@@ -13,6 +13,11 @@
 
 const MODEL = '@cf/openai/whisper';
 
+// Same constant as public/api.js. Teacher-only endpoints check this; it is
+// the app's whole auth model today (the roster blob is equally public), so
+// this adds server-side state, not server-side secrets.
+const TEACHER_PHONE = '13259532991';
+
 // A read-along is a few seconds of 16kHz mono 16-bit PCM: ~32KB/second.
 // 2MB is a minute of audio, far past anything legitimate.
 const MAX_BYTES = 2 * 1024 * 1024;
@@ -39,6 +44,10 @@ export default {
     if (url.pathname === '/api/transcribe') {
       if (request.method !== 'POST') return cors(json({ error: 'method_not_allowed' }, 405), env);
       return cors(await transcribe(request, env), env);
+    }
+
+    if (url.pathname.startsWith('/api/class/')) {
+      return cors(await classApi(request, url, env), env);
     }
 
     return cors(json({ error: 'not_found' }, 404), env);
@@ -227,6 +236,131 @@ async function transcribe(request, env) {
     // to self-assessment and queues the clip for a retry.
     return json({ error: 'transcribe_failed', detail: String(e && e.message || e) }, 502);
   }
+}
+
+// ---------------------------------------------------------------------------
+// /api/class/* — removal gate and re-join approval (D1).
+//
+// The roster itself still lives in the textdb blob; D1 only holds the state
+// the blob cannot enforce: "this phone was removed and may not simply
+// re-register". Endpoints:
+//   GET  /api/class/status?phone=        student: am I removed? pending request?
+//   POST /api/class/remove               teacher: record a removal
+//   POST /api/class/join-request         student: ask to come back
+//   GET  /api/class/join-requests        teacher: list pending applications
+//   POST /api/class/join-request/resolve teacher: approve / deny
+// ---------------------------------------------------------------------------
+async function classApi(request, url, env) {
+  const db = env.DB;
+  if (!db) return json({ error: 'no_db' }, 500);
+  const path = url.pathname;
+
+  // -- student: my status --------------------------------------------------
+  if (path === '/api/class/status' && request.method === 'GET') {
+    const phone = (url.searchParams.get('phone') || '').trim();
+    if (!phone) return json({ error: 'missing_phone' }, 400);
+    const removed = await db
+      .prepare('SELECT phone, name, removed_at FROM removed_students WHERE phone = ?')
+      .bind(phone).first();
+    let req = null;
+    if (removed) {
+      const row = await db
+        .prepare('SELECT id, status, created_at, resolved_at FROM join_requests WHERE phone = ? ORDER BY created_at DESC LIMIT 1')
+        .bind(phone).first();
+      req = row || null;
+    }
+    return json({
+      removed: !!removed,
+      removedAt: removed ? removed.removed_at : null,
+      request: req,
+    });
+  }
+
+  // -- teacher: record a removal -------------------------------------------
+  if (path === '/api/class/remove' && request.method === 'POST') {
+    const body = await readJsonBody(request);
+    if (!body) return json({ error: 'bad_json' }, 400);
+    if (!isTeacher(body)) return json({ error: 'forbidden' }, 403);
+    const phone = String(body.phone || '').trim();
+    if (!phone) return json({ error: 'missing_phone' }, 400);
+    const name = String(body.name || '').slice(0, 60);
+    await db
+      .prepare(`INSERT INTO removed_students (phone, name, removed_at) VALUES (?, ?, ?)
+                ON CONFLICT(phone) DO UPDATE SET name = excluded.name, removed_at = excluded.removed_at`)
+      .bind(phone, name, new Date().toISOString()).run();
+    // A removal invalidates any pending request from before it — the student
+    // must apply again under this removal, not ride an old approval queue.
+    await db
+      .prepare("UPDATE join_requests SET status = 'denied', resolved_at = ? WHERE phone = ? AND status = 'pending'")
+      .bind(new Date().toISOString(), phone).run();
+    return json({ ok: true });
+  }
+
+  // -- student: apply to re-join --------------------------------------------
+  if (path === '/api/class/join-request' && request.method === 'POST') {
+    const body = await readJsonBody(request);
+    if (!body) return json({ error: 'bad_json' }, 400);
+    const phone = String(body.phone || '').trim();
+    const name = String(body.name || '').slice(0, 60);
+    if (!phone || !name) return json({ error: 'missing_fields' }, 400);
+    const removed = await db
+      .prepare('SELECT phone FROM removed_students WHERE phone = ?')
+      .bind(phone).first();
+    if (!removed) return json({ ok: true, notRemoved: true });
+    const existing = await db
+      .prepare("SELECT id FROM join_requests WHERE phone = ? AND status = 'pending'")
+      .bind(phone).first();
+    if (existing) return json({ ok: true, duplicate: true });
+    await db
+      .prepare("INSERT INTO join_requests (id, phone, name, status, created_at) VALUES (?, ?, ?, 'pending', ?)")
+      .bind(crypto.randomUUID(), phone, name, new Date().toISOString()).run();
+    return json({ ok: true });
+  }
+
+  // -- teacher: list pending applications -----------------------------------
+  if (path === '/api/class/join-requests' && request.method === 'GET') {
+    if (!isTeacher({ teacher: url.searchParams.get('teacher') })) {
+      return json({ error: 'forbidden' }, 403);
+    }
+    const rows = await db
+      .prepare("SELECT id, phone, name, status, created_at FROM join_requests WHERE status = 'pending' ORDER BY created_at ASC")
+      .all();
+    return json({ requests: (rows && rows.results) || [] });
+  }
+
+  // -- teacher: approve / deny ----------------------------------------------
+  if (path === '/api/class/join-request/resolve' && request.method === 'POST') {
+    const body = await readJsonBody(request);
+    if (!body) return json({ error: 'bad_json' }, 400);
+    if (!isTeacher(body)) return json({ error: 'forbidden' }, 403);
+    const id = String(body.id || '').trim();
+    const action = body.action === 'approve' ? 'approve' : 'deny';
+    if (!id) return json({ error: 'missing_id' }, 400);
+    const req = await db
+      .prepare('SELECT id, phone FROM join_requests WHERE id = ?')
+      .bind(id).first();
+    if (!req) return json({ error: 'not_found' }, 404);
+    await db
+      .prepare('UPDATE join_requests SET status = ?, resolved_at = ? WHERE id = ?')
+      .bind(action === 'approve' ? 'approved' : 'denied', new Date().toISOString(), id).run();
+    if (action === 'approve') {
+      // Lift the gate; the student re-registers on their next poll/login.
+      await db
+        .prepare('DELETE FROM removed_students WHERE phone = ?')
+        .bind(req.phone).run();
+    }
+    return json({ ok: true, action: action });
+  }
+
+  return json({ error: 'not_found' }, 404);
+}
+
+function isTeacher(body) {
+  return !!(body && String(body.teacher || '') === TEACHER_PHONE);
+}
+
+async function readJsonBody(request) {
+  try { return await request.json(); } catch (e) { return null; }
 }
 
 function json(body, status) {

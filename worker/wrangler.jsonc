@@ -8,6 +8,16 @@
   // real model and draws from the daily neuron allowance.
   "ai": { "binding": "AI" },
 
+  // D1 — the backend database. First tables: class-removal gate and
+  // re-join requests (removed_students / join_requests, see schema.sql).
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "amy_english",
+      "database_id": "0348e0c9-c313-4b48-9515-ddf30c00bfa5"
+    }
+  ],
+
   // The PWA ships from this same Worker, so page and API are one deploy on
   // one origin.
   //

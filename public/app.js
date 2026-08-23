@@ -323,8 +323,15 @@ const App = {
     }
   },
 
-  // Register student - goes straight in, no approval needed
+  // Register student - goes straight in, no approval needed.
+  // EXCEPT when the teacher removed them: then the server-side gate holds
+  // them on the removed page until a re-join request is approved.
   async registerStudent(phone, name) {
+    const status = await Api.classStatus(phone);
+    if (status && status.removed) {
+      this.showRemovedPage(status);
+      return;
+    }
     // Save locally
     this.state.parentStudents[phone] = { name: name, class: '', approved: false };
     await Api.saveParentStudent(phone, this.state.parentStudents[phone]);
@@ -373,8 +380,86 @@ const App = {
     if (wp) wp.classList.remove('hidden');
   },
 
+  // ===== Removed-student gate =====
+  // The teacher took this student out of the class. They cannot use the app
+  // until they apply to re-join AND the teacher approves on the server.
+  showRemovedPage(status) {
+    document.getElementById('login-page').classList.add('hidden');
+    document.getElementById('main-app').classList.add('hidden');
+    const wp = document.getElementById('waiting-page');
+    if (wp) wp.classList.add('hidden');
+    const rp = document.getElementById('removed-page');
+    if (rp) rp.classList.remove('hidden');
+    this.state.removedStatus = status || { removed: true, request: null };
+    this.renderRemovedCard();
+    this.startRemovedPolling();
+  },
+
+  renderRemovedCard() {
+    const card = document.getElementById('removed-card');
+    const btn = document.getElementById('removed-btn');
+    if (!card || !btn) return;
+    const st = this.state.removedStatus || {};
+    const req = st.request;
+    const pending = !!(req && req.status === 'pending');
+    const denied = !!(req && req.status === 'denied');
+    let icon = '🚫', title = '你已被移出班级', desc = '如需重新加入，请提交申请，老师同意后自动进入';
+    if (pending) {
+      icon = '⏳'; title = '申请已提交';
+      desc = '老师同意后这里会自动进入班级，请保持页面打开或稍后重新登录';
+    } else if (denied) {
+      icon = '📩'; title = '上次的申请未通过';
+      desc = '老师没有同意这次申请。你可以再次提交申请，或直接联系老师';
+    }
+    card.innerHTML =
+      '<div style="font-size:48px;margin-bottom:8px">' + icon + '</div>' +
+      '<p style="font-size:15px;color:var(--warning);font-weight:600">' + title + '</p>' +
+      '<p class="text-sub fs-12 mt-8">' + desc + '</p>';
+    btn.textContent = pending ? '⏳ 等待老师同意…' : '✉️ 申请重新加入';
+    btn.disabled = pending;
+    btn.style.opacity = pending ? '0.6' : '1';
+  },
+
+  async applyRejoin() {
+    const phone = this.state.phone, name = this.state.userName;
+    if (!phone) return;
+    const btn = document.getElementById('removed-btn');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ 提交中…'; }
+    const res = await Api.classJoinRequest(phone, name);
+    if (res && res.ok) {
+      this.state.removedStatus = this.state.removedStatus || {};
+      this.state.removedStatus.request = { status: 'pending' };
+      this.renderRemovedCard();
+      this.showToast('✅ 申请已提交，等待老师同意');
+    } else {
+      if (btn) { btn.disabled = false; btn.textContent = '✉️ 申请重新加入'; }
+      this.showToast('⚠️ 提交失败，请检查网络后重试', 'warn');
+    }
+  },
+
+  // While the student sits on the removed page, poll for the approval.
+  // Approved → removed:false → registerStudent() runs for real this time.
+  startRemovedPolling() {
+    if (this._removedTimer) clearInterval(this._removedTimer);
+    this._removedTimer = setInterval(async () => {
+      const status = await Api.classStatus(this.state.phone);
+      if (!status) return;                 // network hiccup: try again next tick
+      if (!status.removed) {
+        clearInterval(this._removedTimer);
+        this._removedTimer = null;
+        this.showToast('🎉 老师已同意，正在进入…');
+        this.registerStudent(this.state.phone, this.state.userName);
+        return;
+      }
+      // Keep the request state fresh (pending/denied changes the card).
+      this.state.removedStatus = status;
+      this.renderRemovedCard();
+    }, 15000);
+  },
+
   async logout() {
     clearTimeout(this._advanceTimer);
+    if (this._removedTimer) { clearInterval(this._removedTimer); this._removedTimer = null; }
     this.state.stepIdx = 0;
     // Clear saved login so auto-login doesn't re-login
     await Api.logout();
@@ -382,6 +467,9 @@ const App = {
     document.getElementById('main-app').classList.add('hidden');
     const wp = document.getElementById('waiting-page');
     if (wp) wp.classList.add('hidden');
+    const rp = document.getElementById('removed-page');
+    if (rp) rp.classList.add('hidden');
+    this.state.removedStatus = null;
     document.getElementById('login-phone').value = '';
     document.getElementById('login-name').value = '';
     this.state.currentTab = 'weekly';
@@ -398,6 +486,10 @@ const App = {
     document.getElementById('login-page').classList.add('hidden');
     const wp = document.getElementById('waiting-page');
     if (wp) wp.classList.add('hidden');
+    const rp = document.getElementById('removed-page');
+    if (rp) rp.classList.add('hidden');
+    // Entering the app means the removal gate is closed for this session.
+    if (this._removedTimer) { clearInterval(this._removedTimer); this._removedTimer = null; }
     document.getElementById('main-app').classList.remove('hidden');
     // Default to the real today (teacher can still switch days for preview)
     this.state.currentTab = this.isTeacher() ? 'weekly' : 'today';
@@ -1009,7 +1101,20 @@ const App = {
           this.state.className = '';
           const badge = document.getElementById('class-badge');
           if (badge) badge.textContent = '待分配';
+          // The removal may be a proper 移出班级 (which must also kick them
+          // out of the app, not just un-assign the class). Event-driven: this
+          // transition only fires when the teacher actually removes them.
+          const st = await Api.classStatus(this.state.phone);
+          if (st && st.removed) {
+            this.showRemovedPage(st);
+            return;
+          }
         }
+      }
+
+      // Teacher: pick up re-join applications (polled with the same cycle)
+      if (this.isTeacher()) {
+        this.fetchJoinRequests();
       }
 
       // Teacher: re-render if on a relevant tab
@@ -1027,6 +1132,9 @@ const App = {
   startAutoSync() {
     if (this._syncInterval) clearInterval(this._syncInterval);
     var interval = this.isTeacher() ? 30000 : 15000;
+    // First poll right away (a teacher who just logged in shouldn't wait
+    // 30s to see pending re-join applications), then on the timer.
+    this.syncFromCloud();
     this._syncInterval = setInterval(() => {
       this.syncFromCloud();
     }, interval);
@@ -1855,6 +1963,26 @@ const App = {
     html += '<div class="fs-12" style="color:var(--success)">✅ 云端同步：' + this._syncStatusText() + '（每30秒自动刷新，老师手机/电脑任意一端操作，另一端自动更新）</div>';
     html += '</div>';
 
+    // Re-join applications from removed students
+    const joinReqs = this.state.joinRequests || [];
+    if (joinReqs.length > 0) {
+      html += '<h3 style="color:var(--primary-dark);margin:16px 0 8px">📮 重新入班申请（' + joinReqs.length + '人）</h3>';
+      html += '<p class="text-sub fs-12 mb-8">这些学生曾被移出班级，正在申请重新加入</p>';
+      joinReqs.forEach(r => {
+        html += '<div class="assign-card" style="border-color:var(--primary)">';
+        html += '<div class="ac-info">';
+        html += '<div><span class="ac-name">' + (r.name||'-') + '</span> <span class="ac-phone">' + (r.phone||'-') + '</span></div>';
+        html += '<span class="badge badge-pending">申请重新加入</span>';
+        html += '</div>';
+        html += '<div class="ac-actions">';
+        html += '<button class="btn btn-primary btn-sm" onclick="App.approveJoin(\'' + r.id + '\')">✅ 同意</button>';
+        html += '<button class="btn btn-outline btn-sm" onclick="App.denyJoin(\'' + r.id + '\')">✖️ 拒绝</button>';
+        html += '</div>';
+        html += '<div class="fs-12 text-sub mt-4">申请时间：' + (r.created_at ? new Date(r.created_at).toLocaleString('zh-CN') : '-') + '</div>';
+        html += '</div>';
+      });
+    }
+
     // Pending students (need class assignment)
     if (pending.length > 0) {
       html += '<h3 style="color:var(--warning);margin-bottom:8px">⏳ 待分配学生（' + pending.length + '人）</h3>';
@@ -1913,6 +2041,56 @@ const App = {
     this.renderContent();
   },
 
+  // ===== Teacher: re-join applications =====
+  async fetchJoinRequests() {
+    if (!this.isTeacher() || !this.state.phone) return;
+    const reqs = await Api.classJoinRequests(this.state.phone);
+    if (reqs === null) return;              // poll failed: keep the old list
+    const prevCount = (this.state.joinRequests || []).length;
+    this.state.joinRequests = reqs;
+    // A new application arrived while the teacher is elsewhere in the app.
+    if (reqs.length > prevCount) {
+      this.showToast('📮 有新的入班申请，请到「学生管理」处理');
+    }
+  },
+
+  async approveJoin(id) {
+    const req = (this.state.joinRequests || []).find(r => r.id === id);
+    const res = await Api.classResolveJoinRequest(id, 'approve');
+    if (!res || !res.ok) { this.showToast('⚠️ 操作失败，请重试', 'warn'); return; }
+    this.showToast('✅ 已同意，学生端将自动进入待分配');
+    // Put the student back on the roster right away so the teacher can
+    // assign a class without waiting for the student's device to re-register.
+    if (req && req.phone) {
+      let s = this.state.students.find(x => x.phone === req.phone);
+      if (!s) {
+        s = {
+          id: 's' + Date.now(), name: req.name, phone: req.phone,
+          parentPhone: req.phone, class: '', approved: false,
+          registeredAt: new Date().toISOString(),
+        };
+        this.state.students.push(s);
+      } else {
+        s.name = req.name || s.name;
+        s.class = '';
+        s.approved = false;
+      }
+      await Api.saveStudent(s);
+      this.syncToCloud();
+    }
+    await this.fetchJoinRequests();
+    this.renderContent();
+  },
+
+  async denyJoin(id) {
+    if (!confirm('拒绝这次申请？学生仍被移出，可再次申请。')) return;
+    const res = await Api.classResolveJoinRequest(id, 'deny');
+    if (!res || !res.ok) { this.showToast('⚠️ 操作失败，请重试', 'warn'); return; }
+    this.showToast('已拒绝该申请');
+    await this.fetchJoinRequests();
+    this.renderContent();
+  },
+
   // Reject / delete a student
   async rejectStudent(sid) {
     if (!confirm('确认删除该学生？删除后该手机号将无法登录。')) return;
@@ -1963,13 +2141,16 @@ const App = {
   },
 
   async removeStudent(sid) {
-    if (!confirm('确认移除该学生？')) return;
+    if (!confirm('确认移除该学生？移除后该学生需申请并经你同意才能重新加入。')) return;
     const student = this.state.students.find(s => s.id === sid);
     if (!student) return;
     student.class = '';
     student.approved = false;
     await Api.saveStudent(student);
     this.syncToCloud();
+    // Same gate as removeFromClass — a full removal must not be a loophole.
+    const gated = await Api.classRemove(student.phone, student.name);
+    if (!gated) this.showToast('⚠️ 移除已保存，但写入后台失败，该学生仍可能重新进入', 'warn');
     this.renderContent();
   },
 
@@ -2091,13 +2272,17 @@ const App = {
   },
 
   async removeFromClass(sid) {
-    if (!confirm('确认将该学生移出班级？')) return;
+    if (!confirm('确认将该学生移出班级？移出后该学生需申请并经你同意才能重新加入。')) return;
     const student = this.state.students.find(s => s.id === sid);
     if (!student) return;
     student.class = '';
     student.approved = false;
     await Api.saveStudent(student);
     this.syncToCloud();
+    // Server-side gate — without this the student just re-registers on next
+    // login and lands back in 待分配.
+    const gated = await Api.classRemove(student.phone, student.name);
+    if (!gated) this.showToast('⚠️ 移出已保存，但写入后台失败，该学生仍可能重新进入', 'warn');
     this.renderContent();
   },
 

@@ -580,6 +580,83 @@ const Api = {
     } catch (e) { console.warn('fetchMyAssignment error:', e); return null; }
   },
 
+  // -- class removal gate / re-join approval (D1 backend) ------------------
+  // Same-origin in production, api. subdomain as fallback — same rule as
+  // the transcribe URL below.
+  get CLASS_API_BASE() {
+    const h = (typeof location !== 'undefined' && location.hostname) || '';
+    const sameZone = h === 'amyeng.top' || h.endsWith('.amyeng.top');
+    return sameZone ? '' : this.API_HOST;
+  },
+
+  _classUrl(path) {
+    return this.CLASS_API_BASE + path;
+  },
+
+  // Student login gate. Returns null on ANY failure (network, non-200,
+  // malformed) — callers must treat null as "no restriction" so a missing
+  // backend can never lock every child out of the app.
+  async classStatus(phone) {
+    try {
+      const res = await fetch(this._classUrl('/api/class/status?phone=' + encodeURIComponent(phone)));
+      if (!res.ok) return null;
+      const data = await res.json();
+      if (data && typeof data.removed === 'boolean') return data;
+      return null;
+    } catch (e) { console.warn('classStatus failed:', e); return null; }
+  },
+
+  // Teacher removed a student — record the gate server-side. Fire-and-forget
+  // is NOT ok here: losing this write silently reopens the loophole. Still
+  // returns a bool so the caller can warn, not block, on failure.
+  async classRemove(phone, name) {
+    try {
+      const res = await fetch(this._classUrl('/api/class/remove'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: phone, name: name, teacher: this.session && this.session.phone }),
+      });
+      return res.ok;
+    } catch (e) { console.warn('classRemove failed:', e); return false; }
+  },
+
+  // Student asks to re-join. Returns { ok } or null on network failure.
+  async classJoinRequest(phone, name) {
+    try {
+      const res = await fetch(this._classUrl('/api/class/join-request'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: phone, name: name }),
+      });
+      if (!res.ok) return null;
+      return await res.json();
+    } catch (e) { console.warn('classJoinRequest failed:', e); return null; }
+  },
+
+  // Teacher: pending re-join applications. [] on failure (a failed poll
+  // just means the list stays as it was).
+  async classJoinRequests(teacherPhone) {
+    try {
+      const res = await fetch(this._classUrl('/api/class/join-requests?teacher=' + encodeURIComponent(teacherPhone)));
+      if (!res.ok) return null;
+      const data = await res.json();
+      return (data && Array.isArray(data.requests)) ? data.requests : [];
+    } catch (e) { console.warn('classJoinRequests failed:', e); return null; }
+  },
+
+  // Teacher: approve / deny an application. { ok } or null on failure.
+  async classResolveJoinRequest(id, action) {
+    try {
+      const res = await fetch(this._classUrl('/api/class/join-request/resolve'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: id, action: action, teacher: this.session && this.session.phone }),
+      });
+      if (!res.ok) return null;
+      return await res.json();
+    } catch (e) { console.warn('classResolveJoinRequest failed:', e); return null; }
+  },
+
   // -- speech recognition -------------------------------------------------
   // Posts 16kHz mono WAV to our own Worker, which calls Workers AI Whisper.
   // Deliberately NOT the browser's SpeechRecognition: that is Chrome-only and
