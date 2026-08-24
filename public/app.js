@@ -1101,9 +1101,14 @@ const App = {
           this.state.className = '';
           const badge = document.getElementById('class-badge');
           if (badge) badge.textContent = '待分配';
-          // The removal may be a proper 移出班级 (which must also kick them
-          // out of the app, not just un-assign the class). Event-driven: this
-          // transition only fires when the teacher actually removes them.
+        }
+
+        // Regardless of class state: if the server says this phone was
+        // removed/deleted, kick them to the removed page immediately.
+        // (Covers the delete case where the student had no class at all.)
+        const rp = document.getElementById('removed-page');
+        const alreadyRemoved = rp && !rp.classList.contains('hidden');
+        if (!alreadyRemoved) {
           const st = await Api.classStatus(this.state.phone);
           if (st && st.removed) {
             this.showRemovedPage(st);
@@ -2093,13 +2098,16 @@ const App = {
 
   // Reject / delete a student
   async rejectStudent(sid) {
-    if (!confirm('确认删除该学生？删除后该手机号将无法登录。')) return;
+    if (!confirm('确认删除该学生？删除后该手机号需申请并经你同意才能重新登录。')) return;
     const student = this.state.students.find(s => s.id === sid || s.phone === sid);
     if (!student) return;
     // Delete locally
     this.state.students = await Api.deleteStudent(student);
     delete this.state.parentStudents[student.phone];
     this.syncToCloud();
+    // Server-side gate: without this write the student can just re-login.
+    const gated = await Api.classRemove(student.phone, student.name);
+    if (!gated) this.showToast('⚠️ 删除已保存，但写入后台失败，该学生仍可能重新进入', 'warn');
     this.renderContent();
   },
 
