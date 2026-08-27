@@ -72,7 +72,7 @@ input,textarea,select{font-family:inherit;font-size:14px;outline:none}
   -webkit-mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent);
   mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent)}
 .nav-tabs.is-overflowing.at-end{-webkit-mask-image:none;mask-image:none}
-.nav-tabs button{display:inline-flex;align-items:center;gap:7px;flex:none;
+.nav-tabs button{display:inline-flex;align-items:center;gap:7px;flex:none;position:relative;
   padding:9px 14px;border-radius:var(--radius-pill);background:transparent;
   color:var(--ink-2);font-size:14px;font-weight:500;white-space:nowrap;
   transition:background var(--fast) var(--ease),color var(--fast) var(--ease)}
@@ -438,6 +438,17 @@ body.stage-mode .content-area{padding-block:0}
 .app-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .app-toast.warn{background:rgba(220,53,69,.95)}
 .app-toast.info{background:rgba(21,134,230,.95)}
+/* Student-join alert banner (teacher) — clickable, slides down from the top */
+.alert-banner{position:fixed;top:0;left:0;right:0;z-index:2100;display:flex;align-items:center;gap:10px;padding:12px 14px;background:linear-gradient(135deg,#FF9A3C,#FF6B35);color:#fff;font-size:14px;box-shadow:0 4px 16px rgba(255,107,53,.45);transform:translateY(-110%);transition:transform .3s ease}
+.alert-banner.show{transform:translateY(0)}
+.alert-banner .ab-main{flex:1;font-weight:600;line-height:1.45}
+.alert-banner .ab-action{background:#fff;color:#E8590C;border:none;border-radius:18px;padding:7px 14px;font-size:13px;font-weight:700;white-space:nowrap;cursor:pointer}
+.alert-banner .ab-close{background:transparent;color:#fff;border:none;font-size:22px;line-height:1;cursor:pointer;padding:0 4px;opacity:.9}
+/* Red count badge on the 学生管理 tab */
+.tab-badge{position:absolute;top:1px;right:1px;min-width:16px;height:16px;border-radius:8px;background:#E5484D;color:#fff;font-size:10px;font-weight:700;line-height:16px;text-align:center;padding:0 4px;box-shadow:0 0 0 2px #fff;pointer-events:none}
+/* Newest pending-student card flashes so the teacher spots it instantly */
+.assign-card.flash{animation:pendingFlash 1.05s ease-in-out 3}
+@keyframes pendingFlash{0%,100%{box-shadow:0 0 0 0 rgba(255,107,53,0)}50%{box-shadow:0 0 0 3px rgba(255,107,53,.6)}}
 .modal{background:var(--card);border-radius:var(--radius);max-width:500px;width:100%;max-height:85vh;overflow-y:auto}
 .modal-header{padding:16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #FFE0CC;position:sticky;top:0;background:var(--card);z-index:1}
 .modal-title{font-size:16px;font-weight:600}
@@ -672,7 +683,7 @@ body.stage-mode .content-area{padding-block:0}
 <!-- Login Page -->
 <div id="login-page" class="login-page">
   <div class="login-box login-box-compact">
-    <div class="login-photo" style="margin-bottom:4px"><img src="photo.jpeg?v=51" alt="Amy老师英语打卡" width="56" height="56"></div>
+    <div class="login-photo" style="margin-bottom:4px"><img src="photo.jpeg?v=52" alt="Amy老师英语打卡" width="56" height="56"></div>
     <h2 style="font-size:18px;margin-bottom:2px">Amy老师英语打卡</h2>
     <p class="subtitle" style="font-size:12px;margin-bottom:14px">登录打卡，每天进步一点点</p>
     <div class="form-group" style="margin-bottom:10px">
@@ -698,7 +709,7 @@ body.stage-mode .content-area{padding-block:0}
 <!-- Waiting Page (for unapproved students) -->
 <div id="waiting-page" class="login-page hidden">
   <div class="login-box">
-    <div class="login-photo"><img src="photo.jpeg?v=51" alt="Amy老师英语打卡" width="56" height="56"></div>
+    <div class="login-photo"><img src="photo.jpeg?v=52" alt="Amy老师英语打卡" width="56" height="56"></div>
     <h2>等待老师审核</h2>
     <p class="subtitle">你的注册信息已提交</p>
     <div class="card" style="background:var(--warning-light);text-align:center;padding:20px;margin:16px 0">
@@ -730,7 +741,7 @@ body.stage-mode .content-area{padding-block:0}
       <nav class="navbar">
         <div class="nav-tabs" id="tab-bar"></div>
         <div class="nav-user">
-          <img id="header-photo" class="photo" src="photo.jpeg?v=51" alt="">
+          <img id="header-photo" class="photo" src="photo.jpeg?v=52" alt="">
           <span id="header-name">Amy老师英语打卡</span>
           <span class="class-badge" id="class-badge"></span>
           <button class="icon-btn" id="invite-btn-header" onclick="App.showInvite()" title="邀请" aria-label="邀请"><svg class="icon"><use href="#i-link"/></svg></button>
@@ -772,12 +783,12 @@ body.stage-mode .content-area{padding-block:0}
   <div class="modal" id="modal-box"></div>
 </div>
 
-<script src="cloud.js?v=51"></script>
-<script src="data.js?v=51"></script>
+<script src="cloud.js?v=52"></script>
+<script src="data.js?v=52"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
-<script src="recorder.js?v=51"></script>
-<script src="api.js?v=51"></script>
-<script src="app.js?v=51"></script>
+<script src="recorder.js?v=52"></script>
+<script src="api.js?v=52"></script>
+<script src="app.js?v=52"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {
