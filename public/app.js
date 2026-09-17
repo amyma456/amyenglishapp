@@ -4747,7 +4747,7 @@ const App = {
 
     if (this.isTeacher()) {
       // Teacher scrolling list — keep the original "answer → lock → next"
-      // behaviour. The mandatory follow-read is a student-side guard.
+      // behaviour. The mandatory hold-to-read is a student-side guard.
       this._recordAnswer(dayIdx, mi, qi, oi, isCorrect);
       const opts = document.querySelectorAll('#q-' + mi + '-' + qi + ' .q-option');
       opts.forEach((el, i) => {
@@ -4775,84 +4775,61 @@ const App = {
       return;
     }
 
-    // Student path: every pick must clear a read-along of the question
-    // sentence with score >= 60 before the answer is accepted. Wrong picks
-    // unlock for re-selection on the same ABCD row instead of forcing a
-    // fresh render.
+    // Student path: pick first, read only on a confirmed-correct answer.
+    //   - Wrong pick: lock just that option red+disabled, others come back
+    //     on the same ABCD row, prompt "请在原 ABCD 上点选正确答案". NO
+    //     recording happens — the child just re-taps until they pick the
+    //     right one.
+    //   - Correct pick (first try OR after one or more wrongs): lock the
+    //     whole row and require a HOLD-to-read of the question sentence
+    //     with score >= 60 before the answer is recorded.
     this._lastPick = this._lastPick || {};
     this._lastPick[mi + '-' + qi] = { oi: oi, isCorrect: isCorrect };
 
-    // Mark the picked option visually but DO NOT freeze the row yet — until
-    // the child reads the sentence aloud with score >= 60, neither correct
-    // nor wrong is "settled".
     const opts = document.querySelectorAll('#q-' + mi + '-' + qi + ' .q-option');
-    opts.forEach((el, i) => {
+    const ansEl = document.getElementById('ans-' + mi + '-' + qi);
+
+    if (!isCorrect) {
+      opts.forEach((el, i) => {
+        el.classList.remove('correct', 'selected');
+        if (i === oi) {
+          el.classList.add('wrong');
+          el.style.pointerEvents = 'none';
+        } else {
+          el.style.pointerEvents = 'auto';
+        }
+      });
+      if (ansEl) {
+        ansEl.style.display = 'block';
+        ansEl.innerHTML = '❌ 当前选项错误。请在原 ABCD 上点选正确答案。';
+      }
+      this._playWrongSound();
+      const expEl = document.getElementById('exp-' + mi + '-' + qi);
+      if (expEl) expEl.classList.add('show');
+      const caEl = document.getElementById('correct-area-' + mi + '-' + qi);
+      if (caEl) caEl.style.display = 'block';
+      // Wrong pick clears any stale hold-read panel — a wrong pick is just a
+      // "try again" hint, no recording has happened yet.
+      const followEl = document.getElementById('qr-follow-' + mi + '-' + qi);
+      if (followEl) followEl.innerHTML = '';
+      return;
+    }
+
+    // Correct pick — gate the answer behind a recorded read-aloud.
+    opts.forEach((el) => {
       el.classList.remove('correct', 'wrong', 'selected');
-      if (i === oi) el.classList.add('selected');
       el.style.pointerEvents = 'none';
     });
+    if (ansEl) {
+      ansEl.style.display = 'block';
+      ansEl.innerHTML = '✅ 选对了！请按住下方按钮跟读原句（≥60 分通过）';
+    }
 
-    const sentence = q.audio_text || q.question;
-    const self = this;
-    // Kick off the mandatory follow-read. The score threshold is 60 — below
-    // that the row stays locked; at-or-above it the pick is finalized and,
-    // if wrong, the wrong option is kept red+disabled while the rest come
-    // back so the child can re-pick on the original ABCD buttons.
-    this._runReadAlongForQuestion(mi, qi, dayIdx, sentence, function(score, passed) {
-      const qItem = document.getElementById('q-' + mi + '-' + qi);
-      if (!qItem) return;
-      const opts = qItem.querySelectorAll('.q-option');
-      const ansEl = document.getElementById('ans-' + mi + '-' + qi);
-      if (passed) {
-        self._recordAnswer(dayIdx, mi, qi, oi, isCorrect);
-        opts.forEach(el => el.classList.remove('selected'));
-        if (isCorrect) {
-          opts.forEach(el => {
-            el.classList.remove('wrong');
-            if (el.classList.contains('correct') === false && el.textContent.charCodeAt(0) === (q.answer + 65)) {
-              el.classList.add('correct');
-            }
-            el.style.pointerEvents = 'none';
-          });
-          if (ansEl) {
-            ansEl.style.display = 'block';
-            ansEl.innerHTML = '✅ 正确！';
-          }
-          self._playCorrectSound();
-        } else {
-          // Wrong pick but the read passed: keep the wrong option locked with
-          // its red highlight (a child shouldn't be able to spam-click the
-          // same wrong answer), and re-enable every other option so they can
-          // choose the correct one on the same ABCD row.
-          opts.forEach((el, i) => {
-            el.classList.remove('correct');
-            if (i === oi) {
-              el.classList.add('wrong');
-              el.style.pointerEvents = 'none';
-            } else {
-              el.style.pointerEvents = 'auto';
-            }
-          });
-          if (ansEl) {
-            ansEl.style.display = 'block';
-            ansEl.innerHTML = '❌ 当前选项错误。跟读通过，请在 ABCD 上点选正确答案。';
-          }
-          self._playWrongSound();
-          const expEl = document.getElementById('exp-' + mi + '-' + qi);
-          if (expEl) expEl.classList.add('show');
-          const caEl = document.getElementById('correct-area-' + mi + '-' + qi);
-          if (caEl) caEl.style.display = 'block';
-        }
-      } else {
-        // Score < 60: read failed. The row stays locked; the follow-read
-        // panel already shows the score and a "再读一次" button.
-        if (ansEl) {
-          ansEl.style.display = 'block';
-          ansEl.innerHTML = '⚠️ 跟读 ' + score + ' 分，未达 60 分。听完标准发音后请再读一次原句。';
-        }
-        self._playWrongSound();
-      }
-    });
+    const followEl = document.getElementById('qr-follow-' + mi + '-' + qi);
+    if (followEl) {
+      const sentence = q.audio_text || q.question;
+      this._renderHoldReadPanel(followEl, mi, qi, dayIdx, sentence);
+    }
   },
 
   // Mandatory follow-read for ABCD-style questions. Records the child
@@ -4861,200 +4838,211 @@ const App = {
   // is true when score >= 60. The recorder state is shared with the
   // speaking module — only one read can be in flight at a time.
   _runReadAlongForQuestion(mi, qi, dayIdx, sentence, onResult) {
-    const followEl = document.getElementById('qr-follow-' + mi + '-' + qi);
-    if (!followEl) { onResult(0, false); return; }
-    Recorder.warmUp();
-    const self = this;
-    this._qrRunning = this._qrRunning || {};
-    if (this._qrRunning[mi + '-' + qi]) {
-      // Already recording for this exact question — let the previous run
-      // finish first instead of dropping into a half-overlapped UI.
-      return;
-    }
-    this._qrRunning[mi + '-' + qi] = true;
-    this._readFinished = false;
-
-    const renderRec = function() {
-      followEl.innerHTML = '<div class="speak-record show" style="text-align:center">'
-        + '<div class="recording-indicator"><div class="rec-mic">🎤</div><div class="rec-pulse"></div></div>'
-        + '<p style="font-size:16px;font-weight:600;color:var(--primary);margin:12px 0 4px">正在录音…</p>'
-        + '<p class="fs-12 text-sub">请大声朗读上面的句子</p>'
-        + '<div class="speak-sentence" style="font-size:18px;margin:12px 0;color:var(--text)">' + sentence + '</div>'
-        + '<div class="rec-timer" id="qr-timer-' + mi + '-' + qi + '">0秒</div>'
-        + '<button class="speak-btn" style="background:var(--danger);margin-top:12px" onclick="App._stopQrRead(' + mi + ',' + qi + ')">结束朗读</button>'
-        + '</div>';
-    };
-
-    this._startClipCapture();
-    clearTimeout(this._readCapTimer);
-    let recSeconds = 0;
-    if (this._qrTimerInterval) clearInterval(this._qrTimerInterval);
-    this._qrTimerInterval = setInterval(function() {
-      recSeconds++;
-      const t = document.getElementById('qr-timer-' + mi + '-' + qi);
-      if (t) t.textContent = recSeconds + '秒';
-    }, 1000);
-    renderRec();
-    this._qrFinish = async function() {
-      if (self._readFinished) return;
-      self._readFinished = true;
-      self._qrRunning[mi + '-' + qi] = false;
-      if (self._qrTimerInterval) { clearInterval(self._qrTimerInterval); self._qrTimerInterval = null; }
-      clearTimeout(self._readCapTimer);
-      const blob = await self._finishClipCapture();
-      let spoken = null;
-      if (blob) {
-        followEl.innerHTML = '<div class="speak-record show" style="text-align:center">'
-          + '<p style="font-size:15px;color:var(--primary);margin-bottom:6px">正在识别…</p>'
-          + '<p class="fs-12 text-sub">正在比对你读的和原句</p></div>';
-        const forAsr = (self._spClipSamples && Recorder.padForAsr(self._spClipSamples)) || blob;
-        const out = await Api.transcribe(forAsr, null);
-        if (out && out.text && !Api.isFillerTranscript(out.text)) spoken = out.text.toLowerCase();
-      }
-      if (!spoken) {
-        // No usable audio: same fallback the speaking module uses
-        // (self-assess) makes the read-along pipeline degrade gracefully.
-        followEl.innerHTML = '<div class="speak-record show" style="text-align:center">'
-          + '<p class="fs-12 text-sub">没有录到音频 / 识别失败，改为自评。</p>'
-          + '<button class="speak-btn" style="background:var(--success);margin:8px" onclick="App._qrSelfScore(' + mi + ',' + qi + ',' + dayIdx + ',90)">⭐ 很好 (90分)</button>'
-          + '<button class="speak-btn" style="background:var(--warning);margin:8px" onclick="App._qrSelfScore(' + mi + ',' + qi + ',' + dayIdx + ',75)">👍 还不错 (75分)</button>'
-          + '<button class="speak-btn" style="background:var(--danger);margin:8px" onclick="App._qrSelfScore(' + mi + ',' + qi + ',' + dayIdx + ',60)">💪 需练习 (60分)</button>'
-          + '</div>';
-        return;
-      }
-      const score = self.calcPronScore(sentence.toLowerCase(), spoken);
-      const a = self.alignSpeech(sentence, spoken);
-      let html = '<div class="speak-record show" style="text-align:center">';
-      html += '<div class="speak-score" style="color:' + (score >= 60 ? 'var(--success)' : 'var(--danger)') + '">' + score + '分</div>';
-      html += '<div class="fs-12 text-sub mb-8">读对 ' + a.ok + ' / ' + a.total + ' 个词</div>';
-      html += '<div class="align-sentence">';
-      a.items.forEach(x => {
-        if (x.status === 'extra') return;
-        const cls = x.status === 'ok' ? 'w-ok' : x.status === 'wrong' ? 'w-bad' : 'w-miss';
-        const tip = x.status === 'wrong' ? ' title="听到的是：' + x.spoken + '"' : '';
-        html += '<span class="' + cls + '"' + tip + '>' + x.target + '</span> ';
-      });
-      html += '</div>';
-      html += '<div class="fs-12 text-sub mt-8">识别到：' + (spoken || '（没听清）') + '</div>';
-      if (score >= 60) {
-        html += '<div class="badge badge-success mt-8" style="font-size:14px">✅ 跟读通过</div>';
-      } else {
-        html += '<div class="badge badge-danger mt-8">分数偏低，再读一次吧（需 ≥ 60 分）</div>';
-      }
-      html += '<div style="display:flex;gap:8px;justify-content:center;margin-top:12px">';
-      html += '<button class="speak-btn" onclick="App._startQrRead(' + mi + ',' + qi + ',' + dayIdx + ')">🎤 重新跟读</button>';
-      html += '</div></div>';
-      followEl.innerHTML = html;
-      onResult(score, score >= 60);
-    };
-    this._readCapTimer = setTimeout(() => self._qrFinish(), 20000);
+    // Deprecated path — kept as a no-op shim so any leftover caller doesn't
+    // crash. The new flow uses _renderHoldReadPanel / _holdReadStart /
+    // _holdReadEnd (press-and-hold UX).
+    try { onResult(0, false); } catch (e) {}
   },
 
   _stopQrRead(mi, qi) {
-    if (typeof this._qrFinish === 'function') this._qrFinish();
+    // Deprecated: the new hold-read panel doesn't have a manual stop button.
+    // If something is mid-recording, finish it so the mic is released.
+    if (typeof this._holdReadEnd === 'function') this._holdReadEnd(mi, qi, null);
   },
 
   _startQrRead(mi, qi, dayIdx) {
-    const m = HOMEWORK_DATA[dayIdx].modules[mi];
+    // Deprecated: re-render the hold-read panel to retry.
+    const m = HOMEWORK_DATA && HOMEWORK_DATA[dayIdx] && HOMEWORK_DATA[dayIdx].modules[mi];
+    if (!m) return;
     const q = m.questions[qi];
     const sentence = q.audio_text || q.question;
-    const self = this;
-    this._runReadAlongForQuestion(mi, qi, dayIdx, sentence, function(score, passed) {
-      // Re-evaluate with the same gate selectAnswer uses.
-      const lastPick = self._lastPick && self._lastPick[mi + '-' + qi];
-      if (!lastPick) return;
-      const { oi, isCorrect } = lastPick;
-      const ansEl = document.getElementById('ans-' + mi + '-' + qi);
-      if (passed) {
-        self._recordAnswer(dayIdx, mi, qi, oi, isCorrect);
-        const opts = document.querySelectorAll('#q-' + mi + '-' + qi + ' .q-option');
-        if (isCorrect) {
-          opts.forEach((el, i) => {
-            el.classList.remove('wrong', 'selected');
-            if (i === q.answer) el.classList.add('correct');
-            el.style.pointerEvents = 'none';
-          });
-          if (ansEl) { ansEl.style.display = 'block'; ansEl.innerHTML = '✅ 正确！'; }
-          self._playCorrectSound();
-        } else {
-          opts.forEach((el, i) => {
-            el.classList.remove('correct');
-            if (i === oi) {
-              el.classList.add('wrong');
-              el.style.pointerEvents = 'none';
-            } else {
-              el.style.pointerEvents = 'auto';
-            }
-          });
-          if (ansEl) {
-            ansEl.style.display = 'block';
-            ansEl.innerHTML = '❌ 当前选项错误。跟读通过，请在 ABCD 上点选正确答案。';
-          }
-          self._playWrongSound();
-          const expEl = document.getElementById('exp-' + mi + '-' + qi);
-          if (expEl) expEl.classList.add('show');
-        }
-      } else {
-        if (ansEl) {
-          ansEl.style.display = 'block';
-          ansEl.innerHTML = '⚠️ 跟读 ' + score + ' 分，未达 60 分。再试一次。';
-        }
-        self._playWrongSound();
-      }
-    });
+    const followEl = document.getElementById('qr-follow-' + mi + '-' + qi);
+    if (followEl) this._renderHoldReadPanel(followEl, mi, qi, dayIdx, sentence);
   },
 
   _qrSelfScore(mi, qi, dayIdx, score) {
-    // Self-assessment fallback: same shape as the audio path. We don't gate
-    // through calcPronScore here — the score is the child's own rating.
+    // Deprecated: re-render the hold-read panel so the child can press-and-
+    // hold again. The new flow has no self-score buttons.
+    const m = HOMEWORK_DATA && HOMEWORK_DATA[dayIdx] && HOMEWORK_DATA[dayIdx].modules[mi];
+    if (!m) return;
+    const q = m.questions[qi];
+    const sentence = q.audio_text || q.question;
+    const followEl = document.getElementById('qr-follow-' + mi + '-' + qi);
+    if (followEl) this._renderHoldReadPanel(followEl, mi, qi, dayIdx, sentence);
+  },
+
+  // Press-and-hold read-along panel. The mic button stays open while the
+  // child has it pressed; on release we score the captured audio against
+  // the question sentence. Threshold is 60. Compared to the old auto-stop
+  // pipeline the timing is fully user-controlled, so we never wait for
+  // silence detection — that shaves a couple of seconds off every pick.
+  _renderHoldReadPanel(followEl, mi, qi, dayIdx, sentence) {
+    const sid = 'hr-' + mi + '-' + qi;
+    const stid = 'qr-status-' + mi + '-' + qi;
+    const esc = this._escHtml || function(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    };
+    followEl.innerHTML = '<div class="speak-record show" style="text-align:center">'
+      + '<p class="fs-12 text-sub">请按住麦克风朗读：</p>'
+      + '<div class="speak-sentence" style="font-size:18px;margin:8px 0;color:var(--text)">' + esc(sentence) + '</div>'
+      + '<div id="' + stid + '" style="min-height:18px;margin:6px 0;color:var(--text-sub);font-size:14px"></div>'
+      + '<button id="' + sid + '" class="speak-btn qr-hold-btn" '
+      + 'style="background:var(--primary);margin-top:8px;font-size:18px;padding:18px 32px;'
+      + 'user-select:none;-webkit-user-select:none;touch-action:none;border-radius:24px;min-width:200px">'
+      + '🎤 按住跟读</button>'
+      + '<p class="fs-12 text-sub" style="margin-top:8px">按住朗读，松手立即打分（≥60 通过）</p>'
+      + '</div>';
+    const btn = document.getElementById(sid);
+    if (!btn) return;
+    const self = this;
+    const onStart = function(e) { e.preventDefault(); self._holdReadStart(mi, qi, dayIdx, sentence); };
+    const onEnd = function(e) { e.preventDefault(); self._holdReadEnd(mi, qi, dayIdx); };
+    btn.addEventListener('mousedown', onStart);
+    btn.addEventListener('touchstart', onStart, { passive: false });
+    btn.addEventListener('mouseup', onEnd);
+    btn.addEventListener('mouseleave', onEnd);
+    btn.addEventListener('touchend', onEnd);
+    btn.addEventListener('touchcancel', onEnd);
+  },
+
+  _holdReadStart(mi, qi, dayIdx, sentence) {
+    if (this._holdReadActive) return;
+    this._holdReadActive = { mi: mi, qi: qi, dayIdx: dayIdx, sentence: sentence, startedAt: Date.now() };
+    Recorder.warmUp();
+    this._startClipCapture();
+    // Cap a held read at 10s — long enough for a child to read a sentence,
+    // short enough that a stuck button doesn't keep the mic open forever.
+    this._holdReadTimer = setTimeout(() => this._holdReadEnd(mi, qi, dayIdx), 10000);
+    this._setHoldReadUI(mi, qi, 'recording', null, false);
+  },
+
+  _holdReadEnd(mi, qi, dayIdx) {
+    const ctx = this._holdReadActive;
+    clearTimeout(this._holdReadTimer);
+    if (!ctx || ctx._ended) return;
+    ctx._ended = true;
+    // Mis-tap guard: a hold shorter than 250 ms is almost certainly an
+    // accidental touch — reset the button rather than firing a half-empty
+    // transcription through the ASR pipeline.
+    if (Date.now() - ctx.startedAt < 250) {
+      this._holdReadActive = null;
+      this._setHoldReadUI(mi, qi, 'mistap', null, false);
+      return;
+    }
+    this._holdReadActive = null;
+    this._setHoldReadUI(mi, qi, 'scoring', null, false);
+
+    const self = this;
+    this._finishClipCapture().then(async (blob) => {
+      let spoken = null;
+      if (blob) {
+        const forAsr = (self._spClipSamples && Recorder.padForAsr(self._spClipSamples)) || blob;
+        try {
+          const out = await Api.transcribe(forAsr, null);
+          if (out && out.text && !Api.isFillerTranscript(out.text)) spoken = out.text.toLowerCase();
+        } catch (e) { console.warn('Hold-read transcribe failed:', e); }
+      }
+      self._showHoldReadResult(mi, qi, dayIdx, ctx.sentence, spoken);
+    }).catch(e => {
+      console.warn('Hold-read capture failed:', e);
+      self._showHoldReadResult(mi, qi, dayIdx, ctx.sentence, null);
+    });
+  },
+
+  // status is one of: 'recording' | 'scoring' | 'mistap' | 'passed' | 'failed' | 'noaudio'
+  _setHoldReadUI(mi, qi, status, score, passed) {
+    const btn = document.getElementById('hr-' + mi + '-' + qi);
+    const statusEl = document.getElementById('qr-status-' + mi + '-' + qi);
+    if (!btn) return;
+    if (status === 'recording') {
+      btn.style.background = 'var(--danger)';
+      btn.innerHTML = '🔴 录音中… 松手打分';
+      btn.disabled = false;
+      if (statusEl) statusEl.innerHTML = '';
+      return;
+    }
+    if (status === 'scoring') {
+      btn.style.background = 'var(--text-sub)';
+      btn.innerHTML = '⏳ 评分中…';
+      btn.disabled = true;
+      if (statusEl) statusEl.innerHTML = '<span style="color:var(--primary)">⏳ 正在识别你的发音…</span>';
+      return;
+    }
+    if (status === 'mistap') {
+      btn.style.background = 'var(--primary)';
+      btn.innerHTML = '🎤 按住跟读';
+      btn.disabled = false;
+      if (statusEl) statusEl.innerHTML = '<span style="color:var(--danger)">⚠️ 时间太短，请按住至少 1 秒再松手</span>';
+      return;
+    }
+    if (status === 'passed') {
+      btn.style.background = 'var(--success)';
+      btn.innerHTML = '✅ 已通过 ' + score + ' 分';
+      btn.disabled = true;
+      if (statusEl) statusEl.innerHTML = '<span style="color:var(--success);font-weight:600">✅ 跟读通过 ' + score + ' 分</span>';
+      return;
+    }
+    if (status === 'failed') {
+      btn.style.background = 'var(--primary)';
+      btn.innerHTML = '🎤 再按一次跟读';
+      btn.disabled = false;
+      if (statusEl) statusEl.innerHTML = '<span style="color:var(--danger);font-weight:600">⚠️ ' + score + ' 分，未达 60 分。请再读一次。</span>';
+      return;
+    }
+    if (status === 'noaudio') {
+      btn.style.background = 'var(--primary)';
+      btn.innerHTML = '🎤 按住跟读';
+      btn.disabled = false;
+      if (statusEl) statusEl.innerHTML = '<span style="color:var(--danger)">⚠️ 没录到声音或识别失败，请再试一次</span>';
+      return;
+    }
+  },
+
+  _showHoldReadResult(mi, qi, dayIdx, sentence, spoken) {
+    const m = HOMEWORK_DATA[dayIdx].modules[mi];
+    const q = m.questions[qi];
     const lastPick = this._lastPick && this._lastPick[mi + '-' + qi];
     if (!lastPick) return;
     const { oi, isCorrect } = lastPick;
-    const m = HOMEWORK_DATA[dayIdx].modules[mi];
-    const q = m.questions[qi];
-    const followEl = document.getElementById('qr-follow-' + mi + '-' + qi);
-    let html = '<div class="speak-record show" style="text-align:center">';
-    html += '<div class="speak-score" style="color:' + (score >= 60 ? 'var(--success)' : 'var(--danger)') + '">' + score + '分</div>';
-    if (score >= 60) html += '<div class="badge badge-success mt-8">跟读通过</div>';
-    else html += '<div class="badge badge-danger mt-8">分数偏低，再读一次吧（需 ≥ 60 分）</div>';
-    html += '<div style="display:flex;gap:8px;justify-content:center;margin-top:12px">';
-    html += '<button class="speak-btn" onclick="App._startQrRead(' + mi + ',' + qi + ',' + dayIdx + ')">🎤 重新跟读</button>';
-    html += '</div></div>';
-    followEl.innerHTML = html;
-    if (score >= 60) {
+
+    if (!spoken) {
+      // No usable audio at all — let the child try again. We don't fabricate
+      // a self-score here: a "speaking" question with no recorded audio
+      // means the mic was denied or transcription failed, so just reset.
+      this._setHoldReadUI(mi, qi, 'noaudio', null, false);
+      return;
+    }
+
+    const score = this.calcPronScore(sentence.toLowerCase(), spoken);
+    const passed = score >= 60;
+
+    if (passed) {
       this._recordAnswer(dayIdx, mi, qi, oi, isCorrect);
       const opts = document.querySelectorAll('#q-' + mi + '-' + qi + ' .q-option');
-      if (isCorrect) {
-        opts.forEach((el, i) => {
-          el.classList.remove('wrong', 'selected');
-          if (i === q.answer) el.classList.add('correct');
-          el.style.pointerEvents = 'none';
-        });
-        const ansEl = document.getElementById('ans-' + mi + '-' + qi);
-        if (ansEl) { ansEl.style.display = 'block'; ansEl.innerHTML = '✅ 正确！'; }
-        this._playCorrectSound();
-      } else {
-        opts.forEach((el, i) => {
-          el.classList.remove('correct');
-          if (i === oi) {
-            el.classList.add('wrong');
-            el.style.pointerEvents = 'none';
-          } else {
-            el.style.pointerEvents = 'auto';
-          }
-        });
-        const ansEl = document.getElementById('ans-' + mi + '-' + qi);
-        if (ansEl) {
-          ansEl.style.display = 'block';
-          ansEl.innerHTML = '❌ 当前选项错误。跟读通过，请在 ABCD 上点选正确答案。';
-        }
-        this._playWrongSound();
-        const expEl = document.getElementById('exp-' + mi + '-' + qi);
-        if (expEl) expEl.classList.add('show');
+      opts.forEach((el, i) => {
+        el.classList.remove('wrong', 'selected');
+        if (i === q.answer) el.classList.add('correct');
+        el.style.pointerEvents = 'none';
+      });
+      const ansEl = document.getElementById('ans-' + mi + '-' + qi);
+      if (ansEl) {
+        ansEl.style.display = 'block';
+        ansEl.innerHTML = '✅ 跟读通过！ ' + score + ' 分';
       }
-    } else {
-      this._playWrongSound();
+      this._playCorrectSound();
+      this._setHoldReadUI(mi, qi, 'passed', score, true);
+      if (qi < m.questions.length - 1) {
+        const self = this;
+        setTimeout(function() {
+          self._autoSpeakQuestion(m, mi, qi + 1, dayIdx);
+        }, 1500);
+      }
+      return;
     }
+
+    // < 60: keep the row locked, show score, allow retry.
+    this._setHoldReadUI(mi, qi, 'failed', score, false);
+    this._playWrongSound();
   },
 
   submitFill(mi, qi, dayIdx) {
