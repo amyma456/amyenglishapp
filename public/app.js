@@ -4693,6 +4693,12 @@ const App = {
     // Correction area (only shows after wrong answer)
     html += '<div class="card mt-8" style="background:var(--warning-light);display:none" id="correct-area-' + mi + '-' + qi + '"><div class="fs-12 mb-4">请手写改正（输入你的改正答案）：</div><textarea rows="2" style="width:100%;border:1.5px solid #FFE0CC;border-radius:8px;padding:8px" placeholder="在此写出你的改正答案..."></textarea></div>';
     html += '</div>';
+    // Follow-read area: after the child picks an ABCD option, we force them to
+    // read the question sentence aloud. score >= 60 unlocks either finishing
+    // (if the pick was right) or re-picking (if it was wrong).
+    if (q.options) {
+      html += '<div id="qr-follow-' + mi + '-' + qi + '" class="qr-follow"></div>';
+    }
     html += '</div>';
     return html;
   },
@@ -4738,34 +4744,316 @@ const App = {
     const m = HOMEWORK_DATA[dayIdx].modules[mi];
     const q = m.questions[qi];
     const isCorrect = oi === q.answer;
-    this._recordAnswer(dayIdx, mi, qi, oi, isCorrect);
+
+    if (this.isTeacher()) {
+      // Teacher scrolling list — keep the original "answer → lock → next"
+      // behaviour. The mandatory follow-read is a student-side guard.
+      this._recordAnswer(dayIdx, mi, qi, oi, isCorrect);
+      const opts = document.querySelectorAll('#q-' + mi + '-' + qi + ' .q-option');
+      opts.forEach((el, i) => {
+        el.classList.remove('correct', 'wrong', 'selected');
+        el.style.pointerEvents = 'none';
+        if (i === q.answer) el.classList.add('correct');
+        if (i === oi && !isCorrect) el.classList.add('wrong');
+      });
+      const ansEl = document.getElementById('ans-' + mi + '-' + qi);
+      ansEl.style.display = 'block';
+      ansEl.innerHTML = isCorrect ? '✅ 正确！' : '❌ 错误。正确答案：' + String.fromCharCode(65+q.answer);
+      if (isCorrect) {
+        this._playCorrectSound();
+      } else {
+        this._playWrongSound();
+        document.getElementById('exp-' + mi + '-' + qi).classList.add('show');
+        document.getElementById('correct-area-' + mi + '-' + qi).style.display = 'block';
+      }
+      if (qi < m.questions.length - 1) {
+        const self = this;
+        setTimeout(function() {
+          self._autoSpeakQuestion(m, mi, qi + 1, dayIdx);
+        }, isCorrect ? 1500 : 2500);
+      }
+      return;
+    }
+
+    // Student path: every pick must clear a read-along of the question
+    // sentence with score >= 60 before the answer is accepted. Wrong picks
+    // unlock for re-selection on the same ABCD row instead of forcing a
+    // fresh render.
+    this._lastPick = this._lastPick || {};
+    this._lastPick[mi + '-' + qi] = { oi: oi, isCorrect: isCorrect };
+
+    // Mark the picked option visually but DO NOT freeze the row yet — until
+    // the child reads the sentence aloud with score >= 60, neither correct
+    // nor wrong is "settled".
     const opts = document.querySelectorAll('#q-' + mi + '-' + qi + ' .q-option');
     opts.forEach((el, i) => {
       el.classList.remove('correct', 'wrong', 'selected');
+      if (i === oi) el.classList.add('selected');
       el.style.pointerEvents = 'none';
-      if (i === q.answer) el.classList.add('correct');
-      if (i === oi && !isCorrect) el.classList.add('wrong');
     });
-    const ansEl = document.getElementById('ans-' + mi + '-' + qi);
-    ansEl.style.display = 'block';
-    ansEl.innerHTML = isCorrect ? '✅ 正确！' : '❌ 错误。正确答案：' + String.fromCharCode(65+q.answer);
-    if (isCorrect) {
-      this._playCorrectSound();
+
+    const sentence = q.audio_text || q.question;
+    const self = this;
+    // Kick off the mandatory follow-read. The score threshold is 60 — below
+    // that the row stays locked; at-or-above it the pick is finalized and,
+    // if wrong, the wrong option is kept red+disabled while the rest come
+    // back so the child can re-pick on the original ABCD buttons.
+    this._runReadAlongForQuestion(mi, qi, dayIdx, sentence, function(score, passed) {
+      const qItem = document.getElementById('q-' + mi + '-' + qi);
+      if (!qItem) return;
+      const opts = qItem.querySelectorAll('.q-option');
+      const ansEl = document.getElementById('ans-' + mi + '-' + qi);
+      if (passed) {
+        self._recordAnswer(dayIdx, mi, qi, oi, isCorrect);
+        opts.forEach(el => el.classList.remove('selected'));
+        if (isCorrect) {
+          opts.forEach(el => {
+            el.classList.remove('wrong');
+            if (el.classList.contains('correct') === false && el.textContent.charCodeAt(0) === (q.answer + 65)) {
+              el.classList.add('correct');
+            }
+            el.style.pointerEvents = 'none';
+          });
+          if (ansEl) {
+            ansEl.style.display = 'block';
+            ansEl.innerHTML = '✅ 正确！';
+          }
+          self._playCorrectSound();
+        } else {
+          // Wrong pick but the read passed: keep the wrong option locked with
+          // its red highlight (a child shouldn't be able to spam-click the
+          // same wrong answer), and re-enable every other option so they can
+          // choose the correct one on the same ABCD row.
+          opts.forEach((el, i) => {
+            el.classList.remove('correct');
+            if (i === oi) {
+              el.classList.add('wrong');
+              el.style.pointerEvents = 'none';
+            } else {
+              el.style.pointerEvents = 'auto';
+            }
+          });
+          if (ansEl) {
+            ansEl.style.display = 'block';
+            ansEl.innerHTML = '❌ 当前选项错误。跟读通过，请在 ABCD 上点选正确答案。';
+          }
+          self._playWrongSound();
+          const expEl = document.getElementById('exp-' + mi + '-' + qi);
+          if (expEl) expEl.classList.add('show');
+          const caEl = document.getElementById('correct-area-' + mi + '-' + qi);
+          if (caEl) caEl.style.display = 'block';
+        }
+      } else {
+        // Score < 60: read failed. The row stays locked; the follow-read
+        // panel already shows the score and a "再读一次" button.
+        if (ansEl) {
+          ansEl.style.display = 'block';
+          ansEl.innerHTML = '⚠️ 跟读 ' + score + ' 分，未达 60 分。听完标准发音后请再读一次原句。';
+        }
+        self._playWrongSound();
+      }
+    });
+  },
+
+  // Mandatory follow-read for ABCD-style questions. Records the child
+  // reading `sentence`, scores it against the same model that drives
+  // speaking questions, and invokes onResult(score, passed) where `passed`
+  // is true when score >= 60. The recorder state is shared with the
+  // speaking module — only one read can be in flight at a time.
+  _runReadAlongForQuestion(mi, qi, dayIdx, sentence, onResult) {
+    const followEl = document.getElementById('qr-follow-' + mi + '-' + qi);
+    if (!followEl) { onResult(0, false); return; }
+    Recorder.warmUp();
+    const self = this;
+    this._qrRunning = this._qrRunning || {};
+    if (this._qrRunning[mi + '-' + qi]) {
+      // Already recording for this exact question — let the previous run
+      // finish first instead of dropping into a half-overlapped UI.
+      return;
+    }
+    this._qrRunning[mi + '-' + qi] = true;
+    this._readFinished = false;
+
+    const renderRec = function() {
+      followEl.innerHTML = '<div class="speak-record show" style="text-align:center">'
+        + '<div class="recording-indicator"><div class="rec-mic">🎤</div><div class="rec-pulse"></div></div>'
+        + '<p style="font-size:16px;font-weight:600;color:var(--primary);margin:12px 0 4px">正在录音…</p>'
+        + '<p class="fs-12 text-sub">请大声朗读上面的句子</p>'
+        + '<div class="speak-sentence" style="font-size:18px;margin:12px 0;color:var(--text)">' + sentence + '</div>'
+        + '<div class="rec-timer" id="qr-timer-' + mi + '-' + qi + '">0秒</div>'
+        + '<button class="speak-btn" style="background:var(--danger);margin-top:12px" onclick="App._stopQrRead(' + mi + ',' + qi + ')">结束朗读</button>'
+        + '</div>';
+    };
+
+    this._startClipCapture();
+    clearTimeout(this._readCapTimer);
+    let recSeconds = 0;
+    if (this._qrTimerInterval) clearInterval(this._qrTimerInterval);
+    this._qrTimerInterval = setInterval(function() {
+      recSeconds++;
+      const t = document.getElementById('qr-timer-' + mi + '-' + qi);
+      if (t) t.textContent = recSeconds + '秒';
+    }, 1000);
+    renderRec();
+    this._qrFinish = async function() {
+      if (self._readFinished) return;
+      self._readFinished = true;
+      self._qrRunning[mi + '-' + qi] = false;
+      if (self._qrTimerInterval) { clearInterval(self._qrTimerInterval); self._qrTimerInterval = null; }
+      clearTimeout(self._readCapTimer);
+      const blob = await self._finishClipCapture();
+      let spoken = null;
+      if (blob) {
+        followEl.innerHTML = '<div class="speak-record show" style="text-align:center">'
+          + '<p style="font-size:15px;color:var(--primary);margin-bottom:6px">正在识别…</p>'
+          + '<p class="fs-12 text-sub">正在比对你读的和原句</p></div>';
+        const forAsr = (self._spClipSamples && Recorder.padForAsr(self._spClipSamples)) || blob;
+        const out = await Api.transcribe(forAsr, null);
+        if (out && out.text && !Api.isFillerTranscript(out.text)) spoken = out.text.toLowerCase();
+      }
+      if (!spoken) {
+        // No usable audio: same fallback the speaking module uses
+        // (self-assess) makes the read-along pipeline degrade gracefully.
+        followEl.innerHTML = '<div class="speak-record show" style="text-align:center">'
+          + '<p class="fs-12 text-sub">没有录到音频 / 识别失败，改为自评。</p>'
+          + '<button class="speak-btn" style="background:var(--success);margin:8px" onclick="App._qrSelfScore(' + mi + ',' + qi + ',' + dayIdx + ',90)">⭐ 很好 (90分)</button>'
+          + '<button class="speak-btn" style="background:var(--warning);margin:8px" onclick="App._qrSelfScore(' + mi + ',' + qi + ',' + dayIdx + ',75)">👍 还不错 (75分)</button>'
+          + '<button class="speak-btn" style="background:var(--danger);margin:8px" onclick="App._qrSelfScore(' + mi + ',' + qi + ',' + dayIdx + ',60)">💪 需练习 (60分)</button>'
+          + '</div>';
+        return;
+      }
+      const score = self.calcPronScore(sentence.toLowerCase(), spoken);
+      const a = self.alignSpeech(sentence, spoken);
+      let html = '<div class="speak-record show" style="text-align:center">';
+      html += '<div class="speak-score" style="color:' + (score >= 60 ? 'var(--success)' : 'var(--danger)') + '">' + score + '分</div>';
+      html += '<div class="fs-12 text-sub mb-8">读对 ' + a.ok + ' / ' + a.total + ' 个词</div>';
+      html += '<div class="align-sentence">';
+      a.items.forEach(x => {
+        if (x.status === 'extra') return;
+        const cls = x.status === 'ok' ? 'w-ok' : x.status === 'wrong' ? 'w-bad' : 'w-miss';
+        const tip = x.status === 'wrong' ? ' title="听到的是：' + x.spoken + '"' : '';
+        html += '<span class="' + cls + '"' + tip + '>' + x.target + '</span> ';
+      });
+      html += '</div>';
+      html += '<div class="fs-12 text-sub mt-8">识别到：' + (spoken || '（没听清）') + '</div>';
+      if (score >= 60) {
+        html += '<div class="badge badge-success mt-8" style="font-size:14px">✅ 跟读通过</div>';
+      } else {
+        html += '<div class="badge badge-danger mt-8">分数偏低，再读一次吧（需 ≥ 60 分）</div>';
+      }
+      html += '<div style="display:flex;gap:8px;justify-content:center;margin-top:12px">';
+      html += '<button class="speak-btn" onclick="App._startQrRead(' + mi + ',' + qi + ',' + dayIdx + ')">🎤 重新跟读</button>';
+      html += '</div></div>';
+      followEl.innerHTML = html;
+      onResult(score, score >= 60);
+    };
+    this._readCapTimer = setTimeout(() => self._qrFinish(), 20000);
+  },
+
+  _stopQrRead(mi, qi) {
+    if (typeof this._qrFinish === 'function') this._qrFinish();
+  },
+
+  _startQrRead(mi, qi, dayIdx) {
+    const m = HOMEWORK_DATA[dayIdx].modules[mi];
+    const q = m.questions[qi];
+    const sentence = q.audio_text || q.question;
+    const self = this;
+    this._runReadAlongForQuestion(mi, qi, dayIdx, sentence, function(score, passed) {
+      // Re-evaluate with the same gate selectAnswer uses.
+      const lastPick = self._lastPick && self._lastPick[mi + '-' + qi];
+      if (!lastPick) return;
+      const { oi, isCorrect } = lastPick;
+      const ansEl = document.getElementById('ans-' + mi + '-' + qi);
+      if (passed) {
+        self._recordAnswer(dayIdx, mi, qi, oi, isCorrect);
+        const opts = document.querySelectorAll('#q-' + mi + '-' + qi + ' .q-option');
+        if (isCorrect) {
+          opts.forEach((el, i) => {
+            el.classList.remove('wrong', 'selected');
+            if (i === q.answer) el.classList.add('correct');
+            el.style.pointerEvents = 'none';
+          });
+          if (ansEl) { ansEl.style.display = 'block'; ansEl.innerHTML = '✅ 正确！'; }
+          self._playCorrectSound();
+        } else {
+          opts.forEach((el, i) => {
+            el.classList.remove('correct');
+            if (i === oi) {
+              el.classList.add('wrong');
+              el.style.pointerEvents = 'none';
+            } else {
+              el.style.pointerEvents = 'auto';
+            }
+          });
+          if (ansEl) {
+            ansEl.style.display = 'block';
+            ansEl.innerHTML = '❌ 当前选项错误。跟读通过，请在 ABCD 上点选正确答案。';
+          }
+          self._playWrongSound();
+          const expEl = document.getElementById('exp-' + mi + '-' + qi);
+          if (expEl) expEl.classList.add('show');
+        }
+      } else {
+        if (ansEl) {
+          ansEl.style.display = 'block';
+          ansEl.innerHTML = '⚠️ 跟读 ' + score + ' 分，未达 60 分。再试一次。';
+        }
+        self._playWrongSound();
+      }
+    });
+  },
+
+  _qrSelfScore(mi, qi, dayIdx, score) {
+    // Self-assessment fallback: same shape as the audio path. We don't gate
+    // through calcPronScore here — the score is the child's own rating.
+    const lastPick = this._lastPick && this._lastPick[mi + '-' + qi];
+    if (!lastPick) return;
+    const { oi, isCorrect } = lastPick;
+    const m = HOMEWORK_DATA[dayIdx].modules[mi];
+    const q = m.questions[qi];
+    const followEl = document.getElementById('qr-follow-' + mi + '-' + qi);
+    let html = '<div class="speak-record show" style="text-align:center">';
+    html += '<div class="speak-score" style="color:' + (score >= 60 ? 'var(--success)' : 'var(--danger)') + '">' + score + '分</div>';
+    if (score >= 60) html += '<div class="badge badge-success mt-8">跟读通过</div>';
+    else html += '<div class="badge badge-danger mt-8">分数偏低，再读一次吧（需 ≥ 60 分）</div>';
+    html += '<div style="display:flex;gap:8px;justify-content:center;margin-top:12px">';
+    html += '<button class="speak-btn" onclick="App._startQrRead(' + mi + ',' + qi + ',' + dayIdx + ')">🎤 重新跟读</button>';
+    html += '</div></div>';
+    followEl.innerHTML = html;
+    if (score >= 60) {
+      this._recordAnswer(dayIdx, mi, qi, oi, isCorrect);
+      const opts = document.querySelectorAll('#q-' + mi + '-' + qi + ' .q-option');
+      if (isCorrect) {
+        opts.forEach((el, i) => {
+          el.classList.remove('wrong', 'selected');
+          if (i === q.answer) el.classList.add('correct');
+          el.style.pointerEvents = 'none';
+        });
+        const ansEl = document.getElementById('ans-' + mi + '-' + qi);
+        if (ansEl) { ansEl.style.display = 'block'; ansEl.innerHTML = '✅ 正确！'; }
+        this._playCorrectSound();
+      } else {
+        opts.forEach((el, i) => {
+          el.classList.remove('correct');
+          if (i === oi) {
+            el.classList.add('wrong');
+            el.style.pointerEvents = 'none';
+          } else {
+            el.style.pointerEvents = 'auto';
+          }
+        });
+        const ansEl = document.getElementById('ans-' + mi + '-' + qi);
+        if (ansEl) {
+          ansEl.style.display = 'block';
+          ansEl.innerHTML = '❌ 当前选项错误。跟读通过，请在 ABCD 上点选正确答案。';
+        }
+        this._playWrongSound();
+        const expEl = document.getElementById('exp-' + mi + '-' + qi);
+        if (expEl) expEl.classList.add('show');
+      }
     } else {
       this._playWrongSound();
-      document.getElementById('exp-' + mi + '-' + qi).classList.add('show');
-      document.getElementById('correct-area-' + mi + '-' + qi).style.display = 'block';
-    }
-    // Auto-speak the next question after a short delay.
-    // Only in the teacher's scrolling list, where the next question is already
-    // on screen. In the student's one-question stage the next question is not
-    // shown yet, so reading it here would speak ahead of the transition —
-    // the stage speaks the question itself when it mounts.
-    if (this.isTeacher() && qi < m.questions.length - 1) {
-      var self = this;
-      setTimeout(function() {
-        self._autoSpeakQuestion(m, mi, qi + 1, dayIdx);
-      }, isCorrect ? 1500 : 2500);
     }
   },
 
