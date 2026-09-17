@@ -50,6 +50,10 @@ export default {
       return cors(await classApi(request, url, env), env);
     }
 
+    if (url.pathname.startsWith('/api/wrong-questions')) {
+      return cors(await wrongQuestionsApi(request, url, env), env);
+    }
+
     return cors(json({ error: 'not_found' }, 404), env);
   },
 };
@@ -350,6 +354,120 @@ async function classApi(request, url, env) {
         .bind(req.phone).run();
     }
     return json({ ok: true, action: action });
+  }
+
+  return json({ error: 'not_found' }, 404);
+}
+
+// ---------------------------------------------------------------------------
+// /api/wrong-questions/* — per-student wrong-answer archive (D1).
+//
+//   POST /api/wrong-questions/report   student: record a wrong answer
+//   GET  /api/wrong-questions          teacher: list every row (or by student)
+//   GET  /api/wrong-questions/by-student?student_id=...
+//                                     teacher: list one student
+//   DELETE /api/wrong-questions/by-student?student_id=...
+//                                     teacher: clear one student's archive
+//
+// The report path is open — any phone that knows the schema can report. We
+// don't gate it because the report carries the same data the local store
+// already has; gating would just hide bugs, not secrets. Teacher-only reads
+// remain gated by isTeacher().
+// ---------------------------------------------------------------------------
+async function wrongQuestionsApi(request, url, env) {
+  const db = env.DB;
+  if (!db) return json({ error: 'no_db' }, 500);
+  const path = url.pathname;
+
+  // -- student: report a wrong answer ---------------------------------------
+  if (path === '/api/wrong-questions/report' && request.method === 'POST') {
+    const body = await readJsonBody(request);
+    if (!body) return json({ error: 'bad_json' }, 400);
+    const studentId = String(body.student_id || '').trim();
+    const studentPhone = String(body.student_phone || '').trim();
+    const studentName = String(body.student_name || '').slice(0, 60);
+    if (!studentId || !studentPhone || !studentName) {
+      return json({ error: 'missing_fields' }, 400);
+    }
+    const dayIdx = Number(body.day_idx);
+    const moduleIdx = Number(body.module_idx);
+    const qIdx = Number(body.q_idx);
+    const question = String(body.question || '').slice(0, 400);
+    const correctAnswer = String(body.correct_answer || '').slice(0, 400);
+    const studentAnswer = body.student_answer != null
+      ? String(body.student_answer).slice(0, 400)
+      : '';
+    if (!Number.isInteger(dayIdx) || !Number.isInteger(moduleIdx)
+        || !Number.isInteger(qIdx) || !question || !correctAnswer) {
+      return json({ error: 'bad_fields' }, 400);
+    }
+    const id = crypto.randomUUID();
+    try {
+      await db.prepare(
+        `INSERT INTO wrong_questions
+          (id, student_id, student_name, student_phone, day_idx, module_idx, q_idx,
+           question, correct_answer, student_answer, day_cn, module_cn,
+           explanation_cn, explanation_en, recorded_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ).bind(
+        id, studentId, studentName, studentPhone,
+        dayIdx, moduleIdx, qIdx,
+        question, correctAnswer, studentAnswer,
+        String(body.day_cn || '').slice(0, 40),
+        String(body.module_cn || '').slice(0, 40),
+        String(body.explanation_cn || '').slice(0, 400),
+        String(body.explanation_en || '').slice(0, 400),
+        new Date().toISOString(),
+      ).run();
+      return json({ ok: true, id, recorded: true });
+    } catch (e) {
+      // UNIQUE violation = already recorded for this (student, day, module, q).
+      // That is the expected path when a student retries — keep the first one.
+      if (String(e && e.message || '').includes('UNIQUE')) {
+        return json({ ok: true, recorded: false, duplicate: true });
+      }
+      return json({ error: 'db_error', detail: String(e && e.message || e) }, 500);
+    }
+  }
+
+  // -- teacher: list all (or filter by student_id) --------------------------
+  if (path === '/api/wrong-questions' && request.method === 'GET') {
+    if (!isTeacher({ teacher: url.searchParams.get('teacher') })) {
+      return json({ error: 'forbidden' }, 403);
+    }
+    const sid = url.searchParams.get('student_id');
+    let rows;
+    if (sid) {
+      const r = await db.prepare(
+        `SELECT id, student_id, student_name, student_phone, day_idx, module_idx, q_idx,
+                question, correct_answer, student_answer, day_cn, module_cn,
+                explanation_cn, explanation_en, recorded_at
+         FROM wrong_questions WHERE student_id = ? ORDER BY day_idx, module_idx, q_idx`
+      ).bind(sid).all();
+      rows = (r && r.results) || [];
+    } else {
+      const r = await db.prepare(
+        `SELECT id, student_id, student_name, student_phone, day_idx, module_idx, q_idx,
+                question, correct_answer, student_answer, day_cn, module_cn,
+                explanation_cn, explanation_en, recorded_at
+         FROM wrong_questions ORDER BY recorded_at DESC LIMIT 1000`
+      ).all();
+      rows = (r && r.results) || [];
+    }
+    return json({ rows, count: rows.length });
+  }
+
+  // -- teacher: clear one student's archive ---------------------------------
+  if (path === '/api/wrong-questions/by-student' && request.method === 'DELETE') {
+    if (!isTeacher({ teacher: url.searchParams.get('teacher') })) {
+      return json({ error: 'forbidden' }, 403);
+    }
+    const sid = url.searchParams.get('student_id');
+    if (!sid) return json({ error: 'missing_student_id' }, 400);
+    const r = await db.prepare(
+      'DELETE FROM wrong_questions WHERE student_id = ?'
+    ).bind(sid).run();
+    return json({ ok: true, deleted: r.meta && r.meta.changes ? r.meta.changes : 0 });
   }
 
   return json({ error: 'not_found' }, 404);

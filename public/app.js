@@ -212,6 +212,21 @@ const App = {
         ? Api.saveCheckin(sid, dayIdx, this._countDayQuestions(dayIdx))
         : null)
       .catch(e => console.warn('Record answer failed:', e));
+
+    // Wrong answers also get pushed to the D1 archive so the teacher's
+    // "错题本 / 错题卷打印" actually has data to work with — without this
+    // the teacher only ever sees rows they locally tap on their own device.
+    // Same fire-and-forget rule: a failed report must not punish the kid.
+    if (!correct) {
+      const payload = this._buildWrongQuestionPayload(dayIdx, moduleIdx, qIdx, value);
+      if (payload) {
+        const me = this.state.students.find(s => s.phone === this.state.phone);
+        const sName = me ? me.name : (this.state.name || '');
+        Api.reportWrongQuestion(sid, sName, this.state.phone, payload)
+          .catch(e => console.warn('Report wrong-question failed:', e));
+      }
+    }
+
     // Speaking questions must NOT auto-advance: picking the right option is
     // only the gate into the read-along, which is the actual exercise. That
     // flow advances itself when the child finishes reading.
@@ -224,6 +239,102 @@ const App = {
     // child can read the explanation and move on when they are ready.
     if (correct) this._scheduleAdvance(1300);
     else clearTimeout(this._advanceTimer);
+  },
+
+  // Pull the question text + correct answer out of HOMEWORK_DATA for the
+  // D1 archive. Returns null if the lookup fails (unknown shape) — the
+  // caller skips the report in that case so we don't write garbage rows.
+  _buildWrongQuestionPayload(dayIdx, moduleIdx, qIdx, studentValue) {
+    const day = HOMEWORK_DATA[dayIdx];
+    if (!day) return null;
+    const m = (day.modules || [])[moduleIdx];
+    if (!m) return null;
+    let question = '', correctAnswer = '';
+    let explanation_cn = m.explanation_cn || '';
+    let explanation_en = m.explanation_en || '';
+    if (Array.isArray(m.questions) && m.questions[qIdx]) {
+      const q = m.questions[qIdx];
+      question = q.question || q.sentence || q.text || q.id || '';
+      if (Array.isArray(q.options)) {
+        const idx = (typeof q.answer === 'number') ? q.answer : -1;
+        correctAnswer = idx >= 0 ? (q.options[idx] || '') : '';
+      } else {
+        correctAnswer = (q.answer != null) ? String(q.answer) : '';
+      }
+      if (q.explanation_cn) explanation_cn = q.explanation_cn;
+      if (q.explanation_en) explanation_en = q.explanation_en;
+    } else if (Array.isArray(m.blanks) && m.blanks[qIdx]) {
+      const b = m.blanks[qIdx];
+      question = (day.day_cn || '') + ' · ' + (m.name_cn || '写作') + ' · 填空' + b.id;
+      correctAnswer = b.answer || '';
+    } else {
+      return null;
+    }
+    return {
+      day_idx: dayIdx,
+      module_idx: moduleIdx,
+      q_idx: qIdx,
+      day_cn: day.day_cn || '',
+      module_cn: m.name_cn || '',
+      question: question,
+      correct_answer: correctAnswer,
+      student_answer: studentValue != null ? String(studentValue) : '',
+      explanation_cn: explanation_cn,
+      explanation_en: explanation_en,
+    };
+  },
+
+  // Pull this kid's wrong-answer record from the local store. Falls back to
+  // the cloud cache (loaded by _loadCloudWrongCache) when the local row is
+  // missing — the typical case is a kid who answered on phone A and the
+  // teacher is checking on phone B.
+  _lookupWrongAnswer(studentId, dayIdx, moduleIdx, qIdx) {
+    const key = Api.answerKey(studentId, dayIdx, moduleIdx, qIdx);
+    const local = this.state.answers[key];
+    if (local) return local;
+    const cloud = (this.state.cloudWrongCache || {})[key];
+    if (!cloud) return null;
+    // Shape the cloud row into the same record shape local answers use so the
+    // renderers don't have to care where the data came from.
+    return {
+      id: cloud.id, studentId: cloud.student_id,
+      dayIdx: cloud.day_idx, moduleIdx: cloud.module_idx, qIdx: cloud.q_idx,
+      value: cloud.student_answer, correct: false,
+      at: cloud.recorded_at, fromCloud: true,
+    };
+  },
+
+  // Fetch every cloud wrong-question once, key by (student,day,module,q).
+  // Cached on state so repeated renders (e.g. clicking each student) don't
+  // refetch. Reload is triggered manually after the teacher clears rows.
+  async _loadCloudWrongCache() {
+    if (!this.isTeacher()) return;
+    if (this.state._cloudWrongLoaded) return;
+    if (this._cloudWrongLoading) {
+      // Another render is already loading; wait for it.
+      await this._cloudWrongLoading;
+      return;
+    }
+    const teacher = this.state.phone || '';
+    this._cloudWrongLoading = Api.getAllWrongQuestions(teacher).then(rows => {
+      const cache = {};
+      rows.forEach(r => {
+        const key = Api.answerKey(r.student_id, r.day_idx, r.module_idx, r.q_idx);
+        // If the kid answered wrong more than once on the same question, the
+        // server keeps only the first; but the latest fetch might race with
+        // a fresh report, so prefer the newer timestamp when both exist.
+        if (!cache[key] || (cache[key].recorded_at < r.recorded_at)) {
+          cache[key] = r;
+        }
+      });
+      this.state.cloudWrongCache = cache;
+      this.state._cloudWrongLoaded = true;
+      this._cloudWrongLoading = null;
+    }).catch(e => {
+      console.warn('Load cloud wrong cache failed:', e);
+      this._cloudWrongLoading = null;
+    });
+    await this._cloudWrongLoading;
   },
 
   isWeChat() {
@@ -1501,7 +1612,7 @@ const App = {
     this.renderContent();
   },
 
-  renderContent() {
+  async renderContent() {
     const area = document.getElementById('content-area');
     const isTeacher = this.isTeacher();
     const tab = this.state.currentTab;
@@ -1519,8 +1630,8 @@ const App = {
         case 'edit': area.innerHTML = this.renderEdit(); break;
         case 'checkin': area.innerHTML = this.renderCheckin(); break;
         case 'scores': area.innerHTML = this.renderScores(); break;
-        case 'errors': area.innerHTML = this.renderErrorBook(); break;
-        case 'print': area.innerHTML = this.renderPrint(); break;
+        case 'errors': area.innerHTML = await this.renderErrorBook(); break;
+        case 'print': area.innerHTML = await this.renderPrint(); break;
         case 'speaking': area.innerHTML = this.renderSpeakingRecords(); break;
         case 'students': area.innerHTML = this.renderStudents(); break;
         case 'classmgmt': area.innerHTML = this.renderClassMgmt(); break;
@@ -1892,8 +2003,10 @@ const App = {
   },
 
   // ===== Teacher: Error Book =====
-  renderErrorBook() {
+  async renderErrorBook() {
     let html = '<h2 style="color:var(--primary-dark);margin-bottom:12px">❌ 班级错题本</h2>';
+    html += '<p class="text-sub mb-12">学生答错的题会上传到云端，老师可在此查看全班错题汇总。</p>';
+    await this._loadCloudWrongCache();
     // Real wrong answers. This used to invent them: it took any student whose
     // day-level correctRate was under 80 and flagged a random half of the
     // questions as wrong, so the same page showed different errors on reload.
@@ -1904,7 +2017,7 @@ const App = {
           m.questions.forEach((q, qi) => {
             const wrongStudents = [];
             this.state.students.forEach(s => {
-              const a = this.state.answers[Api.answerKey(s.id, di, mi, qi)];
+              const a = this._lookupWrongAnswer(s.id, di, mi, qi);
               if (a && !a.correct) wrongStudents.push(s.name);
             });
             if (wrongStudents.length > 0) {
@@ -1940,16 +2053,19 @@ const App = {
     return html;
   },
 
-  genErrorSheet(sid) {
+  async genErrorSheet(sid) {
     const student = this.state.students.find(s => s.id === sid);
     if (!student) return;
+    await this._loadCloudWrongCache();
     // Collect this student's errors — the questions they actually got wrong.
+    // Local-first, then cloud — the local row carries `value` and full record,
+    // the cloud fallback is only needed when the kid answered on another device.
     const errors = [];
     HOMEWORK_DATA.forEach((day, di) => {
       day.modules.forEach((m, mi) => {
         if (m.questions) {
           m.questions.forEach((q, qi) => {
-            const a = this.state.answers[Api.answerKey(student.id, di, mi, qi)];
+            const a = this._lookupWrongAnswer(student.id, di, mi, qi);
             if (a && !a.correct) {
               errors.push({ day: day.day_cn, module: m.name_cn, q: q, type: m.type });
             }

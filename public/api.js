@@ -657,6 +657,64 @@ const Api = {
     } catch (e) { console.warn('classResolveJoinRequest failed:', e); return null; }
   },
 
+  // -- wrong-question archive (D1) -----------------------------------------
+  // Student fires this from saveAnswer when correct=false. Best-effort: a
+  // failed report does not block local storage, so the kid still gets
+  // immediate feedback. The duplicate path (UNIQUE violation) is the
+  // expected outcome when a student retries — keep the first record.
+  async reportWrongQuestion(studentId, studentName, phone, payload) {
+    try {
+      const res = await fetch(this._classUrl('/api/wrong-questions/report'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(Object.assign({
+          student_id: studentId,
+          student_name: studentName,
+          student_phone: phone,
+        }, payload || {})),
+      });
+      if (!res.ok) return null;
+      return await res.json();
+    } catch (e) { console.warn('reportWrongQuestion failed:', e); return null; }
+  },
+
+  // Teacher: list every row for one student. Returns [] on any failure.
+  async getStudentWrongQuestions(teacherPhone, studentId) {
+    try {
+      const res = await fetch(this._classUrl(
+        '/api/wrong-questions?teacher=' + encodeURIComponent(teacherPhone) +
+        '&student_id=' + encodeURIComponent(studentId)
+      ));
+      if (!res.ok) return [];
+      const data = await res.json();
+      return (data && Array.isArray(data.rows)) ? data.rows : [];
+    } catch (e) { console.warn('getStudentWrongQuestions failed:', e); return []; }
+  },
+
+  // Teacher: full archive (most recent first, capped server-side at 1000).
+  async getAllWrongQuestions(teacherPhone) {
+    try {
+      const res = await fetch(this._classUrl(
+        '/api/wrong-questions?teacher=' + encodeURIComponent(teacherPhone)
+      ));
+      if (!res.ok) return [];
+      const data = await res.json();
+      return (data && Array.isArray(data.rows)) ? data.rows : [];
+    } catch (e) { console.warn('getAllWrongQuestions failed:', e); return []; }
+  },
+
+  // Teacher: wipe one student's archive. { deleted } or null on failure.
+  async clearStudentWrongQuestions(teacherPhone, studentId) {
+    try {
+      const res = await fetch(this._classUrl(
+        '/api/wrong-questions/by-student?teacher=' + encodeURIComponent(teacherPhone) +
+        '&student_id=' + encodeURIComponent(studentId)
+      ), { method: 'DELETE' });
+      if (!res.ok) return null;
+      return await res.json();
+    } catch (e) { console.warn('clearStudentWrongQuestions failed:', e); return null; }
+  },
+
   // -- speech recognition -------------------------------------------------
   // Posts 16kHz mono WAV to our own Worker, which calls Workers AI Whisper.
   // Deliberately NOT the browser's SpeechRecognition: that is Chrome-only and

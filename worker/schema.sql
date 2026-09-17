@@ -22,3 +22,30 @@ CREATE TABLE IF NOT EXISTS join_requests (
 
 CREATE INDEX IF NOT EXISTS idx_join_requests_phone ON join_requests(phone);
 CREATE INDEX IF NOT EXISTS idx_join_requests_status ON join_requests(status);
+
+-- Wrong-question archive: every wrong answer the student reports.
+-- One row per (student, day, module, question); ON CONFLICT keeps the first
+-- one, so a student who tries again later doesn't multiply the same row.
+-- Kept even after the student later answers correctly — the teacher may
+-- still want to see "this kid got it wrong on Aug 30".
+CREATE TABLE IF NOT EXISTS wrong_questions (
+  id             TEXT PRIMARY KEY,
+  student_id     TEXT NOT NULL,
+  student_name   TEXT NOT NULL,
+  student_phone  TEXT NOT NULL,
+  day_idx        INTEGER NOT NULL,
+  module_idx     INTEGER NOT NULL,
+  q_idx          INTEGER NOT NULL,
+  question       TEXT NOT NULL,
+  correct_answer TEXT NOT NULL,
+  student_answer TEXT,
+  day_cn         TEXT,
+  module_cn      TEXT,
+  explanation_cn TEXT,
+  explanation_en TEXT,
+  recorded_at    TEXT NOT NULL,
+  UNIQUE(student_id, day_idx, module_idx, q_idx)
+);
+
+CREATE INDEX IF NOT EXISTS idx_wq_student    ON wrong_questions(student_id);
+CREATE INDEX IF NOT EXISTS idx_wq_day_module ON wrong_questions(day_idx, module_idx);
