@@ -509,7 +509,7 @@ const App = {
     // photo for a child.
     const headerPhoto = document.getElementById('header-photo');
     if (headerPhoto) {
-      headerPhoto.src = (this.isTeacher() ? 'photo.jpeg' : 'students.jpeg') + '?v=51';
+      headerPhoto.src = (this.isTeacher() ? 'photo.jpeg' : 'students.jpeg') + '?v=52';
       headerPhoto.alt = this.isTeacher() ? 'Amy老师' : '同学';
     }
     // Update class badge in header
@@ -1122,6 +1122,10 @@ const App = {
         this.fetchJoinRequests();
       }
 
+      // Teacher: detect students that just became pending (new registration
+      // or re-request to join) and raise an instant clickable alert.
+      if (this.isTeacher()) this._checkNewPendingStudents();
+
       // Teacher: re-render if on a relevant tab
       if (this.isTeacher() && (this.state.currentTab === 'students' || this.state.currentTab === 'classmgmt' || this.state.currentTab === 'checkin')) {
         this.renderContent();
@@ -1129,16 +1133,152 @@ const App = {
     } catch(e) { console.warn('Sync from cloud error:', e); }
   },
 
+  // ===== Teacher: instant alert when a student requests to join =====
+  // Phones already alerted about in this session, so polling doesn't
+  // re-notify for the same student every 15 seconds.
+  _alertedPendingPhones: null,
+
+  _currentPendingStudents() {
+    return (this.state.students || []).filter(s => !s.approved || !s.class);
+  },
+
+  // Called after every cloud sync on the teacher side. The first call after
+  // login only records the baseline (no alarm for students that were already
+  // pending); from then on, every newly pending student triggers an alert.
+  _checkNewPendingStudents() {
+    if (!this.isTeacher()) return;
+    const pending = this._currentPendingStudents();
+    if (!this._alertedPendingPhones) {
+      this._alertedPendingPhones = new Set(pending.map(s => s.phone));
+    } else {
+      const fresh = pending.filter(s => !this._alertedPendingPhones.has(s.phone));
+      if (fresh.length > 0) {
+        fresh.forEach(s => this._alertedPendingPhones.add(s.phone));
+        this._alertNewStudents(fresh);
+      }
+    }
+    this._updatePendingBadge();
+  },
+
+  _alertNewStudents(list) {
+    // Ding + vibrate so the teacher notices even with the phone in hand
+    this._playAlertSound();
+    if (navigator.vibrate) { try { navigator.vibrate([120, 80, 120]); } catch(e) {} }
+    const names = list.map(s => s.name).join('、');
+    const label = list.length === 1
+      ? '学生「' + names + '」申请加入'
+      : list.length + ' 名学生申请加入（' + names + '）';
+    this.showAlertBanner('🔔 ' + label + '，等待分配班级', '立即处理 →', function() {
+      App.gotoPendingStudents();
+    });
+  },
+
+  // Prominent clickable banner at the top of the screen. Unlike showToast()
+  // this one has a real tap target: one tap jumps straight into management.
+  _alertBannerTimer: null,
+  showAlertBanner(title, actionText, onAction) {
+    var b = document.getElementById('student-alert-banner');
+    if (!b) {
+      b = document.createElement('div');
+      b.id = 'student-alert-banner';
+      b.className = 'alert-banner';
+      document.body.appendChild(b);
+    }
+    b.innerHTML = '<div class="ab-main">' + title + '</div>'
+      + '<button class="ab-action">' + (actionText || '立即处理') + '</button>'
+      + '<button class="ab-close" aria-label="关闭">&times;</button>';
+    b.querySelector('.ab-action').onclick = function() {
+      App._hideAlertBanner();
+      if (onAction) onAction();
+    };
+    b.querySelector('.ab-close').onclick = function() { App._hideAlertBanner(); };
+    b.classList.add('show');
+    if (this._alertBannerTimer) clearTimeout(this._alertBannerTimer);
+    // Long enough to be seen; after it fades the red tab badge remains.
+    this._alertBannerTimer = setTimeout(function() { App._hideAlertBanner(); }, 15000);
+  },
+
+  _hideAlertBanner() {
+    var b = document.getElementById('student-alert-banner');
+    if (b) b.classList.remove('show');
+    if (this._alertBannerTimer) { clearTimeout(this._alertBannerTimer); this._alertBannerTimer = null; }
+  },
+
+  // Short two-tone "ding" via WebAudio — no audio file needed.
+  _playAlertSound() {
+    try {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      var ctx = this._alertAudioCtx || new AC();
+      this._alertAudioCtx = ctx;
+      if (ctx.state === 'suspended') ctx.resume();
+      var now = ctx.currentTime;
+      [880, 1174.66].forEach(function(freq, i) {
+        var osc = ctx.createOscillator();
+        var gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.0001, now + i * 0.18);
+        gain.gain.exponentialRampToValueAtTime(0.22, now + i * 0.18 + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.18 + 0.16);
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.start(now + i * 0.18); osc.stop(now + i * 0.18 + 0.18);
+      });
+    } catch(e) { /* audio blocked before first user gesture — badge still shows */ }
+  },
+
+  // Red count badge on the 学生管理 tab while students are waiting
+  _updatePendingBadge() {
+    var bar = document.getElementById('tab-bar');
+    if (!bar || !this.isTeacher()) return;
+    var n = this._currentPendingStudents().length;
+    var btn = null;
+    bar.querySelectorAll('button').forEach(function(b) {
+      if (b.getAttribute('onclick') === "App.switchTab('students')") btn = b;
+    });
+    if (!btn) return;
+    var old = btn.querySelector('.tab-badge');
+    if (n > 0) {
+      if (!old) {
+        var badge = document.createElement('span');
+        badge.className = 'tab-badge';
+        btn.appendChild(badge);
+      }
+      btn.querySelector('.tab-badge').textContent = n;
+    } else if (old) {
+      old.remove();
+    }
+  },
+
+  // One tap on the alert banner lands here: open student management and put
+  // the newest pending student right in front of the teacher — no scrolling
+  // around trying to find them at the bottom of a long list.
+  async gotoPendingStudents() {
+    await this.switchTab('students');
+    setTimeout(function() {
+      var card = document.getElementById('pending-card-top');
+      if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        card.classList.add('flash');
+        setTimeout(function() { card.classList.remove('flash'); }, 3200);
+      }
+    }, 100);
+  },
+
   // Auto-polling - keeps data fresh on BOTH teacher and student devices.
-  // Teacher: picks up new student registrations (every 30s).
+  // Teacher: picks up new student registrations (every 15s) so a join
+  //          request raises the alert banner as quickly as possible.
   // Student: picks up class assignments made by the teacher (every 15s)
   //          so the class badge updates promptly after the teacher
   //          assigns a class.
   startAutoSync() {
     if (this._syncInterval) clearInterval(this._syncInterval);
-    var interval = this.isTeacher() ? 30000 : 15000;
-    // First poll right away (a teacher who just logged in shouldn't wait
-    // 30s to see pending re-join applications), then on the timer.
+    // 15s for both roles: the teacher side needs to spot a new join request
+    // fast enough to raise the alert banner, so the old 30s teacher interval
+    // was dropped.
+    var interval = 15000;
+    // First poll right away (a teacher who just logged in shouldn't wait a
+    // whole tick to see a pending re-join application), then on the timer.
     this.syncFromCloud();
     this._syncInterval = setInterval(() => {
       this.syncFromCloud();
@@ -1304,6 +1444,9 @@ const App = {
     }
     bar.innerHTML = tabs.map(t => `<button class="${t.id===this.state.currentTab?'active':''}" onclick="App.switchTab('${t.id}')"><svg class="icon"><use href="#${t.icon}"/></svg>${t.name}</button>`).join('');
     this._setupTabScroll(bar);
+    // Keep the pending-student red badge alive — renderTabs rebuilds the
+    // buttons' innerHTML, which would otherwise wipe it.
+    if (isTeacher) this._updatePendingBadge();
   },
 
   // The tab strip scrolls horizontally when it overflows. Touch can swipe it,
@@ -1364,6 +1507,10 @@ const App = {
     const tab = this.state.currentTab;
     // Only the homework stage locks the page; every other view scrolls.
     document.body.classList.toggle('stage-mode', !isTeacher && tab === 'today');
+
+    // Assign/delete/update all end with renderContent — refresh the
+    // pending badge here so the count always matches reality.
+    if (isTeacher) this._updatePendingBadge();
 
     if (isTeacher) {
       switch(tab) {
@@ -1955,7 +2102,11 @@ const App = {
     html += '<div class="flex-between mb-16">';
     html += '<div class="stat-row" style="flex:1">';
     html += '<div class="stat-box"><div class="num">' + this.state.students.length + '</div><div class="label">总注册</div></div>';
-    const pending = this.state.students.filter(s => !s.approved || !s.class);
+    // Newest first — the student who just requested to join appears at the
+    // very top instead of at the bottom of the list.
+    const pending = this.state.students.filter(s => !s.approved || !s.class)
+      .slice()
+      .sort((a, b) => new Date(b.registeredAt || 0) - new Date(a.registeredAt || 0));
     html += '<div class="stat-box"><div class="num" style="color:var(--warning)">' + pending.length + '</div><div class="label">待分配</div></div>';
     const approved = this.state.students.filter(s => s.approved && s.class);
     html += '<div class="stat-box"><div class="num" style="color:var(--success)">' + approved.length + '</div><div class="label">已分配</div></div>';
@@ -1965,7 +2116,7 @@ const App = {
     html += '</div>';
 
     html += '<div class="card mb-16" style="background:var(--success-light);border:1px solid var(--success)">';
-    html += '<div class="fs-12" style="color:var(--success)">✅ 云端同步：' + this._syncStatusText() + '（每30秒自动刷新，老师手机/电脑任意一端操作，另一端自动更新）</div>';
+    html += '<div class="fs-12" style="color:var(--success)">✅ 云端同步：' + this._syncStatusText() + '（每15秒自动刷新，学生申请加入会立刻弹出提醒）</div>';
     html += '</div>';
 
     // Re-join applications from removed students
@@ -1992,8 +2143,8 @@ const App = {
     if (pending.length > 0) {
       html += '<h3 style="color:var(--warning);margin-bottom:8px">⏳ 待分配学生（' + pending.length + '人）</h3>';
       html += '<p class="text-sub fs-12 mb-8">这些学生已注册，等待你分配班级</p>';
-      pending.forEach(s => {
-        html += '<div class="assign-card">';
+      pending.forEach((s, i) => {
+        html += '<div class="assign-card"' + (i === 0 ? ' id="pending-card-top"' : '') + '>';
         html += '<div class="ac-info">';
         html += '<div><span class="ac-name">' + s.name + '</span> <span class="ac-phone">' + (s.phone||'-') + '</span></div>';
         html += '<span class="badge badge-pending">待分配</span>';
@@ -4720,7 +4871,7 @@ const App = {
     this.showModal(`
       <div class="modal-header"><div class="modal-title">🔗 邀请加入班级</div><button class="modal-close" onclick="App.closeModal()">&times;</button></div>
       <div class="modal-body invite-content">
-        <div class="qr-placeholder"><img src="photo.jpeg?v=51" alt="Amy老师英语打卡" style="width:100%;height:100%;object-fit:cover;border-radius:8px"></div>
+        <div class="qr-placeholder"><img src="photo.jpeg?v=52" alt="Amy老师英语打卡" style="width:100%;height:100%;object-fit:cover;border-radius:8px"></div>
         <p class="text-sub fs-12">扫码或分享链接加入</p>
         <div class="invite-link">${link}</div>
         <button class="btn btn-primary" onclick="navigator.clipboard.writeText('${link}');alert('链接已复制')">📋 复制链接</button>
