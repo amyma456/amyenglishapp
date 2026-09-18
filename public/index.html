@@ -306,6 +306,9 @@ body.stage-mode .content-area{padding-block:0}
 .q-item:last-child{border-bottom:none}
 .q-num{font-size:12px;color:var(--primary);font-weight:600;margin-bottom:4px}
 .q-text{font-size:14px;margin-bottom:8px}
+.q-text .q-instr{font-size:12px;color:var(--text-sub);margin-bottom:4px}
+.q-text .q-main{font-size:15px;line-height:1.5;margin-bottom:4px}
+.q-text .q-hint{font-size:12px;color:#E67E22;margin-top:2px}
 .q-options{display:flex;flex-direction:column;gap:6px}
 .q-option{padding:8px 12px;border:1.5px solid #FFE0CC;border-radius:var(--radius-sm);font-size:13px;cursor:pointer}
 .q-option:hover{background:var(--primary-light)}
@@ -672,7 +675,7 @@ body.stage-mode .content-area{padding-block:0}
 <!-- Login Page -->
 <div id="login-page" class="login-page">
   <div class="login-box login-box-compact">
-    <div class="login-photo" style="margin-bottom:4px"><img src="photo.jpeg?v=58" alt="Amy老师英语打卡" width="56" height="56"></div>
+    <div class="login-photo" style="margin-bottom:4px"><img src="photo.jpeg?v=62" alt="Amy老师英语打卡" width="56" height="56"></div>
     <h2 style="font-size:18px;margin-bottom:2px">Amy老师英语打卡</h2>
     <p class="subtitle" style="font-size:12px;margin-bottom:14px">登录打卡，每天进步一点点</p>
     <div class="form-group" style="margin-bottom:10px">
@@ -698,7 +701,7 @@ body.stage-mode .content-area{padding-block:0}
 <!-- Waiting Page (for unapproved students) -->
 <div id="waiting-page" class="login-page hidden">
   <div class="login-box">
-    <div class="login-photo"><img src="photo.jpeg?v=58" alt="Amy老师英语打卡" width="56" height="56"></div>
+    <div class="login-photo"><img src="photo.jpeg?v=62" alt="Amy老师英语打卡" width="56" height="56"></div>
     <h2>等待老师审核</h2>
     <p class="subtitle">你的注册信息已提交</p>
     <div class="card" style="background:var(--warning-light);text-align:center;padding:20px;margin:16px 0">
@@ -714,7 +717,7 @@ body.stage-mode .content-area{padding-block:0}
 <!-- Removed Page (teacher removed this student; re-join needs approval) -->
 <div id="removed-page" class="login-page hidden">
   <div class="login-box">
-    <div class="login-photo"><img src="photo.jpeg?v=58" alt="Amy老师英语打卡" width="56" height="56"></div>
+    <div class="login-photo"><img src="photo.jpeg?v=62" alt="Amy老师英语打卡" width="56" height="56"></div>
     <h2>暂时无法进入</h2>
     <p class="subtitle">你已被移出班级</p>
     <div class="card" id="removed-card" style="background:var(--warning-light);text-align:center;padding:20px;margin:16px 0"></div>
@@ -742,7 +745,7 @@ body.stage-mode .content-area{padding-block:0}
       <nav class="navbar">
         <div class="nav-tabs" id="tab-bar"></div>
         <div class="nav-user">
-          <img id="header-photo" class="photo" src="photo.jpeg?v=58" alt="">
+          <img id="header-photo" class="photo" src="photo.jpeg?v=62" alt="">
           <span id="header-name">Amy老师英语打卡</span>
           <span class="class-badge" id="class-badge"></span>
           <button class="icon-btn" id="invite-btn-header" onclick="App.showInvite()" title="邀请" aria-label="邀请"><svg class="icon"><use href="#i-link"/></svg></button>
@@ -784,33 +787,48 @@ body.stage-mode .content-area{padding-block:0}
   <div class="modal" id="modal-box"></div>
 </div>
 
-<script src="cloud.js?v=58"></script>
-<script src="data.js?v=58"></script>
+<script src="cloud.js?v=62"></script>
+<script src="data.js?v=62"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
-<script src="recorder.js?v=58"></script>
-<script src="api.js?v=58"></script>
-<script src="app.js?v=58"></script>
+<script src="recorder.js?v=62"></script>
+<script src="api.js?v=62"></script>
+<script src="app.js?v=62"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {
+  // 新 SW 接管时刷新一次，让新代码立刻生效。必须在 register() 之外注册，
+  // 写在 .then() 里会错过事件。首装时（接管前没有 controller）不刷。
+  var __swHadController = !!navigator.serviceWorker.controller;
+  var __swReloaded = false;
+  navigator.serviceWorker.addEventListener('controllerchange', function() {
+    if (__swReloaded || !__swHadController) return;
+    __swReloaded = true;
+    window.location.reload();
+  });
+  // 挂在后台的 PWA 永远不会再触发 load —— 不主动查更新，手机就会一直跑
+  // 旧代码，每次修复看起来都"没生效"。回前台 / 恢复网络时检查一次 sw.js，
+  // 配合 sw.js 里的 skipWaiting + clients.claim，新版本秒级接管。
+  function __swCheck() {
+    if (!navigator.serviceWorker.controller) return;
+    navigator.serviceWorker.getRegistration().then(function(reg) {
+      reg && reg.update && reg.update().catch(function() {});
+    }).catch(function() {});
+  }
+  document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'visible') __swCheck();
+  });
+  window.addEventListener('online', __swCheck);
   window.addEventListener('load', function() {
-    navigator.serviceWorker.register('sw.js').then(function(reg) {
+    navigator.serviceWorker.register('sw.js').then(function() {
       console.log('SW registered');
-      // Check for a new SW version every time the page loads
-      if (reg.update) { reg.update().catch(function(){}); }
-      // When a new SW takes control, reload ONCE so the fresh code is used
-      var reloaded = false;
-      navigator.serviceWorker.addEventListener('controllerchange', function() {
-        if (reloaded) return;
-        reloaded = true;
-        window.location.reload();
-      });
     }).catch(function(err) {
       console.warn('SW registration failed:', err);
     });
   });
 }
+</script>
 
+<script>
 // PWA install prompt
 var deferredPrompt = null;
 window.addEventListener('beforeinstallprompt', function(e) {

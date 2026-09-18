@@ -707,6 +707,60 @@ const App = {
     return s;
   },
 
+  // 把题干拆成「指令 / 题目本体 / 中文提示」三段。
+  // KET/PET 题干里的英文指令（"Choose the correct answer."、"Complete the
+  // second sentence..."）是写给做题人的操作说明，不是题目内容 —— 朗读要
+  // 跳过它，显示时也单独占一行，让英文题目另起一行。
+  //
+  // 指令的判定要避开正文：像 "Look! The children ___ (play) ..." 里的
+  // "Look!" 是句子本身的一部分。所以指令必须至少 3 个词、且以句号收尾，
+  // "Look!" 这种一个词加感叹号的不会命中。
+  _stemParts(text) {
+    var s = String(text === null || text === undefined ? '' : text).trim();
+    if (!s) return { instr: '', rest: '', hint: '' };
+    // [填入正确形式] 这类中文提示：拎出来，显示时单独放最后一行
+    var hint = '';
+    s = s.replace(/\[[^\]]*\]/g, function(mm) {
+      if (/[\u4e00-\u9fff]/.test(mm)) { hint = (hint ? hint + ' ' : '') + mm.trim(); return ' '; }
+      return mm;                    // 方括号里是英文的（罕见）留在正文
+    });
+    var instr = '';
+    var rest = s;
+    var prev = null;
+    while (prev !== rest) {
+      prev = rest;
+      // 前缀里的考试标签：KET: / PET：/ KET/PET.
+      rest = rest.replace(/^\s*(?:ket\s*\/\s*pet|ket|pet|fce)\s*[:：.、]?\s*/i, function(mm) {
+        instr += (instr ? ' ' : '') + mm.trim(); return ' ';
+      });
+      // 开头的英文指令句：动词开头、一直到第一个句号/冒号为止，后面的
+      // 破折号一并带走。注意两点：
+      //  1) 词原子必须排除终止符（[^.。:：!?？！\s]+）——用 \S+ 会贪婪地
+      //     把句号吃进词里，惰性量符就失效了，整句会被当成指令吞掉（实测
+      //     复现过）；! 和 ? 也一并排除，否则 "Look! The children ..."
+      //     这种句子本体会被当成指令。
+      //  2) 要求至少 3 个词，进一步避开感叹开头。
+      rest = rest.replace(/^\s*(?:please\s+)?(?:choose|select|complete|fill|listen|circle|match|tick|write|read|look|answer|put|pick)\b[^.。:：!?？！]*[.。:：]\s*(?:[—–-]\s*)?/i, function(mm) {
+        if ((mm.match(/[^.\s]+/g) || []).length < 3) return mm;   // 太短，不是指令句
+        instr += (instr ? ' ' : '') + mm.trim(); return ' ';
+      });
+    }
+    return { instr: instr.trim(), rest: rest.trim(), hint: hint.trim() };
+  },
+
+  // 学生界面的题干排版：指令一行（灰色小字）、英文题目另起一行（正文）、
+  // 中文提示再一行（橙色小字）。中文题干没有指令，原样一行。
+  _stemHtml(text) {
+    if (!text) return '';
+    var p = this._stemParts(text);
+    if (!p.instr && !p.hint) return String(text);   // 没什么可拆的，保持原样
+    var html = '';
+    if (p.instr) html += '<div class="q-instr">' + p.instr + '</div>';
+    if (p.rest)  html += '<div class="q-main">' + p.rest + '</div>';
+    if (p.hint)  html += '<div class="q-hint">' + p.hint + '</div>';
+    return html;
+  },
+
   // Inline silent WAV (~0.1s) — used to unlock the audio element inside a
   // user gesture WITHOUT any network request. Works offline, instant, and
   // can't be blocked by third-party TTS endpoints.
@@ -4814,7 +4868,9 @@ const App = {
   _questionSpeechText(m, q) {
     if (!q) return '';
     if (q.audio_text) return this._ttsText(q.audio_text);
-    var stem = this._ttsText(q.question);
+    // "KET: Choose the correct answer." 这类指令不读，只读题目本体
+    var parts = this._stemParts(q.question);
+    var stem = this._ttsText(parts.rest);
     // 至少要有两个英文单词才算"一句能读的题"，否则像 "1 blank" 这种
     // 空位编号读出来毫无意义。
     var words = stem.match(/[A-Za-z][A-Za-z'-]*/g) || [];
@@ -4847,7 +4903,7 @@ const App = {
       html += '<div class="auto-read-badge" id="arb-' + mi + '-' + qi + '"><svg class="icon icon-sm speaking-anim"><use href="#i-sound"/></svg> 正在朗读…</div>';
       html += '<div class="flex gap-8 mb-8"><button class="btn btn-outline btn-sm" onclick="App.replayQuestion(\'' + qId + '\',' + mi + ',' + qi + ',\'' + dayIdx + '\')"><svg class="icon icon-sm"><use href="#i-sound"/></svg> 重新听</button></div>';
     }
-    html += '<div class="q-text">' + q.question + '</div>';
+    html += '<div class="q-text">' + this._stemHtml(q.question) + '</div>';
     if (q.options) {
       // Options disabled until reading finishes
       html += '<div class="q-options" id="qo-' + mi + '-' + qi + '" style="opacity:0.4;pointer-events:none">';
@@ -5304,7 +5360,7 @@ const App = {
       explanation_en: 'Third person singular She + simple present tense → goes. Every day is a present tense marker.'
     };
     let html = '<div class="card mt-8" style="background:var(--warning-light)"><div class="card-title fs-12">🔄 相似练习题</div>';
-    html += '<div class="q-text">' + similar.question + '</div>';
+    html += '<div class="q-text">' + this._stemHtml(similar.question) + '</div>';
     html += '<div class="q-options">';
     similar.options.forEach((o, oi) => {
       html += '<div class="q-option" onclick="this.parentElement.querySelectorAll(\'.q-option\').forEach((el,i)=>{if(i===' + similar.answer + ')el.classList.add(\'correct\');if(i===' + oi + '&&i!==' + similar.answer + ')el.classList.add(\'wrong\')})">' + String.fromCharCode(65+oi) + '. ' + o + '</div>';
