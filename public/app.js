@@ -227,18 +227,13 @@ const App = {
       }
     }
 
-    // Speaking questions must NOT auto-advance: picking the right option is
-    // only the gate into the read-along, which is the actual exercise. That
-    // flow advances itself when the child finishes reading.
-    const mod = (HOMEWORK_DATA[dayIdx] || {}).modules || [];
-    if (mod[moduleIdx] && mod[moduleIdx].type === 'speaking') {
-      clearTimeout(this._advanceTimer);
-      return;
-    }
-    // Answered right → move on by itself. Answered wrong → stay put, so the
-    // child can read the explanation and move on when they are ready.
-    if (correct) this._scheduleAdvance(1300);
-    else clearTimeout(this._advanceTimer);
+    // 孩子答完一道题后不再自动翻页——之前的 _scheduleAdvance(1300) 会
+    // 让 stage-next-btn 自己跳题，跟读模块的"≥60 才能进下一题"挡不住它，
+    // 上一题跟读一过它就替孩子翻了。改为：各题型自己 unlock stage-next-btn
+    // （选项题跟读通过 / 填空题答对 / sentence 跟读通过），孩子在屏幕
+    // 底部自己点"下一题"。答错时清掉任何遗留的计时器，避免前一个题
+    // 的 1300ms 计时器偷偷替这一题翻页。
+    clearTimeout(this._advanceTimer);
   },
 
   // Pull the question text + correct answer out of HOMEWORK_DATA for the
@@ -4668,8 +4663,8 @@ const App = {
     return steps;
   },
 
-  // Advance after the child has seen the feedback. Debounced so a module
-  // that records several answers at once (writing) still advances once.
+  // 自动翻页已废弃：现在所有题型都靠 stage-next-btn 自己解锁，孩子在屏幕
+  // 底部自己点。保留函数以防外部旧引用炸出 ReferenceError。
   _scheduleAdvance(delay) {
     if (this.isTeacher()) return;
     clearTimeout(this._advanceTimer);
@@ -5348,8 +5343,10 @@ const App = {
     const m = HOMEWORK_DATA[dayIdx].modules[mi];
     const q = m.questions[qi];
     const input = document.getElementById('fill-' + mi + '-' + qi);
-    const val = input.value.trim().toLowerCase();
-    const ans = String(q.answer).toLowerCase();
+    // 大小写敏感：答案是 "big enough"，孩子写 "Big enough" 不算对，
+    // 不再 toLowerCase。答案本身是规范化小写，孩子照着写就行。
+    const val = input.value.trim();
+    const ans = String(q.answer).trim();
     const isCorrect = val === ans;
     this._recordAnswer(dayIdx, mi, qi, val, isCorrect);
     const ansEl = document.getElementById('ans-' + mi + '-' + qi);
