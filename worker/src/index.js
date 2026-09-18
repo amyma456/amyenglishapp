@@ -194,12 +194,19 @@ async function tts(request, env, ctx) {
 // ---------------------------------------------------------------------------
 // 两个模型要的入参结构不一样。写错不是"效果差一点"，而是直接 500 —— 孩子
 // 这一次朗读的分数就没了。逐个对照官方 schema 确认：
-//   @cf/openai/whisper                 audio: [0..255, ...] 整数数组
-//   @cf/openai/whisper-large-v3-turbo  audio: base64 字符串
+//   @cf/openai/whisper / whisper-tiny-en  audio: [0..255, ...] 整数数组
+//   @cf/openai/whisper-large-v3-turbo     audio: base64 字符串
 // 把整数数组喂给 turbo 会被拒收："Type mismatch of '/audio'"。
 const TURBO_MODEL = '@cf/openai/whisper-large-v3-turbo';
 const B64_CHUNK = 0x8000;
 
+// 试过的三条路，结论记在这里，免得下次又绕一圈：
+//   默认 whisper / whisper-tiny-en / whisper-large-v3-turbo
+// 线上各跑三遍，三者都在 1.4–3.5s，重叠得完全分不出高下 —— 孩子松手后的等待
+// 是网络往返和排队，不是模型算力。tiny 反而会把 "have breakfast" 听成
+// "abreak this"，白丢准确度。所以英文跟读固定用最准的 turbo，不再换模型；
+// 想省那两秒只能从客户端想办法（预取朗读音频、热连接），不是从这里。
+// 另外 beam_size 从 5 降到 1 也实测过：量不出差别，已放弃。
 function toBase64(bytes) {
   let bin = '';
   for (let i = 0; i < bytes.length; i += B64_CHUNK) {
@@ -208,6 +215,8 @@ function toBase64(bytes) {
   return btoa(bin);
 }
 
+// turbo 要 base64 字符串；默认 whisper 要 [0..255,...] 整数数组。形状不能混，
+// 混了不是"效果差一点"，而是直接 500 —— 孩子这一次朗读的分数就没了。
 function fastInput(bytes, mode) {
   const input = { audio: toBase64(bytes), task: 'transcribe', language: 'en' };
   if (mode === 'letter') {

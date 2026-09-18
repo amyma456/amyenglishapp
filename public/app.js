@@ -787,6 +787,74 @@ const App = {
   // Main speak function - robust TTS with multiple fallbacks
   // Primary: Youdao TTS (works for both words and sentences, most reliable)
   // Fallback: Baidu TTS (secondary, for when Youdao fails)
+  // -------------------------------------------------------------------------
+  // TTS 预取 —— 治的是"新出来一道题，要干等它开口"。
+  //
+  // 原来每换一题才去 /api/tts 取音频：孩子看到题 → 安静一秒多 → 才开始读。
+  // 现在题一渲染出来，就顺手把接下来几句的音频取回本地存成 blob，真正要读的
+  // 时候直接播本地文件，起播几乎瞬时。取回来的按文本缓存，重听不再走网络。
+  TTS_PREFETCH_MAX: 12,     // 最多留着十几句，超出的释放掉，别让内存一直涨
+  TTS_PREFETCH_AHEAD: 3,    // 往前预取几步
+
+  // 某一步会朗读的英文（和各个 step 渲染时读的是同一份文本）
+  _stepSpeechText(steps, dayIdx, i) {
+    var s = steps && steps[i];
+    if (!s) return '';
+    var day = HOMEWORK_DATA[dayIdx];
+    var m = day && day.modules && day.modules[s.mi];
+    if (!m) return '';
+    if (s.kind === 'sentence') return this._splitSentences(m.passage)[s.si] || '';
+    if (s.kind === 'translate') {
+      var pairs = this._pairSentences(m);
+      return (pairs && pairs[s.si] && pairs[s.si].en) || '';
+    }
+    if (s.kind === 'question') return this._questionSpeechText(m, m.questions[s.qi]);
+    if (s.kind === 'speaking') {
+      var q = m.questions && m.questions[s.qi];
+      return (q && (q.audio_text || q.sentence)) || '';
+    }
+    return '';
+  },
+
+  // 当前这一步通常正在播或刚要播，跳过它，只预取后面的
+  prefetchUpcoming(steps, dayIdx, fromIdx) {
+    if (!steps || typeof fetch !== 'function') return;
+    for (var i = fromIdx + 1; i <= fromIdx + this.TTS_PREFETCH_AHEAD; i++) {
+      this.prefetchTts(this._stepSpeechText(steps, dayIdx, i));
+    }
+  },
+
+  prefetchTts(text) {
+    var t = this._ttsText(text);
+    if (!t) return;
+    t = t.substring(0, 500).trim();
+    // 单个单词走的是有道的词典接口，不是我们自己的端点，不在这里预取。
+    if (!/\s/.test(t)) return;
+    this._ttsBlobs = this._ttsBlobs || {};
+    this._ttsPending = this._ttsPending || {};
+    if (this._ttsBlobs[t] || this._ttsPending[t]) return;
+    this._ttsPending[t] = true;
+    var self = this;
+    fetch('/api/tts?text=' + encodeURIComponent(t))
+      .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.blob(); })
+      .then(function(b) {
+        self._ttsBlobs[t] = URL.createObjectURL(b);
+        self._ttsBlobOrder = self._ttsBlobOrder || [];
+        self._ttsBlobOrder.push(t);
+        while (self._ttsBlobOrder.length > self.TTS_PREFETCH_MAX) {
+          var old = self._ttsBlobOrder.shift();
+          if (old === t) { self._ttsBlobOrder.push(old); break; }  // 别把自己淘汰掉
+          var u = self._ttsBlobs[old];
+          delete self._ttsBlobs[old];
+          if (u) { try { URL.revokeObjectURL(u); } catch (e) {} }
+        }
+      })
+      .catch(function() {
+        // 取不到就照旧走网络路径，孩子那边不用等、也不需要知道
+      })
+      .then(function() { delete self._ttsPending[t]; });
+  },
+
   // Last resort: speechSynthesis (built-in, no network needed)
   speak(text, opts) {
     opts = opts || {};
@@ -840,7 +908,10 @@ const App = {
     // suspects (a blocked third-party host, a cross-origin media restriction)
     // disappear when the audio comes from the same origin as the page.
     // Words keep Youdao: that path is the one already known to work.
-    var ttsUrl      = isSentence ? ownTts : youdao;
+    // 预取命中就直接播本地 blob —— 不用再等一次网络往返 + 模型生成。
+    // 这是"题一出来就开始读"的关键：绝大多数时候音频早就躺在本地了。
+    var cachedTts = (isSentence && self._ttsBlobs) ? self._ttsBlobs[cleanText] : null;
+    var ttsUrl      = isSentence ? (cachedTts || ownTts) : youdao;
     var fallbackUrl = isSentence ? baidu  : baidu;
 
     var timeoutId = null;
@@ -2836,13 +2907,13 @@ const App = {
       } else {
         self._playWrongSound();
         readArea.innerHTML = '<div class="speak-record show"><p>❌ 回答错误。正确答案：' + options[correctAnswer] + '</p><p class="fs-12 text-sub">请先听朗读，再跟读练习</p><button class="speak-btn" onclick="App.startReadAlong(' + mi + ',' + qi + ',\'' + dayIdx + '\')">🎤 重新跟读</button></div>';
-        readArea.innerHTML += '<div class="q-explanation show mt-8"><div class="cn">📖 ' + q.explanation_cn + '</div><div class="en">📘 ' + q.explanation_en + '</div></div>';
+        readArea.innerHTML += '<div class="q-explanation show mt-8"><div class="cn">📖 ' + q.explanation_cn + '</div></div>';
       }
     }});
   },
 
   startReadAlong(mi, qi, dayIdx) {
-    Recorder.warmUp();
+    Recorder.warmUp(); Api.warmup();
     const m = HOMEWORK_DATA[dayIdx].modules[mi];
     const q = m.questions[qi];
     const readArea = document.getElementById('sp-read-' + mi);
@@ -3637,7 +3708,7 @@ const App = {
     const pairs = this._pairSentences(m);
     const pair = pairs && pairs[si];
     if (!pair) return '<div class="card text-center text-sub">这篇课文暂不支持逐句翻译</div>';
-    Recorder.warmUp();
+    Recorder.warmUp(); Api.warmup();
 
     let html = '<div class="sent-step">';
     html += '<div class="sent-progress">翻译 ' + (si + 1) + ' / ' + pairs.length + ' 句</div>';
@@ -3737,7 +3808,7 @@ const App = {
     const sents = this._splitSentences(m.passage);
     const sent = sents[si] || '';
     const esc = sent.replace(/'/g, "\\'");
-    Recorder.warmUp();
+    Recorder.warmUp(); Api.warmup();
 
     let html = '<div class="sent-step">';
     html += '<div class="sent-progress">第 ' + (si + 1) + ' / ' + sents.length + ' 句</div>';
@@ -3762,6 +3833,7 @@ const App = {
 
   _readSentence(ev, mi, si) {
     const self = this;
+    Api.warmup();                              // 手指按下就把连接热好
     const m = HOMEWORK_DATA[this.state.currentDay].modules[mi];
     const sent = this._splitSentences(m.passage)[si] || '';
     const btn = document.getElementById('sent-btn-' + mi + '-' + si);
@@ -3820,7 +3892,7 @@ const App = {
   // The whole passage, English only, once every sentence has been read.
   renderPassageStep(m, mi, dayIdx) {
     const esc = String(m.passage).replace(/'/g, "\\'");
-    Recorder.warmUp();
+    Recorder.warmUp(); Api.warmup();
     let html = '<div class="passage-full">';
     html += '<div class="pf-title">全文</div>';
     html += '<div class="pf-text">' + m.passage + '</div>';
@@ -4115,7 +4187,7 @@ const App = {
   // and W as "www." — scoring those would fail a child who read correctly.
   _renderSpellRead(m, mi, dayIdx, word, units, kind) {
     var self = this;
-    Recorder.warmUp();          // so the first hold does not clip the start
+    Recorder.warmUp(); Api.warmup();          // so the first hold does not clip the start
     var selfSync = this;
     setTimeout(function(){ selfSync._syncVocabFootLabel(mi, dayIdx); }, 0);
     this._spell = { mi: mi, kind: kind, word: word.word, total: units.length,
@@ -4395,6 +4467,7 @@ const App = {
     }
     if (this._holdKey) return;                 // already recording something
     var self = this;
+    Api.warmup();                              // 手指按下就把连接热好
     this._holdKey = key;
     this._holdDone = onDone;
     this._holdNeedsTranscript = needsTranscript !== false;
@@ -4611,6 +4684,10 @@ const App = {
     const step = steps[this.state.stepIdx];
     const m = day.modules[step.mi];
 
+    // 孩子看这一题、听这一题、读这一题的时间，正好用来把后面几句的音频取回来。
+    // 等到切到下一题时，朗读不用再等网络。
+    this.prefetchUpcoming(steps, dayIdx, this.state.stepIdx);
+
     let html = '<div class="stage">';
 
     // Head: module name + progress
@@ -4784,9 +4861,12 @@ const App = {
       html += '<button class="btn btn-primary btn-sm mt-8" onclick="App.submitFill(' + mi + ',' + qi + ',' + dayIdx + ')">确认</button>';
     }
     html += '<div class="q-answer" id="ans-' + mi + '-' + qi + '" style="display:none"></div>';
-    html += '<div class="q-explanation" id="exp-' + mi + '-' + qi + '"><div class="cn">' + (q.explanation_cn||'') + '</div><div class="en">' + (q.explanation_en||'') + '</div>';
-    // Correction area (only shows after wrong answer)
-    html += '<div class="card mt-8" style="background:var(--warning-light);display:none" id="correct-area-' + mi + '-' + qi + '"><div class="fs-12 mb-4">请手写改正（输入你的改正答案）：</div><textarea rows="2" style="width:100%;border:1.5px solid #FFE0CC;border-radius:8px;padding:8px" placeholder="在此写出你的改正答案..."></textarea></div>';
+    // 孩子只看到中文解释：答错时再甩一段英文解释，看不懂，只是多一屏噪音。
+    html += '<div class="q-explanation" id="exp-' + mi + '-' + qi + '"><div class="cn">' + (q.explanation_cn||'') + '</div>';
+    // The correction area that used to live here is gone: the child corrects
+    // in the original box — re-tapping an ABCD option, or retyping in the same
+    // fill-in input. A second, separate answer box asked them to write the
+    // answer twice and told them nothing the original field didn't.
     html += '</div>';
     // Follow-read area: after the child picks an ABCD option, we force them to
     // read the question sentence aloud. score >= 60 unlocks either finishing
@@ -4858,7 +4938,6 @@ const App = {
       } else {
         this._playWrongSound();
         document.getElementById('exp-' + mi + '-' + qi).classList.add('show');
-        document.getElementById('correct-area-' + mi + '-' + qi).style.display = 'block';
       }
       if (qi < m.questions.length - 1) {
         const self = this;
@@ -4900,8 +4979,6 @@ const App = {
       this._playWrongSound();
       const expEl = document.getElementById('exp-' + mi + '-' + qi);
       if (expEl) expEl.classList.add('show');
-      const caEl = document.getElementById('correct-area-' + mi + '-' + qi);
-      if (caEl) caEl.style.display = 'block';
       // Wrong pick clears any stale hold-read panel — a wrong pick is just a
       // "try again" hint, no recording has happened yet.
       const followEl = document.getElementById('qr-follow-' + mi + '-' + qi);
@@ -5002,7 +5079,7 @@ const App = {
   _holdReadStart(mi, qi, dayIdx, sentence) {
     if (this._holdReadActive) return;
     this._holdReadActive = { mi: mi, qi: qi, dayIdx: dayIdx, sentence: sentence, startedAt: Date.now() };
-    Recorder.warmUp();
+    Recorder.warmUp(); Api.warmup();
     this._startClipCapture();
     // Cap a held read at 10s — long enough for a child to read a sentence,
     // short enough that a stuck button doesn't keep the mic open forever.
@@ -5157,14 +5234,17 @@ const App = {
       ansEl.innerHTML = '✅ 正确！';
       input.style.borderColor = 'var(--success)';
       input.style.color = 'var(--success)';
-      document.getElementById('correct-area-' + mi + '-' + qi).style.display = 'none';
       this._playCorrectSound();
     } else {
-      ansEl.innerHTML = '❌ 错误。正确答案：' + q.answer;
+      ansEl.innerHTML = '❌ 错误。正确答案：' + q.answer
+        + '<br><span class="fs-12 text-sub">就在上面的框里，重新输入改正后的答案</span>';
       input.style.borderColor = 'var(--danger)';
-      input.style.color = 'var(--danger)';
       document.getElementById('exp-' + mi + '-' + qi).classList.add('show');
-      document.getElementById('correct-area-' + mi + '-' + qi).style.display = 'block';
+      // 改在原框里：清掉错的、光标放进去，直接重打。以前会再弹一个"请手写
+      // 改正"的框，等于让孩子把同一个答案写两遍。
+      input.value = '';
+      input.style.color = 'var(--text)';
+      try { input.focus(); } catch (e) {}
       this._playWrongSound();
     }
     // Auto-speak the next question after a short delay.
@@ -5206,7 +5286,7 @@ const App = {
         html += '<div class="error-item">';
         html += '<div class="e-q"><strong>' + e.day + '·' + e.module + '</strong> ' + (e.q.question || e.q.sentence) + '</div>';
         html += '<div class="q-answer">正确答案：' + (e.q.options ? String.fromCharCode(65+e.q.answer) : e.q.answer) + '</div>';
-        html += '<div class="q-explanation show"><div class="cn">📖 ' + (e.q.explanation_cn||'') + '</div><div class="en">📘 ' + (e.q.explanation_en||'') + '</div></div>';
+        html += '<div class="q-explanation show"><div class="cn">📖 ' + (e.q.explanation_cn||'') + '</div></div>';
         html += '<button class="btn btn-outline btn-sm mt-8" onclick="App.practiceSimilar(' + i + ')">🔄 做相似题</button>';
         html += '<div id="similar-' + i + '"></div>';
         html += '</div>';
@@ -5230,7 +5310,7 @@ const App = {
       html += '<div class="q-option" onclick="this.parentElement.querySelectorAll(\'.q-option\').forEach((el,i)=>{if(i===' + similar.answer + ')el.classList.add(\'correct\');if(i===' + oi + '&&i!==' + similar.answer + ')el.classList.add(\'wrong\')})">' + String.fromCharCode(65+oi) + '. ' + o + '</div>';
     });
     html += '</div>';
-    html += '<div class="q-explanation show"><div class="cn">📖 ' + similar.explanation_cn + '</div><div class="en">📘 ' + similar.explanation_en + '</div></div>';
+    html += '<div class="q-explanation show"><div class="cn">📖 ' + similar.explanation_cn + '</div></div>';
     html += '</div>';
     document.getElementById('similar-' + idx).innerHTML = html;
   },

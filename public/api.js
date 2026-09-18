@@ -734,10 +734,34 @@ const Api = {
   },
   TRANSCRIBE_TIMEOUT: 12000,
 
-  // 朗读跟读只要"读对了几个词"，要的是快。?model=turbo 让 Worker 换用
-  // whisper-large-v3-turbo（比默认模型出结果快，而且带 language=en，英文
-  // 不会被猜成别的语言）。中文翻译必须留在默认的多语种模型上，所以这是
-  // 一个显式开关，而不是全局默认。
+  get HEALTH_URL() {
+    const h = (typeof location !== 'undefined' && location.hostname) || '';
+    const sameZone = h === 'amyeng.top' || h.endsWith('.amyeng.top');
+    return (sameZone ? '' : this.API_HOST) + '/api/health';
+  },
+
+  // 读之前先把连接热好。
+  //
+  // 松手后的等待几乎全在网络往返上：tiny / turbo / 默认三个模型线上各跑三遍，
+  // 都在 1.4–3.5s，重叠得完全分不出高下 —— 模型不是瓶颈。但手机上的
+  // DNS + TLS + 连接会闲冷掉，那一次握手正好压在"松手 → 出分"这段路上。
+  // 先打一个最小的请求把连接建好，等真要传录音时就不用再握手。
+  // 20 秒内只热一次，不刷请求。
+  WARMUP_INTERVAL: 20000,
+  _warmedAt: 0,
+
+  warmup() {
+    const now = Date.now();
+    if (now - (this._warmedAt || 0) < this.WARMUP_INTERVAL) return;
+    this._warmedAt = now;
+    try { fetch(this.HEALTH_URL, { cache: 'no-store' }).catch(function () {}); } catch (e) {}
+  },
+
+  // 英文跟读走 ?model=turbo（whisper-large-v3-turbo）。
+  // 不是因为它快 —— 实测三个模型速度没有差别 —— 而是因为它最准：默认
+  // whisper 会把 "I usually have breakfast" 听成 "I usually a breakfast"，
+  // 孩子明明读对了却被判漏读。中文翻译必须留在默认的多语种模型上（turbo 带
+  // language=en，中文会被硬当英文翻），所以这是一个显式开关，不是全局默认。
 
   // Whisper emits stock phrases from its training data when it is handed
   // audio it cannot make sense of. Treating those as a real answer scores the
