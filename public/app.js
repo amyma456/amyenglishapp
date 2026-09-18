@@ -657,6 +657,56 @@ const App = {
   _ttsUnlocked: false,  // Track if audio has been unlocked by user gesture
   _speakToken: 0,       // Incremented on each speak() call to invalidate stale callbacks
 
+  // ===== 朗读设置 =====
+  // 孩子要跟着读，原速太快跟不上。两个音源各降一次：
+  //   - 音频标签（有道/百度/自建 TTS）走 playbackRate，改的是播放速度，
+  //     preservesPitch 打开后音高不变，听上去只是说得慢，不变调。
+  //   - speechSynthesis 走 rate。
+  // 想再慢/再快，只改这两个数字即可。
+  TTS_RATE: 0.78,       // 1 = 原速；0.78 ≈ 慢 22%
+  SYNTH_RATE: 0.72,     // 浏览器内建语音的语速
+
+  // 把音频标签的播放速度压到 TTS_RATE。每次起播都调用一次：换了 src 之后
+  // 某些浏览器会把 playbackRate 重置回 1。
+  _applyRate(el) {
+    if (!el || !el.playbackRate) return;
+    try {
+      el.playbackRate = this.TTS_RATE;
+      // 保持音高，否则慢速会变成"低沉怪声"，孩子更听不懂
+      if ('preservesPitch' in el) el.preservesPitch = true;
+      el.webkitPreservesPitch = true;
+      el.mozPreservesPitch = true;
+      el.msPreservesPitch = true;
+    } catch (e) {}
+  },
+
+  // ===== 只读英文，绝不读中文 =====
+  // 题目里混着中文：释义（"美丽的，漂亮的"）、答题提示（"[填入正确形式]"）、
+  // 中文题干（"听到的句子是什么？"）。这些交给英文音源读出来是一串怪音，
+  // 孩子听不出是什么，也没必要听。所以朗读前统一过一遍：
+  //   - 中文、中文标点、全角字符 → 去掉
+  //   - [中文提示] → 去掉
+  //   - (visit) 这样括号里是英文的保留，是中文注释的去掉
+  //   - 空位 ___ 读作 blank，跟读时能听出"这里空着一格"
+  // 返回空串表示这一句没有可读的英文，调用方应当直接跳过朗读。
+  _ttsText(text) {
+    var s = String(text === null || text === undefined ? '' : text);
+    if (!s) return '';
+    // 中日韩文字、中文标点、全角字符
+    s = s.replace(/[\u3000-\u303f\u4e00-\u9fff\uff00-\uffef]/g, ' ');
+    // 方括号里的内容整段丢掉（都是中文答题提示）
+    s = s.replace(/\[[^\]]*\]/g, ' ');
+    // 圆括号：里面还有英文字母的保留（I ___ (visit) ...），否则丢掉
+    s = s.replace(/\(([^)]*)\)/g, function(m, inner) {
+      return /[A-Za-z]/.test(inner) ? ' (' + inner.trim() + ')' : ' ';
+    });
+    // I ___ (visit) 里的空位读成 blank
+    s = s.replace(/_{2,}/g, ' blank ');
+    s = s.replace(/[ \t]+/g, ' ');
+    s = s.replace(/\s+([,.!?;:])/g, '$1').trim();
+    return s;
+  },
+
   // Inline silent WAV (~0.1s) — used to unlock the audio element inside a
   // user gesture WITHOUT any network request. Works offline, instant, and
   // can't be blocked by third-party TTS endpoints.
@@ -739,8 +789,17 @@ const App = {
   // Fallback: Baidu TTS (secondary, for when Youdao fails)
   // Last resort: speechSynthesis (built-in, no network needed)
   speak(text, opts) {
-    if (!text) { if (opts && opts.onDone) opts.onDone(); return; }
     opts = opts || {};
+    // 先过一遍「只读英文」的过滤：中文释义、答题提示在这里就被去掉了。
+    // 一句里没有可读的英文，就直接当作读完 —— 门控该放行还是要放行，
+    // 否则选项会一直锁着。
+    var speakable = this._ttsText(text);
+    if (!speakable) {
+      this._showSpeakingIndicator(false);
+      if (opts.onDone) opts.onDone();
+      return;
+    }
+    text = speakable;
 
     // Stop any currently playing audio FIRST
     this._stopCurrentAudio();
@@ -759,6 +818,7 @@ const App = {
 
     var audioEl = document.getElementById('tts-player');
     if (!audioEl) { audioEl = new Audio(); }
+    this._applyRate(audioEl);
 
     self._currentAudio = audioEl;
     self._ttsDone = false;
@@ -816,6 +876,7 @@ const App = {
 
     audioEl.onplaying = function() {
       if (myToken !== self._speakToken) return;
+      self._applyRate(audioEl);          // src 换过之后某些浏览器会重置回原速
       self._audioStarted = true;
       if (timeoutId) { clearTimeout(timeoutId); timeoutId = null; }
     };
@@ -858,6 +919,7 @@ const App = {
 
     audioEl.src = ttsUrl;
     audioEl.load(); // Critical for Safari/cross-browser: must call load() after setting src
+    self._applyRate(audioEl);
 
     var playPromise = audioEl.play();
     if (playPromise && typeof playPromise.then === 'function') {
@@ -956,7 +1018,7 @@ const App = {
       window.speechSynthesis.cancel();
       var u = new SpeechSynthesisUtterance(text);
       u.lang = 'en-US';
-      u.rate = opts.rate || 0.85;
+      u.rate = opts.rate || this.SYNTH_RATE;
       u.pitch = 1.0;
       u.volume = 1.0;
 
@@ -2854,7 +2916,7 @@ const App = {
           + '<p class="fs-12 text-sub">正在比对你读的和原句</p></div>';
       }
       const forAsr = (this._spClipSamples && Recorder.padForAsr(this._spClipSamples)) || blob;
-      const out = await Api.transcribe(forAsr, null);
+      const out = await Api.transcribe(forAsr, null, { fast: true });
       if (out && out.text && !Api.isFillerTranscript(out.text)) spoken = out.text.toLowerCase();
     }
 
@@ -3602,6 +3664,7 @@ const App = {
     if (btn) btn.classList.add('reading');
 
     this._holdStart(ev, 'trs-' + mi + '-' + si, '这句的意思', status, function (out, text) {
+      // 孩子说的是中文 —— 必须用多语种模型识别
       if (btn) btn.classList.remove('reading');
       if (!out) return;
       const heard = text ? self._toSimplified(text) : '';
@@ -3635,7 +3698,7 @@ const App = {
         moduleIdx: mi, itemIdx: si, round: 1, type: 'translate-sentence',
         label: pair.en, score: r.score, spoken: heard, source: 'asr',
       });
-    });
+    }, true, 'zh');
   },
 
   // A step is cleared only when the child actually got it. Below the mark
@@ -4321,7 +4384,9 @@ const App = {
   // events (not mouse/touch pairs) so one code path covers finger, pen and
   // mouse, and setPointerCapture so releasing outside the button still ends
   // the recording instead of leaving the mic open.
-  _holdStart(ev, key, promptLabel, statusEl, onDone, needsTranscript) {
+  // lang: 'en'（默认，朗读跟读）| 'zh'（逐句翻译，说的是中文）。
+  // 英文走快速识别模型，中文必须走多语种模型，否则中文会被当成英文硬翻。
+  _holdStart(ev, key, promptLabel, statusEl, onDone, needsTranscript, lang) {
     if (ev) {
       ev.preventDefault();
       if (ev.pointerId !== undefined && ev.currentTarget.setPointerCapture) {
@@ -4333,6 +4398,7 @@ const App = {
     this._holdKey = key;
     this._holdDone = onDone;
     this._holdNeedsTranscript = needsTranscript !== false;
+    this._holdFast = lang !== 'zh';
     this._holdStatusEl = statusEl;
     this._holdStartedAt = Date.now();
 
@@ -4365,6 +4431,7 @@ const App = {
     if (ev) ev.preventDefault();
     var key = this._holdKey, onDone = this._holdDone, statusEl = this._holdStatusEl;
     var needs = this._holdNeedsTranscript;
+    var fast = this._holdFast !== false;
     var heldMs = Date.now() - (this._holdStartedAt || 0);
     this._holdKey = null; this._holdDone = null;
     clearTimeout(this._holdCap);
@@ -4377,7 +4444,7 @@ const App = {
       return;
     }
 
-    if (statusEl && needs) statusEl.innerHTML = '<div class="tap-rec"><span class="tap-spin"></span>正在识别…</div>';
+    if (statusEl && needs) statusEl.innerHTML = '<div class="tap-rec"><span class="tap-spin"></span>核对中，马上出分…</div>';
     var out = null;
     try { out = await Recorder.stop(); } catch (e) { console.warn('hold stop failed', e); }
     if (!out || !out.blob) {
@@ -4389,7 +4456,7 @@ const App = {
     if (!needs) { if (onDone) onDone(out, null); return; }
     // Send the padded copy — short clips make Whisper hallucinate.
     var forAsr = (out.samples && Recorder.padForAsr(out.samples)) || out.blob;
-    var res = await Api.transcribe(forAsr, null);
+    var res = await Api.transcribe(forAsr, null, { fast: fast });
     var text = res && res.text ? res.text : null;
     if (Api.isFillerTranscript(text)) text = null;
     if (onDone) onDone(out, text);
@@ -4660,6 +4727,33 @@ const App = {
     return html;
   },
 
+  // 一道题该朗读哪一段英文。规则只有一条：读题，不读答案，不读中文。
+  //   - 听力题：读 audio_text（听力原文），题干"听到的句子是什么？"是中文，不读
+  //   - 阅读理解/语法/时态/单选/KET：读英文题干
+  //   - 完形填空：题干只是"2___"这样的空格编号，读它所在的课文原句，
+  //     空格读作 blank，孩子才知道该填哪一句
+  //   - 都没有英文可读（例如纯中文题干又没原文）→ 返回空串，不朗读
+  // 解释（explanation_cn / explanation_en）从来不在这里，答题对错才显示。
+  _questionSpeechText(m, q) {
+    if (!q) return '';
+    if (q.audio_text) return this._ttsText(q.audio_text);
+    var stem = this._ttsText(q.question);
+    // 至少要有两个英文单词才算"一句能读的题"，否则像 "1 blank" 这种
+    // 空位编号读出来毫无意义。
+    var words = stem.match(/[A-Za-z][A-Za-z'-]*/g) || [];
+    if (words.length >= 2) return stem;
+
+    var marker = String(q.question || '').match(/\d*_{2,}/);
+    if (marker && m && m.passage) {
+      var target = marker[0];
+      var hit = this._splitSentences(m.passage).filter(function(s) {
+        return s.indexOf(target) >= 0;
+      })[0];
+      if (hit) return this._ttsText(hit.replace(target, ' blank '));
+    }
+    return words.length >= 1 ? stem : '';
+  },
+
   // One question's markup. Extracted so both the scrolling list (teacher
   // preview) and the one-question-per-screen stage render identical DOM —
   // the ids the answer handlers manipulate stay the same either way.
@@ -4669,8 +4763,9 @@ const App = {
     let html = '<div class="q-item" id="' + qId + '">';
     html += '<div class="q-num">第' + (qi+1) + '题</div>';
     // Add listen button if the question has audio content
-    // (audio_text like listening questions, OR English question text)
-    var qHasAudio = !!(q.audio_text || (q.question && /[a-zA-Z]/.test(q.question)));
+    // (listening audio_text, an English stem, or the cloze sentence the
+    // blank lives in — see _questionSpeechText)
+    var qHasAudio = !!this._questionSpeechText(m, q);
     if (qHasAudio) {
       html += '<div class="auto-read-badge" id="arb-' + mi + '-' + qi + '"><svg class="icon icon-sm speaking-anim"><use href="#i-sound"/></svg> 正在朗读…</div>';
       html += '<div class="flex gap-8 mb-8"><button class="btn btn-outline btn-sm" onclick="App.replayQuestion(\'' + qId + '\',' + mi + ',' + qi + ',\'' + dayIdx + '\')"><svg class="icon icon-sm"><use href="#i-sound"/></svg> 重新听</button></div>';
@@ -4706,23 +4801,17 @@ const App = {
   // Auto-speak a specific question and enable its options when done
   _autoSpeakQuestion(m, mi, qi, dayIdx) {
     var q = m.questions[qi];
-    var qHasAudio = !!(q && (q.audio_text || (q.question && /[a-zA-Z]/.test(q.question))));
-    if (!q || !qHasAudio) {
-      // No audio content, just enable options
+    var unlock = function() {
       var optsEl = document.getElementById('qo-' + mi + '-' + qi);
       var waitEl = document.getElementById('qw-' + mi + '-' + qi);
       if (optsEl) { optsEl.style.opacity = '1'; optsEl.style.pointerEvents = 'auto'; }
       if (waitEl) waitEl.style.display = 'none';
-      return;
-    }
-    // Listening questions: play the audio_text (the actual listening content).
-    // Regular questions: play the English question text.
-    this.autoSpeak(q.audio_text || q.question, function() {
-      var optsEl = document.getElementById('qo-' + mi + '-' + qi);
-      var waitEl = document.getElementById('qw-' + mi + '-' + qi);
-      if (optsEl) { optsEl.style.opacity = '1'; optsEl.style.pointerEvents = 'auto'; }
-      if (waitEl) waitEl.style.display = 'none';
-    });
+    };
+    var speakText = this._questionSpeechText(m, q);
+    if (!speakText) { unlock(); return; }
+    // Only the English stem is read. Chinese meanings and the answer
+    // explanation are never spoken; speak() filters once more as a net.
+    this.autoSpeak(speakText, unlock);
   },
 
   replayQuestion(qId, mi, qi, dayIdx) {
@@ -4733,8 +4822,13 @@ const App = {
     var waitEl = document.getElementById('qw-' + mi + '-' + qi);
     if (optsEl) { optsEl.style.opacity = '0.4'; optsEl.style.pointerEvents = 'none'; }
     if (waitEl) { waitEl.style.display = 'block'; }
-    // Listening questions replay the audio_text; others replay the question text
-    this.speak(q.audio_text || q.question, { onDone: function() {
+    var speakText = this._questionSpeechText(m, q);
+    if (!speakText) {                       // nothing English to read — unlock now
+      if (optsEl) { optsEl.style.opacity = '1'; optsEl.style.pointerEvents = 'auto'; }
+      if (waitEl) waitEl.style.display = 'none';
+      return;
+    }
+    this.speak(speakText, { onDone: function() {
       if (optsEl) { optsEl.style.opacity = '1'; optsEl.style.pointerEvents = 'auto'; }
       if (waitEl) waitEl.style.display = 'none';
     }});
@@ -4938,7 +5032,7 @@ const App = {
       if (blob) {
         const forAsr = (self._spClipSamples && Recorder.padForAsr(self._spClipSamples)) || blob;
         try {
-          const out = await Api.transcribe(forAsr, null);
+          const out = await Api.transcribe(forAsr, null, { fast: true });
           if (out && out.text && !Api.isFillerTranscript(out.text)) spoken = out.text.toLowerCase();
         } catch (e) { console.warn('Hold-read transcribe failed:', e); }
       }
@@ -4962,10 +5056,14 @@ const App = {
       return;
     }
     if (status === 'scoring') {
+      // 松手就把结果卡片的架子摆出来，分数一到直接填进这个位置。
+      // 孩子看到的是"分已经在算"，不是整屏灰着等。
       btn.style.background = 'var(--text-sub)';
-      btn.innerHTML = '⏳ 评分中…';
+      btn.innerHTML = '⏳ 正在出分…';
       btn.disabled = true;
-      if (statusEl) statusEl.innerHTML = '<span style="color:var(--primary)">⏳ 正在识别你的发音…</span>';
+      if (statusEl) statusEl.innerHTML =
+        '<div style="font-size:34px;font-weight:700;color:var(--primary);line-height:1.15">…</div>'
+        + '<span style="color:var(--text-sub);font-size:13px">核对中，分数马上到</span>';
       return;
     }
     if (status === 'mistap') {

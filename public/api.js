@@ -734,6 +734,11 @@ const Api = {
   },
   TRANSCRIBE_TIMEOUT: 12000,
 
+  // 朗读跟读只要"读对了几个词"，要的是快。?model=turbo 让 Worker 换用
+  // whisper-large-v3-turbo（比默认模型出结果快，而且带 language=en，英文
+  // 不会被猜成别的语言）。中文翻译必须留在默认的多语种模型上，所以这是
+  // 一个显式开关，而不是全局默认。
+
   // Whisper emits stock phrases from its training data when it is handed
   // audio it cannot make sense of. Treating those as a real answer scores the
   // child 0 for something they may well have read correctly.
@@ -755,12 +760,13 @@ const Api = {
     return this.FILLERS.indexOf(t) >= 0 || this.FILLERS.indexOf(t.replace(/\.$/, '')) >= 0;
   },
 
-  async transcribe(blob, meta) {
+  async transcribe(blob, meta, opts) {
     if (!blob) return null;
+    const fast = !!(opts && opts.fast);
     const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
     const timer = ctrl ? setTimeout(() => ctrl.abort(), this.TRANSCRIBE_TIMEOUT) : null;
     try {
-      const res = await fetch(this.TRANSCRIBE_URL, {
+      const res = await fetch(this.TRANSCRIBE_URL + (fast ? '?model=turbo' : ''), {
         method: 'POST',
         headers: { 'Content-Type': 'audio/wav' },
         body: blob,

@@ -180,14 +180,36 @@ const Recorder = {
   MIN_ASR_SECONDS: 1.2,
   ASR_PAD_SECONDS: 0.35,
 
+  // 识别耗时几乎只跟音频长度走，而孩子松手总比说完晚半秒到一秒。先掐掉
+  // 首尾的静音再送识别：上传的字节少了，模型要听的部分短了，识别内容一
+  // 字不少。阈值取得很低（0.015），只掐真正的静音，气声和尾音都留着。
+  TRIM_THRESHOLD: 0.015,
+  TRIM_KEEP_SECONDS: 0.12,
+
+  trimSilence(samples) {
+    if (!samples || !samples.length) return samples;
+    const th = this.TRIM_THRESHOLD;
+    let first = -1, last = -1;
+    for (let i = 0; i < samples.length; i++) {
+      const v = samples[i] < 0 ? -samples[i] : samples[i];
+      if (v > th) { if (first < 0) first = i; last = i; }
+    }
+    if (first < 0) return samples;               // 整段都是静音：原样返回
+    const keep = Math.round(this.TRIM_KEEP_SECONDS * this.TARGET_RATE);
+    const from = Math.max(0, first - keep);
+    const to = Math.min(samples.length, last + keep);
+    return samples.subarray(from, to);
+  },
+
   padForAsr(samples) {
     if (!samples || !samples.length) return null;
+    const core = this.trimSilence(samples);
     const pad = Math.round(this.ASR_PAD_SECONDS * this.TARGET_RATE);
     const floor = Math.round(this.MIN_ASR_SECONDS * this.TARGET_RATE);
-    const needed = Math.max(floor - samples.length - pad * 2, 0);
+    const needed = Math.max(floor - core.length - pad * 2, 0);
     const tail = pad + needed;
-    const out = new Float32Array(pad + samples.length + tail);
-    out.set(samples, pad);                       // rest stays zero = silence
+    const out = new Float32Array(pad + core.length + tail);
+    out.set(core, pad);                          // rest stays zero = silence
     return this._encodeWav(out, this.TARGET_RATE);
   },
 

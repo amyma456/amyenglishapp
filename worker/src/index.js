@@ -228,10 +228,22 @@ async function transcribe(request, env) {
   }
 
   try {
-    const out = await env.AI.run(model, input);
+    let out = await env.AI.run(model, input);
+    let text = (out && out.text ? out.text : '').trim();
+    // The fast model is the default for read-alongs, but a shorter clip or a
+    // quiet child can come back empty from it. Falling back to the bigger
+    // model here costs one extra model call only in that case — the client
+    // never sees a failure it would have to ask the child to repeat.
+    if (!text && model !== MODEL) {
+      out = await env.AI.run(MODEL, { audio: [...bytes] });
+      text = (out && out.text ? out.text : '').trim();
+      if (text) return json({ model: MODEL, text: text,
+                              words: (out && out.words) || null,
+                              wordCount: (out && out.word_count) || null });
+    }
     return json({
       model: model,
-      text: (out && out.text ? out.text : '').trim(),
+      text: text,
       words: (out && out.words) || null,
       wordCount: (out && out.word_count) || null,
     });
