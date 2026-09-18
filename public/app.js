@@ -5157,18 +5157,18 @@ const App = {
   _renderHoldReadPanel(followEl, mi, qi, dayIdx, sentence) {
     const sid = 'hr-' + mi + '-' + qi;
     const stid = 'qr-status-' + mi + '-' + qi;
-    const esc = this._escHtml || function(s) {
-      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    };
+    const sentid = 'rd-sent-' + mi + '-' + qi;
     followEl.innerHTML = '<div class="speak-record show" style="text-align:center">'
       + '<p class="fs-12 text-sub">请按住麦克风朗读下面这句完整的话：</p>'
-      + '<div class="speak-sentence" style="font-size:18px;margin:8px 0;color:var(--text)">' + esc(sentence) + '</div>'
+      + '<div class="rd-sentence" id="' + sentid + '">' + this._readSentenceHtml(sentence) + '</div>'
+      + '<div class="rd-live-hint" id="rd-live-' + mi + '-' + qi + '"></div>'
       + '<div id="' + stid + '" style="min-height:18px;margin:6px 0;color:var(--text-sub);font-size:14px"></div>'
       + '<button id="' + sid + '" class="speak-btn qr-hold-btn" '
       + 'style="background:var(--primary);margin-top:8px;font-size:18px;padding:18px 32px;'
       + 'user-select:none;-webkit-user-select:none;touch-action:none;border-radius:24px;min-width:200px">'
       + '🎤 按住跟读</button>'
-      + '<p class="fs-12 text-sub" style="margin-top:8px">按住朗读，松手立即打分。≥60 分才能进入下一题。</p>'
+      + '<p class="fs-12 text-sub" style="margin-top:8px">按住朗读，读到的词会变绿打勾。≥60 分才能进入下一题。</p>'
+      + '<p class="fs-12 text-sub" style="margin-top:2px">不认识的词，点一下就有读音和中文意思。</p>'
       + '</div>';
     const btn = document.getElementById(sid);
     if (!btn) return;
@@ -5183,11 +5183,206 @@ const App = {
     btn.addEventListener('touchcancel', onEnd);
   },
 
+  // ===== 跟读：逐词标记 =====
+  //
+  // 句子拆成一个个词渲染。读对的词变绿打勾，读错的标红波浪线，光标（浅橙）
+  // 停在他还没读到的那个词上。孩子一眼能看出读到哪、哪个词没过。
+  //
+  // 出词有两条路，按"能不能用"自动挑：
+  //   A. 手机自带识别（iOS 走 Apple 服务，境内可用）：边说边出词，松手瞬间
+  //      就有分，完全不等网络 —— 这是唯一能把等待压到 0 的办法。
+  //   B. 录下来送 whisper（安卓浏览器在国内基本调不到识别服务）：松手后
+  //      1.5–3.5s 出分，分数到的同时逐词标出来。
+  //   两条同时开着，A 报错就把 A 关掉（_srBroken），B 照常兜底 —— 不会因为
+  //   试 A 失败而白丢一次录音。
+  _escHtml(s) {
+    return String(s === undefined || s === null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  },
+
+  // 把句子切成「显示片段」，每个可读片段带一个序号；数字按朗读时展开后的
+  // 个数记在 n 上（"21" 读作 "twenty one"，占 2 个归一化词，"3D" 占 2 个），
+  // 这样和 alignSpeech 的逐词结果能一一对上，不会整体错位。
+  _readTokens(sentence) {
+    const parts = String(sentence || '').match(/[A-Za-z0-9][A-Za-z0-9'\-]*|[^A-Za-z0-9]+/g) || [];
+    const display = [];
+    const words = [];
+    let wi = 0;
+    parts.forEach(function(p) {
+      if (/^[A-Za-z0-9]/.test(p)) {
+        const sub = App._tokens(p);
+        display.push({ text: p, word: true, wi: wi, n: sub.length || 1 });
+        for (let k = 0; k < sub.length; k++) words.push(sub[k]);
+        wi++;
+      } else {
+        display.push({ text: p, word: false, wi: -1, n: 0 });
+      }
+    });
+    return { display: display, words: words, wordCount: wi };
+  },
+
+  _readSentenceHtml(sentence) {
+    const t = this._readTokens(sentence);
+    const esc = this._escHtml;
+    let html = '';
+    t.display.forEach(function(d) {
+      if (!d.word) { html += esc(d.text); return; }
+      html += '<span class="rd-w" data-w="' + d.wi + '" data-n="' + d.n + '">' + esc(d.text) + '</span>';
+    });
+    return html;
+  },
+
+  _clearReadMarks(mi, qi) {
+    const panel = document.getElementById('rd-sent-' + mi + '-' + qi);
+    if (!panel) return;
+    panel.querySelectorAll('.rd-w').forEach(function(el) {
+      el.classList.remove('rd-ok', 'rd-bad', 'rd-cur');
+    });
+  },
+
+  // 按逐词对齐结果给句子上色。live=true 时只标"读对了"（绿）并把光标停在
+  // 下一个词上 —— 实时阶段识别难免听岔，这时候就飘红会冤枉孩子，反而让他
+  // 不敢读。红色只在最终结果里出现，那才作数。
+  _markReadProgress(mi, qi, sentence, spoken, live) {
+    const panel = document.getElementById('rd-sent-' + mi + '-' + qi);
+    if (!panel) return null;
+    const spans = panel.querySelectorAll('.rd-w');
+    const a = this.alignSpeech(sentence, spoken || '');
+    const targets = a.items.filter(function(x) { return x.target; });
+    const badWords = [];
+    let k = 0;
+    let curSet = false;
+
+    spans.forEach(function(sp) {
+      const n = parseInt(sp.getAttribute('data-n') || '1', 10) || 1;
+      let bad = 0, seen = 0;
+      const localBad = [];
+      for (let i = 0; i < n; i++) {
+        const it = targets[k++];
+        if (!it) break;
+        seen++;
+        if (it.status === 'ok') continue;
+        bad++;
+        localBad.push({ expected: it.target, heard: it.spoken || null });
+      }
+      sp.classList.remove('rd-ok', 'rd-bad', 'rd-cur');
+      if (!seen) {
+        if (!curSet) { sp.classList.add('rd-cur'); curSet = true; }
+        return;
+      }
+      if (bad) {
+        if (live) {
+          // 实时阶段先不标红，只把光标停在这个词上让孩子再读清楚些。
+          if (!curSet) { sp.classList.add('rd-cur'); curSet = true; }
+        } else {
+          sp.classList.add('rd-bad');
+          localBad.forEach(function(x) { badWords.push(x); });
+        }
+      } else {
+        sp.classList.add('rd-ok');
+      }
+    });
+    return { align: a, badWords: badWords };
+  },
+
+  // 手机自带识别。iOS Safari 用 Apple 的服务，境内可用；安卓浏览器大多调
+  // 不到 Google 的服务，一启动就报错，这时把整条路关掉（_srBroken），后面
+  // 的题不再重复试 —— 否则每道题都要白等一次失败。
+  _liveRec: null,
+  _srBroken: false,
+
+  _srCtor() {
+    if (this._srBroken) return null;
+    return window.SpeechRecognition || window.webkitSpeechRecognition || null;
+  },
+
+  _liveStart(mi, qi, sentence) {
+    const Ctor = this._srCtor();
+    if (!Ctor || this._liveRec) return;
+    const self = this;
+    let rec;
+    try { rec = new Ctor(); } catch (e) { this._srBroken = true; return; }
+
+    rec.lang = 'en-US';
+    rec.continuous = true;
+    rec.interimResults = true;
+    rec.maxAlternatives = 1;
+
+    const live = { rec: rec, final: '', interim: '', stopped: false, errored: false };
+    this._liveRec = live;
+
+    rec.onresult = function(ev) {
+      let fin = '', inter = '';
+      for (let i = ev.resultIndex; i < ev.results.length; i++) {
+        const r = ev.results[i];
+        if (r.isFinal) fin += r[0].transcript + ' ';
+        else inter += r[0].transcript + ' ';
+      }
+      if (fin) live.final += fin;
+      live.interim = inter;
+      const spoken = (live.final + ' ' + live.interim).trim();
+      if (!spoken) return;
+      const hint = document.getElementById('rd-live-' + mi + '-' + qi);
+      if (hint) hint.textContent = '🔵 听到：' + spoken;
+      self._markReadProgress(mi, qi, sentence, spoken, true);
+    };
+
+    rec.onerror = function(ev) {
+      live.errored = true;
+      self._srBroken = true;   // 这台设备走不通，整场不再试
+      console.warn('live speech recognition unavailable:', ev && ev.error);
+      const hint = document.getElementById('rd-live-' + mi + '-' + qi);
+      if (hint) hint.textContent = '';
+    };
+
+    rec.onend = function() {
+      // iOS 上 continuous 会被忽略，孩子一停顿它自己就结束了。
+      // 只要手指还按着、也没报错，就接着开一段继续听。
+      if (self._holdReadActive && !live.stopped && !live.errored) {
+        try { rec.start(); } catch (e) { /* 下一段开不起来就算了，B 路兜底 */ }
+      }
+    };
+
+    try { rec.start(); }
+    catch (e) { this._srBroken = true; this._liveRec = null; }
+  },
+
+  // 松手时收尾：等最后一段 final 结果吐出来（最迟 450ms），拿不到就返回 null。
+  _liveStop() {
+    const live = this._liveRec;
+    this._liveRec = null;
+    if (!live) return Promise.resolve(null);
+    live.stopped = true;
+    return new Promise(function(resolve) {
+      let settled = false;
+      const done = function() {
+        if (settled) return;
+        settled = true;
+        const txt = (live.final + ' ' + live.interim).trim();
+        resolve(txt || null);
+      };
+      try { live.rec.onend = done; live.rec.stop(); }
+      catch (e) { done(); return; }
+      setTimeout(done, 450);
+    });
+  },
+
   _holdReadStart(mi, qi, dayIdx, sentence) {
     if (this._holdReadActive) return;
     this._holdReadActive = { mi: mi, qi: qi, dayIdx: dayIdx, sentence: sentence, startedAt: Date.now() };
     Recorder.warmUp(); Api.warmup();
     this._startClipCapture();
+
+    // 新一轮朗读：清掉上一轮的绿/红，把光标放回句首。
+    this._clearReadMarks(mi, qi);
+    const panel = document.getElementById('rd-sent-' + mi + '-' + qi);
+    if (panel) { const first = panel.querySelector('.rd-w'); if (first) first.classList.add('rd-cur'); }
+    const hint = document.getElementById('rd-live-' + mi + '-' + qi);
+    if (hint) hint.textContent = '';
+
+    this._liveStart(mi, qi, sentence);
+
     // Cap a held read at 10s — long enough for a child to read a sentence,
     // short enough that a stuck button doesn't keep the mic open forever.
     this._holdReadTimer = setTimeout(() => this._holdReadEnd(mi, qi, dayIdx), 10000);
@@ -5204,6 +5399,8 @@ const App = {
     // transcription through the ASR pipeline.
     if (Date.now() - ctx.startedAt < 250) {
       this._holdReadActive = null;
+      this._liveStop();
+      this._clearReadMarks(mi, qi);
       this._setHoldReadUI(mi, qi, 'mistap', null, false);
       return;
     }
@@ -5211,24 +5408,40 @@ const App = {
     this._setHoldReadUI(mi, qi, 'scoring', null, false);
 
     const self = this;
-    this._finishClipCapture().then(async (blob) => {
+    const liveP = this._liveStop();
+    const clipP = this._finishClipCapture();
+
+    Promise.all([liveP, clipP]).then(async function(res) {
+      const liveText = res[0];
+      const blob = res[1];
       let spoken = null;
-      if (blob) {
+      let source = null;
+
+      // A 路优先：手机自带识别已经给了文字，直接出分，不等网络。
+      if (liveText && !Api.isFillerTranscript(liveText)) {
+        spoken = liveText.toLowerCase();
+        source = 'live';
+      }
+      // B 路兜底：录下来的音频送 whisper。
+      if (!spoken && blob) {
         const forAsr = (self._spClipSamples && Recorder.padForAsr(self._spClipSamples)) || blob;
         try {
           const out = await Api.transcribe(forAsr, null, { fast: true });
-          if (out && out.text && !Api.isFillerTranscript(out.text)) spoken = out.text.toLowerCase();
+          if (out && out.text && !Api.isFillerTranscript(out.text)) {
+            spoken = out.text.toLowerCase();
+            source = 'whisper';
+          }
         } catch (e) { console.warn('Hold-read transcribe failed:', e); }
       }
-      self._showHoldReadResult(mi, qi, dayIdx, ctx.sentence, spoken);
-    }).catch(e => {
+      self._showHoldReadResult(mi, qi, dayIdx, ctx.sentence, spoken, source);
+    }).catch(function(e) {
       console.warn('Hold-read capture failed:', e);
-      self._showHoldReadResult(mi, qi, dayIdx, ctx.sentence, null);
+      self._showHoldReadResult(mi, qi, dayIdx, ctx.sentence, null, null);
     });
   },
 
   // status is one of: 'recording' | 'scoring' | 'mistap' | 'passed' | 'failed' | 'noaudio'
-  _setHoldReadUI(mi, qi, status, score, passed) {
+  _setHoldReadUI(mi, qi, status, score, passed, extra) {
     const btn = document.getElementById('hr-' + mi + '-' + qi);
     const statusEl = document.getElementById('qr-status-' + mi + '-' + qi);
     if (!btn) return;
@@ -5261,14 +5474,33 @@ const App = {
       btn.style.background = 'var(--success)';
       btn.innerHTML = '✅ 已通过 ' + score + ' 分';
       btn.disabled = true;
-      if (statusEl) statusEl.innerHTML = '<span style="color:var(--success);font-weight:600">✅ 跟读通过 ' + score + ' 分</span>';
+      if (statusEl) statusEl.innerHTML =
+        '<div style="font-size:34px;font-weight:700;color:var(--success);line-height:1.15">' + score + ' 分</div>'
+        + '<span style="color:var(--success);font-weight:600">✅ 每个词都读到了，通过！</span>';
       return;
     }
     if (status === 'failed') {
       btn.style.background = 'var(--primary)';
       btn.innerHTML = '🎤 再按一次跟读';
       btn.disabled = false;
-      if (statusEl) statusEl.innerHTML = '<span style="color:var(--danger);font-weight:600">⚠️ ' + score + ' 分，未达 60 分。请再读一次。</span>';
+      if (statusEl) {
+        const bad = (extra && extra.badWords) || [];
+        let html = '<div style="font-size:34px;font-weight:700;color:var(--danger);line-height:1.15">'
+                 + score + ' 分</div>'
+                 + '<span style="color:var(--danger);font-weight:600">⚠️ 未达 60 分，需要重读</span>';
+        if (bad.length) {
+          const list = bad.slice(0, 6).map(function(x) {
+            return x.heard ? '<b>' + x.expected + '</b>（听成了 ' + x.heard + '）' : '<b>' + x.expected + '</b>（没读到）';
+          }).join('、');
+          html += '<div class="rd-retry">红色波浪线的词就是没读对的：' + list
+                + '<br>先听一遍示范，再把<b>整句</b>重读一次。'
+                + '<div><button class="speak-btn rd-again-btn" style="font-size:13px;padding:6px 14px" '
+                + 'onclick="App._replayReadSentence(' + mi + ',' + qi + ')">🔊 听一遍示范</button></div></div>';
+        } else {
+          html += '<div class="rd-retry">把整句再读一次，注意读清楚每个词。</div>';
+        }
+        statusEl.innerHTML = html;
+      }
       return;
     }
     if (status === 'noaudio') {
@@ -5280,23 +5512,40 @@ const App = {
     }
   },
 
-  _showHoldReadResult(mi, qi, dayIdx, sentence, spoken) {
+  // 重读前先听一遍标准示范。句子从当前题目现算，不依赖面板里存了什么。
+  _replayReadSentence(mi, qi) {
+    const m = HOMEWORK_DATA && HOMEWORK_DATA[this.state.currentDay]
+           && HOMEWORK_DATA[this.state.currentDay].modules[mi];
+    const q = m && m.questions && m.questions[qi];
+    if (!q) return;
+    const s = this._buildReadSentence(m, q);
+    if (s) this.speak(s);
+  },
+
+  _showHoldReadResult(mi, qi, dayIdx, sentence, spoken, source) {
     const m = HOMEWORK_DATA[dayIdx].modules[mi];
     const q = m.questions[qi];
     const lastPick = this._lastPick && this._lastPick[mi + '-' + qi];
     if (!lastPick) return;
     const { oi, isCorrect } = lastPick;
+    const hint = document.getElementById('rd-live-' + mi + '-' + qi);
+    if (hint) hint.textContent = '';
 
     if (!spoken) {
       // No usable audio at all — let the child try again. We don't fabricate
       // a self-score here: a "speaking" question with no recorded audio
       // means the mic was denied or transcription failed, so just reset.
+      this._clearReadMarks(mi, qi);
       this._setHoldReadUI(mi, qi, 'noaudio', null, false);
       return;
     }
 
-    const score = this.calcPronScore(sentence.toLowerCase(), spoken);
+    // 逐词上色：读对的绿勾、读错/漏读的红色波浪线，光标全部撤掉。
+    const marked = this._markReadProgress(mi, qi, sentence, spoken, false);
+    const score = marked ? marked.align.score : this.calcPronScore(sentence.toLowerCase(), spoken);
     const passed = score >= 60;
+
+    if (this._debugRead) console.log('[read] source=' + source + ' score=' + score + ' spoken=' + spoken);
 
     if (passed) {
       this._recordAnswer(dayIdx, mi, qi, oi, isCorrect);
@@ -5328,10 +5577,10 @@ const App = {
       return;
     }
 
-    // < 60：保持 stage-next-btn 锁定（如果题目本来就要求锁），显示分数，
-    // 让孩子按住麦克风再读一次。没选到的按钮基本不可点；nudge 类也撤了，
-    // 避免孩子在没拿到分时就被催促"点这里"。
-    this._setHoldReadUI(mi, qi, 'failed', score, false);
+    // < 60：保持 stage-next-btn 锁定（如果题目本来就要求锁），逐词标出问题，
+    // 让孩子听着示范把整句重读一次。
+    const badWords = marked ? marked.badWords : [];
+    this._setHoldReadUI(mi, qi, 'failed', score, false, { badWords: badWords });
     if (!this.isTeacher()) {
       const next = document.getElementById('stage-next-btn');
       if (next) { next.disabled = true; next.classList.remove('nudge'); }
@@ -5585,10 +5834,165 @@ const App = {
   closeModal() {
     document.getElementById('modal-overlay').classList.remove('show');
   },
+
+  // ===== Tap-a-word lookup =====
+  //
+  // 孩子读到不认识的词（cinema 这种），点一下就要有音标、中文意思和读音。
+  //
+  // 没有去每个渲染函数里给单词包 <span>，那样要改十几处渲染代码，而且以后
+  // 新加的界面又会漏。改成全局代理：用 caretRangeFromPoint 拿到手指下面那个
+  // 文字的字符偏移，再往两边扩到词边界。页面上任何位置的英文单词都自动可点，
+  // 新界面不用做任何事。
+  //
+  // 三道闸门，防止误触：
+  //   1. 点到的元素在 button/input/label/a 里 → 不查词（那是功能操作）；
+  //   2. 取出来的词必须至少 2 个字母，且全是 a-z/'/-；
+  //   3. 弹层开着的时候再点别处 → 只关弹层。
+  _lookupEl: null,
+  _lookupWord: '',
+
+  _initWordLookup() {
+    if (this._lookupBound) return;
+    this._lookupBound = true;
+    const self = this;
+    const handler = function(ev) {
+      // 长按选择文字时不打扰
+      try {
+        const sel = window.getSelection && window.getSelection();
+        if (sel && sel.toString && sel.toString().trim()) return;
+      } catch (e) {}
+      const pt = self._eventPoint(ev);
+      if (!pt) return;
+      const word = self._wordAtPoint(pt.x, pt.y);
+      if (!word) { self._closeWordSheet(); return; }
+      ev.preventDefault();
+      ev.stopPropagation();
+      self._openWordSheet(word);
+    };
+    document.addEventListener('click', handler, true);
+  },
+
+  _eventPoint(ev) {
+    let x = null, y = null;
+    if (ev.changedTouches && ev.changedTouches.length) {
+      x = ev.changedTouches[0].clientX; y = ev.changedTouches[0].clientY;
+    } else if (typeof ev.clientX === 'number' && ev.clientX) {
+      x = ev.clientX; y = ev.clientY;
+    }
+    if (x === null || y === null) return null;
+    return { x: x, y: y };
+  },
+
+  // 手指落点下面的那个英文单词，取不到就返回 null。
+  _wordAtPoint(x, y) {
+    let node = null, offset = 0;
+    try {
+      if (document.caretRangeFromPoint) {
+        const r = document.caretRangeFromPoint(x, y);
+        if (r) { node = r.startContainer; offset = r.startOffset; }
+      } else if (document.caretPositionFromPoint) {
+        const p = document.caretPositionFromPoint(x, y);
+        if (p) { node = p.offsetNode; offset = p.offset; }
+      }
+    } catch (e) { return null; }
+    if (!node || node.nodeType !== 3) return null;
+
+    // 只认纯文本节点。按钮、输入框、链接、以及**自带点击行为**的元素里的
+    // 字不查 —— 否则孩子点选项想选答案，却被弹层抢走了这次点击，
+    // 答题流程直接断掉。选项、按钮一律让它们自己的 onclick 生效。
+    const el = node.parentElement;
+    if (!el) return null;
+    if (el.closest && el.closest(
+      'button,input,textarea,select,a,option,[onclick],[data-nolookup],'
+      + '.q-option,.btn,.tab,.tab-item,.modal-close,.speak-btn,.qr-hold-btn'
+    )) return null;
+
+    const text = node.nodeValue || '';
+    if (!text) return null;
+
+    // 从 caret 往两边扩。caret 可能落在词尾（offset == 词末），所以先看
+    // offset 处是不是字母，不是就往左挪一格再判。
+    const isWordChar = c => /[A-Za-z'\-]/.test(c);
+    let i = Math.min(offset, text.length - 1);
+    if (!isWordChar(text[i] || '')) {
+      if (i === 0 || !isWordChar(text[i - 1] || '')) return null;
+      i = i - 1;
+    }
+    let a = i, b = i;
+    while (a > 0 && isWordChar(text[a - 1])) a--;
+    while (b < text.length - 1 && isWordChar(text[b + 1])) b++;
+    let word = text.slice(a, b + 1).replace(/^['\-]+|['\-]+$/g, '');
+
+    if (word.length < 2 || !/^[A-Za-z][A-Za-z'\-]*$/.test(word)) return null;
+    // 全大写的缩写（OK、USA）查出来没意义，但保留，孩子可能真想查。
+    return word;
+  },
+
+  _wordSheetEl() {
+    if (this._lookupEl && document.body.contains(this._lookupEl)) return this._lookupEl;
+    const wrap = document.createElement('div');
+    wrap.id = 'word-sheet';
+    wrap.setAttribute('data-nolookup', '1');
+    wrap.className = 'word-sheet';
+    wrap.innerHTML =
+      '<div class="ws-mask" data-nolookup="1"></div>'
+      + '<div class="ws-card" data-nolookup="1">'
+      +   '<div class="ws-head">'
+      +     '<span class="ws-word" id="ws-word"></span>'
+      +     '<span class="ws-phon" id="ws-phon"></span>'
+      +     '<button class="ws-speak" id="ws-speak" title="听读音">🔊</button>'
+      +     '<button class="ws-close" id="ws-close" title="关闭">×</button>'
+      +   '</div>'
+      +   '<div class="ws-zh" id="ws-zh"></div>'
+      + '</div>';
+    document.body.appendChild(wrap);
+    const self = this;
+    wrap.querySelector('.ws-mask').addEventListener('click', function() { self._closeWordSheet(); });
+    wrap.querySelector('#ws-close').addEventListener('click', function() { self._closeWordSheet(); });
+    wrap.querySelector('#ws-speak').addEventListener('click', function() {
+      if (self._lookupWord) self.speak(self._lookupWord);
+    });
+    this._lookupEl = wrap;
+    return wrap;
+  },
+
+  _closeWordSheet() {
+    if (this._lookupEl) this._lookupEl.classList.remove('show');
+  },
+
+  async _openWordSheet(word) {
+    const el = this._wordSheetEl();
+    this._lookupWord = word.toLowerCase();
+    el.querySelector('#ws-word').textContent = word;
+    el.querySelector('#ws-phon').textContent = '';
+    el.querySelector('#ws-zh').innerHTML = '<span class="ws-loading">正在查…</span>';
+    el.classList.add('show');
+
+    // 点词即读：孩子点这个词多半就是不认识，先让他听见怎么念。
+    this.speak(word);
+
+    const info = await Api.dict(word);
+    if (this._lookupWord !== word.toLowerCase()) return;   // 已经点了别的词
+    if (!info) {
+      el.querySelector('#ws-zh').innerHTML = '<span class="ws-none">查不到这个词</span>';
+      return;
+    }
+    el.querySelector('#ws-phon').textContent = info.phon ? '/' + info.phon + '/' : '';
+    if (info.zh) {
+      el.querySelector('#ws-zh').textContent = info.zh;
+    } else {
+      el.querySelector('#ws-zh').innerHTML = '<span class="ws-none">暂时查不到中文意思，点 🔊 听读音</span>';
+    }
+  },
+
 };
 
 // Init
 App.init();
+
+// 点词查义：全局代理，页面上任何英文单词点一下都有音标、中文意思和读音。
+// 挂一次就够，跟路由/渲染无关。
+App._initWordLookup();
 
 // Preload voices (some browsers need this)
 if (window.speechSynthesis) {

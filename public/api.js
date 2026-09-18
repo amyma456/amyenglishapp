@@ -740,6 +740,50 @@ const Api = {
     return (sameZone ? '' : this.API_HOST) + '/api/health';
   },
 
+  get DICT_URL() {
+    const h = (typeof location !== 'undefined' && location.hostname) || '';
+    const sameZone = h === 'amyeng.top' || h.endsWith('.amyeng.top');
+    return (sameZone ? '' : this.API_HOST) + '/api/dict';
+  },
+
+  // 查词：孩子点一个不认识的单词，要音标 + 中文意思 + 读音。
+  //
+  // 走自家 Worker 代理（跨域 + 边缘缓存），本地再压一层内存/localStorage
+  // 缓存 —— 一节课里同一个词可能被点好几次，第二次起必须是零等待，否则
+  // 孩子会以为"点了没反应"。
+  _dictMem: {},
+  _dictKey(word) { return 'amy_dict_' + word; },
+
+  async dict(word) {
+    const w = String(word || '').trim().toLowerCase().replace(/^[^a-z]+|[^a-z]+$/g, '');
+    if (!w || !/^[a-z][a-z'\-]*$/.test(w)) return null;
+    if (this._dictMem[w]) return this._dictMem[w];
+    try {
+      const raw = localStorage.getItem(this._dictKey(w));
+      if (raw) {
+        const cached = JSON.parse(raw);
+        // 空结果也缓存过 —— 但别让它永久占坑，7 天后重查。
+        if (cached && (cached.ok || Date.now() - (cached.at || 0) < 7 * 864e5)) {
+          this._dictMem[w] = cached;
+          return cached;
+        }
+      }
+    } catch (e) {}
+    try {
+      const res = await fetch(this.DICT_URL + '?word=' + encodeURIComponent(w));
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      const out = { word: w, phon: data.phon || '', zh: data.zh || '', ok: !!data.zh, at: Date.now() };
+      this._dictMem[w] = out;
+      try { localStorage.setItem(this._dictKey(w), JSON.stringify(out)); } catch (e) {}
+      return out;
+    } catch (e) {
+      console.warn('dict failed:', w, e);
+      // 查不到不缓存，下次还有机会。
+      return { word: w, phon: '', zh: '', ok: false, error: true };
+    }
+  },
+
   // 读之前先把连接热好。
   //
   // 松手后的等待几乎全在网络往返上：tiny / turbo / 默认三个模型线上各跑三遍，

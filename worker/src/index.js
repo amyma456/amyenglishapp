@@ -46,6 +46,10 @@ export default {
       return cors(await transcribe(request, env), env);
     }
 
+    if (url.pathname === '/api/dict') {
+      return cors(await dict(url, env, ctx), env);
+    }
+
     if (url.pathname.startsWith('/api/class/')) {
       return cors(await classApi(request, url, env), env);
     }
@@ -187,6 +191,113 @@ async function tts(request, env, ctx) {
       'Cache-Control': 'public, max-age=31536000, immutable',
     },
   });
+  ctx.waitUntil(cache.put(cacheKey, res.clone()));
+  return res;
+}
+
+// ---------------------------------------------------------------------------
+// 查词：孩子点一个不认识的单词，要立刻看到音标 + 中文意思 + 听到读音。
+//
+// 走服务端代理而不是让浏览器直接调有道，原因有两个：
+//   1. 跨域 —— dict.youdao.com 不给浏览器 CORS 头，前端 fetch 一定失败；
+//   2. 代理层能挂 caches.default，同一个词全站孩子只查一次，之后是边缘
+//      命中，几十毫秒返回。
+// 只接受单个英文词（字母、连字符、撇号），挡住把整句塞进来当翻译用。
+// ---------------------------------------------------------------------------
+
+const DICT_CACHE_SECONDS = 60 * 60 * 24 * 30;
+// 改了释义过滤规则就把它 +1，让旧缓存立刻失效。
+const DICT_CACHE_VERSION = 2;
+
+async function dict(url, env, ctx) {
+  const raw = (url.searchParams.get('word') || '').trim();
+  const word = raw.toLowerCase();
+  // 只收单个词。带空格的一律拒掉 —— 否则孩子误点整句时，会把一整句
+  // 塞给有道当"翻译"，返回一段莫名其妙的文本。
+  if (!word || word.length > 40 || !/^[a-z][a-z'\-]*$/.test(word)) {
+    return json({ error: 'bad_word' }, 400);
+  }
+
+  // 缓存键里带版本号：过滤逻辑一改就升 DICT_CACHE_VERSION，否则旧结果会
+  // 在边缘赖着不走（实测改完过滤规则，piano 还是返回改之前的脏释义）。
+  const cacheKey = new Request(
+    'https://dict.internal/v' + DICT_CACHE_VERSION + '/' + encodeURIComponent(word),
+    { method: 'GET' },
+  );
+  const cache = caches.default;
+  const hit = await cache.match(cacheKey);
+  if (hit) return hit;
+
+  let phon = '';
+  let zh = '';
+
+  // 上游响应直接让 Cloudflare 边缘缓存：同一个词全站孩子只穿透一次
+  // （实测穿透约 0.9s，命中约 30ms）。比只靠 cache.put 更可靠 ——
+  // cache.put 是每 colo 一份，孩子换地方就重新穿透一次。
+  const UPSTREAM = { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; AmyEnglishApp/1.0)' },
+                     cf: { cacheTtl: 604800, cacheEverything: true } };
+
+  // 主源：有道 jsonapi 的 ec 段，同时有音标和简明释义。
+  try {
+    const r = await fetch('https://dict.youdao.com/jsonapi?q=' + encodeURIComponent(word), UPSTREAM);
+    if (r.ok) {
+      const data = await r.json();
+      const node = data && data.ec && data.ec.word;
+      const w = Array.isArray(node) ? node[0] : node;
+      if (w) {
+        phon = w.usphone || w.ukphone || '';
+        const trs = Array.isArray(w.trs) ? w.trs : [];
+        const lines = [];
+        for (const t of trs) {
+          const tr = t && t.tr && t.tr[0];
+          // 注意 tr.l.i 是**数组**（一行一个义项），不是字符串 ——
+          // 直接 indexOf 永远返回 -1，过滤会静默失效。
+          let line = tr && tr.l && tr.l.i;
+          if (Array.isArray(line)) line = line.join(' ');
+          line = String(line || '').replace(/\s+/g, ' ').trim();
+          // 人名、专名的义项对小学生没有意义，跳过。
+          if (line && line.indexOf('【名】') === -1 && line.indexOf('（人名）') === -1) {
+            lines.push(line);
+          }
+          if (lines.length >= 2) break;
+        }
+        zh = lines.join('；');
+        // 义项里常夹着人名/专名的尾巴（"（Piano）人名，法、意、葡译作皮亚诺"），
+        // 对小学生是纯噪音，按分号拆开逐段丢掉。
+        zh = zh.split('；')
+               .map(function(x) { return x.trim(); })
+               .filter(function(x) { return x && x.indexOf('人名') === -1; })
+               .join('；');
+      }
+    }
+  } catch (e) { /* 落到下面的兜底源 */ }
+
+  // 兜底源：suggest 接口只有 248 字节，覆盖率高，但没有音标。
+  if (!zh) {
+    try {
+      const r = await fetch(
+        'https://dict.youdao.com/suggest?num=1&doctype=json&q=' + encodeURIComponent(word),
+        UPSTREAM,
+      );
+      if (r.ok) {
+        const data = await r.json();
+        const e = data && data.data && data.data.entries && data.data.entries[0];
+        if (e && e.explain) zh = String(e.explain).replace(/\.\.\.$/, '').trim();
+      }
+    } catch (e) { /* 两个源都挂了就只能返回空 */ }
+  }
+
+  const res = new Response(
+    JSON.stringify({ word: word, phon: phon, zh: zh, ok: !!zh }),
+    {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Cache-Control': 'public, max-age=' + DICT_CACHE_SECONDS,
+      },
+    },
+  );
+  // 查不到的词也缓存（空结果），免得每次都打一遍上游。
   ctx.waitUntil(cache.put(cacheKey, res.clone()));
   return res;
 }

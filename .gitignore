@@ -4,6 +4,9 @@
 # Temp files
 *.tmp
 
+# 临时 commit 消息文件（曾经被 git add -A 误提交进仓库一次）
+.commit-msg-*.txt
+
 # Deploy directory (deployment copy)
 deploy/
 
