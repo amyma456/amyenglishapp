@@ -4775,6 +4775,10 @@ const App = {
         html += '<div class="mb-8"><button class="btn btn-outline btn-sm" onclick="App.speak(\'' + m.audio_text.replace(/'/g,"\\'") + '\')">听录音</button></div>';
       }
       html += '<div class="stage-q">' + this._renderOneQuestion(m, step.mi, step.qi, dayIdx) + '</div>';
+      // 学生路径：题目可跟读时先把 stage-next-btn 锁住，必须跟读 ≥60 分
+      // 才能进下一题——避免孩子在没读完/读得太糊的情况下被自动跳走。
+      const qHasRead = !!this._buildReadSentence(m, m.questions[step.qi]);
+      if (qHasRead && !this.isTeacher()) this._lockNextOnRender = true;
       const self = this;
       setTimeout(function(){ self._autoSpeakQuestion(m, step.mi, step.qi, dayIdx); }, 250);
     } else if (step.kind === 'speaking') {
@@ -4856,6 +4860,57 @@ const App = {
     }, 300);
 
     return html;
+  },
+
+  // 跟读用的完整英文句。题目里的横杠（"I ___ to school."）要替换成正确
+  // 选项，这样跟读面板上显示的是一句完整的话，孩子按住麦克风读到的是
+  // 完整句子（不会卡在横杠处）。同时按 _questionSpeechText 的规则剥掉
+  // 指令词（"Choose the correct answer."）和中文，所以孩子不会跟着读
+  // "KET choose the correct answer" 这种话。
+  _buildReadSentence(m, q) {
+    if (!q) return '';
+    // 听力题直接用听力原文
+    if (q.audio_text) {
+      var at = this._ttsText(q.audio_text);
+      if (at) return at;
+    }
+    var parts = this._stemParts(q.question);
+    var rest = parts.rest;
+    if (!rest) return '';
+    // 把 ___ 替换成正确选项，构出一句完整的话
+    var filled = rest;
+    if (/_{2,}/.test(filled)) {
+      var ans = '';
+      if (q.options && typeof q.answer === 'number' && q.options[q.answer] != null) {
+        ans = String(q.options[q.answer]).trim();
+      } else if (q.answer != null) {
+        ans = String(q.answer).trim();
+      }
+      if (ans) filled = filled.replace(/_{2,}/g, ans);
+    }
+    var stem = this._ttsText(filled);
+    // 兜底：完形填空的题号（"2___"）且 rest 太短，从 passage 里找原句并填空
+    var words = stem.match(/[A-Za-z][A-Za-z'-]*/g) || [];
+    if (words.length < 2) {
+      var marker = String(q.question || '').match(/\d*_{2,}/);
+      if (marker && m && m.passage) {
+        var target = marker[0];
+        var hit = this._splitSentences(m.passage).filter(function(s) {
+          return s.indexOf(target) >= 0;
+        })[0];
+        if (hit) {
+          var ans2 = '';
+          if (q.options && typeof q.answer === 'number' && q.options[q.answer] != null) {
+            ans2 = String(q.options[q.answer]).trim();
+          } else if (q.answer != null) {
+            ans2 = String(q.answer).trim();
+          }
+          if (ans2) hit = hit.replace(target, ans2);
+          return this._ttsText(hit);
+        }
+      }
+    }
+    return stem;
   },
 
   // 一道题该朗读哪一段英文。规则只有一条：读题，不读答案，不读中文。
@@ -5054,7 +5109,8 @@ const App = {
 
     const followEl = document.getElementById('qr-follow-' + mi + '-' + qi);
     if (followEl) {
-      const sentence = q.audio_text || q.question;
+      // 用 _buildReadSentence：剥指令词、剥中文、横杠处用正确答案补全
+      const sentence = this._buildReadSentence(m, q);
       this._renderHoldReadPanel(followEl, mi, qi, dayIdx, sentence);
     }
   },
@@ -5082,7 +5138,7 @@ const App = {
     const m = HOMEWORK_DATA && HOMEWORK_DATA[dayIdx] && HOMEWORK_DATA[dayIdx].modules[mi];
     if (!m) return;
     const q = m.questions[qi];
-    const sentence = q.audio_text || q.question;
+    const sentence = this._buildReadSentence(m, q);
     const followEl = document.getElementById('qr-follow-' + mi + '-' + qi);
     if (followEl) this._renderHoldReadPanel(followEl, mi, qi, dayIdx, sentence);
   },
@@ -5093,7 +5149,7 @@ const App = {
     const m = HOMEWORK_DATA && HOMEWORK_DATA[dayIdx] && HOMEWORK_DATA[dayIdx].modules[mi];
     if (!m) return;
     const q = m.questions[qi];
-    const sentence = q.audio_text || q.question;
+    const sentence = this._buildReadSentence(m, q);
     const followEl = document.getElementById('qr-follow-' + mi + '-' + qi);
     if (followEl) this._renderHoldReadPanel(followEl, mi, qi, dayIdx, sentence);
   },
@@ -5110,14 +5166,14 @@ const App = {
       return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     };
     followEl.innerHTML = '<div class="speak-record show" style="text-align:center">'
-      + '<p class="fs-12 text-sub">请按住麦克风朗读：</p>'
+      + '<p class="fs-12 text-sub">请按住麦克风朗读下面这句完整的话：</p>'
       + '<div class="speak-sentence" style="font-size:18px;margin:8px 0;color:var(--text)">' + esc(sentence) + '</div>'
       + '<div id="' + stid + '" style="min-height:18px;margin:6px 0;color:var(--text-sub);font-size:14px"></div>'
       + '<button id="' + sid + '" class="speak-btn qr-hold-btn" '
       + 'style="background:var(--primary);margin-top:8px;font-size:18px;padding:18px 32px;'
       + 'user-select:none;-webkit-user-select:none;touch-action:none;border-radius:24px;min-width:200px">'
       + '🎤 按住跟读</button>'
-      + '<p class="fs-12 text-sub" style="margin-top:8px">按住朗读，松手立即打分（≥60 通过）</p>'
+      + '<p class="fs-12 text-sub" style="margin-top:8px">按住朗读，松手立即打分。≥60 分才能进入下一题。</p>'
       + '</div>';
     const btn = document.getElementById(sid);
     if (!btn) return;
@@ -5262,7 +5318,13 @@ const App = {
       }
       this._playCorrectSound();
       this._setHoldReadUI(mi, qi, 'passed', score, true);
-      if (qi < m.questions.length - 1) {
+      if (!this.isTeacher()) {
+        // 学生路径：把 stage-next-btn 解锁，让孩子/家长自己点下一题。
+        // 不再 setTimeout 自动朗读——上一题读音还停在孩子耳边，会盖住
+        // 朗读下一题的提示，反而容易让节奏乱掉。
+        const next = document.getElementById('stage-next-btn');
+        if (next) { next.disabled = false; next.classList.add('nudge'); }
+      } else if (qi < m.questions.length - 1) {
         const self = this;
         setTimeout(function() {
           self._autoSpeakQuestion(m, mi, qi + 1, dayIdx);
@@ -5271,8 +5333,14 @@ const App = {
       return;
     }
 
-    // < 60: keep the row locked, show score, allow retry.
+    // < 60：保持 stage-next-btn 锁定（如果题目本来就要求锁），显示分数，
+    // 让孩子按住麦克风再读一次。没选到的按钮基本不可点；nudge 类也撤了，
+    // 避免孩子在没拿到分时就被催促"点这里"。
     this._setHoldReadUI(mi, qi, 'failed', score, false);
+    if (!this.isTeacher()) {
+      const next = document.getElementById('stage-next-btn');
+      if (next) { next.disabled = true; next.classList.remove('nudge'); }
+    }
     this._playWrongSound();
   },
 
