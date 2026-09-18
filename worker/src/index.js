@@ -191,6 +191,31 @@ async function tts(request, env, ctx) {
   return res;
 }
 
+// ---------------------------------------------------------------------------
+// 两个模型要的入参结构不一样。写错不是"效果差一点"，而是直接 500 —— 孩子
+// 这一次朗读的分数就没了。逐个对照官方 schema 确认：
+//   @cf/openai/whisper                 audio: [0..255, ...] 整数数组
+//   @cf/openai/whisper-large-v3-turbo  audio: base64 字符串
+// 把整数数组喂给 turbo 会被拒收："Type mismatch of '/audio'"。
+const TURBO_MODEL = '@cf/openai/whisper-large-v3-turbo';
+const B64_CHUNK = 0x8000;
+
+function toBase64(bytes) {
+  let bin = '';
+  for (let i = 0; i < bytes.length; i += B64_CHUNK) {
+    bin += String.fromCharCode.apply(null, bytes.subarray(i, i + B64_CHUNK));
+  }
+  return btoa(bin);
+}
+
+function fastInput(bytes, mode) {
+  const input = { audio: toBase64(bytes), task: 'transcribe', language: 'en' };
+  if (mode === 'letter') {
+    input.initial_prompt = 'The speaker is reading single English alphabet letters aloud, one at a time.';
+  }
+  return input;
+}
+
 async function transcribe(request, env) {
   // Reject oversized bodies before buffering them.
   const declared = Number(request.headers.get('content-length') || 0);
@@ -212,35 +237,35 @@ async function transcribe(request, env) {
   // it is listening to. ?mode= lets the client pick; ?model= is for A/B tests.
   const url = new URL(request.url);
   const mode = url.searchParams.get('mode') || 'sentence';
-  const model = url.searchParams.get('model') === 'turbo'
-    ? '@cf/openai/whisper-large-v3-turbo' : MODEL;
-
-  const input = { audio: [...bytes] };
-  // NOTE: @cf/openai/whisper accepts only `audio` — language and
-  // initial_prompt are ignored (tested: a Simplified-Chinese prompt still
-  // returned Traditional). Chinese is normalised on the client instead.
-  if (model !== MODEL) {
-    input.task = 'transcribe';
-    input.language = 'en';
-    if (mode === 'letter') {
-      input.initial_prompt = 'The speaker is reading single English alphabet letters aloud, one at a time.';
-    }
-  }
+  const wantFast = url.searchParams.get('model') === 'turbo';
 
   try {
-    let out = await env.AI.run(model, input);
-    let text = (out && out.text ? out.text : '').trim();
-    // The fast model is the default for read-alongs, but a shorter clip or a
-    // quiet child can come back empty from it. Falling back to the bigger
-    // model here costs one extra model call only in that case — the client
-    // never sees a failure it would have to ask the child to repeat.
-    if (!text && model !== MODEL) {
-      out = await env.AI.run(MODEL, { audio: [...bytes] });
-      text = (out && out.text ? out.text : '').trim();
-      if (text) return json({ model: MODEL, text: text,
-                              words: (out && out.words) || null,
-                              wordCount: (out && out.word_count) || null });
+    let out = null;
+    let model = MODEL;
+    if (wantFast) {
+      try {
+        out = await env.AI.run(TURBO_MODEL, fastInput(bytes, mode));
+        model = TURBO_MODEL;
+      } catch (e) {
+        // 快模型额度用尽、临时故障、入参不兼容 —— 任何一种都不能让孩子这
+        // 一次朗读变成"出分失败"。静默降级，下面用默认模型兜住。
+        out = null;
+      }
     }
+
+    let text = (out && out.text ? out.text : '').trim();
+    // 快模型对特别短的片段、或者声音很小的孩子可能返回空。这时多花一次调用
+    // 换回默认模型，孩子不用重读一遍。
+    //
+    // NOTE: @cf/openai/whisper accepts only `audio` — language and
+    // initial_prompt are ignored (tested: a Simplified-Chinese prompt still
+    // returned Traditional). Chinese is normalised on the client instead.
+    if (!text) {
+      out = await env.AI.run(MODEL, { audio: [...bytes] });
+      model = MODEL;
+      text = (out && out.text ? out.text : '').trim();
+    }
+
     return json({
       model: model,
       text: text,
