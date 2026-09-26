@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="73">
+<meta name="app-version" content="74">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon.svg">
 <title>Amy老师英语打卡平台</title>
@@ -438,6 +438,9 @@ body.stage-mode .content-area{padding-block:0}
 .rd-retry{margin-top:10px;padding:10px 12px;border-radius:var(--radius-sm);background:var(--warning-light);font-size:13px;color:var(--text);text-align:left}
 .rd-retry b{color:var(--danger)}
 .rd-retry .rd-again-btn{margin-top:8px;display:inline-block}
+/* 错词纠正卡片：当前要重读的那个词亮出来，读对了原处红波浪线变绿 */
+.rd-repair-card{margin-top:10px;padding:14px 12px;border-radius:16px;background:var(--warning-light);border:1px dashed var(--warning)}
+.rd-repair-word{font-size:32px;font-weight:700;color:var(--warning);line-height:1.3}
 
 /* ---- 点词查义弹层 ---------------------------------------------------- */
 .word-sheet{position:fixed;inset:0;z-index:9000;display:none}

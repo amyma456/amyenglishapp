@@ -3107,7 +3107,7 @@ const App = {
       + 'style="background:var(--primary);margin-top:8px;font-size:18px;padding:18px 32px;'
       + 'user-select:none;-webkit-user-select:none;touch-action:none;border-radius:24px;min-width:200px">'
       + '🎤 点我读</button>'
-      + '<p class="fs-12 text-sub" style="margin-top:8px">点一下开始，读到的词会变绿打勾；读完了再点一下就打分。≥60 分才能进入下一题。</p>'
+      + '<p class="fs-12 text-sub" style="margin-top:8px">点一下开始，读到的词会变绿打勾；读完了再点一下就打分。读错的词要读对了才能进下一题。</p>'
       + '<p class="fs-12 text-sub" style="margin-top:2px">不认识的词，点一下就有读音和中文意思。</p>'
       + '<div id="sp-clip-' + mi + '" class="mt-8"></div>'
       + '</div>';
@@ -3142,6 +3142,10 @@ const App = {
 
   _spReadStart(mi, qi, dayIdx) {
     if (this._spReadActive) return;
+    // 正在单独纠错某个词时不让整句录音插进来（两路录音会打架）。
+    if (this._wordRepair && this._wordRepair.rec) return;
+    // 主动放弃纠错模式，重新整句朗读。
+    if (this._wordRepair) { clearTimeout(this._wordRepair.capTimer); this._wordRepair = null; }
     const m = HOMEWORK_DATA[dayIdx].modules[mi];
     const sentence = this._speakingReadSentence(mi, qi, dayIdx);
     if (!sentence) return;
@@ -3226,10 +3230,24 @@ const App = {
     }
     const marked = this._markReadProgress(mi, qi, sentence, spoken, false);
     const score = marked ? marked.align.score : this.calcPronScore(sentence.toLowerCase(), spoken);
-    const passed = score >= 60;
+    const badWords = marked ? marked.badWords : [];
+    // 通过 = 分数够 60 且没有读错的词。红色波浪线的词要原处重读对了
+    // 才能进下一题（见 _startWordRepair）。
+    const passed = score >= 60 && badWords.length === 0;
     if (passed) {
       this._playCorrectSound();
       this._spReadUI(mi, qi, dayIdx, 'passed', score);
+    } else if (badWords.length) {
+      // 有读错的词：逐个原处重读纠正，全对了才解锁下一题。
+      this._playWrongSound();
+      this._spReadUI(mi, qi, dayIdx, 'repair', score, { badCount: badWords.length });
+      const self = this;
+      this._startWordRepair(mi, qi, sentence, 'sp-status-' + mi + '-' + qi, function() {
+        self._playCorrectSound();
+        self._spReadUI(mi, qi, dayIdx, 'passed', score);
+      }, function() {
+        self._spReplay(mi, qi, dayIdx);
+      });
     } else {
       this._playWrongSound();
       this._spReadUI(mi, qi, dayIdx, 'failed', score,
@@ -3278,6 +3296,18 @@ const App = {
       btn.innerHTML = '🎤 点我读';
       btn.disabled = false;
       if (statusEl) statusEl.innerHTML = '<span style="color:var(--danger)">⚠️ 没录到声音或识别失败，请再试一次</span>';
+      return;
+    }
+    if (status === 'repair') {
+      // 有读错的词待纠正：主按钮让位给纠错卡片，这里只提供"整句重读"
+      // 的入口（不想逐词纠错的孩子可以整句再来一遍）。
+      btn.style.background = 'var(--primary)';
+      btn.innerHTML = '🎤 重读整句';
+      btn.disabled = false;
+      if (!this.isTeacher()) {
+        const next = document.getElementById('stage-next-btn');
+        if (next) { next.disabled = true; next.classList.remove('nudge'); }
+      }
       return;
     }
     if (status === 'passed') {
@@ -5416,7 +5446,7 @@ const App = {
       + 'style="background:var(--primary);margin-top:8px;font-size:18px;padding:18px 32px;'
       + 'user-select:none;-webkit-user-select:none;touch-action:none;border-radius:24px;min-width:200px">'
       + '🎤 点我读</button>'
-      + '<p class="fs-12 text-sub" style="margin-top:8px">点一下开始，读到的词会变绿打勾；读完了再点一下就打分。≥60 分才能进入下一题。</p>'
+      + '<p class="fs-12 text-sub" style="margin-top:8px">点一下开始，读到的词会变绿打勾；读完了再点一下就打分。读错的词要读对了才能进下一题。</p>'
       + '<p class="fs-12 text-sub" style="margin-top:2px">不认识的词，点一下就有读音和中文意思。</p>'
       + '</div>';
     const btn = document.getElementById(sid);
@@ -5537,6 +5567,160 @@ const App = {
     return { align: a, badWords: badWords };
   },
 
+  // ---- 错词原处重读：句子里红色波浪线的词，要单独读对了才能进下一题 ----
+  // 一轮朗读出分后逐个过没读对的词：卡片上亮出当前词 → 孩子点「读这个
+  // 单词」→ 再点一下停止 → whisper 只核对这一个词。读对了，原句里那个词
+  // 当场从红色波浪线变绿打勾；全部变绿这句话才算通过。阅读选择题和口语
+  // 练习两个面板共用这一套。
+  _wordRepair: null,
+
+  _startWordRepair(mi, qi, sentence, statusElId, onAllFixed, hearSentence) {
+    if (this._wordRepair) return;
+    const panel = document.getElementById('rd-sent-' + mi + '-' + qi);
+    if (!panel) return;
+    this._wordRepair = {
+      mi: mi, qi: qi, sentence: sentence,
+      statusElId: statusElId, onAllFixed: onAllFixed,
+      hearSentence: hearSentence || null,
+      rec: false, startedAt: 0, capTimer: null, word: '',
+    };
+    this._wordRepairNext();
+  },
+
+  // 找下一个红波浪线的词亮出来；没有了就走各自的"通过"回调。
+  _wordRepairNext() {
+    const R = this._wordRepair;
+    if (!R) return;
+    const panel = document.getElementById('rd-sent-' + R.mi + '-' + R.qi);
+    const statusEl = document.getElementById(R.statusElId);
+    if (!panel) { this._wordRepair = null; return; }
+    panel.querySelectorAll('.rd-cur').forEach(function(el) { el.classList.remove('rd-cur'); });
+    const bads = panel.querySelectorAll('.rd-bad');
+    if (!bads.length) {
+      const done = R.onAllFixed;
+      this._wordRepair = null;
+      if (done) done();
+      return;
+    }
+    const cur = bads[0];
+    cur.classList.add('rd-cur');
+    const word = (cur.textContent || '').replace(/[^A-Za-z'\-]/g, '');
+    R.word = word;
+    if (statusEl) {
+      statusEl.innerHTML =
+        '<div class="rd-repair-card">'
+        + '<div class="rd-repair-word">' + this._escHtml(word) + '</div>'
+        + '<div class="fs-12 text-sub">把红色波浪线的词逐个读对了，才能进下一题（也可以点下面的按钮重读整句）</div>'
+        + '<div style="display:flex;gap:8px;justify-content:center;margin-top:10px;flex-wrap:wrap">'
+        + '<button class="speak-btn" style="background:var(--primary)" onclick="App._wordRepairHear()">🔊 听这个词</button>'
+        + '<button class="speak-btn" style="background:var(--warning)" onclick="App._wordRepairHearSentence()">🔊 听整句</button>'
+        + '<button class="speak-btn" id="wrep-btn" style="background:var(--danger);font-size:18px;padding:16px 28px;border-radius:22px;user-select:none;-webkit-user-select:none;touch-action:none">🎤 点我读这个单词</button>'
+        + '</div>'
+        + '<div id="wrep-hint" class="fs-12 text-sub" style="margin-top:8px;min-height:18px"></div>'
+        + '</div>';
+      const self = this;
+      const rbtn = document.getElementById('wrep-btn');
+      if (rbtn) {
+        const onRtap = function(e) {
+          e.preventDefault();
+          self._wordRepairTap();
+        };
+        rbtn.addEventListener('touchstart', onRtap, { passive: false });
+        rbtn.addEventListener('mousedown', onRtap);
+        rbtn.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+      }
+    }
+  },
+
+  _wordRepairHear() {
+    const R = this._wordRepair;
+    if (R && R.word) this.speak(R.word);
+  },
+
+  _wordRepairHearSentence() {
+    const R = this._wordRepair;
+    if (R && typeof R.hearSentence === 'function') R.hearSentence();
+  },
+
+  _wordRepairTap() {
+    const R = this._wordRepair;
+    if (!R) return;
+    if (R.rec) this._wordRepairStop();
+    else this._wordRepairRec();
+  },
+
+  _wordRepairRec() {
+    const R = this._wordRepair;
+    if (!R || R.rec) return;
+    R.rec = true;
+    R.startedAt = Date.now();
+    Recorder.warmUp(); Api.warmup();
+    this._startClipCapture();
+    const btn = document.getElementById('wrep-btn');
+    const hint = document.getElementById('wrep-hint');
+    if (btn) btn.innerHTML = '🔴 录音中… 读完了点我';
+    if (hint) hint.textContent = '';
+    clearTimeout(R.capTimer);
+    R.capTimer = setTimeout(() => this._wordRepairStop(), 6000);
+  },
+
+  _wordRepairStop() {
+    const R = this._wordRepair;
+    if (!R || !R.rec) return;
+    R.rec = false;
+    clearTimeout(R.capTimer);
+    // 误触保护：250ms 内的两下不算一次朗读。
+    if (Date.now() - R.startedAt < 250) {
+      this._finishClipCapture();
+      const btn = document.getElementById('wrep-btn');
+      if (btn) btn.innerHTML = '🎤 点我读这个单词';
+      return;
+    }
+    const btn = document.getElementById('wrep-btn');
+    const hint = document.getElementById('wrep-hint');
+    if (btn) { btn.innerHTML = '⏳ 核对中…'; btn.disabled = true; }
+    if (hint) hint.textContent = '正在听你读「' + (R.word || '') + '」';
+    const self = this;
+    this._finishClipCapture().then(async function(blob) {
+      let text = null;
+      if (blob) {
+        const forAsr = (self._spClipSamples && Recorder.padForAsr(self._spClipSamples)) || blob;
+        try {
+          const out = await Api.transcribe(forAsr, null, { fast: true });
+          if (out && out.text && !Api.isFillerTranscript(out.text)) text = out.text.toLowerCase();
+        } catch (e) { console.warn('word repair transcribe failed', e); }
+      }
+      self._wordRepairJudge(text);
+    });
+  },
+
+  _wordRepairJudge(text) {
+    const R = this._wordRepair;
+    if (!R) return;
+    const btn = document.getElementById('wrep-btn');
+    const hint = document.getElementById('wrep-hint');
+    if (btn) { btn.disabled = false; btn.innerHTML = '🎤 点我读这个单词'; }
+    const a = this.alignSpeech(R.word || '', text || '');
+    const ok = !!(a && a.items && a.items.some(function(x) { return x.target && x.status === 'ok'; }));
+    if (ok) {
+      // 在原单词的位置上：红波浪线当场变绿打勾。
+      const panel = document.getElementById('rd-sent-' + R.mi + '-' + R.qi);
+      if (panel) {
+        const sp = panel.querySelector('.rd-bad.rd-cur');
+        if (sp) { sp.classList.remove('rd-bad', 'rd-cur'); sp.classList.add('rd-ok'); }
+      }
+      this._playCorrectSound();
+      if (hint) hint.innerHTML = '<span style="color:var(--success)">✅ 「' + R.word + '」读对了！</span>';
+      const self = this;
+      setTimeout(function() { self._wordRepairNext(); }, 900);
+    } else {
+      this._playWrongSound();
+      if (hint) hint.innerHTML = '<span style="color:var(--danger)">'
+        + (text ? '听到的是「' + text + '」，听一遍再读' : '没听清，再读一次')
+        + '</span>';
+    }
+  },
+
   // 手机自带识别。iOS Safari 用 Apple 的服务，境内可用；安卓浏览器大多调
   // 不到 Google 的服务，一启动就报错，这时把整条路关掉（_srBroken），后面
   // 的题不再重复试 —— 否则每道题都要白等一次失败。
@@ -5622,6 +5806,10 @@ const App = {
 
   _holdReadStart(mi, qi, dayIdx, sentence) {
     if (this._holdReadActive) return;
+    // 正在单独纠错某个词时不让整句录音插进来（两路录音会打架）。
+    if (this._wordRepair && this._wordRepair.rec) return;
+    // 主动放弃纠错模式，重新整句朗读。
+    if (this._wordRepair) { clearTimeout(this._wordRepair.capTimer); this._wordRepair = null; }
     this._holdReadActive = { mi: mi, qi: qi, dayIdx: dayIdx, sentence: sentence, startedAt: Date.now() };
     Recorder.warmUp(); Api.warmup();
     this._startClipCapture();
@@ -5755,6 +5943,14 @@ const App = {
       }
       return;
     }
+    if (status === 'repair') {
+      // 有读错的词待纠正：主按钮让位给纠错卡片，这里只提供"整句重读"
+      // 的入口（不想逐词纠错的孩子可以整句再来一遍）。
+      btn.style.background = 'var(--primary)';
+      btn.innerHTML = '🎤 重读整句';
+      btn.disabled = false;
+      return;
+    }
     if (status === 'noaudio') {
       btn.style.background = 'var(--primary)';
       btn.innerHTML = '🎤 点我读';
@@ -5795,7 +5991,10 @@ const App = {
     // 逐词上色：读对的绿勾、读错/漏读的红色波浪线，光标全部撤掉。
     const marked = this._markReadProgress(mi, qi, sentence, spoken, false);
     const score = marked ? marked.align.score : this.calcPronScore(sentence.toLowerCase(), spoken);
-    const passed = score >= 60;
+    const badWords = marked ? marked.badWords : [];
+    // 通过 = 分数够 60 且没有读错的词。红色波浪线的词要原处重读对了
+    // 才能进下一题（见 _startWordRepair）。
+    const passed = score >= 60 && badWords.length === 0;
 
     if (this._debugRead) console.log('[read] source=' + source + ' score=' + score + ' spoken=' + spoken);
 
@@ -5829,15 +6028,60 @@ const App = {
       return;
     }
 
-    // < 60：保持 stage-next-btn 锁定（如果题目本来就要求锁），逐词标出问题，
-    // 让孩子听着示范把整句重读一次。
-    const badWords = marked ? marked.badWords : [];
+    // 没通过：有读错的词 → 逐个原处重读纠正；一个词都没有读错的低分
+    // （比如多读了一堆别的词）→ 按原来的流程整句重读。
+    if (badWords.length) {
+      this._setHoldReadUI(mi, qi, 'repair', score, false, { badCount: badWords.length });
+      if (!this.isTeacher()) {
+        const next = document.getElementById('stage-next-btn');
+        if (next) { next.disabled = true; next.classList.remove('nudge'); }
+      }
+      this._playWrongSound();
+      const self = this;
+      this._startWordRepair(mi, qi, sentence, 'qr-status-' + mi + '-' + qi, function() {
+        self._holdRepairDone(mi, qi, dayIdx, score);
+      }, function() {
+        self._replayReadSentence(mi, qi);
+      });
+      return;
+    }
+
     this._setHoldReadUI(mi, qi, 'failed', score, false, { badWords: badWords });
     if (!this.isTeacher()) {
       const next = document.getElementById('stage-next-btn');
       if (next) { next.disabled = true; next.classList.remove('nudge'); }
     }
     this._playWrongSound();
+  },
+
+  // 错词全部纠正完 → 走和整句通过一样的收尾：记答案、亮选项、解锁下一题。
+  _holdRepairDone(mi, qi, dayIdx, score) {
+    const m = HOMEWORK_DATA[dayIdx].modules[mi];
+    const q = m.questions[qi];
+    const lastPick = this._lastPick && this._lastPick[mi + '-' + qi];
+    if (lastPick) this._recordAnswer(dayIdx, mi, qi, lastPick.oi, lastPick.isCorrect);
+    const opts = document.querySelectorAll('#q-' + mi + '-' + qi + ' .q-option');
+    opts.forEach((el, i) => {
+      el.classList.remove('wrong', 'selected');
+      if (i === q.answer) el.classList.add('correct');
+      el.style.pointerEvents = 'none';
+    });
+    const ansEl = document.getElementById('ans-' + mi + '-' + qi);
+    if (ansEl) {
+      ansEl.style.display = 'block';
+      ansEl.innerHTML = '✅ 每个词都读对了，通过！';
+    }
+    this._playCorrectSound();
+    this._setHoldReadUI(mi, qi, 'passed', score, true);
+    if (!this.isTeacher()) {
+      const next = document.getElementById('stage-next-btn');
+      if (next) { next.disabled = false; next.classList.add('nudge'); }
+    } else if (qi < m.questions.length - 1) {
+      const self = this;
+      setTimeout(function() {
+        self._autoSpeakQuestion(m, mi, qi + 1, dayIdx);
+      }, 1500);
+    }
   },
 
   submitFill(mi, qi, dayIdx) {
