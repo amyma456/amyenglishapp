@@ -2919,215 +2919,317 @@ const App = {
     var options = shuffled ? shuffled.options : q.options;
     const isCorrect = oi === correctAnswer;
     const selectedText = options[oi];
-    this._recordAnswer(dayIdx, mi, qi, selectedText, isCorrect);
 
-    // Disable all options immediately
     const opts = document.querySelectorAll('#sp-opts-' + mi + ' .speak-option');
-    opts.forEach((el) => { el.style.pointerEvents = 'none'; });
-
-    // Show "reading answer" indicator
-    var waitEl = document.getElementById('sp-wait-' + mi);
-    if (waitEl) {
-      waitEl.style.display = 'block';
-      waitEl.textContent = '正在朗读答句，请认真听…';
-      waitEl.style.color = 'var(--primary)';
-    }
-
-    // Speak the selected answer, THEN show result
+    const waitEl = document.getElementById('sp-wait-' + mi);
+    const tip = document.getElementById('sp-tip-' + mi);
     var self = this;
-    this.speak(selectedText, { onDone: function() {
-      // Mark correct/wrong
+
+    if (!isCorrect) {
+      // 选错：点的这个标红锁死，正确选项高亮成绿色提示。孩子必须再点到
+      // 绿色的正确选项上才算对，才能进入跟读环节。
+      this._playWrongSound();
       opts.forEach((el, i) => {
         el.classList.remove('correct', 'wrong');
+        if (i === oi) { el.classList.add('wrong'); el.style.pointerEvents = 'none'; }
+        else if (i === correctAnswer) el.classList.add('correct');
+        else el.style.pointerEvents = 'auto';
+      });
+      if (waitEl) {
+        waitEl.style.display = 'block';
+        waitEl.style.color = 'var(--danger)';
+        waitEl.textContent = '❌ 选错了。点绿色的正确选项，再选一次';
+      }
+      if (tip && q.explanation_cn) {
+        tip.classList.add('show');
+        tip.innerHTML = '📖 ' + q.explanation_cn;
+      }
+      return;
+    }
+
+    // 选对（第一次就中，或选错后重新点中）：朗读答句，然后进入
+    // "问句 + 答句"整句跟读。
+    this._recordAnswer(dayIdx, mi, qi, selectedText, true);
+    opts.forEach((el) => {
+      el.classList.remove('wrong');
+      el.style.pointerEvents = 'none';
+    });
+    if (waitEl) {
+      waitEl.style.display = 'block';
+      waitEl.style.color = 'var(--primary)';
+      waitEl.textContent = '正在朗读答句，请认真听…';
+    }
+
+    var self2 = this;
+    this.speak(selectedText, { onDone: function() {
+      opts.forEach((el, i) => {
+        el.classList.remove('wrong');
         if (i === correctAnswer) el.classList.add('correct');
-        if (i === oi && !isCorrect) el.classList.add('wrong');
       });
       if (waitEl) waitEl.style.display = 'none';
-
-      // Show pronunciation tip
-      const tip = document.getElementById('sp-tip-' + mi);
-      tip.classList.add('show');
-      tip.innerHTML = '🗣️ <strong>发音提示：</strong>' + q.pronunciation_tips;
-      // Show read-aloud section
-      const readArea = document.getElementById('sp-read-' + mi);
-      if (isCorrect) {
-        self._playCorrectSound();
-        readArea.innerHTML = '<div class="speak-record show" style="background:var(--success-light)"><p>✅ 回答正确！现在请跟读这句话：</p><button class="speak-btn" onclick="App.startReadAlong(' + mi + ',' + qi + ',\'' + dayIdx + '\')">🎤 开始跟读</button></div>';
-      } else {
-        self._playWrongSound();
-        readArea.innerHTML = '<div class="speak-record show"><p>❌ 回答错误。正确答案：' + options[correctAnswer] + '</p><p class="fs-12 text-sub">请先听朗读，再跟读练习</p><button class="speak-btn" onclick="App.startReadAlong(' + mi + ',' + qi + ',\'' + dayIdx + '\')">🎤 重新跟读</button></div>';
-        readArea.innerHTML += '<div class="q-explanation show mt-8"><div class="cn">📖 ' + q.explanation_cn + '</div></div>';
+      if (tip && q.pronunciation_tips) {
+        tip.classList.add('show');
+        tip.innerHTML = '🗣️ <strong>发音提示：</strong>' + q.pronunciation_tips;
       }
+      self2._playCorrectSound();
+      // Show read-along section for the full Q + A sentence
+      self2.startReadAlong(mi, qi, dayIdx);
     }});
   },
 
+  // 口语跟读：问句 + 答句整句连读。点一下开始、读完再点一下停止打分，
+  // 读到的词实时变绿打勾；≥60 分才能进下一题。
   startReadAlong(mi, qi, dayIdx) {
-    Recorder.warmUp(); Api.warmup();
-    const m = HOMEWORK_DATA[dayIdx].modules[mi];
-    const q = m.questions[qi];
+    const sentence = this._speakingReadSentence(mi, qi, dayIdx);
     const readArea = document.getElementById('sp-read-' + mi);
-    var self = this;
+    if (!readArea || !sentence) return;
+    readArea.innerHTML = '<div class="speak-record show" style="text-align:center">'
+      + '<p class="fs-12 text-sub">请把问句和答句连起来读：</p>'
+      + '<div class="rd-sentence" id="rd-sent-' + mi + '-' + qi + '">' + this._readSentenceHtml(sentence) + '</div>'
+      + '<div class="rd-live-hint" id="rd-live-' + mi + '-' + qi + '"></div>'
+      + '<div id="sp-status-' + mi + '-' + qi + '" style="min-height:18px;margin:6px 0;color:var(--text-sub);font-size:14px"></div>'
+      + '<button id="sphr-' + mi + '-' + qi + '" class="speak-btn" '
+      + 'style="background:var(--primary);margin-top:8px;font-size:18px;padding:18px 32px;'
+      + 'user-select:none;-webkit-user-select:none;touch-action:none;border-radius:24px;min-width:200px">'
+      + '🎤 点我读</button>'
+      + '<p class="fs-12 text-sub" style="margin-top:8px">点一下开始，读到的词会变绿打勾；读完了再点一下就打分。≥60 分才能进入下一题。</p>'
+      + '<p class="fs-12 text-sub" style="margin-top:2px">不认识的词，点一下就有读音和中文意思。</p>'
+      + '<div id="sp-clip-' + mi + '" class="mt-8"></div>'
+      + '</div>';
+    const btn = document.getElementById('sphr-' + mi + '-' + qi);
+    if (!btn) return;
+    const self = this;
+    // 点一下：正在录音 → 结束打分；没在录 → 开始新一轮。
+    // touchstart 上 preventDefault，避免手机补发一次 mousedown 算成两下。
+    const onTap = function(e) {
+      e.preventDefault();
+      if (self._spReadActive) self._spReadEnd(mi, qi, dayIdx);
+      else self._spReadStart(mi, qi, dayIdx);
+    };
+    btn.addEventListener('touchstart', onTap, { passive: false });
+    btn.addEventListener('mousedown', onTap);
+    btn.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+  },
 
-    // Capture the audio for real, in parallel with speech recognition.
+  // 问句 + 正确答句拼成整句。跟读面板和"听示范"都用这一句，
+  // 所以孩子听到的、读的、打分对的都是同一段完整对话。
+  _speakingReadSentence(mi, qi, dayIdx) {
+    const m = HOMEWORK_DATA[dayIdx] && HOMEWORK_DATA[dayIdx].modules[mi];
+    const q = m && m.questions[qi];
+    if (!q) return '';
+    const shuffled = this._speakingShuffle && this._speakingShuffle[mi + '-' + qi];
+    const options = shuffled ? shuffled.options : q.options;
+    const correctAnswer = shuffled ? shuffled.answer : q.answer;
+    const ans = (options && options[correctAnswer] != null) ? String(options[correctAnswer]).trim() : '';
+    const s = String(q.sentence || '').trim().replace(/[?？]\s*$/, '?');
+    return ans ? (s + ' ' + ans) : s;
+  },
+
+  _spReadStart(mi, qi, dayIdx) {
+    if (this._spReadActive) return;
+    const m = HOMEWORK_DATA[dayIdx].modules[mi];
+    const sentence = this._speakingReadSentence(mi, qi, dayIdx);
+    if (!sentence) return;
+    this._spReadActive = { mi: mi, qi: qi, dayIdx: dayIdx, sentence: sentence,
+                           q: m.questions[qi], startedAt: Date.now() };
+    Recorder.warmUp(); Api.warmup();
     this._startClipCapture();
-    this._readFinished = false;      // latch, reset per attempt
-    // Count attempts per question so 重新跟读 shows as round 2, 3, … for the
-    // teacher instead of every record claiming to be the first try.
+    // 同一道题重读算下一轮，老师的记录里能看到第几轮读的。
     this._spRounds = this._spRounds || {};
     const rkey = dayIdx + '-' + mi + '-' + qi;
     this._spRounds[rkey] = (this._spRounds[rkey] || 0) + 1;
     this._spRound = this._spRounds[rkey];
-
-    // Show recording UI immediately with animation
-    readArea.innerHTML = '<div class="speak-record show" style="text-align:center">' +
-      '<div class="recording-indicator"><div class="rec-mic">🎤</div><div class="rec-pulse"></div></div>' +
-      '<p style="font-size:16px;font-weight:600;color:var(--primary);margin:12px 0 4px">正在录音...</p>' +
-      '<p class="fs-12 text-sub">请大声朗读下面的句子</p>' +
-      '<div class="speak-sentence" style="font-size:18px;margin:12px 0;color:var(--text)">' + q.sentence + '</div>' +
-      '<div class="rec-timer" id="rec-timer-' + mi + '">0秒</div>' +
-      '<div class="fs-12 text-sub" id="asr-hint-' + mi + '" style="min-height:18px;margin-top:6px"></div>' +
-      '<button class="speak-btn" style="background:var(--danger);margin-top:12px" onclick="App._stopReading(' + mi + ',' + qi + ',\'' + dayIdx + '\')">结束朗读</button>' +
-      '</div>';
-
-    // Start timer
-    var recSeconds = 0;
-    var timerInterval = setInterval(function() {
-      recSeconds++;
-      var timerEl = document.getElementById('rec-timer-' + mi);
-      if (timerEl) timerEl.textContent = recSeconds + '秒';
-      else clearInterval(timerInterval);
-    }, 1000);
-    self._recTimerInterval = timerInterval;
-
-    // Recognition is Workers AI only. The browser's SpeechRecognition used to
-    // be tried first, but it exists only on Chrome and streams the audio to
-    // Google — so the same child got a different recogniser (and a different
-    // score) depending on which phone they picked up, and on most of them it
-    // failed outright. One path means one behaviour everywhere.
-
-    // Hard cap so a forgotten session cannot record forever.
-    clearTimeout(self._readCapTimer);
-    self._readCapTimer = setTimeout(function() {
-      self._finishRead(mi, qi, dayIdx);
-    }, 20000);
+    // 新一轮朗读：清掉上一轮的绿/红，把光标放回句首。
+    this._clearReadMarks(mi, qi);
+    const panel = document.getElementById('rd-sent-' + mi + '-' + qi);
+    if (panel) { const first = panel.querySelector('.rd-w'); if (first) first.classList.add('rd-cur'); }
+    const hint = document.getElementById('rd-live-' + mi + '-' + qi);
+    if (hint) hint.textContent = '';
+    this._liveStart(mi, qi, sentence);
+    // 20 秒兜底：问句 + 答句比单句长，防止忘了点停止麦克风一直开着。
+    this._spReadTimer = setTimeout(() => this._spReadEnd(mi, qi, dayIdx), 20000);
+    this._spReadUI(mi, qi, dayIdx, 'recording');
   },
 
-  // The single place a read-along ends: child taps 结束朗读, recognition
-  // returns, or the 20s cap fires. Whichever happens first wins.
-  async _finishRead(mi, qi, dayIdx) {
-    if (this._readFinished) return;
-    this._readFinished = true;
-    clearTimeout(this._readCapTimer);
-    if (this._recTimerInterval) { clearInterval(this._recTimerInterval); this._recTimerInterval = null; }
+  // 第二次点击（或 20 秒兜底）就到这里：停识别、停录音，出分。
+  // A 路手机自带识别优先（能逐词实时高亮），拿不到再走 B 路 whisper。
+  _spReadEnd(mi, qi, dayIdx) {
+    const ctx = this._spReadActive;
+    clearTimeout(this._spReadTimer);
+    if (!ctx || ctx._ended) return;
+    ctx._ended = true;
+    // 两次点击隔得太近多半是误触，复位按钮不计这轮。
+    if (Date.now() - ctx.startedAt < 250) {
+      this._spReadActive = null;
+      this._liveStop();
+      this._clearReadMarks(mi, qi);
+      this._spReadUI(mi, qi, dayIdx, 'mistap');
+      return;
+    }
+    this._spReadActive = null;
+    this._spReadUI(mi, qi, dayIdx, 'scoring');
 
-    const m = HOMEWORK_DATA[dayIdx].modules[mi];
-    const q = m.questions[qi];
-    const readArea = document.getElementById('sp-read-' + mi);
-
-    // Release the mic and get the WAV. Everything below has the audio in hand,
-    // so nothing the network does can lose the child's work.
-    const blob = await this._finishClipCapture();
-
-    let spoken = null;
-    if (blob) {
-      if (readArea) {
-        readArea.innerHTML = '<div class="speak-record show" style="text-align:center">'
-          + '<p style="font-size:15px;color:var(--primary);margin-bottom:6px">正在识别…</p>'
-          + '<p class="fs-12 text-sub">正在比对你读的和原句</p></div>';
+    const self = this;
+    const liveP = this._liveStop();
+    const clipP = this._finishClipCapture();
+    Promise.all([liveP, clipP]).then(async function(res) {
+      const liveText = res[0];
+      const blob = res[1];
+      let spoken = null;
+      let source = null;
+      // A 路优先：识别已经给了文字，直接出分，不等网络。
+      if (liveText && !Api.isFillerTranscript(liveText)) {
+        spoken = liveText.toLowerCase();
+        source = 'live';
       }
-      const forAsr = (this._spClipSamples && Recorder.padForAsr(this._spClipSamples)) || blob;
-      const out = await Api.transcribe(forAsr, null, { fast: true });
-      if (out && out.text && !Api.isFillerTranscript(out.text)) spoken = out.text.toLowerCase();
-    }
-
-    if (spoken) {
-      this._showReadResult(mi, qi, dayIdx, q,
-        this.calcPronScore(q.sentence.toLowerCase(), spoken), spoken,
-        this.findWrongWords(q.sentence.toLowerCase(), spoken));
-    } else {
-      this._showSelfAssessment(mi, qi, dayIdx, q,
-        blob ? '这次没识别出内容' : '没有录到音频');
-    }
-  },
-
-  // Stop reading manually (when child clicks "结束朗读")
-  _stopReading(mi, qi, dayIdx) {
-    this._finishRead(mi, qi, dayIdx);
-  },
-
-  // Show speech recognition result
-  _showReadResult(mi, qi, dayIdx, q, score, spoken, wrongWords) {
-    const m = HOMEWORK_DATA[dayIdx].modules[mi];
-    const readArea = document.getElementById('sp-read-' + mi);
-    const a = this.alignSpeech(q.sentence, spoken);
-    var html = '<div class="speak-record show" style="text-align:center">';
-    html += '<div class="speak-score" style="color:' + (score>=70?'var(--success)':'var(--danger)') + '">' + score + '分</div>';
-    html += '<div class="fs-12 text-sub mb-8">读对 ' + a.ok + ' / ' + a.total + ' 个词</div>';
-
-    // The sentence, word by word, marked with what happened to each.
-    html += '<div class="align-sentence">';
-    a.items.forEach(x => {
-      if (x.status === 'extra') return;                    // shown separately
-      const cls = x.status === 'ok' ? 'w-ok' : x.status === 'wrong' ? 'w-bad' : 'w-miss';
-      const tip = x.status === 'wrong' ? ' title="听到的是：' + x.spoken + '"' : '';
-      html += '<span class="' + cls + '"' + tip + '>' + x.target + '</span> ';
+      // B 路兜底：录下来的音频送 whisper。
+      if (!spoken && blob) {
+        const forAsr = (self._spClipSamples && Recorder.padForAsr(self._spClipSamples)) || blob;
+        try {
+          const out = await Api.transcribe(forAsr, null, { fast: true });
+          if (out && out.text && !Api.isFillerTranscript(out.text)) {
+            spoken = out.text.toLowerCase();
+            source = 'whisper';
+          }
+        } catch (e) { console.warn('Speaking read transcribe failed:', e); }
+      }
+      self._spShowResult(mi, qi, dayIdx, ctx, spoken, source);
+    }).catch(function(e) {
+      console.warn('Speaking read capture failed:', e);
+      self._spShowResult(mi, qi, dayIdx, ctx, null, null);
     });
-    html += '</div>';
-    html += '<div class="align-key fs-12 text-sub">'
-         + '<span class="w-ok">正确</span>'
-         + '<span class="w-bad">读错</span>'
-         + '<span class="w-miss">漏读</span></div>';
+  },
 
-    html += '<div class="fs-12 text-sub mt-8">识别到：' + (spoken || '（没听清）') + '</div>';
-    if (a.extra.length) {
-      html += '<div class="fs-12 text-sub">多读了：' + a.extra.map(x=>x.spoken).join(' ') + '</div>';
+  // 出分：逐词上色（绿勾/红波浪线），≥60 过、<60 锁下一题必须重读。
+  _spShowResult(mi, qi, dayIdx, ctx, spoken, source) {
+    const sentence = ctx.sentence;
+    if (!spoken) {
+      // 没识别出内容：清掉标记让孩子重来，不自造分数。
+      this._clearReadMarks(mi, qi);
+      this._spReadUI(mi, qi, dayIdx, 'noaudio');
+      return;
     }
-    const practise = a.wrong.map(x => x.target + '（读成了 ' + x.spoken + '）')
-                      .concat(a.missing.map(x => x.target + '（漏读）'));
-    if (practise.length > 0) {
-      html += '<div class="speak-words">需要练习：' + practise.join('、') + '</div>';
-    }
-    if (score >= 70) {
-      html += '<div class="badge badge-success mt-8" style="font-size:14px">✅ 太棒了！通过！</div>';
+    const marked = this._markReadProgress(mi, qi, sentence, spoken, false);
+    const score = marked ? marked.align.score : this.calcPronScore(sentence.toLowerCase(), spoken);
+    const passed = score >= 60;
+    if (passed) {
       this._playCorrectSound();
+      this._spReadUI(mi, qi, dayIdx, 'passed', score);
     } else {
-      html += '<div class="badge badge-danger mt-8">分数偏低，再试一次吧</div>';
       this._playWrongSound();
+      this._spReadUI(mi, qi, dayIdx, 'failed', score,
+        { badWords: marked ? marked.badWords : [] });
     }
-    html += '<div style="display:flex;gap:8px;justify-content:center;margin-top:12px">';
-    html += '<button class="speak-btn" onclick="App.startReadAlong(' + mi + ',' + qi + ',\'' + dayIdx + '\')">🎤 重新跟读</button>';
-    if (qi < m.questions.length - 1) {
-      html += '<button class="speak-btn" style="background:var(--success)" onclick="App.nextSpeaking(' + mi + ',' + (qi+1) + ',\'' + dayIdx + '\')">下一题 →</button>';
-    } else {
-      html += '<div class="badge badge-success" style="font-size:16px;align-self:center">🎉 全部完成！</div>';
-    }
-    html += '</div>';
-    html += '<div id="sp-clip-' + mi + '" class="mt-8"></div>';
-    html += '</div>';
-    readArea.innerHTML = html;
-    this._persistSpeakingClip(mi, qi, dayIdx, q, score, {
-      spoken: spoken, source: 'asr',
-      okCount: a.ok, wordTotal: a.total,
-      wrongWords: a.wrong.map(x => ({ expected: x.target, heard: x.spoken })),
-      missedWords: a.missing.map(x => x.target),
+    this._persistSpeakingClip(mi, qi, dayIdx, ctx.q, score, {
+      spoken: spoken, source: source,
+      okCount: marked ? marked.align.ok : null,
+      wordTotal: marked ? marked.align.total : null,
+      wrongWords: marked ? marked.badWords.map(x => ({ expected: x.expected, heard: x.heard })) : [],
+      missedWords: marked ? marked.align.missing.map(x => x.target) : [],
     });
+  },
+
+  // status: 'recording' | 'scoring' | 'mistap' | 'passed' | 'failed' | 'noaudio'
+  _spReadUI(mi, qi, dayIdx, status, score, extra) {
+    const btn = document.getElementById('sphr-' + mi + '-' + qi);
+    const statusEl = document.getElementById('sp-status-' + mi + '-' + qi);
+    if (!btn) return;
+    const m = HOMEWORK_DATA[dayIdx] && HOMEWORK_DATA[dayIdx].modules[mi];
+    if (status === 'recording') {
+      btn.style.background = 'var(--danger)';
+      btn.innerHTML = '🔴 录音中… 读完了点我';
+      btn.disabled = false;
+      if (statusEl) statusEl.innerHTML = '';
+      return;
+    }
+    if (status === 'scoring') {
+      btn.style.background = 'var(--text-sub)';
+      btn.innerHTML = '⏳ 正在出分…';
+      btn.disabled = true;
+      if (statusEl) statusEl.innerHTML =
+        '<div style="font-size:34px;font-weight:700;color:var(--primary);line-height:1.15">…</div>'
+        + '<span style="color:var(--text-sub);font-size:13px">核对中，分数马上到</span>';
+      return;
+    }
+    if (status === 'mistap') {
+      btn.style.background = 'var(--primary)';
+      btn.innerHTML = '🎤 点我读';
+      btn.disabled = false;
+      if (statusEl) statusEl.innerHTML = '<span style="color:var(--danger)">⚠️ 时间太短了，点一下开始，读完再点一下</span>';
+      return;
+    }
+    if (status === 'noaudio') {
+      btn.style.background = 'var(--primary)';
+      btn.innerHTML = '🎤 点我读';
+      btn.disabled = false;
+      if (statusEl) statusEl.innerHTML = '<span style="color:var(--danger)">⚠️ 没录到声音或识别失败，请再试一次</span>';
+      return;
+    }
+    if (status === 'passed') {
+      btn.style.background = 'var(--success)';
+      btn.innerHTML = '✅ 已通过 ' + score + ' 分';
+      btn.disabled = true;
+      if (statusEl) {
+        let html = '<div style="font-size:34px;font-weight:700;color:var(--success);line-height:1.15">' + score + ' 分</div>'
+                 + '<span style="color:var(--success);font-weight:600">✅ 读得很好，通过！</span>';
+        if (m && m.questions && qi < m.questions.length - 1) {
+          html += '<div style="margin-top:10px"><button class="speak-btn" style="background:var(--success)" '
+                + 'onclick="App.nextSpeaking(' + mi + ',' + (qi + 1) + ',\'' + dayIdx + '\')">下一题 →</button></div>';
+        } else {
+          html += '<div class="badge badge-success mt-8" style="font-size:16px">🎉 全部完成！</div>';
+        }
+        statusEl.innerHTML = html;
+      }
+      return;
+    }
+    if (status === 'failed') {
+      btn.style.background = 'var(--primary)';
+      btn.innerHTML = '🎤 再点一次重读';
+      btn.disabled = false;
+      if (statusEl) {
+        const bad = (extra && extra.badWords) || [];
+        let html = '<div style="font-size:34px;font-weight:700;color:var(--danger);line-height:1.15">'
+                 + score + ' 分</div>'
+                 + '<span style="color:var(--danger);font-weight:600">⚠️ 不到 60 分，红色波浪线的词再读清楚些</span>';
+        if (bad.length) {
+          const list = bad.slice(0, 6).map(function(x) {
+            return x.heard ? '<b>' + x.expected + '</b>（听成了 ' + x.heard + '）' : '<b>' + x.expected + '</b>（没读到）';
+          }).join('、');
+          html += '<div class="fs-12 text-sub" style="margin-top:6px">没读对的词：' + list
+                + '<br>先听一遍示范，再把<b>整句</b>重读一次。'
+                + '<div style="margin-top:6px"><button class="speak-btn" style="font-size:13px;padding:6px 14px" '
+                + 'onclick="App._spReplay(' + mi + ',' + qi + ',\'' + dayIdx + '\')">🔊 听一遍示范</button></div></div>';
+        } else {
+          html += '<div class="fs-12 text-sub" style="margin-top:6px">把整句再读一次，注意读清楚每个词。'
+                + '<div style="margin-top:6px"><button class="speak-btn" style="font-size:13px;padding:6px 14px" '
+                + 'onclick="App._spReplay(' + mi + ',' + qi + ',\'' + dayIdx + '\')">🔊 听一遍示范</button></div></div>';
+        }
+        statusEl.innerHTML = html;
+      }
+      return;
+    }
+  },
+
+  // 重读前先听一遍标准示范（问句 + 答句整句）。
+  _spReplay(mi, qi, dayIdx) {
+    const s = this._speakingReadSentence(mi, qi, dayIdx);
+    if (s) this.speak(s);
   },
 
   // Self-assessment mode (when speech recognition is not available)
   _showSelfAssessment(mi, qi, dayIdx, q, reason) {
-    const m = HOMEWORK_DATA[dayIdx].modules[mi];
     const readArea = document.getElementById('sp-read-' + mi);
-    var self = this;
+    var sentence = this._speakingReadSentence(mi, qi, dayIdx).replace(/'/g, "\\'");
     var html = '<div class="speak-record show" style="text-align:center">';
     html += '<p style="font-size:15px;font-weight:600;color:var(--primary);margin-bottom:8px">请给自己打分</p>';
     // Be explicit about why the automatic comparison is not shown.
     html += '<p class="fs-12 text-sub mb-8">' + (reason ? reason + '，改为自评。' : '')
          + '听一听标准发音，对比自己的朗读</p>';
-    html += '<button class="speak-btn play" style="margin-bottom:12px" onclick="App.speak(\'' + q.sentence.replace(/'/g,"\\'") + '\')">🔊 听标准发音</button>';
+    html += '<button class="speak-btn play" style="margin-bottom:12px" onclick="App.speak(\'' + sentence + '\')">🔊 听标准发音</button>';
     html += '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">';
     html += '<button class="speak-btn" style="background:var(--success)" onclick="App._selfScore(' + mi + ',' + qi + ',\'' + dayIdx + '\',90)">⭐ 很好 (90分)</button>';
     html += '<button class="speak-btn" style="background:var(--warning)" onclick="App._selfScore(' + mi + ',' + qi + ',\'' + dayIdx + '\',75)">👍 还不错 (75分)</button>';
-    html += '<button class="speak-btn" style="background:var(--danger)" onclick="App._selfScore(' + mi + ',' + qi + ',\'' + dayIdx + '\',60)">💪 需练习 (60分)</button>';
+    html += '<button class="speak-btn" style="background:var(--danger)" onclick="App._selfScore(' + mi + ',' + qi + ',\'' + dayIdx + '\',50)">💪 需练习 (50分)</button>';
     html += '</div>';
     html += '</div>';
     readArea.innerHTML = html;
@@ -3138,9 +3240,10 @@ const App = {
     const m = HOMEWORK_DATA[dayIdx].modules[mi];
     const q = m.questions[qi];
     const readArea = document.getElementById('sp-read-' + mi);
+    const passed = score >= 60;
     var html = '<div class="speak-record show" style="text-align:center">';
-    html += '<div class="speak-score" style="color:' + (score>=70?'var(--success)':'var(--danger)') + '">' + score + '分</div>';
-    if (score >= 70) {
+    html += '<div class="speak-score" style="color:' + (passed?'var(--success)':'var(--danger)') + '">' + score + '分</div>';
+    if (passed) {
       html += '<div class="badge badge-success mt-8" style="font-size:14px">✅ 继续加油！</div>';
       this._playCorrectSound();
     } else {
@@ -3148,9 +3251,9 @@ const App = {
     }
     html += '<div style="display:flex;gap:8px;justify-content:center;margin-top:12px">';
     html += '<button class="speak-btn" onclick="App.startReadAlong(' + mi + ',' + qi + ',\'' + dayIdx + '\')">🎤 再读一次</button>';
-    if (qi < m.questions.length - 1) {
+    if (passed && qi < m.questions.length - 1) {
       html += '<button class="speak-btn" style="background:var(--success)" onclick="App.nextSpeaking(' + mi + ',' + (qi+1) + ',\'' + dayIdx + '\')">下一题 →</button>';
-    } else {
+    } else if (passed) {
       html += '<div class="badge badge-success" style="font-size:16px;align-self:center">🎉 全部完成！</div>';
     }
     html += '</div>';
@@ -5355,8 +5458,9 @@ const App = {
 
     rec.onend = function() {
       // iOS 上 continuous 会被忽略，孩子一停顿它自己就结束了。
-      // 只要手指还按着、也没报错，就接着开一段继续听。
-      if (self._holdReadActive && !live.stopped && !live.errored) {
+      // 只要还在读（作业跟读按住式 _holdReadActive、口语跟读点击式
+      // _spReadActive 都算）、也没报错，就接着开一段继续听。
+      if ((self._holdReadActive || self._spReadActive) && !live.stopped && !live.errored) {
         try { rec.start(); } catch (e) { /* 下一段开不起来就算了，B 路兜底 */ }
       }
     };
