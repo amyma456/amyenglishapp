@@ -7,6 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
+<meta name="app-version" content="68">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon.svg">
 <title>Amy老师英语打卡平台</title>
@@ -849,10 +850,36 @@ if ('serviceWorker' in navigator) {
       reg && reg.update && reg.update().catch(function() {});
     }).catch(function() {});
   }
+  // 版本自检：除了让 SW 更新，还直接拿线上首页的版本号跟本页对比，
+  // 不一致就整页刷新。这样电脑这边一发版，手机一点开（哪怕是从后台
+  // 恢复的旧页面）几秒内就是新版 —— 不用清数据、不用重新登录
+  // （登录信息存在本地，刷新不影响）。
+  var __myVersion = '';
+  var __metaEl = document.querySelector('meta[name="app-version"]');
+  if (__metaEl) __myVersion = __metaEl.getAttribute('content') || '';
+  var __lastVerCheck = 0;
+  function __checkVersion() {
+    if (!__myVersion || !navigator.onLine) return;
+    if (Date.now() - __lastVerCheck < 30000) return; // 30 秒内不重复查
+    __lastVerCheck = Date.now();
+    fetch('./', { cache: 'no-store' }).then(function(res) {
+      if (!res.ok) return null;
+      return res.text();
+    }).then(function(html) {
+      if (!html) return;
+      var m = html.match(/<meta\s+name="app-version"\s+content="(\d+)"/);
+      var live = m && m[1];
+      if (live && live !== __myVersion) window.location.reload();
+    }).catch(function() {});
+  }
   document.addEventListener('visibilitychange', function() {
-    if (document.visibilityState === 'visible') __swCheck();
+    if (document.visibilityState === 'visible') { __swCheck(); __checkVersion(); }
   });
-  window.addEventListener('online', __swCheck);
+  window.addEventListener('pageshow', function(e) {
+    if (e.persisted) __checkVersion(); // 从浏览器往返缓存恢复时也查一次
+  });
+  window.addEventListener('online', function() { __swCheck(); __checkVersion(); });
+  setTimeout(__checkVersion, 3000); // 挂着不动的页面也定期自纠一次
   window.addEventListener('load', function() {
     navigator.serviceWorker.register('sw.js').then(function() {
       console.log('SW registered');
