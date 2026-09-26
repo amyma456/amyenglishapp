@@ -5482,6 +5482,18 @@ const App = {
       .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   },
 
+  // 词典的中文释义压到最短：去掉词性标注（adv. / v. / n. …），只取第一个
+  // 义项的第一小段。"v. 描述，形容；做……运动" → "描述"，两三个字扫一眼就懂。
+  _shortZh(zh) {
+    let s = String(zh || '').trim();
+    if (!s) return '';
+    s = s.replace(/^[a-zA-Z]+\.+\s*/, '');           // 词性标注
+    s = s.split(/;|；/)[0];                            // 只留第一个义项
+    s = s.split(/,|，|、/)[0];                         // 义项里只留第一小段
+    s = s.replace(/……/g, '').replace(/[（(].*?[)）]/g, '').trim();
+    return s;
+  },
+
   // 把句子切成「显示片段」，每个可读片段带一个序号；数字按朗读时展开后的
   // 个数记在 n 上（"21" 读作 "twenty one"，占 2 个归一化词，"3D" 占 2 个），
   // 这样和 alignSpeech 的逐词结果能一一对上，不会整体错位。
@@ -5609,7 +5621,8 @@ const App = {
     if (statusEl) {
       statusEl.innerHTML =
         '<div class="rd-repair-card">'
-        + '<div class="rd-repair-word">' + this._escHtml(word) + '</div>'
+        + '<div class="rd-repair-word">' + this._escHtml(word)
+        + '<span class="rd-repair-zh" id="wrep-zh"></span></div>'
         + '<div class="fs-12 text-sub">把红色波浪线的词逐个读对了，才能进下一题（也可以点下面的按钮重读整句）</div>'
         + '<div style="display:flex;gap:8px;justify-content:center;margin-top:10px;flex-wrap:wrap">'
         + '<button class="speak-btn" style="background:var(--primary)" onclick="App._wordRepairHear()">🔊 听这个词</button>'
@@ -5619,6 +5632,15 @@ const App = {
         + '<div id="wrep-hint" class="fs-12 text-sub" style="margin-top:8px;min-height:18px"></div>'
         + '</div>';
       const self = this;
+      // 词旁边带上最常见的中文意思——只留最短的那一个，两三个字，
+      // 方便孩子扫一眼就知道这个词是什么，不用读一长串释义。
+      Api.dict(word).then(function(info) {
+        if (R !== self._wordRepair || R.word !== word) return;   // 已经换词了
+        const zhEl = document.getElementById('wrep-zh');
+        if (!zhEl) return;
+        const zh = self._shortZh(info && info.zh);
+        if (zh) zhEl.textContent = zh;
+      });
       const rbtn = document.getElementById('wrep-btn');
       if (rbtn) {
         const onRtap = function(e) {
