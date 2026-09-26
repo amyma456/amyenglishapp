@@ -202,6 +202,58 @@ const App = {
     return n;
   },
 
+  // 学生断点续做：登录 / 刷新 / 更新后不从第一题重来，直接停在第一个
+  // 没做完的题上。依据是本地记录的答题（answers）+ 单词闯关完成标记
+  // （learnedWords），它们都存在手机本地，重新登录也不会丢。
+  //  - 做完的模块：整块跳过（含它前面的听读句子步骤）
+  //  - 做到一半的模块：停在第一个没做的题
+  //  - 完全没碰过的模块：从该模块第一屏开始（保留听读/翻译引导）
+  //  - 全部做完：停在"今天的作业做完了"完成页
+  // 老师端始终 0（老师是预览，不做题）。
+  _resumeStepIdx(dayIdx) {
+    const steps = this._buildSteps(dayIdx);
+    if (!steps.length) return 0;
+    const day = HOMEWORK_DATA[dayIdx];
+    if (!day || !day.modules) return 0;
+    const sid = this._myStudentId();
+    const answered = (mi, q) =>
+      !!this.state.answers[Api.answerKey(sid, dayIdx, mi, q)];
+
+    let firstUn = -1;          // 第一个没做完的"可答题"步骤下标
+    const touched = {};         // moduleIdx -> 该模块是否做过至少一题
+    for (let i = 0; i < steps.length && firstUn < 0; i++) {
+      const s = steps[i];
+      if (s.kind === 'question' || s.kind === 'speaking') {
+        if (answered(s.mi, s.qi)) { touched[s.mi] = true; continue; }
+        firstUn = i;
+      } else if (s.kind === 'writing') {
+        const blanks = (day.modules[s.mi] || {}).blanks || [];
+        let miss = -1;
+        for (let bi = 0; bi < blanks.length; bi++) {
+          if (answered(s.mi, bi)) { touched[s.mi] = true; }
+          else if (miss < 0) miss = bi;
+        }
+        if (miss >= 0) firstUn = i;
+      } else if (s.kind === 'vocab') {
+        if (this._getLearnedWords(dayIdx)) { touched[s.mi] = true; continue; }
+        firstUn = i;
+      }
+      // sentence / translate / passage 步骤没有独立答题记录：它们排在
+      // 所属模块的题目之前，跟随后面的题目状态一起被跳过或重做。
+    }
+    if (firstUn < 0) return steps.length;   // 全做完了 → 完成页
+
+    const target = steps[firstUn];
+    if (!touched[target.mi]) {
+      // 模块还没动过：回到该模块的第一屏（听读句子等引导），孩子
+      // 不会一头撞进没有上下文的题目里。
+      for (let i = 0; i < firstUn; i++) {
+        if (steps[i].mi === target.mi) return i;
+      }
+    }
+    return firstUn;
+  },
+
   // Single funnel for every answered question. Fire-and-forget: the DOM
   // feedback the caller renders is what the child sees, not this.
   _recordAnswer(dayIdx, moduleIdx, qIdx, value, correct) {
@@ -600,7 +652,17 @@ const App = {
     // Default to the real today (teacher can still switch days for preview)
     this.state.currentTab = this.isTeacher() ? 'weekly' : 'today';
     this.state.currentDay = this.getTodayWeekdayIdx();
-    this.state.stepIdx = 0;          // always start the day at question 1
+    // 学生：接着上次做到的地方继续，不从第一题重来（重新登录、更新
+    // 自动刷新后同样生效）。老师保持第 0 步。
+    this.state.stepIdx = this.isTeacher()
+      ? 0
+      : this._resumeStepIdx(this.state.currentDay);
+    if (!this.isTeacher() && this.state.stepIdx > 0) {
+      const n = this._buildSteps(this.state.currentDay).length;
+      this.showToast(this.state.stepIdx >= n
+        ? '✅ 今天的作业已经做完啦'
+        : '📍 接着上次做到的地方继续');
+    }
     clearTimeout(this._advanceTimer);
     // Update header name - show student name or teacher label
     const headerName = document.getElementById('header-name');
