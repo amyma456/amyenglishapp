@@ -51,6 +51,8 @@ body.stage-mode,body:has(.login-page:not(.hidden)){
     radial-gradient(circle 620px at 50% 50%, rgba(240,112,0,.12), rgba(240,112,0,0) 70%) no-repeat fixed,
     var(--canvas)}
 button{cursor:pointer;border:none;font-family:inherit;transition:.2s}
+/* 手机浏览器误滑防护：禁止横向过滚触发系统的"后退/前进"导航手势 */
+html{overscroll-behavior-x:none}
 input,textarea,select{font-family:inherit;font-size:14px;outline:none}
 
 /* ===== Nav — 单行、白色、不通栏、两端圆弧 ===== */
@@ -896,6 +898,63 @@ function triggerPWAInstall() {
     dismissInstallBanner();
   });
 }
+
+/* ---- iOS：没有自动安装提示，改为引导"添加到主屏幕" ---- */
+(function() {
+  var ua = navigator.userAgent;
+  var isIOS = /iPhone|iPod/.test(ua) ||
+    (/iPad/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
+  if (!isIOS) return;
+  var standalone = window.navigator.standalone === true ||
+    window.matchMedia('(display-mode: standalone)').matches;
+  if (standalone) return; // 已经是APP形态，不再提示
+  var KEY = 'ios-install-dismissed-at';
+  try {
+    var t = localStorage.getItem(KEY);
+    if (t && Date.now() - Number(t) < 7 * 24 * 3600 * 1000) return; // 关闭后7天内不再打扰
+  } catch (err) {}
+  setTimeout(function() {
+    if (document.getElementById('ios-install-guide')) return;
+    var g = document.createElement('div');
+    g.id = 'ios-install-guide';
+    g.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:var(--primary);color:#fff;padding:12px 14px;z-index:9999;box-shadow:0 -2px 8px rgba(0,0,0,.15);display:flex;align-items:flex-start;gap:10px';
+    g.innerHTML =
+      '<span style="font-size:20px;line-height:1">📲</span>' +
+      '<div style="flex:1;font-size:12px;line-height:1.55">' +
+      '<div style="font-weight:600;font-size:13px;margin-bottom:2px">装到手机桌面，像APP一样用</div>' +
+      '点浏览器底部<span style="background:#fff;color:var(--primary);border-radius:4px;padding:0 5px;font-weight:600">分享&nbsp;⬆️</span>按钮 →' +
+      '选<span style="background:#fff;color:var(--primary);border-radius:4px;padding:0 5px;font-weight:600">添加到主屏幕</span>。' +
+      '之后从桌面图标打开，左右滑就不会退出啦。</div>' +
+      '<button id="ios-guide-close" style="background:transparent;color:#fff;border:none;font-size:20px;padding:2px 4px;line-height:1">&times;</button>';
+    document.body.appendChild(g);
+    document.getElementById('ios-guide-close').onclick = function() {
+      try { localStorage.setItem(KEY, String(Date.now())); } catch (err) {}
+      g.remove();
+    };
+  }, 2500);
+})();
+
+/* ---- 边缘误滑拦截：浏览器模式下，从屏幕左右边缘开始的横向滑动 ----
+   会触发系统的"后退/前进"手势把页面滑走。起点贴近边缘且横向移动占主导时
+   直接拦截。安装成APP（standalone）后系统手势本就不存在，自动跳过。 */
+(function() {
+  var standalone = window.matchMedia('(display-mode: standalone)').matches ||
+    window.navigator.standalone === true;
+  if (standalone) return;
+  var EDGE = 24, guard = false, sx = 0, sy = 0;
+  document.addEventListener('touchstart', function(e) {
+    if (e.touches.length !== 1) { guard = false; return; }
+    var t = e.touches[0];
+    sx = t.clientX; sy = t.clientY;
+    guard = sx <= EDGE || sx >= window.innerWidth - EDGE;
+  }, { passive: true });
+  document.addEventListener('touchmove', function(e) {
+    if (!guard) return;
+    var t = e.touches[0];
+    if (Math.abs(t.clientX - sx) > Math.abs(t.clientY - sy)) e.preventDefault();
+  }, { passive: false });
+  document.addEventListener('touchend', function() { guard = false; });
+})();
 </script>
 </body>
 </html>
