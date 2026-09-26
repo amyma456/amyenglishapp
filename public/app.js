@@ -905,7 +905,7 @@ const App = {
   // 现在题一渲染出来，就顺手把接下来几句的音频取回本地存成 blob，真正要读的
   // 时候直接播本地文件，起播几乎瞬时。取回来的按文本缓存，重听不再走网络。
   TTS_PREFETCH_MAX: 12,     // 最多留着十几句，超出的释放掉，别让内存一直涨
-  TTS_PREFETCH_AHEAD: 3,    // 往前预取几步
+  TTS_PREFETCH_AHEAD: 5,    // 往前预取几步
 
   // 某一步会朗读的英文（和各个 step 渲染时读的是同一份文本）
   _stepSpeechText(steps, dayIdx, i) {
@@ -927,11 +927,39 @@ const App = {
     return '';
   },
 
+  // 某一步"点了选项之后才会读"的句子。题面本身早就在预取了，但孩子
+  // 点 ABCD 之后系统要读的是另外几句：口语模块读所选选项本身（对错
+  // 都读），选择题模块读"题干+正确答案"拼成的整句。以前这些要等孩子
+  // 点了才去现场生成音频，冷启动要干等好几秒；现在跟题面一起提前取好。
+  _stepTapSpeechTexts(steps, dayIdx, i) {
+    var s = steps && steps[i];
+    if (!s) return [];
+    var day = HOMEWORK_DATA[dayIdx];
+    var m = day && day.modules && day.modules[s.mi];
+    if (!m) return [];
+    var out = [];
+    if (s.kind === 'speaking') {
+      var q = m.questions && m.questions[s.qi];
+      if (q && q.options) {
+        q.options.forEach(function(o) { if (o) out.push(String(o)); });
+      }
+    } else if (s.kind === 'question') {
+      var q2 = m.questions && m.questions[s.qi];
+      if (q2) {
+        var rs = this._buildReadSentence(m, q2);
+        if (rs) out.push(rs);
+      }
+    }
+    return out;
+  },
+
   // 当前这一步通常正在播或刚要播，跳过它，只预取后面的
   prefetchUpcoming(steps, dayIdx, fromIdx) {
     if (!steps || typeof fetch !== 'function') return;
     for (var i = fromIdx + 1; i <= fromIdx + this.TTS_PREFETCH_AHEAD; i++) {
       this.prefetchTts(this._stepSpeechText(steps, dayIdx, i));
+      var taps = this._stepTapSpeechTexts(steps, dayIdx, i);
+      for (var j = 0; j < taps.length; j++) this.prefetchTts(taps[j]);
     }
   },
 
@@ -1099,55 +1127,76 @@ const App = {
       }
     };
 
-    audioEl.src = ttsUrl;
-    audioEl.load(); // Critical for Safari/cross-browser: must call load() after setting src
-    self._applyRate(audioEl);
+    // 开播动作收进一个函数：如果这句的音频正在预取（题一渲染就发出去了），
+    // 先等它一小会儿 —— 直接再发一次请求等于两份生成音频赛跑，后发的
+    // 那次常常更慢，孩子点完选项就是从这儿开始干等的。等到本地 blob 就
+    // 直接播，基本瞬时；最多等 2.5 秒，取不回来就照旧走网络，行为不变。
+    function startPlayback() {
+      if (self._ttsDone || myToken !== self._speakToken) return;
+      audioEl.src = ttsUrl;
+      audioEl.load(); // Critical for Safari/cross-browser: must call load() after setting src
+      self._applyRate(audioEl);
 
-    var playPromise = audioEl.play();
-    if (playPromise && typeof playPromise.then === 'function') {
-      playPromise.then(function() {
-        if (myToken !== self._speakToken) return;
-        self._audioStarted = true;
-        if (timeoutId) { clearTimeout(timeoutId); timeoutId = null; }
-      }).catch(function(err) {
-        if (self._ttsDone || myToken !== self._speakToken) return;
-        // play() was rejected — likely autoplay restriction or network error
-        // Try Baidu first, then speechSynthesis
-        if (!baiduTried) {
-          baiduTried = true;
-          try {
-            audioEl.src = fallbackUrl;
-            audioEl.load();
-            audioEl.play().then(function() {
-              if (myToken !== self._speakToken) return;
-              self._audioStarted = true;
-              if (timeoutId) { clearTimeout(timeoutId); timeoutId = null; }
-            }).catch(function() { trySynthFallback(); });
-          } catch(e) { trySynthFallback(); }
-        } else {
-          trySynthFallback();
+      var playPromise = audioEl.play();
+      if (playPromise && typeof playPromise.then === 'function') {
+        playPromise.then(function() {
+          if (myToken !== self._speakToken) return;
+          self._audioStarted = true;
+          if (timeoutId) { clearTimeout(timeoutId); timeoutId = null; }
+        }).catch(function(err) {
+          if (self._ttsDone || myToken !== self._speakToken) return;
+          // play() was rejected — likely autoplay restriction or network error
+          // Try Baidu first, then speechSynthesis
+          if (!baiduTried) {
+            baiduTried = true;
+            try {
+              audioEl.src = fallbackUrl;
+              audioEl.load();
+              audioEl.play().then(function() {
+                if (myToken !== self._speakToken) return;
+                self._audioStarted = true;
+                if (timeoutId) { clearTimeout(timeoutId); timeoutId = null; }
+              }).catch(function() { trySynthFallback(); });
+            } catch(e) { trySynthFallback(); }
+          } else {
+            trySynthFallback();
+          }
+        });
+      }
+
+      // Safety timeout: if audio hasn't started in 2.5 seconds, try Baidu/synthesis
+      timeoutId = setTimeout(function() {
+        if (!self._ttsDone && !self._audioStarted && myToken === self._speakToken) {
+          if (!baiduTried) {
+            baiduTried = true;
+            try {
+              audioEl.src = fallbackUrl;
+              audioEl.load();
+              audioEl.play().then(function() {
+                if (myToken !== self._speakToken) return;
+                self._audioStarted = true;
+              }).catch(function() { trySynthFallback(); });
+            } catch(e) { trySynthFallback(); }
+          } else {
+            trySynthFallback();
+          }
         }
-      });
+      }, 2500);
     }
 
-    // Safety timeout: if audio hasn't started in 2.5 seconds, try Baidu/synthesis
-    timeoutId = setTimeout(function() {
-      if (!self._ttsDone && !self._audioStarted && myToken === self._speakToken) {
-        if (!baiduTried) {
-          baiduTried = true;
-          try {
-            audioEl.src = fallbackUrl;
-            audioEl.load();
-            audioEl.play().then(function() {
-              if (myToken !== self._speakToken) return;
-              self._audioStarted = true;
-            }).catch(function() { trySynthFallback(); });
-          } catch(e) { trySynthFallback(); }
-        } else {
-          trySynthFallback();
-        }
-      }
-    }, 2500);
+    if (isSentence && !cachedTts && self._ttsPending && self._ttsPending[cleanText]) {
+      var waitedMs = 0;
+      (function waitForPrefetch() {
+        if (self._ttsDone || myToken !== self._speakToken) return;
+        var hit = self._ttsBlobs && self._ttsBlobs[cleanText];
+        if (hit) { ttsUrl = hit; startPlayback(); return; }
+        if (waitedMs >= 2500 || !self._ttsPending[cleanText]) { startPlayback(); return; }
+        waitedMs += 120;
+        setTimeout(waitForPrefetch, 120);
+      })();
+    } else {
+      startPlayback();
+    }
 
     // Absolute timeout: no matter what, stop indicator after 12 seconds.
     // If NOTHING ever started playing (all TTS sources failed), tell the
