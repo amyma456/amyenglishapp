@@ -3037,10 +3037,16 @@ const App = {
     var self = this;
 
     if (!isCorrect) {
-      // 选错：把点的这个选项读出来给孩子听，然后必须再点到绿色的
-      // 正确选项上才算对，才能进入跟读环节。
+      // 选错：立刻把点的这个标红锁死、正确选项亮绿色——不等朗读，
+      // 孩子马上能看到要点回哪一个（朗读要是卡住，绿色提示也还在）。
+      // 同时把点错的这句读出来给他听，读完再提醒一次。
       this._playWrongSound();
-      opts.forEach((el) => { el.style.pointerEvents = 'none'; });
+      opts.forEach((el, i) => {
+        el.classList.remove('correct', 'wrong');
+        if (i === oi) { el.classList.add('wrong'); el.style.pointerEvents = 'none'; }
+        else if (i === correctAnswer) el.classList.add('correct');
+        else el.style.pointerEvents = 'auto';
+      });
       if (waitEl) {
         waitEl.style.display = 'block';
         waitEl.style.color = 'var(--danger)';
@@ -3050,14 +3056,7 @@ const App = {
         tip.classList.add('show');
         tip.innerHTML = '📖 ' + q.explanation_cn;
       }
-      var self2 = this;
       this.speak(selectedText, { onDone: function() {
-        opts.forEach((el, i) => {
-          el.classList.remove('correct', 'wrong');
-          if (i === oi) { el.classList.add('wrong'); el.style.pointerEvents = 'none'; }
-          else if (i === correctAnswer) el.classList.add('correct');
-          else el.style.pointerEvents = 'auto';
-        });
         if (waitEl) waitEl.textContent = '❌ 选错了。点绿色的正确选项，再选一次';
       }});
       return;
@@ -3285,6 +3284,12 @@ const App = {
       btn.style.background = 'var(--success)';
       btn.innerHTML = '✅ 已通过 ' + score + ' 分';
       btn.disabled = true;
+      if (!this.isTeacher()) {
+        // 学生路径：跟读 ≥60 分，把底部 stage-next-btn 解锁（橙色轻推
+        // 提示孩子/家长可以进下一题了）。
+        const next = document.getElementById('stage-next-btn');
+        if (next) { next.disabled = false; next.classList.add('nudge'); }
+      }
       if (statusEl) {
         let html = '<div style="font-size:34px;font-weight:700;color:var(--success);line-height:1.15">' + score + ' 分</div>'
                  + '<span style="color:var(--success);font-weight:600">✅ 读得很好，通过！</span>';
@@ -3302,6 +3307,11 @@ const App = {
       btn.style.background = 'var(--primary)';
       btn.innerHTML = '🎤 再点一次重读';
       btn.disabled = false;
+      if (!this.isTeacher()) {
+        // <60 分：底部"下一题"保持灰色锁定，重读通过后才会解锁。
+        const next = document.getElementById('stage-next-btn');
+        if (next) { next.disabled = true; next.classList.remove('nudge'); }
+      }
       if (statusEl) {
         const bad = (extra && extra.badWords) || [];
         let html = '<div style="font-size:34px;font-weight:700;color:var(--danger);line-height:1.15">'
@@ -4998,6 +5008,9 @@ const App = {
     } else if (step.kind === 'speaking') {
       html += '<div class="stage-q" id="sp-content-' + step.mi + '">'
            + this.renderSpeakingQuestion(m, step.mi, step.qi, dayIdx) + '</div>';
+      // 学生路径：口语题同样先锁 stage-next-btn，选对选项 + 整句跟读
+      // ≥60 分才解锁——和选择题的门槛一致，没读完不能点"下一题"。
+      if (!this.isTeacher()) this._lockNextOnRender = true;
     } else if (step.kind === 'vocab') {
       html += '<div class="stage-q">' + this.renderVocabGame(m, step.mi, dayIdx) + '</div>';
     } else if (step.kind === 'writing') {
@@ -5308,6 +5321,8 @@ const App = {
         } else {
           el.style.pointerEvents = 'auto';
         }
+        // 和口语模块一致：正确选项立刻亮绿，孩子知道要点回哪一个。
+        if (i === q.answer) el.classList.add('correct');
       });
       if (ansEl) {
         ansEl.style.display = 'block';
