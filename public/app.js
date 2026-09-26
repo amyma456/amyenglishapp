@@ -4884,6 +4884,18 @@ const App = {
       if (ans) filled = filled.replace(/_{2,}/g, ans);
     }
     var stem = this._ttsText(filled);
+    // 问句题干：把正确答案拼在后面一起读。孩子跟读的是"问句 + 回答"
+    // 一来一回的完整对话（"Do you like apples? — Yes, I do."），而不是
+    // 只读半截问句。带横杠的题干填空后已是完整句，不重复拼。
+    if (!/_{2,}/.test(rest) && /[?？]\s*$/.test(String(rest).trim())) {
+      var ansOpt = '';
+      if (q.options && typeof q.answer === 'number' && q.options[q.answer] != null) {
+        ansOpt = String(q.options[q.answer]).trim();
+      } else if (q.answer != null) {
+        ansOpt = String(q.answer).trim();
+      }
+      if (ansOpt) stem = stem.replace(/[?？]\s*$/, '?') + ' ' + ansOpt;
+    }
     // 兜底：完形填空的题号（"2___"）且 rest 太短，从 passage 里找原句并填空
     var words = stem.match(/[A-Za-z][A-Za-z'-]*/g) || [];
     if (words.length < 2) {
@@ -5099,7 +5111,7 @@ const App = {
     });
     if (ansEl) {
       ansEl.style.display = 'block';
-      ansEl.innerHTML = '✅ 选对了！请按住下方按钮跟读原句（≥60 分通过）';
+      ansEl.innerHTML = '✅ 选对了！点下方按钮把问句和答案读出来（≥60 分通过）';
     }
 
     const followEl = document.getElementById('qr-follow-' + mi + '-' + qi);
@@ -5154,33 +5166,38 @@ const App = {
   // the question sentence. Threshold is 60. Compared to the old auto-stop
   // pipeline the timing is fully user-controlled, so we never wait for
   // silence detection — that shaves a couple of seconds off every pick.
+  // 点击跟读面板。点一下麦克风开始录音，读完再点一下就结束并打分。
+  // 相比按住不放，孩子不用一直压着按钮，读长句也不会手累；15 秒兜底
+  // 自动收一次，防止忘了点停止、麦克风一直开着。
   _renderHoldReadPanel(followEl, mi, qi, dayIdx, sentence) {
     const sid = 'hr-' + mi + '-' + qi;
     const stid = 'qr-status-' + mi + '-' + qi;
     const sentid = 'rd-sent-' + mi + '-' + qi;
     followEl.innerHTML = '<div class="speak-record show" style="text-align:center">'
-      + '<p class="fs-12 text-sub">请按住麦克风朗读下面这句完整的话：</p>'
+      + '<p class="fs-12 text-sub">请朗读下面这句完整的话（问句和答案都读出来）：</p>'
       + '<div class="rd-sentence" id="' + sentid + '">' + this._readSentenceHtml(sentence) + '</div>'
       + '<div class="rd-live-hint" id="rd-live-' + mi + '-' + qi + '"></div>'
       + '<div id="' + stid + '" style="min-height:18px;margin:6px 0;color:var(--text-sub);font-size:14px"></div>'
       + '<button id="' + sid + '" class="speak-btn qr-hold-btn" '
       + 'style="background:var(--primary);margin-top:8px;font-size:18px;padding:18px 32px;'
       + 'user-select:none;-webkit-user-select:none;touch-action:none;border-radius:24px;min-width:200px">'
-      + '🎤 按住跟读</button>'
-      + '<p class="fs-12 text-sub" style="margin-top:8px">按住朗读，读到的词会变绿打勾。≥60 分才能进入下一题。</p>'
+      + '🎤 点我读</button>'
+      + '<p class="fs-12 text-sub" style="margin-top:8px">点一下开始，读到的词会变绿打勾；读完了再点一下就打分。≥60 分才能进入下一题。</p>'
       + '<p class="fs-12 text-sub" style="margin-top:2px">不认识的词，点一下就有读音和中文意思。</p>'
       + '</div>';
     const btn = document.getElementById(sid);
     if (!btn) return;
     const self = this;
-    const onStart = function(e) { e.preventDefault(); self._holdReadStart(mi, qi, dayIdx, sentence); };
-    const onEnd = function(e) { e.preventDefault(); self._holdReadEnd(mi, qi, dayIdx); };
-    btn.addEventListener('mousedown', onStart);
-    btn.addEventListener('touchstart', onStart, { passive: false });
-    btn.addEventListener('mouseup', onEnd);
-    btn.addEventListener('mouseleave', onEnd);
-    btn.addEventListener('touchend', onEnd);
-    btn.addEventListener('touchcancel', onEnd);
+    // 点一下：正在录音 → 结束打分；没在录 → 开始新一轮。
+    // touchstart 上 preventDefault，避免手机再补发一次 mousedown 点了两下。
+    const onTap = function(e) {
+      e.preventDefault();
+      if (self._holdReadActive) self._holdReadEnd(mi, qi, dayIdx);
+      else self._holdReadStart(mi, qi, dayIdx, sentence);
+    };
+    btn.addEventListener('touchstart', onTap, { passive: false });
+    btn.addEventListener('mousedown', onTap);
+    btn.addEventListener('contextmenu', function(e) { e.preventDefault(); });
   },
 
   // ===== 跟读：逐词标记 =====
@@ -5383,9 +5400,9 @@ const App = {
 
     this._liveStart(mi, qi, sentence);
 
-    // Cap a held read at 10s — long enough for a child to read a sentence,
-    // short enough that a stuck button doesn't keep the mic open forever.
-    this._holdReadTimer = setTimeout(() => this._holdReadEnd(mi, qi, dayIdx), 10000);
+    // Tap-to-stop 的兜底：最多录 15 秒自动收一次（问句 + 回答比单句长），
+    // 防止孩子忘了点停止、麦克风一直开着。
+    this._holdReadTimer = setTimeout(() => this._holdReadEnd(mi, qi, dayIdx), 15000);
     this._setHoldReadUI(mi, qi, 'recording', null, false);
   },
 
@@ -5394,9 +5411,9 @@ const App = {
     clearTimeout(this._holdReadTimer);
     if (!ctx || ctx._ended) return;
     ctx._ended = true;
-    // Mis-tap guard: a hold shorter than 250 ms is almost certainly an
-    // accidental touch — reset the button rather than firing a half-empty
-    // transcription through the ASR pipeline.
+    // Mis-tap guard: two taps less than 250 ms apart is almost certainly an
+    // accidental double-touch — reset the button rather than firing a
+    // half-empty transcription through the ASR pipeline.
     if (Date.now() - ctx.startedAt < 250) {
       this._holdReadActive = null;
       this._liveStop();
@@ -5447,7 +5464,7 @@ const App = {
     if (!btn) return;
     if (status === 'recording') {
       btn.style.background = 'var(--danger)';
-      btn.innerHTML = '🔴 录音中… 松手打分';
+      btn.innerHTML = '🔴 录音中… 读完了点我';
       btn.disabled = false;
       if (statusEl) statusEl.innerHTML = '';
       return;
@@ -5465,9 +5482,9 @@ const App = {
     }
     if (status === 'mistap') {
       btn.style.background = 'var(--primary)';
-      btn.innerHTML = '🎤 按住跟读';
+      btn.innerHTML = '🎤 点我读';
       btn.disabled = false;
-      if (statusEl) statusEl.innerHTML = '<span style="color:var(--danger)">⚠️ 时间太短，请按住至少 1 秒再松手</span>';
+      if (statusEl) statusEl.innerHTML = '<span style="color:var(--danger)">⚠️ 时间太短了，点一下开始，读完再点一下</span>';
       return;
     }
     if (status === 'passed') {
@@ -5481,7 +5498,7 @@ const App = {
     }
     if (status === 'failed') {
       btn.style.background = 'var(--primary)';
-      btn.innerHTML = '🎤 再按一次跟读';
+      btn.innerHTML = '🎤 再点一次重读';
       btn.disabled = false;
       if (statusEl) {
         const bad = (extra && extra.badWords) || [];
@@ -5505,7 +5522,7 @@ const App = {
     }
     if (status === 'noaudio') {
       btn.style.background = 'var(--primary)';
-      btn.innerHTML = '🎤 按住跟读';
+      btn.innerHTML = '🎤 点我读';
       btn.disabled = false;
       if (statusEl) statusEl.innerHTML = '<span style="color:var(--danger)">⚠️ 没录到声音或识别失败，请再试一次</span>';
       return;
