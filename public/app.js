@@ -2926,24 +2926,29 @@ const App = {
     var self = this;
 
     if (!isCorrect) {
-      // 选错：点的这个标红锁死，正确选项高亮成绿色提示。孩子必须再点到
-      // 绿色的正确选项上才算对，才能进入跟读环节。
+      // 选错：把点的这个选项读出来给孩子听，然后必须再点到绿色的
+      // 正确选项上才算对，才能进入跟读环节。
       this._playWrongSound();
-      opts.forEach((el, i) => {
-        el.classList.remove('correct', 'wrong');
-        if (i === oi) { el.classList.add('wrong'); el.style.pointerEvents = 'none'; }
-        else if (i === correctAnswer) el.classList.add('correct');
-        else el.style.pointerEvents = 'auto';
-      });
+      opts.forEach((el) => { el.style.pointerEvents = 'none'; });
       if (waitEl) {
         waitEl.style.display = 'block';
         waitEl.style.color = 'var(--danger)';
-        waitEl.textContent = '❌ 选错了。点绿色的正确选项，再选一次';
+        waitEl.textContent = '❌ 选错了。正在朗读你选的句子，请认真听…';
       }
       if (tip && q.explanation_cn) {
         tip.classList.add('show');
         tip.innerHTML = '📖 ' + q.explanation_cn;
       }
+      var self2 = this;
+      this.speak(selectedText, { onDone: function() {
+        opts.forEach((el, i) => {
+          el.classList.remove('correct', 'wrong');
+          if (i === oi) { el.classList.add('wrong'); el.style.pointerEvents = 'none'; }
+          else if (i === correctAnswer) el.classList.add('correct');
+          else el.style.pointerEvents = 'auto';
+        });
+        if (waitEl) waitEl.textContent = '❌ 选错了。点绿色的正确选项，再选一次';
+      }});
       return;
     }
 
