@@ -904,7 +904,7 @@ const App = {
   // 原来每换一题才去 /api/tts 取音频：孩子看到题 → 安静一秒多 → 才开始读。
   // 现在题一渲染出来，就顺手把接下来几句的音频取回本地存成 blob，真正要读的
   // 时候直接播本地文件，起播几乎瞬时。取回来的按文本缓存，重听不再走网络。
-  TTS_PREFETCH_MAX: 12,     // 最多留着十几句，超出的释放掉，别让内存一直涨
+  TTS_PREFETCH_MAX: 20,     // 最多留二十句左右，超出的释放掉，别让内存一直涨
   TTS_PREFETCH_AHEAD: 5,    // 往前预取几步
 
   // 某一步会朗读的英文（和各个 step 渲染时读的是同一份文本）
@@ -953,9 +953,22 @@ const App = {
     return out;
   },
 
-  // 当前这一步通常正在播或刚要播，跳过它，只预取后面的
+  // 当前这一步通常正在播或刚要播，跳过它，只预取后面的。
+  // 但当前这一题的"整句选项"要预取：听力题点错后系统要立刻朗读所选句子，
+  // 等点了再取就得干等网络。后面的题只预取题面本身，选项等翻到那题再取，
+  // 不然一次渲染甩出去二十几个请求，还把本地缓存挤爆。
   prefetchUpcoming(steps, dayIdx, fromIdx) {
     if (!steps || typeof fetch !== 'function') return;
+    var curStep = steps[fromIdx];
+    if (curStep && curStep.kind === 'question') {
+      var day0 = HOMEWORK_DATA[dayIdx];
+      var cm = day0 && day0.modules && day0.modules[curStep.mi];
+      var cq = cm && cm.questions && cm.questions[curStep.qi];
+      var copts = (cq && cq.options) || [];
+      for (var k = 0; k < copts.length; k++) {
+        if (copts[k] && /\s/.test(String(copts[k]).trim())) this.prefetchTts(String(copts[k]));
+      }
+    }
     for (var i = fromIdx + 1; i <= fromIdx + this.TTS_PREFETCH_AHEAD; i++) {
       this.prefetchTts(this._stepSpeechText(steps, dayIdx, i));
       var taps = this._stepTapSpeechTexts(steps, dayIdx, i);
@@ -5356,7 +5369,7 @@ const App = {
       });
       if (ansEl) {
         ansEl.style.display = 'block';
-        ansEl.innerHTML = '❌ 当前选项错误。请在原 ABCD 上点选正确答案。';
+        ansEl.innerHTML = '❌ 选错了。正在朗读你选的句子，请认真听…';
       }
       this._playWrongSound();
       const expEl = document.getElementById('exp-' + mi + '-' + qi);
@@ -5365,10 +5378,32 @@ const App = {
       // "try again" hint, no recording has happened yet.
       const followEl = document.getElementById('qr-follow-' + mi + '-' + qi);
       if (followEl) followEl.innerHTML = '';
+      // 和口语模块一致：把点错的这句立刻读出来给他听——听力题尤其重要，
+      // 孩子要靠耳朵发现自己选的句子和原文差在哪。绿色高亮不朗读，不用
+      // 等读完就能改选。选项是完整句子才读（听力类）；短语选项保持原样。
+      // 这句的音频在题目渲染时就已经预取好了，点下去基本零等待开口。
+      var pickedText = (q.options && q.options[oi] != null) ? String(q.options[oi]) : '';
+      var self = this;
+      if (pickedText && /\s/.test(pickedText.trim()) && this.state.audioEnabled) {
+        this.speak(pickedText, { onDone: function() {
+          var el = document.getElementById('ans-' + mi + '-' + qi);
+          var pick = self._lastPick && self._lastPick[mi + '-' + qi];
+          if (el && pick && pick.oi === oi && !pick.isCorrect) {
+            el.innerHTML = '❌ 选错了。点绿色的正确选项，再选一次';
+          }
+        }});
+      } else if (ansEl) {
+        ansEl.innerHTML = '❌ 当前选项错误。请在原 ABCD 上点选正确答案。';
+      }
       return;
     }
 
     // Correct pick — gate the answer behind a recorded read-aloud.
+    // 选对的一瞬间就给成功提示音（和词汇游戏一致），同时停掉可能还在播的
+    // 错句朗读——别让它漏进接下来的跟读录音里。
+    this._stopCurrentAudio();
+    this._showSpeakingIndicator(false);
+    this._playCorrectSound();
     opts.forEach((el) => {
       el.classList.remove('correct', 'wrong', 'selected');
       el.style.pointerEvents = 'none';
