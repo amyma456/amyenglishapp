@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="78">
+<meta name="app-version" content="79">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon.svg">
 <title>Amy老师英语打卡平台</title>
@@ -393,9 +393,21 @@ body.stage-mode .content-area{padding-block:0}
   padding:5px 12px;font-family:inherit;line-height:1.5;cursor:pointer;
   -webkit-tap-highlight-color:transparent}
 .keyword-chip .kw-en::before{content:'🔊';font-size:10px;margin-right:4px;opacity:.7}
+/* 中文默认藏着 —— 配对上了才露出来（孩子自己挑出来的，不是白给的） */
 .keyword-chip .kw-cn{display:none;color:var(--orange);font-weight:600}
-.keyword-chip.open{background:#fff;border-color:var(--primary);box-shadow:0 1px 3px rgba(0,0,0,.06)}
-.keyword-chip.open .kw-cn{display:inline}
+.keyword-chip.picking{background:#fff;border-color:var(--orange);box-shadow:0 0 0 3px var(--orange-wash)}
+.keyword-chip.paired{background:var(--success-light);border-color:var(--success);color:var(--ink)}
+.keyword-chip.paired .kw-en::before{content:'✓'}
+.keyword-chip.paired .kw-cn{display:inline}
+/* 中文候选池：点英文词才摊开，配对成功就收回去 */
+.wk-pool{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)}
+.wk-pool-hint{font-size:11px;color:var(--ink-3);margin-bottom:6px}
+.wk-pool-items{display:flex;flex-wrap:wrap;gap:8px}
+.wk-cn-chip{border:1px solid var(--line);background:#fff;color:var(--ink);
+  padding:5px 12px;border-radius:12px;font-size:12px;font-family:inherit;line-height:1.5;
+  cursor:pointer;-webkit-tap-highlight-color:transparent}
+.wk-cn-chip.wk-wrong{border-color:var(--danger);color:var(--danger);animation:wk-shake .4s}
+@keyframes wk-shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
 
 /* 写作第二步：朗读全文 */
 .wr-start-hint{margin-top:12px;font-size:13px;font-weight:500;color:var(--success)}

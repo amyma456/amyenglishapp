@@ -4897,20 +4897,31 @@ const App = {
     html += '<div class="writing-banner">⚠️ ' + m.requirement_cn + '</div>';
 
     // 参考单词：粘在滚动区顶部。作文一长，孩子滑到后半段时原始的
+    // 参考单词：粘在滚动区顶部。作文一长，孩子滑到后半段时原始的
     // 关键词条早就滚出去了，遇到不会写的词得往回翻 —— 这里让它常驻。
-    // 词条本身点了才有反应（听发音 + 展开中文），没点就是一片干干净净
-    // 的英文词，孩子的注意力还在自己写。
+    //
+    // 这里只给英文，**中文要孩子自己配对出来**：点某个词 → 听发音 + 从
+    // 打乱的中文里挑出它的意思。配对上了才显示「英文 · 中文」。
+    // 系统不主动把「英文＝中文」摆在他面前，认一遍比看一眼记得住。
+    const kwPaired = this._kwState(mi);
     html += '<div class="writing-kwbar">';
-    html += '<div class="wk-title">📌 参考单词（不会就点一下：听发音 / 看中文）</div>';
+    html += '<div class="wk-title">📌 参考单词（点一下：听发音 → 再找出它的中文意思）</div>';
     html += '<div class="writing-keywords">';
     kws.forEach((it, ki) => {
-      html += '<button type="button" class="keyword-chip kw-tap" id="kw-' + mi + '-' + ki + '"'
-           + ' onclick="App._kwPeek(' + mi + ',' + ki + ')" aria-expanded="false">'
+      html += '<button type="button" class="keyword-chip kw-tap' + (kwPaired[ki] ? ' paired' : '')
+           + '" id="kw-' + mi + '-' + ki + '"'
+           + ' onclick="App._kwPeek(' + mi + ',' + ki + ')" aria-pressed="false">'
            + '<span class="kw-en">' + this._escHtml(it.en) + '</span>'
            + '<span class="kw-cn">' + this._escHtml(it.cn) + '</span>'
            + '</button>';
     });
-    html += '</div></div>';
+    html += '</div>';
+    // 中文候选池：默认不出现，点了英文词才摊开，配对成功就收回去
+    html += '<div class="wk-pool" id="wk-pool-' + mi + '" style="display:none">'
+         +  '<div class="wk-pool-hint" id="wk-pool-hint-' + mi + '"></div>'
+         +  '<div class="wk-pool-items" id="wk-pool-items-' + mi + '"></div>'
+         +  '</div>';
+    html += '</div>';
     // 点下去就要响：多词短语先预取一份音频（单个词走的是有道词典，不进预取）
     kws.forEach(it => this.prefetchTts(it.en));
 
@@ -4988,23 +4999,126 @@ const App = {
     });
   },
 
-  // 点参考单词：念一遍 + 把中文意思摊开（再点一下收起来）。
-  // 中文默认是藏着的 —— 孩子不认识才点，这是「不会时的参考」，
-  // 而不是系统主动把答案递过去。
-  _kwPeek(mi, ki) {
+  _kwModule(mi) {
     const day = HOMEWORK_DATA[this.state.currentDay];
-    const m = day && day.modules && day.modules[mi];
+    return (day && day.modules && day.modules[mi]) || null;
+  },
+
+  // 配对状态只放内存：配对是「提示的打开方式」，不是关卡门禁 ——
+  // 刷新后重来一遍没什么代价，存起来反而容易和填空进度打架。
+  _kwState(mi) {
+    if (!this._kwPair) this._kwPair = {};
+    const k = this._writingReadKey(mi);
+    if (!this._kwPair[k]) this._kwPair[k] = {};
+    return this._kwPair[k];
+  },
+  _kwPickMap() {
+    if (!this._kwPick) this._kwPick = {};
+    return this._kwPick;
+  },
+  // 中文候选的顺序：第一次摊开时打乱一次并存起来。顺序固定的话孩子会去
+  // 背位置，配对就退化成「点第三个」，白练了。
+  _kwShufflePool(mi, kws, paired) {
+    if (!this._kwPool) this._kwPool = {};
+    const k = this._writingReadKey(mi);
+    let order = this._kwPool[k];
+    if (!order) {
+      order = [];
+      for (let i = 0; i < kws.length; i++) if (!paired[i]) order.push(i);
+      for (let i = order.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const t = order[i]; order[i] = order[j]; order[j] = t;
+      }
+      this._kwPool[k] = order;
+    }
+    return order.filter(function (ki) { return !paired[ki]; });
+  },
+
+  // 点参考单词：听发音 + 开始给它找中文（摊开打乱的中文候选）。
+  // 已经配对过的词再点就只发声（中文一直显示在那儿了）。
+  _kwPeek(mi, ki) {
+    const m = this._kwModule(mi);
     if (!m) return;
     const it = this._kwList(m)[ki];
     if (!it) return;
-    const chip = document.getElementById('kw-' + mi + '-' + ki);
-    if (chip) {
-      const open = !chip.classList.contains('open');
-      chip.classList.toggle('open', open);
-      chip.setAttribute('aria-expanded', open ? 'true' : 'false');
+    const paired = this._kwState(mi);
+    if (it.en) this.speak(it.en);                 // 先让耳朵记住这个词
+    if (paired[ki]) return;                       // 已配好，中文已经在上面了
+    this._kwPickMap()[this._writingReadKey(mi)] = ki;
+    this._kwRenderBar(mi, m);
+  },
+
+  // 点中文候选：对上了才算配对成功 —— 错了抖一下、提示再想想，
+  // 但绝不把正确答案指出来，答案要孩子自己找。
+  _kwPair(mi, ki) {
+    const m = this._kwModule(mi);
+    if (!m) return;
+    const kws = this._kwList(m);
+    const paired = this._kwState(mi);
+    const key = this._writingReadKey(mi);
+    const pick = this._kwPickMap()[key];
+    if (pick == null || paired[pick]) return;
+
+    if (pick !== ki) {
+      const chip = document.getElementById('wkcn-' + mi + '-' + ki);
+      if (chip) {
+        chip.classList.add('wk-wrong');
+        setTimeout(function () {
+          const c = document.getElementById('wkcn-' + mi + '-' + ki);
+          if (c) c.classList.remove('wk-wrong');
+        }, 700);
+      }
+      const hint = document.getElementById('wk-pool-hint-' + mi);
+      if (hint) hint.textContent = '🤔 不是这个，再想想';
+      return;
     }
-    // 收起那一下也念 —— 手指点它多半就是想听这个词怎么读，不是想关它。
-    if (it.en) this.speak(it.en);
+
+    paired[ki] = true;
+    delete this._kwPickMap()[key];
+    // 配对成功再读一遍：把「音 — 形 — 义」这一次绑牢
+    if (kws[ki].en) this.speak(kws[ki].en);
+    this._kwRenderBar(mi, m);
+  },
+
+  // 按状态重画参考区：哪些已配对（显示中文 + ✓）、哪个正在配对（高亮）、
+  // 候选池里还剩哪些中文没被认领。
+  _kwRenderBar(mi, m) {
+    const kws = this._kwList(m);
+    const paired = this._kwState(mi);
+    const key = this._writingReadKey(mi);
+    const pick = this._kwPickMap()[key];
+    const picking = (pick != null && !paired[pick]) ? pick : null;
+
+    kws.forEach((it, ki) => {
+      const chip = document.getElementById('kw-' + mi + '-' + ki);
+      if (!chip) return;
+      chip.classList.toggle('paired', !!paired[ki]);
+      chip.classList.toggle('picking', picking === ki);
+      chip.setAttribute('aria-pressed', picking === ki ? 'true' : 'false');
+    });
+
+    const pool = document.getElementById('wk-pool-' + mi);
+    const items = document.getElementById('wk-pool-items-' + mi);
+    const hint = document.getElementById('wk-pool-hint-' + mi);
+    if (!pool || !items) return;
+
+    if (picking == null) { pool.style.display = 'none'; items.innerHTML = ''; return; }
+
+    const rest = this._kwShufflePool(mi, kws, paired);
+    if (!rest.length) {
+      if (hint) hint.textContent = '🎉 全部配对完成，作文就靠这些词写出来';
+      items.innerHTML = '';
+      pool.style.display = '';
+      return;
+    }
+    if (hint) hint.textContent = '👆 找出「' + kws[picking].en + '」的中文意思';
+    let h = '';
+    rest.forEach(ki => {
+      h += '<button type="button" class="wk-cn-chip" id="wkcn-' + mi + '-' + ki + '"'
+         + ' onclick="App._kwPair(' + mi + ',' + ki + ')">' + this._escHtml(kws[ki].cn) + '</button>';
+    });
+    items.innerHTML = h;
+    pool.style.display = '';
   },
 
   // ===== 写作：写完之后的朗读全文 =====

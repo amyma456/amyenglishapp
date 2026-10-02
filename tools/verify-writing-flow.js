@@ -3,8 +3,9 @@
 // 真跑一遍「填空 → 提交 → 朗读全文 → 全文中文翻译」，确认这几件事没被改坏：
 //
 //   1. 作文步骤拆成两屏：writing（填空）+ writingread（朗读全文）
-//   2. 参考单词条是 sticky 容器（writing-kwbar）；词条点一下才念发音 + 摊开
-//      中文意思，不跟填空联动（不给答案提示）
+//   2. 参考单词条是 sticky 容器（writing-kwbar）：只给英文，中文要点开英文词
+//      后在打乱的候选里自己配对出来（配错只提示再想想、不给答案），
+//      而且不跟填空联动（不替孩子指出该填哪个词）
 //   3. 空没填全对 → 不放行；改对再提交 → 放行「开始朗读」
 //   4. 朗读屏：句句 ≥60 才记为通过，没全过 nextStep 硬门禁不放行
 //   5. 全部读对 → 出全文中文翻译、解锁「下一题」
@@ -143,32 +144,65 @@ ok(kinds[0] === 'writing', '第 1 步是写作填空：' + kinds[0]);
 ok(kinds[1] === 'writingread', '第 2 步是朗读全文：' + kinds[1]);
 ok(kinds.filter(k => k === 'writingread').length === 1, '朗读全文只有一屏（所有句子都在这一屏）');
 
-// 2. 参考单词条 / 填空框
-console.log('\n--- 2. 参考单词条 / 填空框 ---');
+// 2. 参考单词条（配对玩法）/ 填空框
+console.log('\n--- 2. 参考单词条（配对玩法）/ 填空框 ---');
 const wHtml = App.renderWritingTemplate(m, MI, DAY);
 ok(wHtml.includes('writing-kwbar'), '关键词条带 sticky 容器 writing-kwbar');
 ok((wHtml.match(/class="keyword-chip/g) || []).length === (m.keywords || []).length,
    (m.keywords || []).length + ' 个关键词 chip 都在');
 ok(!wHtml.includes('data-kw-blank') && !wHtml.includes('_hlKeyword'),
    '参考单词不跟填空联动（不替孩子指出该填哪个词）');
+ok(!wHtml.includes('aria-expanded'), '旧的可展开语义已换成 aria-pressed');
 ok((wHtml.match(/onclick="App\._kwPeek\(/g) || []).length === (m.keywords || []).length,
-   (m.keywords || []).length + ' 个词条都能点开（听发音 / 看中文）');
+   (m.keywords || []).length + ' 个英文词都能点（听发音 → 找中文）');
 ok(wHtml.includes('class="kw-cn"'), '中文意思默认收着（kw-cn）');
-ok(!wHtml.includes('keyword-chip kw-tap open'), '刚进来没有已展开的词条');
-ok(wHtml.includes(m.keywords_cn[0]), '词条里带着中文意思：' + m.keywords_cn[0]);
+ok(!/keyword-chip kw-tap paired/.test(wHtml), '刚进来一个词都还没配对');
+ok(wHtml.includes('id="wk-pool-' + MI + '"') && wHtml.includes('display:none'),
+   '中文候选池默认不出现（点了英文词才摊开）');
+ok(wHtml.includes('placeholder="' + m.blanks[0].hint_cn + '"'),
+   '横线上继续用灰色中文提示：' + m.blanks[0].hint_cn);
 ok(App._kwList(m).every(x => x.en && x.cn), '每个关键词的英文 + 中文都齐');
 
-// 点一下 → 念出来 + 摊开中文；再点 → 收回去
+// 中文「藏着」是 CSS 干的活，静态查一遍样式
+const idxSrc = fs.readFileSync(BASE + 'index.html', 'utf8');
+ok(/\.keyword-chip \.kw-cn\{display:none/.test(idxSrc), 'CSS：中文默认不显示');
+ok(/\.keyword-chip\.paired \.kw-cn\{display:inline/.test(idxSrc), 'CSS：配对上了才显示中文');
+
+// 点英文词 → 先念一遍 + 摊开打乱的中文候选
 const kwSpoken = [];
 App.speak = function (t) { kwSpoken.push(String(t)); };
 App._kwPeek(MI, 0);
-ok(getEl('kw-' + MI + '-0')._cls.has('open'), '点一下 → 中文摊开');
-ok(getEl('kw-' + MI + '-0')._attrs['aria-expanded'] === 'true', 'aria-expanded 跟着变 true');
-ok(kwSpoken[kwSpoken.length - 1] === m.keywords[0],
-   '点一下 → 同时念出这个词：' + m.keywords[0]);
+ok(kwSpoken[kwSpoken.length - 1] === m.keywords[0], '点英文词 → 先念出这个词：' + m.keywords[0]);
+ok(getEl('kw-' + MI + '-0')._cls.has('picking'), '点英文词 → 该词高亮成「正在配对」');
+ok(getEl('kw-' + MI + '-0')._attrs['aria-pressed'] === 'true', 'aria-pressed 跟着变 true');
+const poolHtml = getEl('wk-pool-items-' + MI).innerHTML;
+ok((poolHtml.match(/class="wk-cn-chip"/g) || []).length === m.keywords.length,
+   '候选池摊开 ' + m.keywords.length + ' 个中文意思');
+ok(m.keywords_cn.every(cn => poolHtml.includes(cn)), '5 个中文意思都在候选里（打乱顺序）');
+ok(!getEl('kw-' + MI + '-0')._cls.has('paired'), '还没挑中文 → 不算配对成功');
+
+// 挑错 → 只提醒再想想，绝不把答案指出来
+App._kwPair(MI, 1);
+ok(!App._kwState(MI)[0], '挑错 → 不配对');
+ok(getEl('wk-pool-hint-' + MI).textContent.includes('再想想'), '挑错 → 提示再想想');
+ok(getEl('kw-' + MI + '-0')._cls.has('picking'), '挑错 → 仍停在配对中，可以接着试');
+ok(!getEl('kw-' + MI + '-0')._cls.has('paired'), '挑错 → 中文不露出来');
+
+// 挑对 → 配对成功：中文露出来 + 再念一遍
+App._kwPair(MI, 0);
+ok(App._kwState(MI)[0] === true, '挑对 → 记下配对成功');
+ok(getEl('kw-' + MI + '-0')._cls.has('paired'), '挑对 → 词条变绿配对态（中文露出来）');
+ok(kwSpoken[kwSpoken.length - 1] === m.keywords[0], '配对成功 → 再念一遍（音-形-义绑一次）');
+ok(getEl('wk-pool-' + MI).style.display === 'none', '配对成功 → 候选池收回去');
+ok(getEl('wk-pool-items-' + MI).innerHTML === '', '配对成功 → 候选池清空');
+
+// 已配对的词再点 → 只发声，不再摊候选
 App._kwPeek(MI, 0);
-ok(!getEl('kw-' + MI + '-0')._cls.has('open'), '再点一下 → 中文收回去');
-ok(getEl('kw-' + MI + '-0')._attrs['aria-expanded'] === 'false', 'aria-expanded 跟着变 false');
+ok(getEl('wk-pool-' + MI).style.display === 'none', '已配对的词再点 → 只发声，不摊候选池');
+
+const wHtml2 = App.renderWritingTemplate(m, MI, DAY);
+ok(/keyword-chip kw-tap paired/.test(wHtml2), '重进这一屏 → 已配对的词还是配对态');
+ok(wHtml2.includes('display:none'), '重进这一屏 → 候选池照旧收着');
 
 ok((wHtml.match(/data-blank="/g) || []).length === m.blanks.length, m.blanks.length + ' 个填空输入框');
 ok(wHtml.includes('value=""'), '首次进入输入框为空');
