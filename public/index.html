@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="76">
+<meta name="app-version" content="77">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon.svg">
 <title>Amy老师英语打卡平台</title>
@@ -382,6 +382,37 @@ body.stage-mode .content-area{padding-block:0}
 .writing-blank input{border:none;border-bottom:none;width:100%;text-align:center;color:var(--primary);font-weight:600;background:transparent}
 .writing-keywords{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
 .keyword-chip{background:var(--primary-light);color:var(--primary-dark);padding:4px 12px;border-radius:12px;font-size:12px}
+/* 参考单词条粘在滚动区顶部：作文一长，滑到后半段时原始的提示条早滚出去了，
+   孩子遇到不会写的词得往回翻。粘住 + 点亮当前空对应的那个词。 */
+.writing-kwbar{position:sticky;top:0;z-index:6;background:var(--surface);
+  padding:4px 0 8px;margin-bottom:10px;border-bottom:1px solid var(--line)}
+.wk-title{font-size:11px;color:var(--ink-3);margin-bottom:6px}
+.writing-kwbar .writing-keywords{margin-bottom:0}
+.keyword-chip.on{background:var(--orange);color:#fff;font-weight:600;
+  box-shadow:0 0 0 3px var(--orange-wash)}
+
+/* 写作第二步：朗读全文 */
+.wr-start-hint{margin-top:12px;font-size:13px;font-weight:500;color:var(--success)}
+.wr-start-hint.bad{color:#D6321F}
+.writing-read{max-width:600px;margin:0 auto}
+.wr-head{font-size:15px;font-weight:600;color:var(--ink);text-align:center}
+.wr-sub{font-size:12px;color:var(--ink-2);text-align:center;margin:6px 0 8px}
+.wr-progress{font-size:12px;color:var(--ink-3);text-align:center;margin-bottom:12px}
+.wr-allok{color:var(--success);font-weight:600}
+.wr-item{border:1px solid var(--line);border-radius:var(--radius-sm);
+  padding:10px 12px;margin-bottom:10px;background:var(--canvas);text-align:center}
+.wr-item.done{border-color:var(--success);background:var(--success-light)}
+.wr-sent{font-size:16px;line-height:1.6;color:var(--ink)}
+.wr-no{display:inline-block;min-width:18px;height:18px;line-height:18px;border-radius:50%;
+  background:var(--line);color:var(--ink-2);font-size:11px;margin-right:6px;
+  vertical-align:middle;text-align:center}
+.wr-item.done .wr-no{background:var(--success);color:#fff}
+.wr-flag{margin-left:6px;font-size:13px}
+.wr-item .word-read-btn{margin-top:8px;padding:8px 18px;font-size:14px}
+.wr-cn{margin-top:14px;background:var(--success-light);border:1px solid var(--success);
+  border-radius:var(--radius-sm);padding:12px 14px;text-align:left}
+.wr-cn-title{font-size:12px;color:var(--ink-2);margin-bottom:6px}
+.wr-cn-text{font-size:15px;line-height:1.85;color:var(--ink)}
 
 /* A4 error sheet */
 .a4-sheet{width:210mm;min-height:297mm;background:#fff;margin:0 auto;box-shadow:0 4px 20px rgba(0,0,0,.1);padding:20mm 18mm;font-size:12pt;line-height:1.8;position:relative}

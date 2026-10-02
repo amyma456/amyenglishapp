@@ -1634,6 +1634,7 @@ const HOMEWORK_DATA = [
           }
         ],
         "full_text": "My best friend is Tom. He is very tall and kind. We often play together after school. We always help each other with our homework. I feel very happy when I am with him.",
+        "full_text_cn": "我最好的朋友是 Tom。他又高又善良。放学后我们常常一起玩。我们总是互相帮忙做作业。和他在一起的时候，我觉得非常开心。",
         "explanation_cn": "这篇作文围绕最好的朋友展开，使用了5个关键词。注意：1) best friend 是固定搭配；2) tall and kind 用 and 连接两个形容词；3) play together 中 together 是副词；4) help each other 是互帮互助的意思；5) when 引导时间状语从句。整篇作文使用一般现在时，表达日常状态。",
         "explanation_en": "This essay is about a best friend, using 5 keywords. Notes: 1) 'best friend' is a fixed collocation; 2) 'tall and kind' uses 'and' to connect two adjectives; 3) 'together' is an adverb in 'play together'; 4) 'help each other' means mutual assistance; 5) 'when' introduces a time clause. The entire essay uses the simple present tense to express a routine state."
       },

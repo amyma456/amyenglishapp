@@ -234,6 +234,12 @@ const App = {
           else if (miss < 0) miss = bi;
         }
         if (miss >= 0) firstUn = i;
+      } else if (s.kind === 'writingread') {
+        // 作文的空填完了但全文还没读完 → 回到朗读这一屏（朗读的记录在
+        // 本机，刷新/重登录都还在，不会让孩子重读已经读过的句子）
+        const wm = day.modules[s.mi] || {};
+        if (this._writingAllRead(wm, s.mi)) { touched[s.mi] = true; continue; }
+        firstUn = i;
       } else if (s.kind === 'vocab') {
         if (this._getLearnedWords(dayIdx)) { touched[s.mi] = true; continue; }
         firstUn = i;
@@ -949,6 +955,9 @@ const App = {
         var rs = this._buildReadSentence(m, q2);
         if (rs) out.push(rs);
       }
+    } else if (s.kind === 'writingread') {
+      // 这一屏的每一句都是孩子要点开听的，全部提前取好
+      return this._writingSentences(m);
     }
     return out;
   },
@@ -968,6 +977,11 @@ const App = {
       for (var k = 0; k < copts.length; k++) {
         if (copts[k] && /\s/.test(String(copts[k]).trim())) this.prefetchTts(String(copts[k]));
       }
+    } else if (curStep && curStep.kind === 'writingread') {
+      // 这一屏的句子孩子会一句句点着听，先全取回来，点哪句都是秒播
+      var dm = HOMEWORK_DATA[dayIdx] && HOMEWORK_DATA[dayIdx].modules[curStep.mi];
+      var cur = this._writingSentences(dm);
+      for (var n = 0; n < cur.length; n++) this.prefetchTts(cur[n]);
     }
     for (var i = fromIdx + 1; i <= fromIdx + this.TTS_PREFETCH_AHEAD; i++) {
       this.prefetchTts(this._stepSpeechText(steps, dayIdx, i));
@@ -1950,6 +1964,10 @@ const App = {
         case 'myerrors': area.innerHTML = this.renderMyErrors(); break;
       }
     }
+    // 舞台渲染完就把该锁的「下一题」锁上。以前只有 nextStep/prevStep 里会
+    // 调 _applyStepLock，首次进入（刚登录、刚刷新、第一次落到这一题）时是
+    // 漏的 —— 那一屏的门禁等于没上。
+    if (!isTeacher && tab === 'today') this._applyStepLock();
   },
 
   // ===== Teacher: Weekly Plan =====
@@ -4858,28 +4876,309 @@ const App = {
 
   // Writing template
   renderWritingTemplate(m, mi, dayIdx) {
+    const blanks = m.blanks || [];
+    // 每个关键词对应哪个空。孩子点到某个空时，上面那条参考单词里
+    // 对应的词会亮起来 —— 关键词条是粘顶的，不用往回翻也能看见。
+    const kwBlankId = {};
+    (m.keywords || []).forEach((k, ki) => {
+      const lk = String(k).toLowerCase();
+      const bi = blanks.findIndex(b =>
+        String(b.answer || '').toLowerCase() === lk ||
+        String(b.hint_en || '').toLowerCase() === lk);
+      kwBlankId[ki] = bi >= 0 ? blanks[bi].id : '';
+    });
+    // 上次填过的答案回填 —— 从「朗读」那一步点上一题回来时不用重打一遍
+    const sid = this._myStudentId();
+    const fst = this._writingFillState(mi);
+    const prevVal = (bi) => {
+      let v = (fst[bi] && fst[bi].v != null) ? String(fst[bi].v) : null;
+      if (v == null) {
+        const rec = this.state.answers[Api.answerKey(sid, dayIdx, mi, bi)];
+        v = rec ? String(rec.value == null ? '' : rec.value) : '';
+      }
+      return v.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+    };
+
     let html = '<div class="writing-template">';
     html += '<div class="writing-banner">⚠️ ' + m.requirement_cn + '</div>';
+
+    // 参考单词：粘在滚动区顶部。作文一长，孩子滑到后半段时原始的
+    // 关键词条早就滚出去了，遇到不会写的词得往回翻 —— 这里让它常驻。
+    html += '<div class="writing-kwbar">';
+    html += '<div class="wk-title">📌 参考单词</div>';
     html += '<div class="writing-keywords">';
-    m.keywords.forEach(k => html += '<span class="keyword-chip">' + k + '</span>');
-    html += '</div>';
+    (m.keywords || []).forEach((k, ki) => {
+      html += '<span class="keyword-chip" id="kw-' + mi + '-' + ki
+           + '" data-kw-blank="' + kwBlankId[ki] + '">' + k + '</span>';
+    });
+    html += '</div></div>';
+
     html += '<div class="card mb-16"><div class="card-title fs-12">📝 完成作文（填入空白处）</div>';
     html += '<div class="writing-essay">';
     let text = m.template;
-    m.blanks.forEach(b => {
-      text = text.replace('{{' + b.id + '}}', '<input type="text" class="writing-blank-input" data-blank="' + b.id + '" data-answer="' + b.answer + '" placeholder="' + b.hint_cn + '" style="border:none;border-bottom:2px solid var(--primary);text-align:center;color:var(--primary);font-weight:600;width:120px;background:transparent;font-size:14px">');
+    m.blanks.forEach((b, bi) => {
+      const v = prevVal(bi);
+      text = text.replace('{{' + b.id + '}}', '<input type="text" class="writing-blank-input" data-blank="' + b.id + '" data-answer="' + b.answer + '" value="' + v + '" placeholder="' + b.hint_cn + '" onfocus="App._hlKeyword(' + mi + ',\'' + b.id + '\')" onblur="App._hlKeyword(' + mi + ',null)" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" style="border:none;border-bottom:2px solid var(--primary);text-align:center;color:var(--primary);font-weight:600;width:120px;background:transparent;font-size:14px">');
     });
     html += text;
     html += '</div></div>';
     html += '<button class="btn btn-primary" onclick="App.submitWriting(' + mi + ',' + dayIdx + ')">提交批改</button>';
-    html += '<div id="writing-result-' + mi + '"></div>';
+    html += '<div id="writing-result-' + mi + '">' + this._writingReviewHtml(m, mi, dayIdx) + '</div>';
     html += '</div>';
     return html;
+  },
+
+  // 空填成什么样自己记一份（本地）。不能复用 Api 的答题记录：那份是
+  // 一次写入不再改的（saveAnswer 见到已存在的 key 直接返回），孩子第一次
+  // 填错、改对之后再提交，记录里留的还是错的那个值，门禁就永远开不了。
+  _WF_STORE_KEY: 'amy-writing-fill-v1',
+  _writingFillStore() {
+    if (!this._wfStore) {
+      try { this._wfStore = JSON.parse(localStorage.getItem(this._WF_STORE_KEY) || '{}') || {}; }
+      catch (e) { this._wfStore = {}; }
+    }
+    return this._wfStore;
+  },
+  _writingFillState(mi) {
+    const store = this._writingFillStore();
+    const k = this._writingReadKey(mi);
+    if (!store[k] || typeof store[k] !== 'object') store[k] = {};
+    return store[k];
+  },
+  _saveWritingFill() {
+    try { localStorage.setItem(this._WF_STORE_KEY, JSON.stringify(this._writingFillStore())); } catch (e) {}
+  },
+  _writingAllBlanksRight(m, mi, dayIdx) {
+    const blanks = m.blanks || [];
+    if (!blanks.length) return false;
+    const st = this._writingFillState(mi);
+    return blanks.every(function (_, bi) { return !!(st[bi] && st[bi].ok); });
+  },
+  // 重新进入这一屏（上一题回来 / 刷新后回到这题）时，把「填对了就点底部
+  // 开始朗读」的提示还原出来，不用孩子再点一次提交。
+  _writingReviewHtml(m, mi, dayIdx) {
+    if (!this._writingAllBlanksRight(m, mi, dayIdx)) return '';
+    return '<div class="wr-start-hint ok">✅ 全部填对！点底部「开始朗读」，读完才能进入下一题</div>';
+  },
+
+  // 点到某个空时，把参考单词条里对应的那个词点亮并滚进视野。
+  _hlKeyword(mi, blankId) {
+    const bar = document.querySelector('.writing-kwbar');
+    if (!bar) return;
+    bar.querySelectorAll('.keyword-chip').forEach(function(chip) {
+      const on = !!blankId && chip.getAttribute('data-kw-blank') === String(blankId);
+      chip.classList.toggle('on', on);
+      if (on && chip.scrollIntoView) {
+        try { chip.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' }); } catch (e) {}
+      }
+    });
+  },
+
+  // ===== 写作：写完之后的朗读全文 =====
+  // 作文的英文按句拆开 —— 和阅读模块的逐句跟读是同一份规则
+  //（_splitSentences 的 lookbehind 切句 + 逗号不进句尾）。
+  _writingSentences(m) {
+    return this._splitSentences((m && m.full_text) || '');
+  },
+
+  // 读对过哪几句存在本机（localStorage）。刷新 / 重进这一屏不用重读已经
+  // 读过的句子，断点续做也才有依据。
+  _WR_STORE_KEY: 'amy-writing-read-v1',
+  _writingReadStore() {
+    if (!this._wrStore) {
+      try { this._wrStore = JSON.parse(localStorage.getItem(this._WR_STORE_KEY) || '{}') || {}; }
+      catch (e) { this._wrStore = {}; }
+    }
+    return this._wrStore;
+  },
+  _writingReadKey(mi) { return this.state.currentDay + '-' + mi; },
+  _writingReadState(mi) {
+    const store = this._writingReadStore();
+    const k = this._writingReadKey(mi);
+    if (!store[k] || typeof store[k] !== 'object') store[k] = { passed: {} };
+    if (!store[k].passed) store[k].passed = {};
+    return store[k];
+  },
+  _saveWritingRead() {
+    try { localStorage.setItem(this._WR_STORE_KEY, JSON.stringify(this._writingReadStore())); } catch (e) {}
+  },
+  // 整篇都读对了没有 —— 门禁和解锁都以它为准
+  _writingAllRead(m, mi) {
+    const sents = this._writingSentences(m);
+    if (!sents.length) return true;
+    const st = this._writingReadState(mi);
+    return sents.every(function (_, i) { return !!st.passed[i]; });
+  },
+  // 当前这一步是不是「写作朗读」，以及它放行了没有。nextStep 的硬门禁用。
+  _writingReadGateOpen() {
+    const steps = this._buildSteps(this.state.currentDay);
+    const s = steps[this.state.stepIdx];
+    if (!s || s.kind !== 'writingread') return true;
+    if (this.isTeacher()) return true;
+    const m = HOMEWORK_DATA[this.state.currentDay].modules[s.mi];
+    return this._writingAllRead(m, s.mi);
+  },
+
+  // ===== 写作第二步：朗读全文 =====
+  // 一句话一张卡：点句子听朗读，按住按钮跟读。读对≥60 分变绿打勾，
+  // 没到分只能重读这一句。全部读对才出现全文中文翻译，并解锁「下一题」。
+  renderWritingRead(m, mi, dayIdx) {
+    const sents = this._writingSentences(m);
+    if (!sents.length) return '';
+    const st = this._writingReadState(mi);
+    const allRead = this._writingAllRead(m, mi);
+    Recorder.warmUp(); Api.warmup();
+
+    let html = '<div class="writing-read">';
+    html += '<div class="wr-head">🎤 朗读全文</div>';
+    html += '<div class="wr-sub">点句子先听一遍，再按住按钮跟读。读对全部 '
+         + sents.length + ' 句才能进入下一题。</div>';
+    html += '<div class="wr-progress" id="wr-progress-' + mi + '"></div>';
+    sents.forEach((s, si) => {
+      const esc = s.replace(/'/g, "\\'");
+      const ok = !!st.passed[si];
+      html += '<div class="wr-item' + (ok ? ' done' : '') + '" id="wr-item-' + mi + '-' + si + '">';
+      html += '<div class="wr-sent tap-speak-sm" onclick="App.speak(\'' + esc + '\')" title="点一下听朗读">'
+           + '<span class="wr-no">' + (si + 1) + '</span>' + s
+           + '<span class="wr-flag">' + (ok ? '✅' : '') + '</span></div>';
+      html += '<button class="word-read-btn hold-target" id="wr-btn-' + mi + '-' + si + '"'
+           + ' onpointerdown="App._readWritingSentence(event,' + mi + ',' + si + ')"'
+           + ' onpointerup="App._holdEnd(event)" onpointercancel="App._holdEnd(event)"'
+           + ' oncontextmenu="return false">' + (ok ? '重读这句' : '按住跟读') + '</button>';
+      html += '<div id="wr-status-' + mi + '-' + si + '"></div>';
+      html += '<div id="wr-result-' + mi + '-' + si + '"></div>';
+      html += '</div>';
+    });
+    html += '<div id="wr-cn-' + mi + '">' + (allRead ? this._writingTranslationHtml(m) : '') + '</div>';
+    html += '</div>';
+    // 渲染完把进度条和门禁状态按已有记录补一次
+    setTimeout(() => this._refreshWritingRead(mi, m), 0);
+    return html;
+  },
+
+  _readWritingSentence(ev, mi, si) {
+    const self = this;
+    Api.warmup();                              // 手指按下就把连接热好
+    const m = HOMEWORK_DATA[this.state.currentDay].modules[mi];
+    const sent = this._writingSentences(m)[si] || '';
+    const btn = document.getElementById('wr-btn-' + mi + '-' + si);
+    const status = document.getElementById('wr-status-' + mi + '-' + si);
+    if (btn) btn.classList.add('reading');
+
+    this._holdStart(ev, 'wr-' + mi + '-' + si, '这一句', status, function(out, text) {
+      if (btn) btn.classList.remove('reading');
+      if (!out) return;
+      const a = self.alignSpeech(sent, text || '');
+      const slot = document.getElementById('wr-result-' + mi + '-' + si);
+
+      let html = '<div class="spell-summary">';
+      html += '<div class="ss-head"><span class="ss-score">' + (text ? a.score : '—') + '</span>'
+           + '<span class="ss-label">' + (text ? '读对 ' + a.ok + '/' + a.total + ' 个词' : '没听清，再读一次') + '</span></div>';
+      if (text) {
+        html += '<div class="align-sentence">';
+        a.items.forEach(function(x) {
+          if (x.status === 'extra') return;
+          const cls = x.status === 'ok' ? 'w-ok' : x.status === 'wrong' ? 'w-bad' : 'w-miss';
+          html += '<span class="' + cls + '">' + x.target + '</span> ';
+        });
+        html += '</div>';
+      }
+      if (out.samples) {
+        const joined = Recorder.join([out.samples], 0);
+        if (joined) html += '<audio id="wr-audio-' + mi + '-' + si + '" controls src="'
+                         + URL.createObjectURL(joined.blob) + '" style="width:100%;max-width:280px;height:32px"></audio>';
+      }
+      html += '</div>';
+      if (slot) slot.innerHTML = html;
+      if (status) status.innerHTML = '';
+
+      const audio = document.getElementById('wr-audio-' + mi + '-' + si);
+      if (audio) { const p = audio.play(); if (p && p.catch) p.catch(function(){}); }
+
+      // 这一句过了就记下来、变绿；没过就只提示重读，别的句子不受影响。
+      const passed = !!text && a.score >= self.PASS_SCORE;
+      if (passed) self._markWritingSentenceDone(mi, si, m);
+      else if (slot) slot.insertAdjacentHTML('beforeend', self._retryHint(false, !!text));
+
+      Api.submitSpeakingScore({
+        studentId: self._myStudentId(), dayIdx: self.state.currentDay,
+        moduleIdx: mi, itemIdx: si, round: 1, type: 'writing-sentence',
+        label: sent, score: a.score, spoken: text, source: 'asr',
+      });
+      Api.uploadRecording(out.blob, {
+        studentId: self._myStudentId(), dayIdx: self.state.currentDay,
+        moduleIdx: mi, itemIdx: si, round: 1, type: 'writing-sentence',
+        label: sent, score: a.score,
+      }).catch(function(){});
+    });
+  },
+
+  _markWritingSentenceDone(mi, si, m) {
+    const st = this._writingReadState(mi);
+    st.passed[si] = true;
+    this._saveWritingRead();
+    const item = document.getElementById('wr-item-' + mi + '-' + si);
+    if (item) {
+      item.classList.add('done');
+      const flag = item.querySelector('.wr-flag');
+      if (flag) flag.textContent = '✅';
+      const b = document.getElementById('wr-btn-' + mi + '-' + si);
+      if (b) b.textContent = '重读这句';
+    }
+    this._refreshWritingRead(mi, m);
+  },
+
+  // 数一遍读对了几句：全对了就放全文中文翻译 + 解锁「下一题」。
+  _refreshWritingRead(mi, m) {
+    const sents = this._writingSentences(m);
+    const st = this._writingReadState(mi);
+    let done = 0;
+    sents.forEach(function (_, i) { if (st.passed[i]) done++; });
+    const allRead = done >= sents.length;
+
+    const prog = document.getElementById('wr-progress-' + mi);
+    if (prog) {
+      prog.innerHTML = allRead
+        ? '<span class="wr-allok">🎉 全部读完了，中文翻译在下面</span>'
+        : '已读对 <b>' + done + '</b> / ' + sents.length + ' 句';
+    }
+
+    if (allRead) {
+      const cn = document.getElementById('wr-cn-' + mi);
+      if (cn && !cn.innerHTML) {
+        cn.innerHTML = this._writingTranslationHtml(m);
+        setTimeout(function () {               // 翻译直接送进视野，别让孩子自己找
+          const el = document.getElementById('wr-cn-' + mi);
+          if (el && el.scrollIntoView) {
+            try { el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {}
+          }
+        }, 160);
+      }
+      this._unlockStep();
+    }
+    // 老师端是预览，不设门槛
+    if (this.isTeacher()) this._unlockStep();
+  },
+
+  _writingTranslationHtml(m) {
+    if (!m.full_text_cn) return '';
+    let html = '<div class="wr-cn">';
+    html += '<div class="wr-cn-title">🀄 全文中文翻译</div>';
+    html += '<div class="wr-cn-text">' + m.full_text_cn + '</div>';
+    html += '</div>';
+    return html;
+  },
+
+  // 解锁「下一题」——和 _gateStep 通过时的表现保持一致
+  _unlockStep() {
+    const next = document.getElementById('stage-next-btn');
+    if (next) { next.disabled = false; next.classList.add('nudge'); }
   },
 
   submitWriting(mi, dayIdx) {
     const m = HOMEWORK_DATA[dayIdx].modules[mi];
     const inputs = document.querySelectorAll('[data-blank]');
+    const fst = this._writingFillState(mi);
     let correct = 0, total = m.blanks.length;
     let detail = '';
     m.blanks.forEach((b, bi) => {
@@ -4887,15 +5186,31 @@ const App = {
       const val = input.value.trim().toLowerCase();
       const ans = b.answer.toLowerCase();
       const isCorrect = val === ans;
+      fst[bi] = { v: input.value, ok: isCorrect };   // 以最近一次提交为准
       this._recordAnswer(dayIdx, mi, bi, val, isCorrect);
       if (isCorrect) correct++;
       detail += '<div class="fs-12 mb-8"><span class="badge ' + (isCorrect?'badge-success':'badge-danger') + '">' + (isCorrect?'✅':'❌') + '</span> 空白' + b.id + '：你填 "' + (input.value||'(空)') + '" | 正确：' + b.answer + '</div>';
       if (isCorrect) { input.style.color = 'var(--success)'; input.style.borderColor = 'var(--success)'; }
       else { input.style.color = 'var(--danger)'; input.style.borderColor = 'var(--danger)'; }
     });
+    this._saveWritingFill();
     const score = Math.round(correct / total * 100);
     const result = document.getElementById('writing-result-' + mi);
     result.innerHTML = '<div class="card mt-16" style="background:var(--primary-light)"><div class="card-title">📊 批改结果</div><div class="text-center mb-16"><span style="font-size:36px;font-weight:700;color:' + (score>=80?'var(--success)':score>=60?'var(--warning)':'var(--danger)') + '">' + score + '</span><span class="text-sub">分/100</span></div>' + detail + '<div class="q-explanation show mt-8"><div class="cn">📖 ' + (m.explanation_cn||'') + '</div><div class="en">📘 ' + (m.explanation_en||'') + '</div></div><div class="card mt-16" style="background:var(--success-light)"><div class="card-title fs-12">✅ 完整范文</div><div class="mt-8">' + m.full_text + '</div></div><div class="writing-banner mt-16">📝 请背诵这篇作文！明天将进行挖空默写测试</div></div>';
+
+    // 填对了才放行去朗读 —— 要读的必须是写对的那篇作文。空没填对就先
+    // 别往下走，改对了再提交一次，「开始朗读」才会亮。
+    if (correct === total) {
+      result.insertAdjacentHTML('beforeend',
+        '<div class="wr-start-hint ok">✅ 全部填对！点底部「开始朗读」，读完才能进入下一题</div>');
+      this._unlockStep();
+    } else {
+      result.insertAdjacentHTML('beforeend',
+        '<div class="wr-start-hint bad">还有 ' + (total - correct)
+        + ' 个空没填对，改对后再点一次「提交批改」，就能开始朗读全文</div>');
+      const next = document.getElementById('stage-next-btn');
+      if (next && !this.isTeacher()) { next.disabled = true; next.classList.remove('nudge'); }
+    }
   },
 
   // ===== One question per screen =====
@@ -4908,7 +5223,12 @@ const App = {
     if (!day || !day.modules) return steps;
     day.modules.forEach((m, mi) => {
       if (m.type === 'vocabulary_game')       { steps.push({ mi, kind: 'vocab' }); return; }
-      if (m.type === 'writing_template')      { steps.push({ mi, kind: 'writing' }); return; }
+      if (m.type === 'writing_template') {
+        // 写完作文之后朗读全文，是独立的一屏：读对全部句子才放行下一题
+        steps.push({ mi, kind: 'writing' });
+        if (this._writingSentences(m).length) steps.push({ mi, kind: 'writingread' });
+        return;
+      }
       if (m.type === 'speaking' && m.questions) {
         m.questions.forEach((q, qi) => steps.push({ mi, qi, kind: 'speaking' }));
         return;
@@ -4958,6 +5278,13 @@ const App = {
   nextStep() {
     clearTimeout(this._advanceTimer);
     this._stopCurrentAudio();
+    // 硬门禁：写作朗读这一屏必须读完最后一句才放行。按钮本身也是锁的，
+    // 这里是防止别处（旧计时器、外部调用）把这一屏替孩子翻过去。
+    if (!this._writingReadGateOpen()) {
+      const nextBtn = document.getElementById('stage-next-btn');
+      if (nextBtn) { nextBtn.disabled = true; nextBtn.classList.remove('nudge'); }
+      return;
+    }
     const steps = this._buildSteps(this.state.currentDay);
     if (this.state.stepIdx < steps.length - 1) {
       this.state.stepIdx++;
@@ -5058,6 +5385,12 @@ const App = {
       html += '<div class="stage-q">' + this.renderVocabGame(m, step.mi, dayIdx) + '</div>';
     } else if (step.kind === 'writing') {
       html += '<div class="stage-q stage-scroll">' + this.renderWritingTemplate(m, step.mi, dayIdx) + '</div>';
+      // 空没填对之前不放行；上一题回来时若已经全对就直接放行
+      if (!this.isTeacher() && !this._writingAllBlanksRight(m, step.mi, dayIdx)) this._lockNextOnRender = true;
+    } else if (step.kind === 'writingread') {
+      html += '<div class="stage-q">' + this.renderWritingRead(m, step.mi, dayIdx) + '</div>';
+      // 全部句子读对（≥60 分）之前不放行
+      if (!this.isTeacher() && !this._writingAllRead(m, step.mi)) this._lockNextOnRender = true;
     }
     html += '</div>';
 
@@ -5081,6 +5414,7 @@ const App = {
               : nextStep && nextStep.kind === 'passage' ? '整篇翻译' : '下一题';
       else if (step.kind === 'translate') label = nextStep && nextStep.kind === 'translate' ? '下一句' : '开始做题';
       else if (step.kind === 'passage') label = '开始做题';
+      else if (step.kind === 'writing') label = '开始朗读';
       else label = '下一题';
       html += '<button class="btn-ghost" id="stage-next-btn" onclick="App.nextStep()">' + label + '</button>';
     }
