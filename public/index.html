@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="77">
+<meta name="app-version" content="78">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon.svg">
 <title>Amy老师英语打卡平台</title>
@@ -383,13 +383,19 @@ body.stage-mode .content-area{padding-block:0}
 .writing-keywords{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
 .keyword-chip{background:var(--primary-light);color:var(--primary-dark);padding:4px 12px;border-radius:12px;font-size:12px}
 /* 参考单词条粘在滚动区顶部：作文一长，滑到后半段时原始的提示条早滚出去了，
-   孩子遇到不会写的词得往回翻。粘住 + 点亮当前空对应的那个词。 */
+   孩子遇到不会写的词得往回翻。词条本身要「点一下才有反应」—— 听发音 + 摊开
+   中文意思，没点就是一片干净的英文词，不让系统替孩子把答案摆出来。 */
 .writing-kwbar{position:sticky;top:0;z-index:6;background:var(--surface);
   padding:4px 0 8px;margin-bottom:10px;border-bottom:1px solid var(--line)}
 .wk-title{font-size:11px;color:var(--ink-3);margin-bottom:6px}
 .writing-kwbar .writing-keywords{margin-bottom:0}
-.keyword-chip.on{background:var(--orange);color:#fff;font-weight:600;
-  box-shadow:0 0 0 3px var(--orange-wash)}
+.keyword-chip.kw-tap{display:inline-flex;align-items:center;gap:5px;border:1px solid transparent;
+  padding:5px 12px;font-family:inherit;line-height:1.5;cursor:pointer;
+  -webkit-tap-highlight-color:transparent}
+.keyword-chip .kw-en::before{content:'🔊';font-size:10px;margin-right:4px;opacity:.7}
+.keyword-chip .kw-cn{display:none;color:var(--orange);font-weight:600}
+.keyword-chip.open{background:#fff;border-color:var(--primary);box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.keyword-chip.open .kw-cn{display:inline}
 
 /* 写作第二步：朗读全文 */
 .wr-start-hint{margin-top:12px;font-size:13px;font-weight:500;color:var(--success)}

@@ -3,7 +3,8 @@
 // 真跑一遍「填空 → 提交 → 朗读全文 → 全文中文翻译」，确认这几件事没被改坏：
 //
 //   1. 作文步骤拆成两屏：writing（填空）+ writingread（朗读全文）
-//   2. 参考单词条是 sticky 容器（writing-kwbar），chip 带 data-kw-blank 映射
+//   2. 参考单词条是 sticky 容器（writing-kwbar）；词条点一下才念发音 + 摊开
+//      中文意思，不跟填空联动（不给答案提示）
 //   3. 空没填全对 → 不放行；改对再提交 → 放行「开始朗读」
 //   4. 朗读屏：句句 ≥60 才记为通过，没全过 nextStep 硬门禁不放行
 //   5. 全部读对 → 出全文中文翻译、解锁「下一题」
@@ -146,11 +147,29 @@ ok(kinds.filter(k => k === 'writingread').length === 1, '朗读全文只有一�
 console.log('\n--- 2. 参考单词条 / 填空框 ---');
 const wHtml = App.renderWritingTemplate(m, MI, DAY);
 ok(wHtml.includes('writing-kwbar'), '关键词条带 sticky 容器 writing-kwbar');
-ok((wHtml.match(/keyword-chip/g) || []).length === (m.keywords || []).length,
+ok((wHtml.match(/class="keyword-chip/g) || []).length === (m.keywords || []).length,
    (m.keywords || []).length + ' 个关键词 chip 都在');
-ok(wHtml.includes('data-kw-blank="' + m.blanks[0].id + '"'), 'chip 带 data-kw-blank 映射（用于点亮）');
-ok(wHtml.includes('onfocus="App._hlKeyword(' + MI + ',\'' + m.blanks[0].id + '\')"'),
-   '输入框聚焦会点亮对应关键词');
+ok(!wHtml.includes('data-kw-blank') && !wHtml.includes('_hlKeyword'),
+   '参考单词不跟填空联动（不替孩子指出该填哪个词）');
+ok((wHtml.match(/onclick="App\._kwPeek\(/g) || []).length === (m.keywords || []).length,
+   (m.keywords || []).length + ' 个词条都能点开（听发音 / 看中文）');
+ok(wHtml.includes('class="kw-cn"'), '中文意思默认收着（kw-cn）');
+ok(!wHtml.includes('keyword-chip kw-tap open'), '刚进来没有已展开的词条');
+ok(wHtml.includes(m.keywords_cn[0]), '词条里带着中文意思：' + m.keywords_cn[0]);
+ok(App._kwList(m).every(x => x.en && x.cn), '每个关键词的英文 + 中文都齐');
+
+// 点一下 → 念出来 + 摊开中文；再点 → 收回去
+const kwSpoken = [];
+App.speak = function (t) { kwSpoken.push(String(t)); };
+App._kwPeek(MI, 0);
+ok(getEl('kw-' + MI + '-0')._cls.has('open'), '点一下 → 中文摊开');
+ok(getEl('kw-' + MI + '-0')._attrs['aria-expanded'] === 'true', 'aria-expanded 跟着变 true');
+ok(kwSpoken[kwSpoken.length - 1] === m.keywords[0],
+   '点一下 → 同时念出这个词：' + m.keywords[0]);
+App._kwPeek(MI, 0);
+ok(!getEl('kw-' + MI + '-0')._cls.has('open'), '再点一下 → 中文收回去');
+ok(getEl('kw-' + MI + '-0')._attrs['aria-expanded'] === 'false', 'aria-expanded 跟着变 false');
+
 ok((wHtml.match(/data-blank="/g) || []).length === m.blanks.length, m.blanks.length + ' 个填空输入框');
 ok(wHtml.includes('value=""'), '首次进入输入框为空');
 ok(wHtml.includes('autocapitalize="off"'), '关掉手机自动首字母大写（词都是小写）');

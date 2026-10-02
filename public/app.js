@@ -4877,16 +4877,10 @@ const App = {
   // Writing template
   renderWritingTemplate(m, mi, dayIdx) {
     const blanks = m.blanks || [];
-    // 每个关键词对应哪个空。孩子点到某个空时，上面那条参考单词里
-    // 对应的词会亮起来 —— 关键词条是粘顶的，不用往回翻也能看见。
-    const kwBlankId = {};
-    (m.keywords || []).forEach((k, ki) => {
-      const lk = String(k).toLowerCase();
-      const bi = blanks.findIndex(b =>
-        String(b.answer || '').toLowerCase() === lk ||
-        String(b.hint_en || '').toLowerCase() === lk);
-      kwBlankId[ki] = bi >= 0 ? blanks[bi].id : '';
-    });
+    // 参考单词的中文是「不会的时候才去翻」的：默认藏着，点了才摊开，
+    // 顺手把这个词念一遍。所以**不**做「点哪个空就点亮哪个词」的联动 ——
+    // 那等于系统直接把答案递过去，孩子就不用自己想了。
+    const kws = this._kwList(m);
     // 上次填过的答案回填 —— 从「朗读」那一步点上一题回来时不用重打一遍
     const sid = this._myStudentId();
     const fst = this._writingFillState(mi);
@@ -4904,21 +4898,28 @@ const App = {
 
     // 参考单词：粘在滚动区顶部。作文一长，孩子滑到后半段时原始的
     // 关键词条早就滚出去了，遇到不会写的词得往回翻 —— 这里让它常驻。
+    // 词条本身点了才有反应（听发音 + 展开中文），没点就是一片干干净净
+    // 的英文词，孩子的注意力还在自己写。
     html += '<div class="writing-kwbar">';
-    html += '<div class="wk-title">📌 参考单词</div>';
+    html += '<div class="wk-title">📌 参考单词（不会就点一下：听发音 / 看中文）</div>';
     html += '<div class="writing-keywords">';
-    (m.keywords || []).forEach((k, ki) => {
-      html += '<span class="keyword-chip" id="kw-' + mi + '-' + ki
-           + '" data-kw-blank="' + kwBlankId[ki] + '">' + k + '</span>';
+    kws.forEach((it, ki) => {
+      html += '<button type="button" class="keyword-chip kw-tap" id="kw-' + mi + '-' + ki + '"'
+           + ' onclick="App._kwPeek(' + mi + ',' + ki + ')" aria-expanded="false">'
+           + '<span class="kw-en">' + this._escHtml(it.en) + '</span>'
+           + '<span class="kw-cn">' + this._escHtml(it.cn) + '</span>'
+           + '</button>';
     });
     html += '</div></div>';
+    // 点下去就要响：多词短语先预取一份音频（单个词走的是有道词典，不进预取）
+    kws.forEach(it => this.prefetchTts(it.en));
 
     html += '<div class="card mb-16"><div class="card-title fs-12">📝 完成作文（填入空白处）</div>';
     html += '<div class="writing-essay">';
     let text = m.template;
     m.blanks.forEach((b, bi) => {
       const v = prevVal(bi);
-      text = text.replace('{{' + b.id + '}}', '<input type="text" class="writing-blank-input" data-blank="' + b.id + '" data-answer="' + b.answer + '" value="' + v + '" placeholder="' + b.hint_cn + '" onfocus="App._hlKeyword(' + mi + ',\'' + b.id + '\')" onblur="App._hlKeyword(' + mi + ',null)" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" style="border:none;border-bottom:2px solid var(--primary);text-align:center;color:var(--primary);font-weight:600;width:120px;background:transparent;font-size:14px">');
+      text = text.replace('{{' + b.id + '}}', '<input type="text" class="writing-blank-input" data-blank="' + b.id + '" data-answer="' + b.answer + '" value="' + v + '" placeholder="' + b.hint_cn + '" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" style="border:none;border-bottom:2px solid var(--primary);text-align:center;color:var(--primary);font-weight:600;width:120px;background:transparent;font-size:14px">');
     });
     html += text;
     html += '</div></div>';
@@ -4961,17 +4962,49 @@ const App = {
     return '<div class="wr-start-hint ok">✅ 全部填对！点底部「开始朗读」，读完才能进入下一题</div>';
   },
 
-  // 点到某个空时，把参考单词条里对应的那个词点亮并滚进视野。
-  _hlKeyword(mi, blankId) {
-    const bar = document.querySelector('.writing-kwbar');
-    if (!bar) return;
-    bar.querySelectorAll('.keyword-chip').forEach(function(chip) {
-      const on = !!blankId && chip.getAttribute('data-kw-blank') === String(blankId);
-      chip.classList.toggle('on', on);
-      if (on && chip.scrollIntoView) {
-        try { chip.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' }); } catch (e) {}
+  // 关键词列表归一化：keywords 可以是字符串数组（中文另给 keywords_cn），
+  // 也可以直接写成 [{en, cn}]。中文三级兜底，最后从对应空的中文提示里借。
+  _kwList(m) {
+    const blanks = (m && m.blanks) || [];
+    const cns = (m && m.keywords_cn) || [];
+    return ((m && m.keywords) || []).map(function (k, ki) {
+      let en = '', cn = '';
+      if (k && typeof k === 'object') {
+        en = String(k.en || k.word || '');
+        cn = String(k.cn || k.hint_cn || '');
+      } else {
+        en = String(k == null ? '' : k);
       }
+      if (!cn) cn = String(cns[ki] || '');
+      if (!cn) {
+        const lk = en.toLowerCase();
+        const b = blanks.filter(function (x) {
+          return String(x.answer || '').toLowerCase() === lk
+              || String(x.hint_en || '').toLowerCase() === lk;
+        })[0];
+        cn = b ? String(b.hint_cn || '') : '';
+      }
+      return { en: en, cn: cn };
     });
+  },
+
+  // 点参考单词：念一遍 + 把中文意思摊开（再点一下收起来）。
+  // 中文默认是藏着的 —— 孩子不认识才点，这是「不会时的参考」，
+  // 而不是系统主动把答案递过去。
+  _kwPeek(mi, ki) {
+    const day = HOMEWORK_DATA[this.state.currentDay];
+    const m = day && day.modules && day.modules[mi];
+    if (!m) return;
+    const it = this._kwList(m)[ki];
+    if (!it) return;
+    const chip = document.getElementById('kw-' + mi + '-' + ki);
+    if (chip) {
+      const open = !chip.classList.contains('open');
+      chip.classList.toggle('open', open);
+      chip.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+    // 收起那一下也念 —— 手指点它多半就是想听这个词怎么读，不是想关它。
+    if (it.en) this.speak(it.en);
   },
 
   // ===== 写作：写完之后的朗读全文 =====

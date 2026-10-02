@@ -1600,6 +1600,13 @@ const HOMEWORK_DATA = [
           "help each other",
           "happy"
         ],
+        "keywords_cn": [
+          "最好的朋友",
+          "又高又善良",
+          "一起玩",
+          "互相帮助",
+          "开心的"
+        ],
         "template": "My {{1}} is Tom. He is very {{2}}. We often {{3}} after school. We always {{4}} with our homework. I feel very {{5}} when I am with him.",
         "blanks": [
           {
