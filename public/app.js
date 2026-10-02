@@ -4903,17 +4903,11 @@ const App = {
     // 这里只给英文，**中文要孩子自己配对出来**：点某个词 → 听发音 + 从
     // 打乱的中文里挑出它的意思。配对上了才显示「英文 · 中文」。
     // 系统不主动把「英文＝中文」摆在他面前，认一遍比看一眼记得住。
-    const kwPaired = this._kwState(mi);
     html += '<div class="writing-kwbar">';
-    html += '<div class="wk-title">📌 参考单词（点一下：听发音 → 再找出它的中文意思）</div>';
+    html += '<div class="wk-title">📌 参考单词（点一下听发音 → 找出它的中文意思）</div>';
     html += '<div class="writing-keywords">';
     kws.forEach((it, ki) => {
-      html += '<button type="button" class="keyword-chip kw-tap' + (kwPaired[ki] ? ' paired' : '')
-           + '" id="kw-' + mi + '-' + ki + '"'
-           + ' onclick="App._kwPeek(' + mi + ',' + ki + ')" aria-pressed="false">'
-           + '<span class="kw-en">' + this._escHtml(it.en) + '</span>'
-           + '<span class="kw-cn">' + this._escHtml(it.cn) + '</span>'
-           + '</button>';
+      html += this._kwChipHtml(mi, ki, it, !!this._kwState(mi)[ki], this._kwShown(mi, ki));
     });
     html += '</div>';
     // 中文候选池：默认不出现，点了英文词才摊开，配对成功就收回去
@@ -4925,12 +4919,19 @@ const App = {
     // 点下去就要响：多词短语先预取一份音频（单个词走的是有道词典，不进预取）
     kws.forEach(it => this.prefetchTts(it.en));
 
+    // 配对没做完，横线上就填不了 —— 先认词，再动笔（老师端是预览，不锁）
+    const lockHtml = this._writingLockHintHtml(mi, m);
+    if (lockHtml) html += '<div class="wf-lock" id="wf-lock-' + mi + '">' + lockHtml + '</div>';
+
     html += '<div class="card mb-16"><div class="card-title fs-12">📝 完成作文（填入空白处）</div>';
     html += '<div class="writing-essay">';
     let text = m.template;
+    const fillOpen = this.isTeacher() || this._kwAllPaired(mi, m);
     m.blanks.forEach((b, bi) => {
       const v = prevVal(bi);
-      text = text.replace('{{' + b.id + '}}', '<input type="text" class="writing-blank-input" data-blank="' + b.id + '" data-answer="' + b.answer + '" value="' + v + '" placeholder="' + b.hint_cn + '" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" style="border:none;border-bottom:2px solid var(--primary);text-align:center;color:var(--primary);font-weight:600;width:120px;background:transparent;font-size:14px">');
+      text = text.replace('{{' + b.id + '}}', '<input type="text" class="writing-blank-input' + (fillOpen ? '' : ' locked') + '" data-blank="' + b.id + '" data-answer="' + b.answer + '" value="' + v + '" placeholder="' + b.hint_cn + '"'
+        + (fillOpen ? '' : ' readonly onclick="App._writingLockedClick(' + mi + ')"')
+        + ' autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" style="border:none;border-bottom:2px solid var(--primary);text-align:center;color:var(--primary);font-weight:600;width:120px;background:transparent;font-size:14px">');
     });
     html += text;
     html += '</div></div>';
@@ -4969,6 +4970,8 @@ const App = {
   // 重新进入这一屏（上一题回来 / 刷新后回到这题）时，把「填对了就点底部
   // 开始朗读」的提示还原出来，不用孩子再点一次提交。
   _writingReviewHtml(m, mi, dayIdx) {
+    // 配对记录被清掉（换设备/清缓存）时别出现「全部填对」和横线锁着同时在场
+    if (!this.isTeacher() && !this._kwAllPaired(mi, m)) return '';
     if (!this._writingAllBlanksRight(m, mi, dayIdx)) return '';
     return '<div class="wr-start-hint ok">✅ 全部填对！点底部「开始朗读」，读完才能进入下一题</div>';
   },
@@ -5004,13 +5007,72 @@ const App = {
     return (day && day.modules && day.modules[mi]) || null;
   },
 
-  // 配对状态只放内存：配对是「提示的打开方式」，不是关卡门禁 ——
-  // 刷新后重来一遍没什么代价，存起来反而容易和填空进度打架。
+  // 配对进度要落 localStorage：它现在是填空的前置关卡 —— 刷新一下
+  // 配对记录没了、横线却还填着上次的答案，门禁就自相矛盾了。
+  _KW_PAIR_KEY: 'amy-writing-kwpair-v1',
   _kwState(mi) {
-    if (!this._kwPair) this._kwPair = {};
+    if (!this._kwPairCache) {
+      try { this._kwPairCache = JSON.parse(localStorage.getItem(this._KW_PAIR_KEY) || '{}') || {}; }
+      catch (e) { this._kwPairCache = {}; }
+    }
     const k = this._writingReadKey(mi);
-    if (!this._kwPair[k]) this._kwPair[k] = {};
-    return this._kwPair[k];
+    if (!this._kwPairCache[k] || typeof this._kwPairCache[k] !== 'object') this._kwPairCache[k] = {};
+    return this._kwPairCache[k];
+  },
+  _saveKwPair() {
+    try { localStorage.setItem(this._KW_PAIR_KEY, JSON.stringify(this._kwPairCache || {})); } catch (e) {}
+  },
+  // 配对好了的中文是不是正被眼睛挡着。只在内存里：刷新后一律重新遮上，
+  // 「要看自己点」才是默认状态。
+  _kwShown(mi, ki) {
+    const key = this._writingReadKey(mi);
+    return !!(this._kwShownMap && this._kwShownMap[key] && this._kwShownMap[key][ki]);
+  },
+  _setKwShown(mi, ki, on) {
+    if (!this._kwShownMap) this._kwShownMap = {};
+    const key = this._writingReadKey(mi);
+    if (!this._kwShownMap[key]) this._kwShownMap[key] = {};
+    if (on) this._kwShownMap[key][ki] = true;
+    else delete this._kwShownMap[key][ki];
+  },
+  _kwUnpairedCount(mi, m) {
+    const kws = this._kwList(m);
+    const paired = this._kwState(mi);
+    let n = 0;
+    kws.forEach(function (_, ki) { if (!paired[ki]) n++; });
+    return n;
+  },
+  // 5 个词全配对上了没有 —— 这是「能不能往横线上写字」的门槛
+  _kwAllPaired(mi, m) {
+    return this._kwList(m).length > 0 && this._kwUnpairedCount(mi, m) === 0;
+  },
+
+  // 一个参考单词长什么样：
+  //   没配对 → 🔊 best friend                      （点它＝听发音 + 开始配中文）
+  //   配好了 → ✓ best friend  👁  + 被眼睛遮住的中文（点 👁 才露出来）
+  _kwChipHtml(mi, ki, it, paired, revealed) {
+    const e = this._escHtml;
+    let h = '<div class="keyword-chip kw-tap' + (paired ? ' paired' : '') + (revealed ? ' reveal' : '')
+          + '" id="kw-' + mi + '-' + ki + '">';
+    h += '<button type="button" class="kw-hit" id="kwhit-' + mi + '-' + ki + '"'
+       + ' onclick="App._kwPeek(' + mi + ',' + ki + ')" aria-pressed="false">'
+       + '<span class="kw-en">' + e(it.en) + '</span></button>';
+    h += '<button type="button" class="kw-eye" id="kweye-' + mi + '-' + ki + '"'
+       + ' onclick="App._kwReveal(' + mi + ',' + ki + ')" aria-label="看中文意思">'
+       + '<svg class="icon"><use href="#' + (revealed ? 'i-eye' : 'i-eye-off') + '"/></svg></button>';
+    h += '<span class="kw-cn">' + e(it.cn) + '</span>';
+    h += '</div>';
+    return h;
+  },
+
+  // 点眼睛：把遮住的中文露出来；再点一下重新遮上。
+  // 这不是考他 —— 想看随时能看，只是不让他一直盯着中文不动脑。
+  _kwReveal(mi, ki) {
+    const m = this._kwModule(mi);
+    if (!m) return;
+    if (!this._kwState(mi)[ki]) return;                 // 还没配对，没有可看的中文
+    this._setKwShown(mi, ki, !this._kwShown(mi, ki));
+    this._kwRenderBar(mi, m);
   },
   _kwPickMap() {
     if (!this._kwPick) this._kwPick = {};
@@ -5074,15 +5136,26 @@ const App = {
     }
 
     paired[ki] = true;
+    this._saveKwPair();
     delete this._kwPickMap()[key];
+    // 配对成功先亮一下：让他看见「选的就是它」，随后自动把中文遮回眼睛后面，
+    // 想看再点眼睛。中文一直摊着的话，配对就变成抄一遍了。
+    this._setKwShown(mi, ki, true);
     // 配对成功再读一遍：把「音 — 形 — 义」这一次绑牢
     if (kws[ki].en) this.speak(kws[ki].en);
     this._kwRenderBar(mi, m);
+    const self = this;
+    setTimeout(function () {
+      self._setKwShown(mi, ki, false);
+      self._kwRenderBar(mi, m);
+    }, this.KW_HIDE_MS);
   },
 
   // 按状态重画参考区：哪些已配对（显示中文 + ✓）、哪个正在配对（高亮）、
   // 候选池里还剩哪些中文没被认领。
   _kwRenderBar(mi, m) {
+    // 配对进度一变，横线上的锁也要跟着变（配对全做完才让写字）
+    this._writingSyncFillLock(mi, m);
     const kws = this._kwList(m);
     const paired = this._kwState(mi);
     const key = this._writingReadKey(mi);
@@ -5092,9 +5165,17 @@ const App = {
     kws.forEach((it, ki) => {
       const chip = document.getElementById('kw-' + mi + '-' + ki);
       if (!chip) return;
-      chip.classList.toggle('paired', !!paired[ki]);
+      const on = !!paired[ki];
+      chip.classList.toggle('paired', on);
       chip.classList.toggle('picking', picking === ki);
-      chip.setAttribute('aria-pressed', picking === ki ? 'true' : 'false');
+      chip.classList.toggle('reveal', on && this._kwShown(mi, ki));
+      const hit = document.getElementById('kwhit-' + mi + '-' + ki);
+      if (hit) hit.setAttribute('aria-pressed', picking === ki ? 'true' : 'false');
+      const eye = document.getElementById('kweye-' + mi + '-' + ki);
+      if (eye) {
+        eye.innerHTML = '<svg class="icon"><use href="#'
+          + (this._kwShown(mi, ki) ? 'i-eye' : 'i-eye-off') + '"/></svg>';
+      }
     });
 
     const pool = document.getElementById('wk-pool-' + mi);
@@ -5119,6 +5200,49 @@ const App = {
     });
     items.innerHTML = h;
     pool.style.display = '';
+  },
+
+  // ===== 写作：填空横线的锁（配对没做完就不让动笔）=====
+  // 配对成功的中文先亮这么久，然后自动遮回眼睛后面（测试里会调小）
+  KW_HIDE_MS: 1500,
+
+  // 横线上那把锁：参考单词没配对完，横线就填不了 —— 先认词，再动笔。
+  // 老师端是预览，不锁。
+  _writingLockHintHtml(mi, m) {
+    if (this.isTeacher()) return '';
+    const total = this._kwList(m).length;
+    const left = this._kwUnpairedCount(mi, m);
+    if (!left) return '✅ 参考单词都配对好了，可以填横线上的词了';
+    return '🔒 先把上面 ' + total + ' 个单词和中文意思配对好（还剩 <b>' + left
+         + '</b> 个），才能填横线上的词';
+  },
+  _writingSyncFillLock(mi, m) {
+    const open = this.isTeacher() || this._kwAllPaired(mi, m);
+    (m.blanks || []).forEach(function (b) {
+      const input = document.querySelector('[data-blank="' + b.id + '"]');
+      if (!input) return;
+      if (open) {
+        if (input.removeAttribute) input.removeAttribute('readonly');
+        if (input.classList) input.classList.remove('locked');
+      } else {
+        if (input.setAttribute) input.setAttribute('readonly', 'readonly');
+        if (input.classList) input.classList.add('locked');
+      }
+    });
+    const lock = document.getElementById('wf-lock-' + mi);
+    if (!lock) return;
+    lock.innerHTML = this._writingLockHintHtml(mi, m);
+    if (lock.classList) lock.classList.toggle('ok', open);
+  },
+  // 锁着的时候点横线：把提示条抖一下，免得孩子以为是手机没反应
+  _writingLockedClick(mi) {
+    const lock = document.getElementById('wf-lock-' + mi);
+    if (!lock || !lock.classList) return;
+    lock.classList.add('shake');
+    setTimeout(function () {
+      const l = document.getElementById('wf-lock-' + mi);
+      if (l && l.classList) l.classList.remove('shake');
+    }, 700);
   },
 
   // ===== 写作：写完之后的朗读全文 =====
@@ -5324,6 +5448,16 @@ const App = {
 
   submitWriting(mi, dayIdx) {
     const m = HOMEWORK_DATA[dayIdx].modules[mi];
+    // 兜一道：配对没做完不让提交（横线本来就是 readonly，防的是脚本/旧页面绕过）
+    if (!this.isTeacher() && !this._kwAllPaired(mi, m)) {
+      const r0 = document.getElementById('writing-result-' + mi);
+      if (r0) {
+        r0.innerHTML = '<div class="wr-start-hint bad">🔒 先把上面 '
+          + this._kwList(m).length + ' 个参考单词和中文意思配对好，再来提交批改</div>';
+      }
+      this._writingSyncFillLock(mi, m);
+      return;
+    }
     const inputs = document.querySelectorAll('[data-blank]');
     const fst = this._writingFillState(mi);
     let correct = 0, total = m.blanks.length;

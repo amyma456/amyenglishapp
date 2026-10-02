@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="79">
+<meta name="app-version" content="80">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon.svg">
 <title>Amy老师英语打卡平台</title>
@@ -390,15 +390,28 @@ body.stage-mode .content-area{padding-block:0}
 .wk-title{font-size:11px;color:var(--ink-3);margin-bottom:6px}
 .writing-kwbar .writing-keywords{margin-bottom:0}
 .keyword-chip.kw-tap{display:inline-flex;align-items:center;gap:5px;border:1px solid transparent;
-  padding:5px 12px;font-family:inherit;line-height:1.5;cursor:pointer;
-  -webkit-tap-highlight-color:transparent}
-.keyword-chip .kw-en::before{content:'🔊';font-size:10px;margin-right:4px;opacity:.7}
-/* 中文默认藏着 —— 配对上了才露出来（孩子自己挑出来的，不是白给的） */
-.keyword-chip .kw-cn{display:none;color:var(--orange);font-weight:600}
+  padding:5px 12px;font-family:inherit;line-height:1.5;-webkit-tap-highlight-color:transparent}
+.keyword-chip.kw-tap .kw-hit{border:none;background:transparent;font:inherit;color:inherit;
+  padding:0;cursor:pointer;display:inline-flex;align-items:center}
+.keyword-chip.kw-tap .kw-en::before{content:'🔊';font-size:10px;margin-right:4px;opacity:.7}
+/* 中文一直藏着 —— 配对上了也还遮着，点眼睛（睫毛）才露出来 */
+.keyword-chip.kw-tap .kw-cn{display:none;color:var(--orange);font-weight:600}
 .keyword-chip.picking{background:#fff;border-color:var(--orange);box-shadow:0 0 0 3px var(--orange-wash)}
 .keyword-chip.paired{background:var(--success-light);border-color:var(--success);color:var(--ink)}
 .keyword-chip.paired .kw-en::before{content:'✓'}
-.keyword-chip.paired .kw-cn{display:inline}
+.keyword-chip.paired.reveal .kw-cn{display:inline}
+/* 眼睛：闭着＝中文被睫毛挡着，睁着＝中文露出来了 */
+.keyword-chip .kw-eye{display:none;border:none;background:transparent;color:var(--ink-3);
+  padding:0 1px;cursor:pointer;align-items:center}
+.keyword-chip.paired .kw-eye{display:inline-flex}
+.keyword-chip .kw-eye .icon{width:14px;height:14px}
+.keyword-chip.paired.reveal .kw-eye{color:var(--orange)}
+/* 横线上的锁：参考单词没配对完就填不了 */
+.wf-lock{margin:0 0 10px;padding:9px 12px;border-radius:var(--radius-sm);font-size:12px;
+  background:var(--warning-light);border:1px solid var(--warning);color:var(--warning)}
+.wf-lock.ok{background:var(--success-light);border-color:var(--success);color:var(--success)}
+.wf-lock.shake{animation:wk-shake .5s}
+.writing-blank-input.locked{color:var(--ink-3)!important;border-bottom-color:var(--line)!important;cursor:not-allowed}
 /* 中文候选池：点英文词才摊开，配对成功就收回去 */
 .wk-pool{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)}
 .wk-pool-hint{font-size:11px;color:var(--ink-3);margin-bottom:6px}
@@ -869,6 +882,8 @@ body.stage-mode .content-area{padding-block:0}
 <symbol id="i-logout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 4H6.5A2.5 2.5 0 0 0 4 6.5v11A2.5 2.5 0 0 0 6.5 20h3"/><path d="M16 8.5l3.5 3.5-3.5 3.5M19.5 12H9.5"/></symbol>
 <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.3l2.7 2.7L16 9.5"/></symbol>
 <symbol id="i-sound" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6.5 9H3v6h3.5L11 19V5Z"/><path d="M15.5 9.5a3.5 3.5 0 0 1 0 5M18.5 7a7 7 0 0 1 0 10"/></symbol>
+<symbol id="i-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5c2.4 3.6 5.4 5.4 9 5.4s6.6-1.8 9-5.4"/><path d="M5.2 12.6 3.6 15M9.2 14.4 8.3 17.2M14.8 14.4l.9 2.8M18.8 12.6l1.6 2.4"/></symbol>
+<symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5.6c-4.5 0-8.2 2.9-9.4 6.4 1.2 3.5 4.9 6.4 9.4 6.4s8.2-2.9 9.4-6.4C20.2 8.5 16.5 5.6 12 5.6Z"/><circle cx="12" cy="12" r="2.5"/></symbol>
 </svg>
 
 <!-- Modal -->

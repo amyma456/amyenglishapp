@@ -4,8 +4,9 @@
 //
 //   1. 作文步骤拆成两屏：writing（填空）+ writingread（朗读全文）
 //   2. 参考单词条是 sticky 容器（writing-kwbar）：只给英文，中文要点开英文词
-//      后在打乱的候选里自己配对出来（配错只提示再想想、不给答案），
-//      而且不跟填空联动（不替孩子指出该填哪个词）
+//      后在打乱的候选里自己配对出来（配错只提示再想想、不给答案）；配对成功后
+//      中文立刻被「眼睛」遮回去，点眼睛才露出来；而且不跟填空联动
+//   3. 横线要配对全部做完才让填（readonly + 提示条），提交处还有一道兜底
 //   3. 空没填全对 → 不放行；改对再提交 → 放行「开始朗读」
 //   4. 朗读屏：句句 ≥60 才记为通过，没全过 nextStep 硬门禁不放行
 //   5. 全部读对 → 出全文中文翻译、解锁「下一题」
@@ -36,6 +37,7 @@ function el(tag) {
     insertAdjacentHTML: (pos, h) => { e.innerHTML += h; },
     setAttribute: (k, v) => { e._attrs[k] = String(v); },
     getAttribute: k => (k in e._attrs ? e._attrs[k] : null),
+    removeAttribute: k => { delete e._attrs[k]; },
     appendChild: () => {}, remove: () => {}, scrollIntoView: () => {},
     play: () => Promise.resolve(), focus: () => {}, click: () => {},
     addEventListener: () => {}, removeEventListener: () => {},
@@ -136,6 +138,10 @@ App.state.currentTab = 'today';
 const m = HOMEWORK_DATA[DAY].modules[MI];
 console.log('模块：' + HOMEWORK_DATA[DAY].day_cn + ' / ' + m.name_cn + '（type=' + m.type + '）\n');
 
+// ---- 主体：配对→填空→朗读这一串里有 async 等待（中文自动遮回），整体包一层 ----
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+(async () => {
+
 // 1. 步骤拆分
 console.log('--- 1. 步骤拆分 ---');
 const steps = App._buildSteps(DAY);
@@ -144,8 +150,9 @@ ok(kinds[0] === 'writing', '第 1 步是写作填空：' + kinds[0]);
 ok(kinds[1] === 'writingread', '第 2 步是朗读全文：' + kinds[1]);
 ok(kinds.filter(k => k === 'writingread').length === 1, '朗读全文只有一屏（所有句子都在这一屏）');
 
-// 2. 参考单词条（配对玩法）/ 填空框
-console.log('\n--- 2. 参考单词条（配对玩法）/ 填空框 ---');
+// 2. 参考单词条（配对 + 眼睛遮中文）/ 填空横线的锁
+console.log('\n--- 2. 参考单词条（配对 + 眼睛遮中文）/ 填空横线的锁 ---');
+App.KW_HIDE_MS = 40;                     // 「配好先亮一下」的时长，测试里调小
 const wHtml = App.renderWritingTemplate(m, MI, DAY);
 ok(wHtml.includes('writing-kwbar'), '关键词条带 sticky 容器 writing-kwbar');
 ok((wHtml.match(/class="keyword-chip/g) || []).length === (m.keywords || []).length,
@@ -155,26 +162,36 @@ ok(!wHtml.includes('data-kw-blank') && !wHtml.includes('_hlKeyword'),
 ok(!wHtml.includes('aria-expanded'), '旧的可展开语义已换成 aria-pressed');
 ok((wHtml.match(/onclick="App\._kwPeek\(/g) || []).length === (m.keywords || []).length,
    (m.keywords || []).length + ' 个英文词都能点（听发音 → 找中文）');
+ok((wHtml.match(/class="kw-eye"/g) || []).length === (m.keywords || []).length,
+   '每个词旁边都有一个「眼睛」（遮 / 露中文）');
 ok(wHtml.includes('class="kw-cn"'), '中文意思默认收着（kw-cn）');
-ok(!/keyword-chip kw-tap paired/.test(wHtml), '刚进来一个词都还没配对');
+ok(!/keyword-chip kw-tap reveal/.test(wHtml), '刚进来没有露着的中文');
 ok(wHtml.includes('id="wk-pool-' + MI + '"') && wHtml.includes('display:none'),
    '中文候选池默认不出现（点了英文词才摊开）');
 ok(wHtml.includes('placeholder="' + m.blanks[0].hint_cn + '"'),
    '横线上继续用灰色中文提示：' + m.blanks[0].hint_cn);
+ok(wHtml.includes('readonly'), '配对没做完 → 横线只读，填不了');
+ok(wHtml.includes('id="wf-lock-' + MI + '"'), '有「先配对才能填」的提示条');
 ok(App._kwList(m).every(x => x.en && x.cn), '每个关键词的英文 + 中文都齐');
 
-// 中文「藏着」是 CSS 干的活，静态查一遍样式
+// 图标 / 样式（「藏着」这件事主要靠 CSS，静态查一遍）
 const idxSrc = fs.readFileSync(BASE + 'index.html', 'utf8');
-ok(/\.keyword-chip \.kw-cn\{display:none/.test(idxSrc), 'CSS：中文默认不显示');
-ok(/\.keyword-chip\.paired \.kw-cn\{display:inline/.test(idxSrc), 'CSS：配对上了才显示中文');
+ok(/symbol id="i-eye-off"/.test(idxSrc), '有「闭眼睫毛」图标 i-eye-off');
+ok(/symbol id="i-eye"/.test(idxSrc), '有「睁眼」图标 i-eye');
+ok(/\.keyword-chip\.paired\.reveal \.kw-cn\{display:inline/.test(idxSrc),
+   'CSS：点开眼睛才显示中文');
+ok(/\.keyword-chip\.paired \.kw-eye\{display:inline-flex/.test(idxSrc),
+   'CSS：配对上了才出现眼睛');
+ok(/\.writing-blank-input\.locked\{/.test(idxSrc), 'CSS：锁着的横线有单独样式');
 
-// 点英文词 → 先念一遍 + 摊开打乱的中文候选
+// 点英文词 → 念一遍 + 摊开打乱的中文候选
 const kwSpoken = [];
 App.speak = function (t) { kwSpoken.push(String(t)); };
+m.blanks.forEach(b => { blankInputs[b.id] = el('input'); });
 App._kwPeek(MI, 0);
 ok(kwSpoken[kwSpoken.length - 1] === m.keywords[0], '点英文词 → 先念出这个词：' + m.keywords[0]);
 ok(getEl('kw-' + MI + '-0')._cls.has('picking'), '点英文词 → 该词高亮成「正在配对」');
-ok(getEl('kw-' + MI + '-0')._attrs['aria-pressed'] === 'true', 'aria-pressed 跟着变 true');
+ok(getEl('kwhit-' + MI + '-0')._attrs['aria-pressed'] === 'true', 'aria-pressed 跟着变 true');
 const poolHtml = getEl('wk-pool-items-' + MI).innerHTML;
 ok((poolHtml.match(/class="wk-cn-chip"/g) || []).length === m.keywords.length,
    '候选池摊开 ' + m.keywords.length + ' 个中文意思');
@@ -188,21 +205,41 @@ ok(getEl('wk-pool-hint-' + MI).textContent.includes('再想想'), '挑错 → �
 ok(getEl('kw-' + MI + '-0')._cls.has('picking'), '挑错 → 仍停在配对中，可以接着试');
 ok(!getEl('kw-' + MI + '-0')._cls.has('paired'), '挑错 → 中文不露出来');
 
-// 挑对 → 配对成功：中文露出来 + 再念一遍
+// 挑对 → 配对成功：中文先亮一下，随后被眼睛自动遮回去
 App._kwPair(MI, 0);
 ok(App._kwState(MI)[0] === true, '挑对 → 记下配对成功');
-ok(getEl('kw-' + MI + '-0')._cls.has('paired'), '挑对 → 词条变绿配对态（中文露出来）');
-ok(kwSpoken[kwSpoken.length - 1] === m.keywords[0], '配对成功 → 再念一遍（音-形-义绑一次）');
+ok(getEl('kw-' + MI + '-0')._cls.has('paired'), '挑对 → 词条变绿配对态');
+ok(getEl('kw-' + MI + '-0')._cls.has('reveal'), '刚配好 → 中文先亮出来给他看一眼');
+ok(kwSpoken[kwSpoken.length - 1] === m.keywords[0], '配好 → 再念一遍（音-形-义绑一次）');
 ok(getEl('wk-pool-' + MI).style.display === 'none', '配对成功 → 候选池收回去');
-ok(getEl('wk-pool-items-' + MI).innerHTML === '', '配对成功 → 候选池清空');
+await sleep(App.KW_HIDE_MS + 80);
+ok(!getEl('kw-' + MI + '-0')._cls.has('reveal'), '亮完 → 中文自动遮回眼睛后面');
+ok(getEl('kweye-' + MI + '-0').innerHTML.includes('i-eye-off'), '眼睛闭着（睫毛挡着中文）');
 
-// 已配对的词再点 → 只发声，不再摊候选
-App._kwPeek(MI, 0);
-ok(getEl('wk-pool-' + MI).style.display === 'none', '已配对的词再点 → 只发声，不摊候选池');
+// 点眼睛才看得见中文，再点又遮上
+App._kwReveal(MI, 0);
+ok(getEl('kw-' + MI + '-0')._cls.has('reveal'), '点眼睛 → 中文露出来');
+ok(getEl('kweye-' + MI + '-0').innerHTML.includes('i-eye'), '眼睛睁开');
+App._kwReveal(MI, 0);
+ok(!getEl('kw-' + MI + '-0')._cls.has('reveal'), '再点眼睛 → 中文又遮上');
 
-const wHtml2 = App.renderWritingTemplate(m, MI, DAY);
-ok(/keyword-chip kw-tap paired/.test(wHtml2), '重进这一屏 → 已配对的词还是配对态');
-ok(wHtml2.includes('display:none'), '重进这一屏 → 候选池照旧收着');
+// 还没全配对 → 横线仍然锁着，点它只抖提示
+App._writingSyncFillLock(MI, m);
+ok(blankInputs[m.blanks[0].id]._attrs['readonly'] === 'readonly', '还没全配对 → 横线 readonly');
+ok(getEl('wf-lock-' + MI).innerHTML.includes('才能填横线上的词'), '提示条：先配对再填');
+App._writingLockedClick(MI);
+ok(getEl('wf-lock-' + MI)._cls.has('shake'), '点锁着的横线 → 提示条抖一下');
+
+// 把剩下 4 个也配上 → 横线解锁
+for (let ki = 1; ki < m.keywords.length; ki++) { App._kwPeek(MI, ki); App._kwPair(MI, ki); }
+await sleep(App.KW_HIDE_MS + 80);
+ok(App._kwAllPaired(MI, m), '5 个词全部配对成功');
+ok(getEl('wf-lock-' + MI).innerHTML.includes('可以填横线上的词'), '提示条变成「可以填了」');
+ok(getEl('wf-lock-' + MI)._cls.has('ok'), '提示条转成绿色');
+ok(blankInputs[m.blanks[0].id]._attrs['readonly'] === undefined, '横线解锁（不再 readonly）');
+const wHtmlOpen = App.renderWritingTemplate(m, MI, DAY);
+ok(!wHtmlOpen.includes('readonly'), '重进这一屏 → 横线还是能填的（配对进度记住了）');
+ok(/keyword-chip kw-tap paired/.test(wHtmlOpen), '重进这一屏 → 配好的词还是配对态');
 
 ok((wHtml.match(/data-blank="/g) || []).length === m.blanks.length, m.blanks.length + ' 个填空输入框');
 ok(wHtml.includes('value=""'), '首次进入输入框为空');
@@ -290,5 +327,14 @@ App._writingReadState(MI).passed = {};                    // 模拟朗读没做
 App._saveWritingRead();
 ok(App._resumeStepIdx(DAY) === wrStepIdx, '作文填完但朗读没做 → 直接回到朗读这一屏（不用重填作文）');
 
+// 9. 兜底：绕过界面直接提交也不行
+console.log('\n--- 9. 配对门禁兜底 ---');
+delete App._kwState(MI)[0];                               // 假装还有一个词没配对
+App.submitWriting(MI, DAY);
+ok(getEl('writing-result-' + MI).innerHTML.includes('配对好'), '配对没做完直接提交 → 拦住并提示');
+ok(!getEl('writing-result-' + MI).innerHTML.includes('批改结果'), '配对没做完 → 不出批改结果');
+
 console.log('\n' + (fail ? '❌ 有 ' + fail + ' 项不通过' : '✅ 全部通过'));
 process.exit(fail ? 1 : 0);
+
+})();
