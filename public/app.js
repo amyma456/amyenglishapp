@@ -45,6 +45,10 @@ const App = {
     // gone, the first tap anywhere has to be what unlocks it — otherwise the
     // sentence auto-read is called but never actually heard.
     this._setupAudioUnlock();
+    // 提示音用的是 Web Audio，和语音朗读走的不是同一条路，得单独唤醒；
+    // 而且它随时可能被系统掐掉（切后台、来电、TTS 抢音频会话），所以不是
+    // 一次性的事 —— 每次点按都顺手确认一下它还醒着。
+    this._bindAudioKeeper();
     // Show WeChat notice if in WeChat
     if (this.isWeChat()) {
       const notice = document.getElementById('wechat-notice');
@@ -161,6 +165,25 @@ const App = {
     };
     document.addEventListener('touchstart', unlockHandler, { once: false, passive: true });
     document.addEventListener('click', unlockHandler, { once: false });
+  },
+
+  // 提示音的"保活"。语音朗读走 <audio> 元素，提示音走 Web Audio，两条路
+  // 各有各的解锁；而且音频会话随时可能被系统抢走（切后台回来、来电、
+  // 语音朗读把会话切到播放态），醒来之后 AudioContext 会停在 suspended，
+  // 之后所有提示音都不响。所以每次点按都顺手确认一下它还在跑，代价只是
+  // 读一次 state 字段。
+  _bindAudioKeeper() {
+    if (this._audioKeeperBound) return;
+    this._audioKeeperBound = true;
+    var self = this;
+    var keep = function() { self._unlockAudioCtx(); };
+    ['pointerdown', 'touchstart', 'click'].forEach(function(tn) {
+      document.addEventListener(tn, keep, true);
+    });
+    // 从后台回到前台、或者被别的应用打断过，也补一次
+    document.addEventListener('visibilitychange', function() {
+      if (!document.hidden) keep();
+    });
   },
 
   // ===== Data =====
@@ -1684,55 +1707,103 @@ const App = {
   _getAudioCtx() {
     if (!this._audioCtx) {
       try {
-        this._audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        this._audioCtx = new AC();
       } catch(e) { return null; }
     }
     return this._audioCtx;
   },
 
-  // Play a pleasant "ding" sound for correct answers
-  _playCorrectSound() {
+  // 把音频上下文叫醒。iOS Safari / 微信里 AudioContext 只要没在用户手势里
+  // resume 过就一直是 suspended —— 现象就是"点选之后一点声都没有"。这个
+  // 函数绑在全局第一次点按上（见 _bindAudioKeeper）。
+  _unlockAudioCtx() {
     var ctx = this._getAudioCtx();
-    if (!ctx) return;
+    if (!ctx) return null;
     try {
-      if (ctx.state === 'suspended') ctx.resume();
-      // Two ascending notes (C5 -> E5 -> G5) - a happy chord arpeggio
-      var notes = [523.25, 659.25, 783.99];
-      notes.forEach(function(freq, i) {
-        var osc = ctx.createOscillator();
-        var gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.frequency.value = freq;
-        osc.type = 'sine';
-        var startTime = ctx.currentTime + i * 0.08;
-        gain.gain.setValueAtTime(0, startTime);
-        gain.gain.linearRampToValueAtTime(0.3, startTime + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.25);
-        osc.start(startTime);
-        osc.stop(startTime + 0.3);
-      });
+      if (ctx.state !== 'running' && ctx.resume) {
+        var p = ctx.resume();
+        if (p && p.catch) p.catch(function() {});
+      }
     } catch(e) {}
+    return ctx;
   },
 
-  // Play a gentle "buzz" sound for wrong answers
-  _playWrongSound() {
+  // 统一发声器。notes: [{f, at, dur, vol, type, to}]
+  //   f 起播频率(Hz) / at 相对起播点的偏移(秒) / dur 时长(秒)
+  //   vol 峰值音量 / type 波形 / to 滑到的频率(Hz)
+  //
+  // 这里有个必须踩住的坑：**挂起状态下排进去的振荡器会被直接吞掉**。
+  // 原先的写法是 `if (suspended) resume()` 之后马上排音 —— resume() 是
+  // 异步的，排音时上下文还没真正跑起来，在 iOS（尤其是刚被 TTS 抢过音频
+  // 会话之后）就静默丢弃了。表现就是"有时候响、有时候不响，孩子点对了
+  // 却没动静"。所以现在等 resume 落地之后再排，另留一条兜底路径，万一
+  // resume 一直不落地也不至于永远哑着。
+  _playTone(notes) {
     var ctx = this._getAudioCtx();
     if (!ctx) return;
+    var fired = false;
+    var fire = function() {
+      if (fired) return;
+      fired = true;
+      var t0 = ctx.currentTime + 0.01;
+      notes.forEach(function(n) {
+        try {
+          var osc = ctx.createOscillator();
+          var gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.type = n.type || 'sine';
+          var start = t0 + (n.at || 0);
+          var dur = n.dur || 0.22;
+          var vol = (n.vol == null) ? 0.4 : n.vol;
+          osc.frequency.setValueAtTime(n.f, start);
+          if (n.to) osc.frequency.exponentialRampToValueAtTime(n.to, start + dur);
+          gain.gain.setValueAtTime(0.0001, start);
+          gain.gain.linearRampToValueAtTime(vol, start + 0.012);
+          gain.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+          osc.start(start);
+          osc.stop(start + dur + 0.03);
+        } catch(e) {}
+      });
+    };
     try {
-      if (ctx.state === 'suspended') ctx.resume();
-      var osc = ctx.createOscillator();
-      var gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.frequency.value = 200;
-      osc.type = 'square';
-      gain.gain.setValueAtTime(0, ctx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.15, ctx.currentTime + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.3);
+      if (ctx.state === 'running') { fire(); return; }
+      if (ctx.resume) {
+        var p = ctx.resume();
+        if (p && p.then) {
+          p.then(fire).catch(function() {});
+          setTimeout(fire, 500);     // resume 迟迟不落地也别哑着
+          return;
+        }
+      }
     } catch(e) {}
+    fire();
+  },
+
+  // 选对了：C5 → E5 → G5 三连上行，末尾再补一记高音 C6，干净利落的一声"叮铃"。
+  // 手机小喇叭对低频不友好，所以每个音都叠了一层高八度泛音、音量也提了一档
+  // —— 教室里有杂音时也要听得见。总长约 0.55 秒，不拖到影响后面的朗读。
+  _playCorrectSound() {
+    this._playTone([
+      { f: 523.25, at: 0.00, dur: 0.16, vol: 0.32 },
+      { f: 1046.5, at: 0.00, dur: 0.10, vol: 0.07, type: 'triangle' },
+      { f: 659.25, at: 0.08, dur: 0.16, vol: 0.36 },
+      { f: 1318.5, at: 0.08, dur: 0.10, vol: 0.08, type: 'triangle' },
+      { f: 783.99, at: 0.16, dur: 0.22, vol: 0.42 },
+      { f: 1568.0, at: 0.16, dur: 0.14, vol: 0.09, type: 'triangle' },
+      { f: 1046.5, at: 0.27, dur: 0.28, vol: 0.34 }
+    ]);
+  },
+
+  // 选错了：两记往下掉的短音，一听就知道"不是这个"。音色用 triangle，
+  // 比原来的方波柔和，不刺耳，但比正弦更容易在嘈杂环境里被听见。
+  _playWrongSound() {
+    this._playTone([
+      { f: 294.0, at: 0.00, dur: 0.16, vol: 0.26, to: 220.0, type: 'triangle' },
+      { f: 220.0, at: 0.13, dur: 0.26, vol: 0.28, to: 164.8, type: 'triangle' }
+    ]);
   },
 
   // Show celebration animation
@@ -3396,31 +3467,35 @@ const App = {
       return;
     }
 
-    // 选对（第一次就中，或选错后重新点中）：朗读答句，然后进入
-    // "问句 + 答句"整句跟读。
+    // 选对（第一次就中，或选错后重新点中）：先当场给回馈，再朗读答句，
+    // 然后进入"问句 + 答句"整句跟读。
+    //
+    // 「当场」是重点。这几样原来是挂在 speak() 的 onDone 里的 —— 孩子点完
+    // 选项得先把整句答句听完（音频还没取回来时更久）才听得到提示音、才看
+    // 得到绿框，等于点下去那一下什么反应都没有。现在提示音、绿框、文字在
+    // 手指落下的一瞬间就出来，朗读接在它后面。
+    this._stopCurrentAudio();
+    this._showSpeakingIndicator(false);
+    this._playCorrectSound();
     this._recordAnswer(dayIdx, mi, qi, selectedText, true);
-    opts.forEach((el) => {
-      el.classList.remove('wrong');
+    opts.forEach((el, i) => {
+      el.classList.remove('wrong', 'selected');
       el.style.pointerEvents = 'none';
+      if (i === correctAnswer) el.classList.add('correct');
     });
     if (waitEl) {
       waitEl.style.display = 'block';
-      waitEl.style.color = 'var(--primary)';
-      waitEl.textContent = '正在朗读答句，请认真听…';
+      waitEl.style.color = 'var(--success)';
+      waitEl.textContent = '✅ 选对了！正在朗读答句…';
     }
 
     var self2 = this;
     this.speak(selectedText, { onDone: function() {
-      opts.forEach((el, i) => {
-        el.classList.remove('wrong');
-        if (i === correctAnswer) el.classList.add('correct');
-      });
       if (waitEl) waitEl.style.display = 'none';
       if (tip && q.pronunciation_tips) {
         tip.classList.add('show');
         tip.innerHTML = '🗣️ <strong>发音提示：</strong>' + q.pronunciation_tips;
       }
-      self2._playCorrectSound();
       // Show read-along section for the full Q + A sentence
       self2.startReadAlong(mi, qi, dayIdx);
     }});
@@ -6367,9 +6442,13 @@ const App = {
     this._stopCurrentAudio();
     this._showSpeakingIndicator(false);
     this._playCorrectSound();
-    opts.forEach((el) => {
+    opts.forEach((el, i) => {
       el.classList.remove('correct', 'wrong', 'selected');
       el.style.pointerEvents = 'none';
+      // 点对哪一项，那一项就当场亮绿 —— 提示音得有个"落点"，不然孩子
+      // 听到一声响却不知道是冲着哪一项来的。跟读门槛完全不受影响：
+      // 下一题仍然要读够 60 分才开（见 _setHoldReadUI 的 passed 分支）。
+      if (i === q.answer) el.classList.add('correct');
     });
     if (ansEl) {
       ansEl.style.display = 'block';

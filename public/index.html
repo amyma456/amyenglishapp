@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="83">
+<meta name="app-version" content="84">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon.svg">
 <title>Amy老师英语打卡平台</title>
@@ -316,7 +316,7 @@ body.stage-mode .content-area{padding-block:0}
 .q-option{padding:8px 12px;border:1.5px solid #FFE0CC;border-radius:var(--radius-sm);font-size:13px;cursor:pointer}
 .q-option:hover{background:var(--primary-light)}
 .q-option.selected{background:var(--primary);color:#fff;border-color:var(--primary)}
-.q-option.correct{background:var(--success-light);border-color:var(--success);color:var(--success)}
+.q-option.correct{background:var(--success-light);border-color:var(--success);color:var(--success);animation:ackPop .42s ease}
 .q-option.wrong{background:var(--danger-light);border-color:var(--danger);color:var(--danger)}
 .q-answer{font-size:12px;color:var(--success);margin-top:6px;font-weight:600}
 .q-explanation{background:var(--info-light);border-radius:var(--radius-sm);padding:10px;margin-top:8px;font-size:12px;display:none}
@@ -366,7 +366,7 @@ body.stage-mode .content-area{padding-block:0}
 .spell-letter{display:inline-block;padding:0 2px;letter-spacing:2px}
 .spell-blank-input{width:auto;min-width:40px;max-width:100px;font-size:32px;font-weight:700;text-align:center;border:none;border-bottom:3px solid var(--primary);background:var(--primary-light);border-radius:4px 4px 0 0;color:var(--primary-dark);font-family:monospace;letter-spacing:2px;padding:4px 8px;outline:none;transition:.2s}
 .spell-blank-input:focus{background:var(--primary);color:#fff;border-bottom-color:var(--primary-dark)}
-.spell-blank-input.correct{border-color:var(--success);background:var(--success-light);color:var(--success)}
+.spell-blank-input.correct{border-color:var(--success);background:var(--success-light);color:var(--success);animation:ackPop .42s ease}
 .spell-blank-input.wrong{border-color:var(--danger);background:var(--danger-light);color:var(--danger);animation:shake .3s ease}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
 .spell-result-word{font-size:28px;font-weight:700;color:var(--primary-dark);margin-top:8px}
@@ -474,7 +474,7 @@ body.stage-mode .content-area{padding-block:0}
 .speak-options{display:flex;flex-direction:column;gap:8px;margin:16px 0}
 .speak-option{padding:12px;border:2px solid #FFE0CC;border-radius:var(--radius-sm);font-size:14px;cursor:pointer}
 .speak-option:hover{border-color:var(--primary);background:var(--primary-light)}
-.speak-option.correct{border-color:var(--success);background:var(--success-light)}
+.speak-option.correct{border-color:var(--success);background:var(--success-light);animation:ackPop .42s ease}
 .speak-option.wrong{border-color:var(--danger);background:var(--danger-light)}
 .speak-tip{background:var(--info-light);border-radius:var(--radius-sm);padding:10px;font-size:12px;margin:12px 0;display:none}
 .speak-tip.show{display:block}
@@ -699,6 +699,9 @@ button.gate-locked::before{content:'🔒 '}
 .vocab-option-card .opt-label{font-size:12px;color:var(--text-sub);font-weight:600}
 @keyframes bounceIn{0%{transform:scale(0);opacity:0}60%{transform:scale(1.1);opacity:1}100%{transform:scale(1)}}
 @keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.15)}100%{transform:scale(1)}}
+/* 点对选项时的即时回馈：放大一下 + 一圈绿色扩散出去。声音和这个动画
+   同时到，孩子不用盯着看也知道自己点对了。 */
+@keyframes ackPop{0%{transform:scale(1);box-shadow:0 0 0 0 rgba(82,196,26,.5)}40%{transform:scale(1.05);box-shadow:0 0 0 9px rgba(82,196,26,0)}100%{transform:scale(1);box-shadow:0 0 0 0 rgba(82,196,26,0)}}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
 
 /* Auto-read indicator */
@@ -925,12 +928,12 @@ button.gate-locked::before{content:'🔒 '}
   <div class="modal" id="modal-box"></div>
 </div>
 
-<script src="cloud.js?v=83"></script>
-<script src="data.js?v=83"></script>
+<script src="cloud.js?v=84"></script>
+<script src="data.js?v=84"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
-<script src="recorder.js?v=83"></script>
-<script src="api.js?v=83"></script>
-<script src="app.js?v=83"></script>
+<script src="recorder.js?v=84"></script>
+<script src="api.js?v=84"></script>
+<script src="app.js?v=84"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {
