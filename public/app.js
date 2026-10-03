@@ -32,6 +32,8 @@ const App = {
   async init() {
     await this.loadData();
     this.loadVoices();
+    // 先听再读的门禁：一次绑定，全平台所有朗读控件都走它
+    this._bindGateGuard();
     if (typeof Cloud !== 'undefined') Cloud.init();
     // WeChat built-in browser: unlock audio as soon as WeixinJSBridge is
     // ready. On WeChat, the first play() must happen inside this callback
@@ -146,8 +148,10 @@ const App = {
       // on) gets played now instead of being lost.
       if (self._pendingSpeak) {
         var pending = self._pendingSpeak;
+        var pGate = self._pendingSpeakGate;
         self._pendingSpeak = null;
-        self.speak(pending);
+        self._pendingSpeakGate = null;
+        self.speak(pending, pGate ? { onDone: function() { self._gateUnlock(pGate); } } : undefined);
         return;
       }
       // Re-render content so auto-speak can now work with unlocked audio
@@ -1365,6 +1369,185 @@ const App = {
     this._toastTimer = setTimeout(function() {
       t.classList.remove('show');
     }, 3000);
+  },
+
+  // ===== 平台统一规则：先听完，才能读 ====================================
+  //
+  // 凡是要求孩子朗读的地方（整句跟读、逐句跟读、写作朗读、字母/音节拼读、
+  // 错词重读），都要先把那句的示范听完整才解锁。理由很实在：没听过就开口，
+  // 读出来的是孩子自己"想当然"的音，越读越偏，纠正的成本比一开始就听高得多。
+  //
+  // 全平台只走一条路，不给每个面板各写一套：
+  //   1. 渲染时朗读控件加 data-gate="<区域id>"，锁着的再带 class="gate-locked"；
+  //   2. 区域里放一颗 <button class="gate-listen" data-gate data-say="示范内容">，
+  //      点它 → 播示范 → 播完调 _gateUnlock 把该区域点亮；
+  //   3. 全局在**捕获阶段**监听 pointerdown/touchstart/mousedown：凡是撞上带
+  //      data-gate 且还没解锁的朗读控件，就地拦下（preventDefault +
+  //      stopPropagation）。内联的 onpointerdown 和按钮自己的 touchstart 都还
+  //      没轮到执行，录音压根不会启动 —— 不会留下"录了一半被掐断"的脏状态。
+  _gates: {},
+
+  _gateOpen(gid) { return !!this._gates[gid]; },
+
+  // 门禁 id 统一从这里出，**必须带"第几天"**：题号 mi/qi 在不同天是重复的，
+  // 只用题号的话，孩子切到另一天的同一题会被当成"已经听过了"，门就白设了。
+  _gid(prefix) {
+    const rest = Array.prototype.slice.call(arguments, 1);
+    return prefix + '@' + this.state.currentDay + ':' + rest.join('-');
+  },
+
+  // 解锁一个区域：把手底下所有挂着同一 gid 的控件点亮。
+  _gateUnlock(gid) {
+    if (!gid) return;
+    this._gates[gid] = true;
+    this._syncGates();
+  },
+
+  // 按当前 _gates 把（可能刚重建过的）DOM 重新点亮一遍。
+  // 面板每次重渲染都是新节点，带上 gate-locked，所以渲染后要 sync 一次，
+  // 免得"已经听过了却还是灰的"。
+  _syncGates(root) {
+    const scope = root || document;
+    const self = this;
+    scope.querySelectorAll('[data-gate]').forEach(function(el) {
+      if (el.classList.contains('gate-listen') || el.getAttribute('data-listen') === '1') return;
+      if (self._gates[el.getAttribute('data-gate')]) el.classList.remove('gate-locked');
+    });
+  },
+
+  // 没听就想读 → 抖一下 + 说清楚该点哪儿（不弹窗打断，只用一条轻提示）
+  _gateNudge(gid) {
+    const now = Date.now();
+    if (this._gateNudgeAt && now - this._gateNudgeAt < 900) return;   // 一次手势别提示两遍
+    this._gateNudgeAt = now;
+    document.querySelectorAll('[data-gate="' + gid + '"]').forEach(function(el) {
+      if (el.classList.contains('gate-listen') || el.getAttribute('data-listen') === '1') return;
+      el.classList.add('gate-shake');
+      setTimeout(function() { el.classList.remove('gate-shake'); }, 460);
+    });
+    // 顺手把"该点哪儿"指出来：专用按钮，或者本身就是句子的那个听入口
+    const listen = document.querySelector('.gate-listen[data-gate="' + gid + '"], [data-gate="' + gid + '"][data-listen="1"]');
+    if (listen) {
+      listen.classList.add('gate-hint-glow');
+      setTimeout(function() { listen.classList.remove('gate-hint-glow'); }, 1250);
+    }
+    this.showToast('🔊 先听一遍示范，再开口读哦', 'warn');
+  },
+
+  // 那颗「🔊 先听一遍」按钮。say 是示范内容（英文），label 可换措辞。
+  _gateListenHtml(gid, say, label) {
+    return '<button type="button" class="gate-listen" data-gate="' + gid
+      + '" data-say="' + this._escHtml(say) + '">' + (label || '🔊 先听一遍') + '</button>';
+  },
+
+  // 依次播放一串示范音（字母 → 音节 → 整词）。TTS 一次只放一条，所以上一条
+  // 播完了才放下一条；中间任何一条哑火也不会卡住，外层的兜底计时器会放行。
+  _speakSeq(items, onAllDone) {
+    const self = this;
+    let i = 0;
+    const next = function() {
+      if (i >= items.length) { if (onAllDone) onAllDone(); return; }
+      const t = items[i++];
+      if (!t) { next(); return; }
+      self.speak(t, { onDone: function() { setTimeout(next, 0); } });
+    };
+    next();
+  },
+
+  // 兜底放行时间：示范可能因为断网/系统静音根本没响，onDone 就永远不来。
+  // 按句子长短给一个上限，最迟也会放行 —— 不能因为听不到声把孩子锁死在题目里。
+  _gateFallbackMs(say) {
+    const n = String(say || '').split(/\s+/).filter(Boolean).length;
+    return Math.max(4000, Math.min(12000, 2500 + n * 450));
+  },
+
+  _gateGuardBound: false,
+  _bindGateGuard() {
+    if (this._gateGuardBound) return;
+    this._gateGuardBound = true;
+    const self = this;
+    const closestGate = function(ev) {
+      const t = ev.target;
+      return (t && t.closest) ? t.closest('.gate-listen,[data-gate]') : null;
+    };
+
+    // 播示范 → 播完解锁。兜底计时器和真实回调赛跑，谁先到算谁，门一定开。
+    const playAndUnlock = function(el, gid) {
+      if (!el || !gid) return;
+      if (el.dataset.playing === '1') return;          // 正在播，别叠第二遍
+      el.dataset.playing = '1';
+      el.classList.add('playing');
+      const say = el.getAttribute('data-say') || '';
+      const seq = el.getAttribute('data-seq');         // 一串示范（字母→音节→整词）
+      const done = function() {
+        if (el.dataset.playing !== '1') return;
+        el.dataset.playing = '';
+        el.classList.remove('playing');
+        clearTimeout(el._gateTimer);
+        self._gateUnlock(gid);
+      };
+      clearTimeout(el._gateTimer);
+      el._gateTimer = setTimeout(done, self._gateFallbackMs(seq ? seq.split('|').join(' ') : say));
+      if (seq) self._speakSeq(seq.split('|'), done);
+      else self.speak(say, { onDone: done });
+    };
+
+    // ① 「先听一遍」按钮 + "还没听就想读"的拦截。
+    //    走 pointerdown/touchstart：必须赶在控件自己的录音 handler 之前落地，
+    //    否则点了就已经开录了，事后拦截只会留下一段半截录音。
+    const guard = function(ev) {
+      const el = closestGate(ev);
+      if (!el) return;
+      const gid = el.getAttribute('data-gate');
+      if (!gid) return;
+
+      if (el.classList.contains('gate-listen')) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        playAndUnlock(el, gid);
+        return;
+      }
+      // 句子形态的听入口（data-listen）不在这一层处理 —— 见下面 click 那条。
+      // 在这里吞掉 touchstart 会连页面滚动一起吞掉，孩子在这句话上往下滑都滑不动。
+      if (el.getAttribute('data-listen') === '1') return;
+
+      if (!self._gateOpen(gid)) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        self._gateNudge(gid);
+      }
+    };
+    ['pointerdown', 'touchstart', 'mousedown'].forEach(function(tn) {
+      document.addEventListener(tn, guard, true);
+    });
+
+    // ② 句子本身就是听入口（阅读逐句、写作朗读）：用 click。
+    //    "点一下听一遍"是轻点，滑动翻页必须照常，所以不能用 touchstart。
+    document.addEventListener('click', function(ev) {
+      const el = closestGate(ev);
+      if (!el || el.getAttribute('data-listen') !== '1') return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      playAndUnlock(el, el.getAttribute('data-gate'));
+    }, true);
+
+    // 面板重渲染会带出新的 gate-locked 节点（比如切到下一题、口语面板刷新），
+    // 而"这句我早听过了"的状态是记在 _gates 里的。DOM 一有新节点就按记录
+    // 校正一次，免得已听过的句子又变回灰的、孩子被迫再听第二遍。
+    if (window.MutationObserver) {
+      const mo = new MutationObserver(function() {
+        if (self._gateSyncRaf) return;
+        self._gateSyncRaf = requestAnimationFrame(function() {
+          self._gateSyncRaf = null;
+          self._syncGates();
+        });
+      });
+      const boot = function() {
+        if (document.body) mo.observe(document.body, { childList: true, subtree: true });
+        else setTimeout(boot, 60);
+      };
+      boot();
+    }
   },
 
   // Auto-speak with callback - minimal delay for fast response
@@ -3129,16 +3312,18 @@ const App = {
     const sentence = this._speakingReadSentence(mi, qi, dayIdx);
     const readArea = document.getElementById('sp-read-' + mi);
     if (!readArea || !sentence) return;
+    const gid = this._gid('sp', mi, qi);
     readArea.innerHTML = '<div class="speak-record show" style="text-align:center">'
       + '<p class="fs-12 text-sub">请把问句和答句连起来读：</p>'
       + '<div class="rd-sentence" id="rd-sent-' + mi + '-' + qi + '">' + this._readSentenceHtml(sentence) + '</div>'
       + '<div class="rd-live-hint" id="rd-live-' + mi + '-' + qi + '"></div>'
+      + '<div class="gate-bar">' + this._gateListenHtml(gid, sentence, '🔊 先听一遍示范') + '</div>'
       + '<div id="sp-status-' + mi + '-' + qi + '" style="min-height:18px;margin:6px 0;color:var(--text-sub);font-size:14px"></div>'
-      + '<button id="sphr-' + mi + '-' + qi + '" class="speak-btn" '
+      + '<button id="sphr-' + mi + '-' + qi + '" class="speak-btn gate-locked" data-gate="' + gid + '" '
       + 'style="background:var(--primary);margin-top:8px;font-size:18px;padding:18px 32px;'
       + 'user-select:none;-webkit-user-select:none;touch-action:none;border-radius:24px;min-width:200px">'
       + '🎤 点我读</button>'
-      + '<p class="fs-12 text-sub" style="margin-top:8px">点一下开始，读到的词会变绿打勾；读完了再点一下就打分。读错的词要读对了才能进下一题。</p>'
+      + '<p class="fs-12 text-sub" style="margin-top:8px">先听完上面的示范，再点「点我读」；读到的词会变绿打勾，读完了再点一下就打分。读错的词要读对了才能进下一题。</p>'
       + '<p class="fs-12 text-sub" style="margin-top:2px">不认识的词，点一下就有读音和中文意思。</p>'
       + '<div id="sp-clip-' + mi + '" class="mt-8"></div>'
       + '</div>';
@@ -3173,6 +3358,9 @@ const App = {
 
   _spReadStart(mi, qi, dayIdx) {
     if (this._spReadActive) return;
+    // 门禁双保险：全局捕获已经拦过一次，这里是兜底，保证"没听不会开录"。
+    const gid = this._gid('sp', mi, qi);
+    if (!this._gateOpen(gid)) { this._gateNudge(gid); return; }
     // 正在单独纠错某个词时不让整句录音插进来（两路录音会打架）。
     if (this._wordRepair && this._wordRepair.rec) return;
     // 主动放弃纠错模式，重新整句朗读。
@@ -4149,12 +4337,18 @@ const App = {
     const esc = sent.replace(/'/g, "\\'");
     Recorder.warmUp(); Api.warmup();
 
+    // 先听再读：句子本身就是那颗"听"的按钮 —— 点它播一遍完整示范，
+    // 播完才解锁下面的跟读。孩子不用先找一个喇叭图标，直觉就是点句子。
+    const gid = this._gid('sentg', mi, si);
     let html = '<div class="sent-step">';
     html += '<div class="sent-progress">第 ' + (si + 1) + ' / ' + sents.length + ' 句</div>';
     html += '<div class="sent-text tap-speak-sm" id="sent-' + mi + '-' + si + '"'
-         + ' onclick="App.speak(\'' + esc + '\')" title="点一下听朗读">' + sent + '</div>';
-    html += '<div class="sent-hint">先点句子听一遍，再按住下面的按钮跟读</div>';
-    html += '<button class="word-read-btn hold-target" id="sent-btn-' + mi + '-' + si + '"'
+         + ' data-gate="' + gid + '" data-listen="1" data-nolookup="1"'
+         + ' data-say="' + this._escHtml(sent) + '"'
+         + ' title="点一下，先听一遍示范">' + sent + '</div>';
+    html += '<div class="sent-hint">先点句子完整听一遍，再点下面的按钮跟读</div>';
+    html += '<button class="word-read-btn hold-target gate-locked" data-gate="' + gid + '"'
+         + ' id="sent-btn-' + mi + '-' + si + '"'
          + ' onpointerdown="App._readSentence(event,' + mi + ',' + si + ')"'
          + ' onpointerup="App._holdEnd(event)" onpointercancel="App._holdEnd(event)"'
          + ' oncontextmenu="return false">按住跟读</button>';
@@ -4166,12 +4360,16 @@ const App = {
     // still inside the tap. iOS Safari only allows playback from within the
     // synchronous call stack of a user gesture — a setTimeout here worked on
     // desktop and silently did nothing on iPhone.
+    // 这一遍自动示范播完，同样算"听过了"，把门禁一起放行。
     this._speakOnRender = sent;
+    this._speakOnRenderGate = gid;
     return html;
   },
 
   _readSentence(ev, mi, si) {
     const self = this;
+    const gid = this._gid('sentg', mi, si);
+    if (!this._gateOpen(gid)) { this._gateNudge(gid); return; }   // 先听再读
     Api.warmup();                              // 手指按下就把连接热好
     const m = HOMEWORK_DATA[this.state.currentDay].modules[mi];
     const sent = this._splitSentences(m.passage)[si] || '';
@@ -4537,9 +4735,17 @@ const App = {
     html += this._wordImage(word, true);
     html += '<div class="vocab-word">' + word.word + '</div>';
     html += '<div class="vocab-phonetic">' + word.phonetic + '</div>';
-    html += '<div class="read-instruction">按住每个格子读，松开结束</div>';
+    html += '<div class="read-instruction">先听完示范，再按住每个格子读，松开结束</div>';
 
-    html += '<div class="spell-row" id="spell-row-' + mi + '">';
+    // 先听再读：这一排格子由一个门禁统管。点「先听一遍」会从上到下依次播
+    // 每个字母（音节）再播整词，听完这串才解锁，孩子才知道每个格子该发什么音。
+    var gid = this._gid('spellg', mi);
+    var seq = units.map(function(u) { return kind === 'letter' ? String(u) : u; }).concat([word.word]);
+    html += '<div class="gate-bar"><button type="button" class="gate-listen" data-gate="' + gid
+         + '" data-seq="' + this._escHtml(seq.join('|')) + '">🔊 先听一遍（'
+         + (kind === 'letter' ? '逐字母 + 整词' : '按音节 + 整词') + '）</button></div>';
+
+    html += '<div class="spell-row gate-locked" id="spell-row-' + mi + '" data-gate="' + gid + '">';
     units.forEach(function(u, i) {
       html += '<div class="spell-box hold-target" id="spell-' + mi + '-' + i + '"'
            + ' onpointerdown="App._readUnit(event,' + mi + ',' + i + ')"'
@@ -4566,6 +4772,8 @@ const App = {
 
   _readUnit(ev, mi, idx) {
     var self = this;
+    var gid = this._gid('spellg', mi);
+    if (!this._gateOpen(gid)) { this._gateNudge(gid); return; }   // 先听再读
     var el = document.getElementById('spell-' + mi + '-' + idx);
     if (!el) return;
     var label = el.textContent.trim();
@@ -4608,6 +4816,8 @@ const App = {
 
   async _readFullWord(ev, mi) {
     var self = this;
+    var gid = this._gid('spellg', mi);
+    if (!this._gateOpen(gid)) { this._gateNudge(gid); return; }   // 先听再读
     var el = document.getElementById('spell-word-' + mi);
     var status = document.getElementById('spell-status-' + mi);
     var wordText = this._spell.word;
@@ -4704,10 +4914,14 @@ const App = {
     var instr = document.querySelector('.read-instruction');
     if (instr) instr.textContent = '按住不放，把下面的字母和单词连着读一遍';
 
-    var html = '<div class="cont-seq">' + seq.map(function(x, i) {
+    // 先听再读：连读也要先听一遍完整串法，孩子才知道"连着读"是什么节奏
+    var cgid = this._gid('contg', mi);
+    var html = '<div class="gate-bar"><button type="button" class="gate-listen" data-gate="' + cgid
+         + '" data-seq="' + this._escHtml(seq.join('|')) + '">🔊 先听一遍（连起来读）</button></div>';
+    html += '<div class="cont-seq gate-locked" data-gate="' + cgid + '">' + seq.map(function(x, i) {
       return '<span class="cont-item" id="cont-' + mi + '-' + i + '">' + x + '</span>';
     }).join('') + '</div>';
-    html += '<button class="word-read-btn hold-target" id="cont-btn-' + mi + '"'
+    html += '<button class="word-read-btn hold-target gate-locked" data-gate="' + cgid + '" id="cont-btn-' + mi + '"'
          + ' onpointerdown="App._readContinuous(event,' + mi + ')"'
          + ' onpointerup="App._holdEnd(event)" onpointercancel="App._holdEnd(event)"'
          + ' oncontextmenu="return false">按住连续读</button>';
@@ -4718,6 +4932,8 @@ const App = {
 
   _readContinuous(ev, mi) {
     var self = this;
+    var cgid = this._gid('contg', mi);
+    if (!this._gateOpen(cgid)) { this._gateNudge(cgid); return; }   // 先听再读
     var sp = this._spell;
     var btn = document.getElementById('cont-btn-' + mi);
     var status = document.getElementById('cont-status-' + mi);
@@ -5306,13 +5522,17 @@ const App = {
          + sents.length + ' 句才能进入下一题。</div>';
     html += '<div class="wr-progress" id="wr-progress-' + mi + '"></div>';
     sents.forEach((s, si) => {
-      const esc = s.replace(/'/g, "\\'");
       const ok = !!st.passed[si];
+      // 先听再读：句子本身是"听"入口，点它播一遍示范，播完才解锁跟读。
+      const gid = this._gid('wrg', mi, si);
       html += '<div class="wr-item' + (ok ? ' done' : '') + '" id="wr-item-' + mi + '-' + si + '">';
-      html += '<div class="wr-sent tap-speak-sm" onclick="App.speak(\'' + esc + '\')" title="点一下听朗读">'
+      html += '<div class="wr-sent tap-speak-sm" data-gate="' + gid + '" data-listen="1"'
+           + ' data-nolookup="1"'
+           + ' data-say="' + this._escHtml(s) + '" title="点一下，先听一遍示范">'
            + '<span class="wr-no">' + (si + 1) + '</span>' + s
            + '<span class="wr-flag">' + (ok ? '✅' : '') + '</span></div>';
-      html += '<button class="word-read-btn hold-target" id="wr-btn-' + mi + '-' + si + '"'
+      html += '<button class="word-read-btn hold-target gate-locked" data-gate="' + gid + '"'
+           + ' id="wr-btn-' + mi + '-' + si + '"'
            + ' onpointerdown="App._readWritingSentence(event,' + mi + ',' + si + ')"'
            + ' onpointerup="App._holdEnd(event)" onpointercancel="App._holdEnd(event)"'
            + ' oncontextmenu="return false">' + (ok ? '重读这句' : '按住跟读') + '</button>';
@@ -5329,6 +5549,8 @@ const App = {
 
   _readWritingSentence(ev, mi, si) {
     const self = this;
+    const gid = this._gid('wrg', mi, si);
+    if (!this._gateOpen(gid)) { this._gateNudge(gid); return; }   // 先听再读
     Api.warmup();                              // 手指按下就把连接热好
     const m = HOMEWORK_DATA[this.state.currentDay].modules[mi];
     const sent = this._writingSentences(m)[si] || '';
@@ -5550,10 +5772,16 @@ const App = {
   _flushSpeakOnRender() {
     this._applyStepLock();
     var sent = this._speakOnRender;
+    var gate = this._speakOnRenderGate;
     this._speakOnRender = null;
+    this._speakOnRenderGate = null;
     if (!sent) return;
-    if (this._ttsUnlocked) this.speak(sent);
-    else this._pendingSpeak = sent;
+    var self = this;
+    // 这一遍系统自动示范播完，就当作"听过"，顺手把门禁放行 —— 孩子确实是
+    // 听着示范进来的，没必要让他再点一次才解锁。
+    var opts = gate ? { onDone: function() { self._gateUnlock(gate); } } : undefined;
+    if (this._ttsUnlocked) this.speak(sent, opts);
+    else { this._pendingSpeak = sent; this._pendingSpeakGate = gate; }
   },
 
   nextStep() {
@@ -6087,16 +6315,18 @@ const App = {
     const sid = 'hr-' + mi + '-' + qi;
     const stid = 'qr-status-' + mi + '-' + qi;
     const sentid = 'rd-sent-' + mi + '-' + qi;
+    const gid = this._gid('hrg', mi, qi);
     followEl.innerHTML = '<div class="speak-record show" style="text-align:center">'
       + '<p class="fs-12 text-sub">请朗读下面这句完整的话（问句和答案都读出来）：</p>'
       + '<div class="rd-sentence" id="' + sentid + '">' + this._readSentenceHtml(sentence) + '</div>'
       + '<div class="rd-live-hint" id="rd-live-' + mi + '-' + qi + '"></div>'
+      + '<div class="gate-bar">' + this._gateListenHtml(gid, sentence, '🔊 先听一遍示范') + '</div>'
       + '<div id="' + stid + '" style="min-height:18px;margin:6px 0;color:var(--text-sub);font-size:14px"></div>'
-      + '<button id="' + sid + '" class="speak-btn qr-hold-btn" '
+      + '<button id="' + sid + '" class="speak-btn qr-hold-btn gate-locked" data-gate="' + gid + '" '
       + 'style="background:var(--primary);margin-top:8px;font-size:18px;padding:18px 32px;'
       + 'user-select:none;-webkit-user-select:none;touch-action:none;border-radius:24px;min-width:200px">'
       + '🎤 点我读</button>'
-      + '<p class="fs-12 text-sub" style="margin-top:8px">点一下开始，读到的词会变绿打勾；读完了再点一下就打分。读错的词要读对了才能进下一题。</p>'
+      + '<p class="fs-12 text-sub" style="margin-top:8px">先听完上面的示范，再点「点我读」；读到的词会变绿打勾，读完了再点一下就打分。读错的词要读对了才能进下一题。</p>'
       + '<p class="fs-12 text-sub" style="margin-top:2px">不认识的词，点一下就有读音和中文意思。</p>'
       + '</div>';
     const btn = document.getElementById(sid);
@@ -6184,10 +6414,101 @@ const App = {
     });
   },
 
-  // 按逐词对齐结果给句子上色。live=true 时只标"读对了"（绿）并把光标停在
-  // 下一个词上 —— 实时阶段识别难免听岔，这时候就飘红会冤枉孩子，反而让他
-  // 不敢读。红色只在最终结果里出现，那才作数。
+  // ===== 实时逐词高亮：只回答一个问题 ——「他现在读到第几个词」===========
+  //
+  // 这里和出分是两条完全不同的路，分开看：
+  //   实时（正在读） —— 用的就是下面这条"单调前缀推进"。识别出一个新词就把
+  //                    位置往前推一格，永不回退，不解释后半句。
+  //   出分（读完了） —— 才走 _markReadProgress 里那套全局对齐，逐词判对错。
+  //
+  // 为什么实时不能沿用全局对齐：Levenshtein 算的是"对整句话的最优解释"。孩子
+  // 才读到一半，它已经把后半句一起拉进来匹配了，最优解常常是"把中间几个词判成
+  // 漏读"——落到界面上就是光标卡住不动、或者来回跳，看上去就是高亮慢了半拍、
+  // 不跟嘴。前缀推进只做加法，识别到哪就推到哪，天然跟手，而且复杂度从 O(n·m)
+  // 掉到 O(m·窗口)，interim 结果一秒来十次也扛得住。
+  //
+  // 识别本身有噪声（cat 被听成 cut、多吐一个词），这一层刻意"听不出来就不动"：
+  // 没匹配上的当噪声跳过，光标停在那儿等孩子重读，而不是乱标红冤枉人。
+  _liveRaf: null,
+  _livePending: null,
+
+  // interim 结果可能一帧来好几次，合并到每帧最多画一次，省掉多余的重排
+  _liveFlush(mi, qi, sentence, spoken) {
+    this._livePending = { mi: mi, qi: qi, sentence: sentence, spoken: spoken };
+    if (this._liveRaf) return;
+    const self = this;
+    const raf = window.requestAnimationFrame || function(cb) { return setTimeout(cb, 16); };
+    this._liveRaf = raf(function() {
+      self._liveRaf = null;
+      const p = self._livePending;
+      self._livePending = null;
+      if (p) self._liveAdvance(p.mi, p.qi, p.sentence, p.spoken);
+    });
+  },
+
+  // 纯计算，不碰 DOM：目标词序列 T 对上已说词序列 S，回答两件事 ——
+  // 哪些目标词确实读到了（hit），以及嘴巴推进到了第几个词（cursor）。
+  // 规则只有一条：cursor 只能前进。识别出一个新词就往前走一格，找不着就当
+  // 噪声跳过。绝不回退、绝不重排，所以光标不会来回跳。
+  _advanceCursor(T, S, WINDOW) {
+    const hit = new Array(T.length).fill(false);
+    let cursor = 0;
+    for (let si = 0; si < S.length; si++) {
+      const w = S[si];
+      const end = Math.min(T.length, cursor + WINDOW);
+      let idx = -1;
+      for (let k = cursor; k < end; k++) {
+        if (T[k] === w) { idx = k; break; }
+      }
+      if (idx < 0) continue;                   // 识别噪声，跳过，光标不动
+      hit[idx] = true;
+      cursor = idx + 1;                        // 单调前进，绝不回退
+    }
+    return { hit: hit, cursor: cursor };
+  },
+
+  _liveAdvance(mi, qi, sentence, spoken) {
+    const panel = document.getElementById('rd-sent-' + mi + '-' + qi);
+    if (!panel) return;
+    const spans = panel.querySelectorAll('.rd-w');
+    if (!spans.length) return;
+
+    const T = this._tokens(sentence);
+    const S = this._tokens(spoken || '');
+    if (!T.length) return;
+
+    const WINDOW = 3;                          // 往后看几个词，容忍多说/漏说
+    const r = this._advanceCursor(T, S, WINDOW);
+    const hit = r.hit;
+    const cursor = r.cursor;
+    let k = 0;
+    let curSet = false;
+    spans.forEach(function(sp) {
+      const n = parseInt(sp.getAttribute('data-n') || '1', 10) || 1;
+      const k0 = k;
+      k += n;
+      if (k0 >= T.length) { sp.classList.remove('rd-ok', 'rd-cur'); return; }
+      const seg = hit.slice(k0, Math.min(k, T.length));
+      const done = seg.length > 0 && seg.every(Boolean);
+      sp.classList.toggle('rd-ok', done);
+      // 光标 = 第一个还没读对的词。但如果它已经被嘴甩下两个词以上，那多半是
+      // 这一处识别听岔了（孩子其实读对了），光标继续跟着嘴走，不为一个噪声卡住。
+      const stale = (k0 + n) <= (cursor - 2);
+      if (!done && !stale && !curSet) { sp.classList.add('rd-cur'); curSet = true; }
+      else sp.classList.remove('rd-cur');
+    });
+
+    // 长句子会折行，光标跑出视野孩子就看不见自己读到哪了 —— 轻轻带回视野。
+    const cur = panel.querySelector('.rd-cur');
+    if (cur && cur.scrollIntoView) {
+      try { cur.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) {}
+    }
+  },
+
+  // 按逐词对齐结果给句子上色。live=true 直接交给前缀推进那条快路；live=false
+  // 才做全局对齐，逐词判 ok / wrong / missing，红色只在这时候出现才作数。
   _markReadProgress(mi, qi, sentence, spoken, live) {
+    if (live) { this._liveAdvance(mi, qi, sentence, spoken); return null; }
     const panel = document.getElementById('rd-sent-' + mi + '-' + qi);
     if (!panel) return null;
     const spans = panel.querySelectorAll('.rd-w');
@@ -6215,13 +6536,8 @@ const App = {
         return;
       }
       if (bad) {
-        if (live) {
-          // 实时阶段先不标红，只把光标停在这个词上让孩子再读清楚些。
-          if (!curSet) { sp.classList.add('rd-cur'); curSet = true; }
-        } else {
-          sp.classList.add('rd-bad');
-          localBad.forEach(function(x) { badWords.push(x); });
-        }
+        sp.classList.add('rd-bad');
+        localBad.forEach(function(x) { badWords.push(x); });
       } else {
         sp.classList.add('rd-ok');
       }
@@ -6268,16 +6584,18 @@ const App = {
     cur.classList.add('rd-cur');
     const word = (cur.textContent || '').replace(/[^A-Za-z'\-]/g, '');
     R.word = word;
+    // 每个词单独一道门禁：换词就重新要求先听一遍（id 里带上词本身）
+    const wgid = this._gid('wrep', R.mi, R.qi, word);
     if (statusEl) {
       statusEl.innerHTML =
         '<div class="rd-repair-card">'
         + '<div class="rd-repair-word">' + this._escHtml(word)
         + '<span class="rd-repair-zh" id="wrep-zh"></span></div>'
-        + '<div class="fs-12 text-sub">把红色波浪线的词逐个读对了，才能进下一题（也可以点下面的按钮重读整句）</div>'
-        + '<div style="display:flex;gap:8px;justify-content:center;margin-top:10px;flex-wrap:wrap">'
-        + '<button class="speak-btn" style="background:var(--primary)" onclick="App._wordRepairHear()">🔊 听这个词</button>'
-        + '<button class="speak-btn" style="background:var(--warning)" onclick="App._wordRepairHearSentence()">🔊 听整句</button>'
-        + '<button class="speak-btn" id="wrep-btn" style="background:var(--danger);font-size:18px;padding:16px 28px;border-radius:22px;user-select:none;-webkit-user-select:none;touch-action:none">🎤 点我读这个单词</button>'
+        + '<div class="fs-12 text-sub">先把这个词听一遍，再点下面读它；读对了才能进下一题（也可以重读整句）</div>'
+        + '<div class="gate-bar">' + this._gateListenHtml(wgid, word, '🔊 先听这个词') + '</div>'
+        + '<div style="display:flex;gap:8px;justify-content:center;margin-top:8px;flex-wrap:wrap">'
+        + '<button class="speak-btn" style="background:var(--primary)" onclick="App._wordRepairHearSentence()">🔊 听整句</button>'
+        + '<button class="speak-btn gate-locked" data-gate="' + wgid + '" id="wrep-btn" style="background:var(--danger);font-size:18px;padding:16px 28px;border-radius:22px;user-select:none;-webkit-user-select:none;touch-action:none">🎤 点我读这个单词</button>'
         + '</div>'
         + '<div id="wrep-hint" class="fs-12 text-sub" style="margin-top:8px;min-height:18px"></div>'
         + '</div>';
@@ -6317,6 +6635,8 @@ const App = {
   _wordRepairTap() {
     const R = this._wordRepair;
     if (!R) return;
+    const wgid = this._gid('wrep', R.mi, R.qi, R.word);
+    if (!this._gateOpen(wgid)) { this._gateNudge(wgid); return; }   // 先听再读
     if (R.rec) this._wordRepairStop();
     else this._wordRepairRec();
   },
@@ -6416,7 +6736,7 @@ const App = {
     rec.interimResults = true;
     rec.maxAlternatives = 1;
 
-    const live = { rec: rec, final: '', interim: '', stopped: false, errored: false };
+    const live = { rec: rec, final: '', interim: '', stopped: false, errored: false, _hintAt: 0 };
     this._liveRec = live;
 
     rec.onresult = function(ev) {
@@ -6430,9 +6750,16 @@ const App = {
       live.interim = inter;
       const spoken = (live.final + ' ' + live.interim).trim();
       if (!spoken) return;
-      const hint = document.getElementById('rd-live-' + mi + '-' + qi);
-      if (hint) hint.textContent = '🔵 听到：' + spoken;
-      self._markReadProgress(mi, qi, sentence, spoken, true);
+      // 高亮先走 —— 这是孩子盯着看的东西，一帧都不能等。
+      self._liveFlush(mi, qi, sentence, spoken);
+      // "听到：…" 是旁白，节流到 200ms 一次。每个 interim 都写一遍
+      // textContent 会白触发一次重排，把光标那点响应拖慢。
+      const now = Date.now();
+      if (!live._hintAt || now - live._hintAt > 200) {
+        live._hintAt = now;
+        const hint = document.getElementById('rd-live-' + mi + '-' + qi);
+        if (hint) hint.textContent = '🔵 听到：' + spoken;
+      }
     };
 
     rec.onerror = function(ev) {
@@ -6478,6 +6805,9 @@ const App = {
 
   _holdReadStart(mi, qi, dayIdx, sentence) {
     if (this._holdReadActive) return;
+    // 门禁双保险：这一句必须先听过示范
+    const gid = this._gid('hrg', mi, qi);
+    if (!this._gateOpen(gid)) { this._gateNudge(gid); return; }
     // 正在单独纠错某个词时不让整句录音插进来（两路录音会打架）。
     if (this._wordRepair && this._wordRepair.rec) return;
     // 主动放弃纠错模式，重新整句朗读。

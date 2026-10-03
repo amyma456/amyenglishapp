@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="80">
+<meta name="app-version" content="81">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon.svg">
 <title>Amy老师英语打卡平台</title>
@@ -490,13 +490,47 @@ body.stage-mode .content-area{padding-block:0}
 /* 句子拆成一个词一个 span。读到的词变绿打勾，读错的词红色波浪线。
    孩子一眼能看出自己读到哪、哪个词没读对。 */
 .rd-sentence{font-size:20px;line-height:2.2;margin:10px 0 4px;font-weight:600;color:var(--text);word-break:break-word}
-.rd-w{display:inline-block;border-radius:6px;padding:0 3px;transition:color .12s,background .12s}
-.rd-w.rd-cur{background:var(--primary-light);color:var(--primary-dark);animation:rdPulse 1s ease-in-out infinite}
-@keyframes rdPulse{0%,100%{background:var(--primary-light)}50%{background:#FFE0C7}}
+/* 过渡压到 70ms：实时高亮要"跟得上嘴"，超过 100ms 的渐变看起来就是慢半拍 */
+.rd-w{display:inline-block;border-radius:6px;padding:0 3px;
+  transition:color .07s linear,background .07s linear,box-shadow .07s linear}
+/* 光标（他现在读到哪儿）：底色 + 一圈光晕，比只换底色更容易一眼看到 */
+.rd-w.rd-cur{background:var(--primary-light);color:var(--primary-dark);
+  box-shadow:0 0 0 2px rgba(255,138,0,.25);animation:rdPulse .85s ease-in-out infinite}
+@keyframes rdPulse{0%,100%{background:var(--primary-light);box-shadow:0 0 0 2px rgba(255,138,0,.22)}
+  50%{background:#FFE0C7;box-shadow:0 0 0 3px rgba(255,138,0,.34)}}
 .rd-w.rd-ok{color:var(--success)}
 .rd-w.rd-ok::after{content:'✓';font-size:11px;vertical-align:super;margin-left:1px;opacity:.85}
 .rd-w.rd-bad{color:var(--danger);text-decoration:underline wavy var(--danger);text-underline-offset:4px}
 .rd-live-hint{font-size:11px;color:var(--teal);margin-top:2px}
+
+/* ---- 先听后读门禁 ---------------------------------------------------- */
+/* 平台统一规则：凡是要求朗读的地方，都要先把这句的示范听完整才解锁。
+   没听的控件压暗（但还点得动 —— 点它会抖一下并说明原因，不会让人以为坏了）；
+   听完「🔊 先听一遍」那一下才亮起来。 */
+.gate-bar{display:flex;align-items:center;justify-content:center;gap:10px;
+  flex-wrap:wrap;margin:12px 0 2px}
+.gate-listen{background:var(--warning);color:#fff;border:0;cursor:pointer;
+  padding:10px 20px;border-radius:var(--radius-pill);font-size:15px;font-weight:600;
+  display:inline-flex;align-items:center;gap:6px;line-height:1.2;
+  box-shadow:0 2px 0 rgba(0,0,0,.06)}
+.gate-listen.playing{animation:gateListenBlink .9s ease-in-out infinite}
+@keyframes gateListenBlink{0%,100%{opacity:1}50%{opacity:.58}}
+.gate-listen.gate-hint-glow{animation:gateGlow 1.2s ease-in-out}
+@keyframes gateGlow{0%,100%{box-shadow:0 0 0 0 rgba(255,138,0,.55)}
+  50%{box-shadow:0 0 0 9px rgba(255,138,0,.16)}}
+.gate-locked{opacity:.42;filter:grayscale(.45)}
+/* 按钮上加个小锁，一看就知道"还不能点"，不用去猜为什么按了没反应 */
+button.gate-locked::before{content:'🔒 '}
+/* 句子当听入口时，正在播 + 被提示时给点反馈（句子不能吞 touchstart，只能靠这个） */
+[data-listen="1"].playing{opacity:.6}
+.tap-speak-sm.gate-hint-glow,.wr-sent.gate-hint-glow,.sent-text.gate-hint-glow{animation:gateGlow 1.2s ease-in-out}
+.gate-shake{animation:gateShake .42s cubic-bezier(.36,.07,.19,.97)}
+@keyframes gateShake{10%,90%{transform:translateX(-2px)}20%,80%{transform:translateX(3px)}
+  30%,50%,70%{transform:translateX(-5px)}40%,60%{transform:translateX(5px)}}
+
+/* 拼读格子的门禁：整排格子先听后读，锁着的时候一起压暗 */
+.spell-row.gate-locked,.cont-seq.gate-locked{opacity:.42;filter:grayscale(.45)}
+.spell-row.gate-locked .spell-box,.cont-seq.gate-locked .cont-item{pointer-events:auto}
 .rd-retry{margin-top:10px;padding:10px 12px;border-radius:var(--radius-sm);background:var(--warning-light);font-size:13px;color:var(--text);text-align:left}
 .rd-retry b{color:var(--danger)}
 .rd-retry .rd-again-btn{margin-top:8px;display:inline-block}
@@ -891,12 +925,12 @@ body.stage-mode .content-area{padding-block:0}
   <div class="modal" id="modal-box"></div>
 </div>
 
-<script src="cloud.js?v=65"></script>
-<script src="data.js?v=65"></script>
+<script src="cloud.js?v=81"></script>
+<script src="data.js?v=81"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
-<script src="recorder.js?v=65"></script>
-<script src="api.js?v=65"></script>
-<script src="app.js?v=65"></script>
+<script src="recorder.js?v=81"></script>
+<script src="api.js?v=81"></script>
+<script src="app.js?v=81"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {

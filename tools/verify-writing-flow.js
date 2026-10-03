@@ -277,7 +277,10 @@ const rHtml = App.renderWritingRead(m, MI, DAY);
 const sents = App._writingSentences(m);
 ok((rHtml.match(/class="wr-item/g) || []).length === sents.length, sents.length + ' 句都渲染成一张卡');
 ok((rHtml.match(/id="wr-btn-/g) || []).length === sents.length, '每句都有一个「按住跟读」按钮');
-ok((rHtml.match(/App\.speak\('/g) || []).length === sents.length, '每句都能点开听一遍');
+// v81：听入口从 onclick="App.speak(...)" 换成 data-listen —— 点句子听示范，
+// 播完由门禁统一解锁跟读按钮（见 App._bindGateGuard）。
+ok((rHtml.match(/data-listen="1"/g) || []).length === sents.length, '每句都能点开听一遍（句子即听入口）');
+ok((rHtml.match(/gate-locked/g) || []).length === sents.length, '没听之前，每句的跟读按钮都锁着（先听再读）');
 ok(rHtml.includes(sents[0]), '第一句是「' + sents[0] + '」');
 ok(rHtml.includes('读对全部 ' + sents.length + ' 句才能进入下一题'), '写明要读对全部句子');
 ok(rHtml.includes('wr-cn') && !rHtml.includes('全文中文翻译'), '还没读完 → 不出中文翻译');
@@ -286,6 +289,19 @@ ok(App._writingReadGateOpen() === false, 'nextStep 硬门禁：不放行');
 
 // 6. 逐句朗读：60 分门槛
 console.log('\n--- 6. 逐句朗读（' + App.PASS_SCORE + ' 分门槛）---');
+
+// v81 加了「先听再读」：没听过示范，跟读要被挡在录音之外。
+// 这里绕过全局捕获，直接调跟读函数，验的是函数内那道兜底。
+let gateBlocked = false;
+App._holdStart = () => { gateBlocked = true; };
+App._readWritingSentence({ preventDefault() {} }, MI, 0);
+ok(!gateBlocked, '没听示范 → 跟读被门禁挡下，不会开录');
+ok(App._gateOpen(App._gid('wrg', MI, 0)) === false, '第一句的门禁仍然是锁的');
+
+// 模拟孩子点句子听完了：逐句解锁，之后才测朗读本身
+sents.forEach((_, si) => App._gateUnlock(App._gid('wrg', MI, si)));
+ok(App._gateOpen(App._gid('wrg', MI, 0)) === true, '听完示范 → 门禁解锁');
+
 let cb = null;
 App._holdStart = (ev, key, label, status, onDone) => { cb = onDone; };
 const read = (si, spoken) => {
