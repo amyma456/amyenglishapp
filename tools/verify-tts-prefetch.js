@@ -221,6 +221,36 @@ const reset = () => {
   ok(q21 > 0 || q22 > 0, '当前屏和下一屏至少留住了要紧的部分（当前 ' + q21 + ' 句 / 下一屏 ' + q22 + ' 句）');
   ok(localTexts().filter(t => t.indexOf('wide16 ') === 0).length === 0, '走过最久的那一屏最先放掉');
 
+  console.log('\n=== 8. 单词/字母也预取（词汇「先听一遍」串行播不能一段段等网络）===');
+  reset();
+  App.prefetchTts('a'); App.prefetchTts('apple');
+  ok(requested.indexOf('a') !== -1, '单个字母也进了预取（请求已发出）');
+  ok(requested.indexOf('apple') !== -1, '单词也进了预取（请求已发出）');
+  await settle();
+  ok(!!App._ttsBlobs['a'] && !!App._ttsBlobs['apple'], '字母和单词的音频都能落到本地');
+
+  console.log('\n=== 9. 门禁听入口一出现，示范就预取（点了就该 0 延迟）===');
+  reset();
+  const gateBox = mkEl('div');
+  const gateBtn = mkEl('button');
+  gateBtn._cls.add('gate-listen');
+  gateBtn.setAttribute('data-gate', 'g1');
+  gateBtn.setAttribute('data-say', 'gate demo sentence here');
+  const gateSeq = mkEl('button');
+  gateSeq._cls.add('gate-listen');
+  gateSeq.setAttribute('data-gate', 'g2');
+  gateSeq.setAttribute('data-seq', 'b|a|t|bat');
+  gateBox.querySelectorAll = sel => (sel === '[data-gate]' ? [gateBtn, gateSeq] : []);
+  App._syncGates(gateBox);
+  ok(requested.indexOf('gate demo sentence here') !== -1, '「先听一遍」的示范句已发出预取请求');
+  ['b', 'a', 't', 'bat'].forEach(x =>
+    ok(requested.indexOf(x) !== -1, '字母串里的 "' + x + '" 也发出了预取请求'));
+  await settle();
+  const reqBefore = requested.length;
+  App._syncGates(gateBox);                 // 再触发一次不得重复取
+  await settle();
+  ok(requested.length === reqBefore, '重复触发 _syncGates 不会重复发请求（多发 ' + (requested.length - reqBefore) + ' 个）');
+
   console.log('\n' + (fail ? '❌ ' + fail + ' 项未通过' : '✅ 全部通过'));
   process.exit(fail ? 1 : 0);
 })();

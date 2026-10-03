@@ -1021,6 +1021,11 @@ const App = {
       for (var k = 0; k < copts.length; k++) {
         if (copts[k]) this.prefetchTts(String(copts[k]), fromIdx);
       }
+      // 当前屏自己的示范句也要：口语跟读的「先听一遍」读的是问句+答句整句，
+      // 阅读逐句的听入口就是那句话本身 —— 孩子落在这屏的头几秒就会去点，
+      // 不能等点了才现场生成。
+      var curSay = this._stepSpeechText(steps, dayIdx, fromIdx);
+      if (curSay) this.prefetchTts(curSay, fromIdx);
       // writingread 这一屏的句子孩子会一句句点着听，先全取回来
       var curTaps = this._stepTapSpeechTexts(steps, dayIdx, fromIdx);
       for (var n = 0; n < curTaps.length; n++) this.prefetchTts(curTaps[n], fromIdx);
@@ -1040,8 +1045,9 @@ const App = {
     var t = this._ttsText(text);
     if (!t) return;
     t = t.substring(0, 500).trim();
-    // 单个单词走的是有道的词典接口，不是我们自己的端点，不在这里预取。
-    if (!/\s/.test(t)) return;
+    // 单词/字母也要预取：词汇模块"先听一遍"是串行播 5~6 段（逐字母 + 整词），
+    // 每段现场去取的话中间全是空档，孩子看着格子干等。现在统一走自家端点
+    // （服务端在额度用完时会自动换道有道/百度），取回来存本地，点哪段秒播。
 
     this._ttsBlobs = this._ttsBlobs || {};
     this._ttsPending = this._ttsPending || {};
@@ -1216,8 +1222,10 @@ const App = {
     // Words keep Youdao: that path is the one already known to work.
     // 预取命中就直接播本地 blob —— 不用再等一次网络往返 + 模型生成。
     // 这是"题一出来就开始读"的关键：绝大多数时候音频早就躺在本地了。
-    var cachedTts = (isSentence && self._ttsBlobs) ? self._ttsBlobs[cleanText] : null;
-    var ttsUrl      = isSentence ? (cachedTts || ownTts) : youdao;
+    // 单词/字母也走缓存：词汇模块的"先听一遍"要串行播 5~6 个字母 + 整词，
+    // 每一段都现场去有道取一次的话中间全是空档；预取回来就是一段接一段。
+    var cachedTts = (self._ttsBlobs && self._ttsBlobs[cleanText]) || null;
+    var ttsUrl      = cachedTts || (isSentence ? ownTts : youdao);
     var fallbackUrl = isSentence ? baidu  : baidu;
 
     var timeoutId = null;
@@ -1354,7 +1362,7 @@ const App = {
     // 孩子点下去要读的这句，如果音频正在取、或还排在预取队列里，就等它
     // 一下并让它插队 —— 直接再发一次请求等于两份音频赛跑，还要跟一堆预取
     // 抢浏览器连接，反而更慢。最多等 2.5 秒，等不到就照旧走网络，行为不变。
-    var waitingForPrefetch = isSentence && !cachedTts
+    var waitingForPrefetch = !cachedTts
       && ((self._ttsPending && self._ttsPending[cleanText]) || this._ttsQueued(cleanText));
     if (waitingForPrefetch) {
       this._ttsPrioritize(cleanText);
@@ -1553,8 +1561,21 @@ const App = {
     const scope = root || document;
     const self = this;
     scope.querySelectorAll('[data-gate]').forEach(function(el) {
-      if (el.classList.contains('gate-listen') || el.getAttribute('data-listen') === '1') return;
-      if (self._gates[el.getAttribute('data-gate')]) el.classList.remove('gate-locked');
+      const isListen = el.classList.contains('gate-listen') || el.getAttribute('data-listen') === '1';
+      if (!isListen) {
+        if (self._gates[el.getAttribute('data-gate')]) el.classList.remove('gate-locked');
+        return;
+      }
+      // 听入口一出现就把它要播的东西预取好：孩子点「先听一遍」时音频应该
+      // 已经在本地了，点下去就是 0 延迟，而不是现场等网络生成那两三秒。
+      // prefetchTts 自带去重，这里反复触发也不会重复发请求。
+      const seq = el.getAttribute('data-seq');
+      if (seq) {
+        seq.split('|').forEach(function(item) { if (item) self.prefetchTts(item); });
+      } else {
+        const say = el.getAttribute('data-say');
+        if (say) self.prefetchTts(say);
+      }
     });
   },
 
@@ -1620,12 +1641,22 @@ const App = {
       if (el.dataset.playing === '1') return;          // 正在播，别叠第二遍
       el.dataset.playing = '1';
       el.classList.add('playing');
+      // 点下去当场给反馈：一声轻快的短音 + 按钮字样换掉。示范音频就算
+      // 还在路上，孩子也立刻知道"我点到了，它在放"——而不是干等两三秒
+      // 什么动静都没有。
+      self._playListenCue();
+      let label = null;
+      if (el.classList.contains('gate-listen') && el.innerHTML) {
+        label = el.innerHTML;
+        el.innerHTML = '🔊 示范播放中…';
+      }
       const say = el.getAttribute('data-say') || '';
       const seq = el.getAttribute('data-seq');         // 一串示范（字母→音节→整词）
       const done = function() {
         if (el.dataset.playing !== '1') return;
         el.dataset.playing = '';
         el.classList.remove('playing');
+        if (label !== null) el.innerHTML = label;
         clearTimeout(el._gateTimer);
         self._gateUnlock(gid);
       };
@@ -1780,6 +1811,15 @@ const App = {
       }
     } catch(e) {}
     fire();
+  },
+
+  // 点下「先听一遍」那一瞬的一声轻快短音 —— 告诉孩子"点到了，正在放"。
+  // 示范音频就算还在路上，这一声也是 0 延迟的。
+  _playListenCue() {
+    this._playTone([
+      { f: 880.0, at: 0.00, dur: 0.09, vol: 0.20 },
+      { f: 1174.7, at: 0.06, dur: 0.10, vol: 0.14, type: 'triangle' }
+    ]);
   },
 
   // 选对了：C5 → E5 → G5 三连上行，末尾再补一记高音 C6，干净利落的一声"叮铃"。

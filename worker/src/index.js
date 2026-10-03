@@ -156,6 +156,30 @@ async function gradeTranslation(request, env) {
 const TTS_MODEL = '@cf/deepgram/aura-2-en';
 const TTS_MAX_CHARS = 900;
 
+// 备用通道：Workers AI 的免费额度（每天 10,000 neurons）用完时，AI.run 会抛
+// "4006: you have used up your daily free allocation"，整条 /api/tts 直接 502，
+// 客户端只能走"自家失败→再试第三方"的弯路，孩子点什么都先干等一两秒。
+// 现在服务端就地换道：整句走百度、单词/字母走有道（跟客户端原来的路由一致），
+// 取回来的音频照样写进边缘缓存 —— 全班孩子只有第一人付一次回源的钱。
+async function ttsFallbackAudio(text) {
+  const enc = encodeURIComponent(text);
+  const isSentence = /\s/.test(text.trim());
+  const upstream = isSentence
+    ? 'https://fanyi.baidu.com/gettts?lan=en&text=' + enc + '&spd=3&source=web'
+    : 'https://dict.youdao.com/dictvoice?audio=' + enc + '&type=2';
+  const r = await fetch(upstream, {
+    headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
+  });
+  if (!r.ok) throw new Error('tts_fallback_http_' + r.status);
+  const ct = r.headers.get('content-type') || '';
+  if (!/audio|octet-stream/i.test(ct)) throw new Error('tts_fallback_ct_' + ct);
+  const buf = await r.arrayBuffer();
+  // 上游偶尔把错误页/空响应吐回来（几百字节的 JSON），拿去当音频只会让
+  // <audio> 再抛一次错。太小的当失败处理。
+  if (buf.byteLength < 500) throw new Error('tts_fallback_too_small');
+  return buf;
+}
+
 async function tts(request, env, ctx) {
   const url = new URL(request.url);
   const text = (url.searchParams.get('text') || '').trim();
@@ -167,21 +191,31 @@ async function tts(request, env, ctx) {
   const hit = await cache.match(cacheKey);
   if (hit) return hit;
 
-  let audio;
+  let body = null;
+  let fromFallback = false;
   try {
-    audio = await env.AI.run(TTS_MODEL, { text: text });
+    const audio = await env.AI.run(TTS_MODEL, { text: text });
+    // The binding returns either a ReadableStream or an object holding base64.
+    body = audio;
+    if (audio && typeof audio === 'object' && !(audio instanceof ReadableStream)) {
+      if (audio.audio) {
+        const bin = atob(audio.audio);
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        body = bytes;
+      }
+    }
   } catch (e) {
-    return json({ error: 'tts_failed', detail: String(e && e.message || e) }, 502);
+    body = null;
   }
-
-  // The binding returns either a ReadableStream or an object holding base64.
-  let body = audio;
-  if (audio && typeof audio === 'object' && !(audio instanceof ReadableStream)) {
-    if (audio.audio) {
-      const bin = atob(audio.audio);
-      const bytes = new Uint8Array(bin.length);
-      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-      body = bytes;
+  if (!body) {
+    // 额度用完 / 模型出错：换备用通道。再不行才真的报错，让客户端走
+    // 它自己的第三层兜底（speechSynthesis）。
+    try {
+      body = await ttsFallbackAudio(text);
+      fromFallback = true;
+    } catch (e2) {
+      return json({ error: 'tts_failed', detail: String(e2 && e2.message || e2) }, 502);
     }
   }
 
@@ -189,6 +223,7 @@ async function tts(request, env, ctx) {
     headers: {
       'Content-Type': 'audio/mpeg',
       'Cache-Control': 'public, max-age=31536000, immutable',
+      ...(fromFallback ? { 'X-TTS-Source': 'fallback' } : {}),
     },
   });
   ctx.waitUntil(cache.put(cacheKey, res.clone()));
