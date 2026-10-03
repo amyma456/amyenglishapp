@@ -914,8 +914,22 @@ const App = {
   // 原来每换一题才去 /api/tts 取音频：孩子看到题 → 安静一秒多 → 才开始读。
   // 现在题一渲染出来，就顺手把接下来几句的音频取回本地存成 blob，真正要读的
   // 时候直接播本地文件，起播几乎瞬时。取回来的按文本缓存，重听不再走网络。
-  TTS_PREFETCH_MAX: 20,     // 最多留二十句左右，超出的释放掉，别让内存一直涨
-  TTS_PREFETCH_AHEAD: 5,    // 往前预取几步
+  //
+  // 两条纪律（都是踩过坑换来的）：
+  //
+  //   1. 取的时候排一条队，最多三句同时在路上，永远先取离当前进度最近的
+  //      那几句。原先是把后面五屏一次全甩出去 —— 口语题一屏 5 句（题面 +
+  //      四个选项）就是 25 个请求同时打过去，实测并发到 25 时排在后面的要
+  //      6 秒才回来。而孩子点选项那一刻要的正是其中一两句，预取反倒成了
+  //      拖慢它的原因。
+  //   2. 扔的时候按"离当前进度有多远"，不是按取回来的先后。原先是谁先取
+  //      回来谁先被顶掉，而下一屏的音频恰好是这一轮里最先取回来的 —— 结果
+  //      每一题都是刚预取好就被扔掉，孩子点下去只能重新等网络，看着就是
+  //      "点读反应越来越慢"。
+  // -------------------------------------------------------------------------
+  TTS_PREFETCH_MAX: 30,          // 本地最多留三十句音频，超出的按下述顺序释放
+  TTS_PREFETCH_AHEAD: 5,         // 往前预取几步
+  TTS_PREFETCH_CONCURRENCY: 3,   // 预取请求同时在路上的上限
 
   // 某一步会朗读的英文（和各个 step 渲染时读的是同一份文本）
   _stepSpeechText(steps, dayIdx, i) {
@@ -967,62 +981,159 @@ const App = {
   },
 
   // 当前这一步通常正在播或刚要播，跳过它，只预取后面的。
-  // 但当前这一题的"整句选项"要预取：听力题点错后系统要立刻朗读所选句子，
-  // 等点了再取就得干等网络。后面的题只预取题面本身，选项等翻到那题再取，
-  // 不然一次渲染甩出去二十几个请求，还把本地缓存挤爆。
+  // 但当前这一屏"点了马上要读"的句子必须现在就手上有：孩子点它的那一刻
+  // 不能再去网络要。听力题点错要立刻读所选句子、口语题点完选项要立刻读
+  // 答句、写作朗读那一屏每一句都要点着听，都靠这一步兜住。
   prefetchUpcoming(steps, dayIdx, fromIdx) {
     if (!steps || typeof fetch !== 'function') return;
     var curStep = steps[fromIdx];
-    if (curStep && curStep.kind === 'question') {
+
+    if (curStep) {
       var day0 = HOMEWORK_DATA[dayIdx];
       var cm = day0 && day0.modules && day0.modules[curStep.mi];
       var cq = cm && cm.questions && cm.questions[curStep.qi];
       var copts = (cq && cq.options) || [];
       for (var k = 0; k < copts.length; k++) {
-        if (copts[k] && /\s/.test(String(copts[k]).trim())) this.prefetchTts(String(copts[k]));
+        if (copts[k]) this.prefetchTts(String(copts[k]), fromIdx);
       }
-    } else if (curStep && curStep.kind === 'writingread') {
-      // 这一屏的句子孩子会一句句点着听，先全取回来，点哪句都是秒播
-      var dm = HOMEWORK_DATA[dayIdx] && HOMEWORK_DATA[dayIdx].modules[curStep.mi];
-      var cur = this._writingSentences(dm);
-      for (var n = 0; n < cur.length; n++) this.prefetchTts(cur[n]);
+      // writingread 这一屏的句子孩子会一句句点着听，先全取回来
+      var curTaps = this._stepTapSpeechTexts(steps, dayIdx, fromIdx);
+      for (var n = 0; n < curTaps.length; n++) this.prefetchTts(curTaps[n], fromIdx);
     }
+
     for (var i = fromIdx + 1; i <= fromIdx + this.TTS_PREFETCH_AHEAD; i++) {
-      this.prefetchTts(this._stepSpeechText(steps, dayIdx, i));
+      this.prefetchTts(this._stepSpeechText(steps, dayIdx, i), i);
       var taps = this._stepTapSpeechTexts(steps, dayIdx, i);
-      for (var j = 0; j < taps.length; j++) this.prefetchTts(taps[j]);
+      for (var j = 0; j < taps.length; j++) this.prefetchTts(taps[j], i);
     }
+    this._ttsTrim();
   },
 
-  prefetchTts(text) {
+  // 把一句英文排进预取队列。stepIdx 是"这句话属于第几步"—— 取和扔都靠它
+  // 排序：越靠近孩子当前这一步，越先取、越不容易被释放。
+  prefetchTts(text, stepIdx) {
     var t = this._ttsText(text);
     if (!t) return;
     t = t.substring(0, 500).trim();
     // 单个单词走的是有道的词典接口，不是我们自己的端点，不在这里预取。
     if (!/\s/.test(t)) return;
+
     this._ttsBlobs = this._ttsBlobs || {};
     this._ttsPending = this._ttsPending || {};
-    if (this._ttsBlobs[t] || this._ttsPending[t]) return;
-    this._ttsPending[t] = true;
+    this._ttsBlobStep = this._ttsBlobStep || {};
+
+    var st = (typeof stepIdx === 'number') ? stepIdx
+           : ((this.state && typeof this.state.stepIdx === 'number') ? this.state.stepIdx : 0);
+    var prev = this._ttsBlobStep[t];
+    // 同一句可能在好几屏里都要用，记最早的那一步：走过它才允许释放。
+    this._ttsBlobStep[t] = (typeof prev === 'number') ? Math.min(prev, st) : st;
+
+    if (this._ttsBlobs[t] || this._ttsPending[t]) return;      // 已经取到 / 正在路上
+    var q = this._ttsQueue = this._ttsQueue || [];
+    for (var i = 0; i < q.length; i++) {
+      if (q[i].text === t) return;                             // 已经排在队里
+    }
+    q.push({ text: t, step: st });
+    this._ttsPump();
+  },
+
+  // 队列泵：没到并发上限就再放一句出去，每次挑队里"离当前进度最近"的那句。
+  // 就近优先而不是先进先出，是为了保证孩子在看的这一屏永远排在最前面 ——
+  // 后面几屏晚一点回来没关系，当前这一屏晚一点都不行。
+  _ttsPump() {
+    var q = this._ttsQueue = this._ttsQueue || [];
+    this._ttsRunning = this._ttsRunning || 0;
     var self = this;
-    fetch('/api/tts?text=' + encodeURIComponent(t))
-      .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.blob(); })
-      .then(function(b) {
-        self._ttsBlobs[t] = URL.createObjectURL(b);
-        self._ttsBlobOrder = self._ttsBlobOrder || [];
-        self._ttsBlobOrder.push(t);
-        while (self._ttsBlobOrder.length > self.TTS_PREFETCH_MAX) {
-          var old = self._ttsBlobOrder.shift();
-          if (old === t) { self._ttsBlobOrder.push(old); break; }  // 别把自己淘汰掉
-          var u = self._ttsBlobs[old];
-          delete self._ttsBlobs[old];
-          if (u) { try { URL.revokeObjectURL(u); } catch (e) {} }
-        }
-      })
-      .catch(function() {
-        // 取不到就照旧走网络路径，孩子那边不用等、也不需要知道
-      })
-      .then(function() { delete self._ttsPending[t]; });
+    while (this._ttsRunning < this.TTS_PREFETCH_CONCURRENCY && q.length) {
+      var best = 0;
+      for (var i = 1; i < q.length; i++) {
+        if (q[i].step < q[best].step) best = i;
+      }
+      var job = q.splice(best, 1)[0];
+      var t = job.text;
+      if (this._ttsBlobs[t]) continue;                          // 等的时候已经到手了
+      this._ttsRunning++;
+      this._ttsPending[t] = true;
+      fetch('/api/tts?text=' + encodeURIComponent(t))
+        .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.blob(); })
+        .then(function(b) {
+          self._ttsBlobs[t] = URL.createObjectURL(b);
+          self._ttsBlobOrder = self._ttsBlobOrder || [];
+          self._ttsBlobOrder.push(t);
+          self._ttsTrim();
+        })
+        .catch(function() {
+          // 取不到就照旧走网络路径，孩子那边不用等、也不需要知道
+        })
+        .then(function() {
+          delete self._ttsPending[t];
+          self._ttsRunning--;
+          self._ttsPump();
+        });
+    }
+  },
+
+  // 孩子正在等这一句（他刚点下去）—— 把它插到队头，别排在一堆预取后面。
+  _ttsPrioritize(text) {
+    var q = this._ttsQueue;
+    if (!q) return;
+    for (var i = 0; i < q.length; i++) {
+      if (q[i].text === text) { q[i].step = -999; this._ttsPump(); return; }
+    }
+  },
+
+  _ttsQueued(text) {
+    var q = this._ttsQueue;
+    if (!q) return false;
+    for (var i = 0; i < q.length; i++) {
+      if (q[i].text === text) return true;
+    }
+    return false;
+  },
+
+  // 释放本地音频。扔的顺序不是"谁先取回来谁先走" —— 那正好会把孩子马上
+  // 要用的那一句先扔掉（下一屏的音频最先取回、也最先被顶掉，结果每一题
+  // 点下去都要重新等）。改成按"离当前进度多远"取舍：
+  //   已经走过的屏 → 最先放； 还没到的屏 → 越远越先放； 当前这一屏 → 最后放。
+  _ttsTrim() {
+    var order = this._ttsBlobOrder;
+    if (!order || order.length <= this.TTS_PREFETCH_MAX) return;
+    var self = this;
+    var cur = (this.state && typeof this.state.stepIdx === 'number') ? this.state.stepIdx : 0;
+    var stepOf = function(t) {
+      var s = self._ttsBlobStep && self._ttsBlobStep[t];
+      return (typeof s === 'number') ? s : cur;
+    };
+    var rank = function(t) {
+      var s = stepOf(t);
+      if (s < cur) return 0;      // 已经走过：最先放
+      if (s === cur) return 2;    // 正用着：最后放
+      return 1;                   // 还没到：中间，越远越先放
+    };
+    var idx = order.map(function(_, i) { return i; });
+    idx.sort(function(a, b) {
+      var ra = rank(order[a]), rb = rank(order[b]);
+      if (ra !== rb) return ra - rb;
+      if (ra === 1) return stepOf(order[b]) - stepOf(order[a]);   // 远的先放
+      if (ra === 0) return stepOf(order[a]) - stepOf(order[b]);   // 最旧的先放
+      return a - b;                                               // 当前屏：按取回顺序
+    });
+    var drop = order.length - this.TTS_PREFETCH_MAX;
+    var dead = {};
+    for (var k = 0; k < drop && k < idx.length; k++) dead[idx[k]] = 1;
+    var keep = [];
+    for (var i2 = 0; i2 < order.length; i2++) {
+      if (dead[i2]) { this._ttsDrop(order[i2]); continue; }
+      keep.push(order[i2]);
+    }
+    this._ttsBlobOrder = keep;
+  },
+
+  _ttsDrop(t) {
+    var u = this._ttsBlobs && this._ttsBlobs[t];
+    if (this._ttsBlobs) delete this._ttsBlobs[t];
+    if (this._ttsBlobStep) delete this._ttsBlobStep[t];
+    if (u) { try { URL.revokeObjectURL(u); } catch (e) {} }
   },
 
   // Last resort: speechSynthesis (built-in, no network needed)
@@ -1215,13 +1326,20 @@ const App = {
       }, 2500);
     }
 
-    if (isSentence && !cachedTts && self._ttsPending && self._ttsPending[cleanText]) {
+    // 孩子点下去要读的这句，如果音频正在取、或还排在预取队列里，就等它
+    // 一下并让它插队 —— 直接再发一次请求等于两份音频赛跑，还要跟一堆预取
+    // 抢浏览器连接，反而更慢。最多等 2.5 秒，等不到就照旧走网络，行为不变。
+    var waitingForPrefetch = isSentence && !cachedTts
+      && ((self._ttsPending && self._ttsPending[cleanText]) || this._ttsQueued(cleanText));
+    if (waitingForPrefetch) {
+      this._ttsPrioritize(cleanText);
       var waitedMs = 0;
       (function waitForPrefetch() {
         if (self._ttsDone || myToken !== self._speakToken) return;
         var hit = self._ttsBlobs && self._ttsBlobs[cleanText];
         if (hit) { ttsUrl = hit; startPlayback(); return; }
-        if (waitedMs >= 2500 || !self._ttsPending[cleanText]) { startPlayback(); return; }
+        var busy = (self._ttsPending && self._ttsPending[cleanText]) || self._ttsQueued(cleanText);
+        if (waitedMs >= 2500 || !busy) { startPlayback(); return; }
         waitedMs += 120;
         setTimeout(waitForPrefetch, 120);
       })();
