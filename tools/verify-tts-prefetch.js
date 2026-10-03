@@ -142,12 +142,14 @@ const reset = () => {
   console.log('\n=== 1. 排队与并发上限 ===');
   reset();
   App.state.stepIdx = 0;
+  const CONC = App.TTS_PREFETCH_CONCURRENCY;
   // 口语题一屏 5 句（题面 + 四个选项），往后预取五屏
   for (let i = 1; i <= 25; i++) App.prefetchTts('sentence number ' + i + ' here', i);
-  ok(App.TTS_PREFETCH_CONCURRENCY === 3, '并发上限是 3（实测 25 并发会把个别句子拖到 6 秒）');
-  ok(inflight === 3, '一次排入 25 句，同时只放 3 个请求出去（实际 ' + inflight + '）');
-  ok(maxInflight <= 3, '无论排多长，在路上的请求都不超过 3（实际峰值 ' + maxInflight + '）');
-  ok(queuedTexts().length === 22, '其余 22 句在队里等着（实际 ' + queuedTexts().length + '）');
+  ok(CONC >= 2 && CONC <= 8,
+     '并发上限在 2–8 之间（' + CONC + '）：实测 8 个并发每句 2.2–2.6s、25 个要拖到 6s');
+  ok(inflight === CONC, '一次排入 25 句，同时只放 ' + CONC + ' 个请求出去（实际 ' + inflight + '）');
+  ok(maxInflight <= CONC, '无论排多长，在路上的请求都不超过上限（实际峰值 ' + maxInflight + '）');
+  ok(queuedTexts().length === 25 - CONC, '其余 ' + (25 - CONC) + ' 句在队里等着（实际 ' + queuedTexts().length + '）');
 
   console.log('\n=== 2. 就近优先，不是先进先出 ===');
   ok(requested[0] === 'sentence number 1 here', '先取的是离当前进度最近的第 1 句（实际 ' + JSON.stringify(requested[0]) + '）');
