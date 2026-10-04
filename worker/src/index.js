@@ -363,10 +363,20 @@ function toBase64(bytes) {
 
 // turbo 要 base64 字符串；默认 whisper 要 [0..255,...] 整数数组。形状不能混，
 // 混了不是"效果差一点"，而是直接 500 —— 孩子这一次朗读的分数就没了。
+//
+// mode=zh（v86）：中文翻译也走 turbo。之前中文只能留在默认模型，是因为这里
+// 把 language 硬钉成 'en'，中文会被硬当英文翻。默认模型还有个致命慢点：它要
+// 整数数组入参，5 秒录音 160KB 的 WAV 会被 JSON 展成 ~600KB 的请求体，手机
+// 上传这段就是孩子"识别时间很长"的大头。turbo 走 base64（~213KB）加上模型
+// 本身更准，速度和准确度一起收。中文提示词按 Whisper 惯例给简体中文，
+// 引导它直接出简体（出繁体也没关系，客户端 _toSimplified 兜底）。
 function fastInput(bytes, mode) {
   const input = { audio: toBase64(bytes), task: 'transcribe', language: 'en' };
   if (mode === 'letter') {
     input.initial_prompt = 'The speaker is reading single English alphabet letters aloud, one at a time.';
+  } else if (mode === 'zh') {
+    input.language = 'zh';
+    input.initial_prompt = '以下是普通话的句子，请用简体中文输出。';
   }
   return input;
 }

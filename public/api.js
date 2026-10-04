@@ -804,8 +804,13 @@ const Api = {
   // 英文跟读走 ?model=turbo（whisper-large-v3-turbo）。
   // 不是因为它快 —— 实测三个模型速度没有差别 —— 而是因为它最准：默认
   // whisper 会把 "I usually have breakfast" 听成 "I usually a breakfast"，
-  // 孩子明明读对了却被判漏读。中文翻译必须留在默认的多语种模型上（turbo 带
-  // language=en，中文会被硬当英文翻），所以这是一个显式开关，不是全局默认。
+  // 孩子明明读对了却被判漏读。
+  //
+  // 中文（v86）也上了 turbo，带 &mode=zh：worker 收到后给 turbo 传
+  // language=zh + 简体中文提示词，中文不再被硬当英文翻。这同时治了"中文
+  // 识别时间很长"——默认模型要整数数组入参，JSON 展开后请求体是 WAV 的
+  // 三四倍，手机上传这段就是主要等待；turbo 走 base64，体积小一半多。
+  // turbo 失败/返回空时 worker 自动降级回默认多语种模型，孩子不用重说。
 
   // Whisper emits stock phrases from its training data when it is handed
   // audio it cannot make sense of. Treating those as a real answer scores the
@@ -834,7 +839,9 @@ const Api = {
     const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
     const timer = ctrl ? setTimeout(() => ctrl.abort(), this.TRANSCRIBE_TIMEOUT) : null;
     try {
-      const res = await fetch(this.TRANSCRIBE_URL + (fast ? '?model=turbo' : ''), {
+      const lang = (opts && opts.lang) || '';
+      const qs = fast ? ('?model=turbo' + (lang === 'zh' ? '&mode=zh' : '')) : '';
+      const res = await fetch(this.TRANSCRIBE_URL + qs, {
         method: 'POST',
         headers: { 'Content-Type': 'audio/wav' },
         body: blob,

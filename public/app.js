@@ -4702,7 +4702,8 @@ const App = {
         return;
       }
       const forAsr = (out.samples && Recorder.padForAsr(out.samples)) || out.blob;
-      const res = await Api.transcribe(forAsr, null);
+      // 整篇翻译说的是中文 —— turbo + mode=zh（v86），同逐句翻译。
+      const res = await Api.transcribe(forAsr, null, { fast: true, lang: 'zh' });
       const heard = res && res.text && !Api.isFillerTranscript(res.text) ? res.text : '';
       const r = this.scoreTranslation(m.passage_cn, heard);
 
@@ -5247,7 +5248,10 @@ const App = {
   // mouse, and setPointerCapture so releasing outside the button still ends
   // the recording instead of leaving the mic open.
   // lang: 'en'（默认，朗读跟读）| 'zh'（逐句翻译，说的是中文）。
-  // 英文走快速识别模型，中文必须走多语种模型，否则中文会被当成英文硬翻。
+  // 两条路都走 turbo 快模型：英文 ?model=turbo（language=en），
+  // 中文 ?model=turbo&mode=zh（language=zh + 简体提示词，v86 起）。
+  // 中文不再留在默认模型上 —— 那条路要整数数组 JSON，请求体膨胀三四倍，
+  // 孩子说完要盯着"核对中"多等好几秒。
   _holdStart(ev, key, promptLabel, statusEl, onDone, needsTranscript, lang) {
     if (ev) {
       ev.preventDefault();
@@ -5319,7 +5323,9 @@ const App = {
     if (!needs) { if (onDone) onDone(out, null); return; }
     // Send the padded copy — short clips make Whisper hallucinate.
     var forAsr = (out.samples && Recorder.padForAsr(out.samples)) || out.blob;
-    var res = await Api.transcribe(forAsr, null, { fast: fast });
+    // 中文也走 turbo（mode=zh），worker 会传 language=zh + 简体提示词；
+    // turbo 失败或返回空时服务端自动降级回默认多语种模型。
+    var res = await Api.transcribe(forAsr, null, fast ? { fast: true } : { fast: true, lang: 'zh' });
     var text = res && res.text ? res.text : null;
     if (Api.isFillerTranscript(text)) text = null;
     if (onDone) onDone(out, text);
