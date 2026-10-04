@@ -49,3 +49,11 @@ CREATE TABLE IF NOT EXISTS wrong_questions (
 
 CREATE INDEX IF NOT EXISTS idx_wq_student    ON wrong_questions(student_id);
 CREATE INDEX IF NOT EXISTS idx_wq_day_module ON wrong_questions(day_idx, module_idx);
+
+-- v89: TTS 消费计数（阿里云 qwen3-tts-flash 每日字符上限，≈¥2.4/天封顶）。
+-- 按 UTC 日一行；worker 运行时会 CREATE TABLE IF NOT EXISTS 自建，
+-- 这里只是把结构写进文档。worker/src/index.js: ttsCharsToday()。
+CREATE TABLE IF NOT EXISTS tts_usage (
+  day    TEXT PRIMARY KEY,
+  chars  INTEGER NOT NULL DEFAULT 0
+);

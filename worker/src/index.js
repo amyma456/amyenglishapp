@@ -151,8 +151,12 @@ async function gradeTranslation(request, env) {
 // mobile browsers (Xiaomi's built-in browser plays nothing). Serving the audio
 // from the same origin as the page removes that whole class of problem.
 //
-// Responses are cached — 45 children read the same sentences over and over,
+// Responses are cached — every child reads the same sentences over and over,
 // so almost every request after the first is a cache hit and costs nothing.
+//
+// 通道顺序（v89 起）：阿里云 qwen3-tts-flash（主，按字符计费、音色最好）
+//   → Cloudflare Deepgram aura（备，烧 neurons，额度大头就是它）
+//   → 百度/有道代理（免费兜底）。见下方 aliyunTtsAudio / tts()。
 const TTS_MODEL = '@cf/deepgram/aura-2-en';
 const TTS_MAX_CHARS = 900;
 
@@ -180,6 +184,75 @@ async function ttsFallbackAudio(text) {
   return buf;
 }
 
+// 阿里云 qwen3-tts-flash（v89）：示范读音的主通道。
+// 为什么切：Deepgram aura 每次朗读烧 90~145 neurons，是 Cloudflare 每天
+// 10,000 免费额度的真正大头（实测占 98%），傍晚必然耗尽。qwen3-tts-flash
+// 按字符计费（¥0.8/万字符），平台朗读文本全部来自固定题库且结果写边缘
+// 缓存 —— 同一段文字只有第一次生成收钱，之后全站孩子免费命中。音色也比
+// Deepgram 更自然。Cherry 是中英双语音色，一个声音通吃单词和中文释义。
+const ALIYUN_TTS_URL = 'https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation';
+const ALIYUN_TTS_MODEL = 'qwen3-tts-flash';
+const ALIYUN_TTS_VOICE = 'Cherry';
+
+// 消费上限：qwen3-tts-flash ¥0.8/万字符 → 30,000 字符/天 ≈ ¥2.4 封顶。
+// 正常流量远到不了（题库固定 + 边缘缓存），这道闸只防缓存失效/刷量时的
+// 失控账单。计数走 D1（按 UTC 日一行），超额当天自动回落免费通道。
+const ALIYUN_TTS_DAILY_CHAR_CAP = 30000;
+
+let ttsTableReady = false;
+async function ttsCharsToday(env) {
+  if (!env.DB) return { used: 0, add: function () {} };
+  const day = new Date().toISOString().slice(0, 10);
+  try {
+    if (!ttsTableReady) {
+      await env.DB.prepare(
+        'CREATE TABLE IF NOT EXISTS tts_usage (day TEXT PRIMARY KEY, chars INTEGER NOT NULL DEFAULT 0)'
+      ).run();
+      ttsTableReady = true;
+    }
+    const row = await env.DB.prepare('SELECT chars FROM tts_usage WHERE day = ?1').bind(day).first();
+    const self = {
+      used: (row && row.chars) || 0,
+      add: function (n) {
+        return env.DB.prepare(
+          'INSERT INTO tts_usage (day, chars) VALUES (?1, ?2) ' +
+          'ON CONFLICT(day) DO UPDATE SET chars = chars + ?2'
+        ).bind(day, n).run();
+      },
+    };
+    return self;
+  } catch (e) {
+    // D1 出问题不能挡住朗读：按 0 计、放行。
+    return { used: 0, add: function () {} };
+  }
+}
+
+// 返回 ArrayBuffer；失败一律抛错，由 tts() 决定降级，不在这里吞。
+// 响应里 output.audio.url 是 24 小时有效的 OSS 直链，必须当场取回字节
+// 再写缓存 —— 缓存里存直链的话，第二天全站孩子都拿到过期签名。
+async function aliyunTtsAudio(text, env) {
+  const key = (env && (env.ALIYUN_KEY || env.DASHSCOPE_API_KEY)) || '';
+  if (!key) throw new Error('aliyun_key_missing');
+  const hasCJK = /[\u4e00-\u9fff\u3400-\u4dbf]/.test(text);
+  const res = await fetch(ALIYUN_TTS_URL, {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: ALIYUN_TTS_MODEL,
+      input: { text: text, voice: ALIYUN_TTS_VOICE, language_type: hasCJK ? 'Chinese' : 'English' },
+    }),
+  });
+  if (!res.ok) throw new Error('aliyun_tts_http_' + res.status);
+  const data = await res.json();
+  const audioUrl = data && data.output && data.output.audio && data.output.audio.url;
+  if (!audioUrl) throw new Error('aliyun_tts_no_url');
+  const wav = await fetch(audioUrl);
+  if (!wav.ok) throw new Error('aliyun_tts_fetch_' + wav.status);
+  const buf = await wav.arrayBuffer();
+  if (buf.byteLength < 500) throw new Error('aliyun_tts_too_small');
+  return buf;
+}
+
 async function tts(request, env, ctx) {
   const url = new URL(request.url);
   const text = (url.searchParams.get('text') || '').trim();
@@ -192,28 +265,40 @@ async function tts(request, env, ctx) {
   if (hit) return hit;
 
   let body = null;
-  let fromFallback = false;
-  try {
-    const audio = await env.AI.run(TTS_MODEL, { text: text });
-    // The binding returns either a ReadableStream or an object holding base64.
-    body = audio;
-    if (audio && typeof audio === 'object' && !(audio instanceof ReadableStream)) {
-      if (audio.audio) {
-        const bin = atob(audio.audio);
-        const bytes = new Uint8Array(bin.length);
-        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-        body = bytes;
-      }
+  let source = 'aliyun';
+  const usage = await ttsCharsToday(env);
+  if (usage.used < ALIYUN_TTS_DAILY_CHAR_CAP) {
+    try {
+      body = await aliyunTtsAudio(text, env);
+      ctx.waitUntil(usage.add(text.length));
+    } catch (e) {
+      body = null;   // Key 没配 / 上游抖动 / 取音频失败 —— 静默走老路
     }
-  } catch (e) {
-    body = null;
+  }
+  if (!body) {
+    source = 'cf';
+    try {
+      const audio = await env.AI.run(TTS_MODEL, { text: text });
+      // The binding returns either a ReadableStream or an object holding base64.
+      body = audio;
+      if (audio && typeof audio === 'object' && !(audio instanceof ReadableStream)) {
+        if (audio.audio) {
+          const bin = atob(audio.audio);
+          const bytes = new Uint8Array(bin.length);
+          for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+          body = bytes;
+        }
+      }
+    } catch (e) {
+      body = null;
+    }
   }
   if (!body) {
     // 额度用完 / 模型出错：换备用通道。再不行才真的报错，让客户端走
     // 它自己的第三层兜底（speechSynthesis）。
     try {
       body = await ttsFallbackAudio(text);
-      fromFallback = true;
+      source = 'fallback';
     } catch (e2) {
       return json({ error: 'tts_failed', detail: String(e2 && e2.message || e2) }, 502);
     }
@@ -223,7 +308,7 @@ async function tts(request, env, ctx) {
     headers: {
       'Content-Type': 'audio/mpeg',
       'Cache-Control': 'public, max-age=31536000, immutable',
-      ...(fromFallback ? { 'X-TTS-Source': 'fallback' } : {}),
+      'X-TTS-Source': source,
     },
   });
   ctx.waitUntil(cache.put(cacheKey, res.clone()));

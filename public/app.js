@@ -960,6 +960,8 @@ const App = {
   _stepSpeechText(steps, dayIdx, i) {
     var s = steps && steps[i];
     if (!s) return '';
+    // 错词巩固屏：孩子落屏头一秒就会点单词听示范，提前把音频取好
+    if (s.kind === 'review') return s.word || '';
     var day = HOMEWORK_DATA[dayIdx];
     var m = day && day.modules && day.modules[s.mi];
     if (!m) return '';
@@ -4309,6 +4311,9 @@ const App = {
       setTimeout(() => this.nextVocabStage(mi, dayIdx, wordCount, stageCount), 1200);
     } else {
       // Wrong answer - show in orange, highlight correct answer, make it clickable
+      // 错词进复习队列（v89）：今天作业末尾的"错词巩固"会再练它
+      const vw = ((HOMEWORK_DATA[dayIdx].modules[mi] || {}).words || [])[this.state.vocabWordIdx];
+      if (vw && vw.word) this._reviewAdd(vw.word);
       opts.forEach((el, i) => {
         el.style.pointerEvents = 'none';
         if (i === selected) el.classList.add('wrong');
@@ -4379,6 +4384,8 @@ const App = {
         el.value = '';
       });
       this._playWrongSound();
+      // 拼写错了，单词进复习队列（v89）
+      if (fullWord) this._reviewAdd(fullWord);
       if (resultDiv) {
         var hintText = answer.length === 1 ? '缺少一个字母，请再试一次' : '缺少 ' + answer.length + ' 个字母，请再试一次';
         resultDiv.innerHTML = '<div style="color:var(--danger);font-size:13px;margin-top:8px">❌ ' + hintText + '</div>';
@@ -4696,6 +4703,9 @@ const App = {
   _renderSentenceRepair(prefix, mi, si, words) {
     const self = this;
     const key = prefix + '-' + mi + '-' + si;
+    // 读错/漏读的单词全部进复习队列（v89）：今天作业末尾逐个巩固，
+    // 连对 2 次才出队 —— "读错的单词要重新读"不只在这一次朗读里。
+    (words || []).forEach(w => this._reviewAdd(w));
     this._repair = { key: key, prefix: prefix, words: words.slice(), listened: {}, done: {}, total: words.length };
     const btn = document.getElementById(prefix + '-btn-' + mi + '-' + si);
     if (btn) { btn.disabled = true; btn.textContent = '先读对红色单词'; }
@@ -6079,6 +6089,150 @@ const App = {
   // Flattens the day into a linear list of steps. Modules with their own
   // internal progression (vocab game, writing template) stay one step each;
   // everything else contributes one step per question.
+  // ===== 错词巩固（v89）：错过的词自动进复习队列 =====
+  //
+  // 数据来源（都是孩子真实错过的瞬间，自动收集，不用老师手动加）：
+  //   1. 词卡闯关选错（看图选词 / 选释义 / 补全拼写）
+  //   2. 阅读逐句、写作朗读里识别出读错或漏读的单词（修复词卡弹出的那些）
+  //
+  // 规则：每个词要**连续 2 次跟读 ≥60 分**才算掌握出队；中途读错一次就
+  // 清零重来并排到队尾。每天从队列里取最多 REVIEW_PER_DAY 个，插在当天
+  // 作业的最后当"错词巩固"环节 —— 错得多的词（反复进队列）自然出现得
+  // 更频繁，这就是"错得多就多练"的自适应。
+  //
+  // 存储在本机 localStorage（按学生 id 分 key）：复习是练习行为，不需要
+  // 跨设备同步，也不该给服务端加写入压力。
+  REVIEW_PER_DAY: 5,
+
+  _reviewKey() {
+    return 'amyReviewV1_' + (this._myStudentId() || 'guest');
+  },
+  _reviewLoad() {
+    try {
+      const list = JSON.parse(localStorage.getItem(this._reviewKey()) || '[]');
+      return Array.isArray(list) ? list.filter(e => e && typeof e.w === 'string') : [];
+    } catch (e) { return []; }
+  },
+  _reviewSave(list) {
+    try { localStorage.setItem(this._reviewKey(), JSON.stringify(list.slice(0, 60))); } catch (e) {}
+  },
+  _reviewAdd(rawWord) {
+    const word = String(rawWord || '').trim().toLowerCase();
+    if (!word || word.length > 40 || !/^[a-z][a-z'\- ]*$/i.test(word)) return;
+    const list = this._reviewLoad();
+    const e = list.find(x => x.w === word);
+    if (e) { e.n = (e.n || 1) + 1; e.ok = 0; e.t = Date.now(); }
+    else list.push({ w: word, n: 1, ok: 0, t: Date.now() });
+    this._reviewSave(list);
+  },
+  // 一次跟读通过。连续 ok≥2 → 出队（掌握）。
+  _reviewPass(rawWord) {
+    const word = String(rawWord || '').trim().toLowerCase();
+    const list = this._reviewLoad();
+    const e = list.find(x => x.w === word);
+    if (!e) return 0;
+    e.ok = (e.ok || 0) + 1;
+    e.t = Date.now();
+    if (e.ok >= 2) this._reviewSave(list.filter(x => x.w !== word));
+    else this._reviewSave(list);
+    return e.ok;
+  },
+  // 一次跟读失败：连对清零、排到队尾（明天还会见到它）。
+  _reviewFail(rawWord) {
+    const word = String(rawWord || '').trim().toLowerCase();
+    const list = this._reviewLoad();
+    const idx = list.findIndex(x => x.w === word);
+    if (idx < 0) return;
+    const e = list.splice(idx, 1)[0];
+    e.ok = 0; e.n = (e.n || 1) + 1; e.t = Date.now();
+    list.push(e);
+    this._reviewSave(list);
+  },
+  // 今天要练的词：队列前 N 个（最久没练对的排最前）。
+  _reviewDue(n) {
+    return this._reviewLoad().slice(0, n || this.REVIEW_PER_DAY);
+  },
+  // 本场会话里孩子点了"先跳过"的词：跳过不是放弃 —— 词留在队列里，
+  // 只是今天这轮不再出现（防"跳过→重建步骤→又是它"的死循环）。
+  _reviewSkip(rawWord) {
+    const word = String(rawWord || '').trim().toLowerCase();
+    if (!this._reviewSkipped) this._reviewSkipped = {};
+    this._reviewSkipped[word] = true;
+  },
+
+  // 错词巩固这一屏：先点单词听示范，再按住跟读。跟修复词卡同一套交互
+  // （孩子已经熟悉），过线 = alignSpeech ≥60 分。
+  renderReviewStep(step) {
+    const word = String(step.word || '');
+    const esc = word.replace(/'/g, "\\'");
+    Recorder.warmUp(); Api.warmup();
+    this._reviewCtx = { word: word, tries: step.tries || 0 };
+    this._reviewListened = false;   // 每个新词都要先听一遍示范才能跟读
+    const n = this._reviewDue(60).length;
+    let html = '<div class="review-step">';
+    html += '<div class="review-badge">🎯 错词巩固 · 还剩 ' + n + ' 个待巩固</div>';
+    html += '<div class="review-card">';
+    html += '<div class="review-word tap-speak-sm" onclick="App.speak(\'' + esc + '\')" title="点一下听发音">' + this._escHtml(word) + '</div>';
+    html += '<div class="review-sub">这是你之前读错/答错的单词</div>';
+    html += '</div>';
+    html += '<div class="review-goal">' + (step.tries > 0
+      ? '已连对 ' + step.tries + ' / 2 次，再读对 ' + (2 - step.tries) + ' 次就毕业'
+      : '规则：连续跟读对 2 次，这个词就从错题本里毕业') + '</div>';
+    html += '<button class="word-read-btn hold-target" id="review-btn"'
+      + ' onpointerdown="App._reviewWordStart(event)"'
+      + ' onpointerup="App._holdEnd(event)" onpointercancel="App._holdEnd(event)"'
+      + ' oncontextmenu="return false">🔊 ' + this._escHtml(word) + '</button>';
+    html += '<div class="review-hint" id="review-hint">第一按听示范读音，第二按住跟读</div>';
+    html += '<div class="review-skip" onclick="App._reviewSkipClick(\'' + esc + '\')">这个先跳过，下次再练 →</div>';
+    html += '</div>';
+    return html;
+  },
+
+  _reviewWordStart(ev) {
+    ev.preventDefault();
+    const ctx = this._reviewCtx;
+    if (!ctx) return;
+    if (ev.pointerId !== undefined && ev.currentTarget.setPointerCapture) {
+      try { ev.currentTarget.setPointerCapture(ev.pointerId); } catch (e) {}
+    }
+    const status = document.getElementById('review-hint');
+    if (!this._reviewListened) {
+      this._reviewListened = true;              // 先听一遍示范才解锁跟读
+      if (status) status.textContent = '听好了？再按住它，大声读出来';
+      this.speak(ctx.word);
+      return;
+    }
+    const word = ctx.word;
+    const self = this;
+    this._holdStart(ev, 'review-' + word, word, status, function(out, text) {
+      if (!text) {
+        if (status) status.textContent = '没听清，点一下单词听读音，再按住读一次';
+        return;
+      }
+      const a = self.alignSpeech(word, text);
+      if (a.ok >= 1 && a.score >= 60) {
+        const okN = self._reviewPass(word);
+        const btn = document.getElementById('review-btn');
+        if (btn) { btn.classList.add('review-done'); btn.disabled = true; }
+        if (status) status.innerHTML = okN >= 2
+          ? '🎉 连续 2 次读对，这个词毕业啦！'
+          : '✓ 第 1 次读对！明天还要再读一次巩固';
+        const next = document.getElementById('stage-next-btn');
+        if (next) { next.disabled = false; next.classList.add('nudge'); }
+      } else {
+        self._reviewFail(word);
+        if (status) status.innerHTML = '❌ 还没读对，再听一遍、再按住读一次（识别到：' + self._escHtml(text) + '）';
+      }
+    }, true, 'en', word);
+  },
+
+  _reviewSkipClick(word) {
+    this._reviewSkip(word);
+    const btn = document.getElementById('stage-next-btn');
+    if (btn) { btn.disabled = false; }
+    this.nextStep();
+  },
+
   _buildSteps(dayIdx) {
     const day = HOMEWORK_DATA[dayIdx];
     const steps = [];
@@ -6114,6 +6268,14 @@ const App = {
       }
       if (m.questions) m.questions.forEach((q, qi) => steps.push({ mi, qi, kind: 'question' }));
     });
+    // 错词巩固排在当天全部模块之后：先把正课做完，最后把之前错的词
+    // 一个个过掉。老师预览路径不掺这个 —— 复习是学生自己的账。
+    if (!this.isTeacher()) {
+      if (!this._reviewSkipped) this._reviewSkipped = {};
+      this._reviewDue(this.REVIEW_PER_DAY)
+        .filter(e => e && e.w && !this._reviewSkipped[e.w])
+        .forEach(e => steps.push({ kind: 'review', word: e.w, tries: e.ok || 0 }));
+    }
     return steps;
   },
 
@@ -6198,7 +6360,8 @@ const App = {
     }
 
     const step = steps[this.state.stepIdx];
-    const m = day.modules[step.mi];
+    // 错词巩固步骤没有所属模块（step.mi 为 undefined），m 允许为 null
+    const m = step.mi !== undefined ? day.modules[step.mi] : null;
 
     // 孩子看这一题、听这一题、读这一题的时间，正好用来把后面几句的音频取回来。
     // 等到切到下一题时，朗读不用再等网络。
@@ -6208,7 +6371,7 @@ const App = {
 
     // Head: module name + progress
     html += '<div class="stage-head">';
-    html += '<span class="sh-name">' + m.name_cn + '</span>';
+    html += '<span class="sh-name">' + (m ? m.name_cn : '🎯 错词巩固') + '</span>';
     html += '<div class="stage-progress"><i style="width:' + Math.round((this.state.stepIdx) / steps.length * 100) + '%"></i></div>';
     html += '<span class="sh-count">' + (this.state.stepIdx + 1) + ' / ' + steps.length + '</span>';
     html += '</div>';
@@ -6259,6 +6422,10 @@ const App = {
       html += '<div class="stage-q">' + this.renderWritingRead(m, step.mi, dayIdx) + '</div>';
       // 全部句子读对（≥60 分）之前不放行
       if (!this.isTeacher() && !this._writingAllRead(m, step.mi)) this._lockNextOnRender = true;
+    } else if (step.kind === 'review') {
+      html += '<div class="stage-q">' + this.renderReviewStep(step) + '</div>';
+      // 跟读通过（或点了"先跳过"）才放行下一题
+      if (!this.isTeacher()) this._lockNextOnRender = true;
     }
     html += '</div>';
 
@@ -6283,6 +6450,7 @@ const App = {
       else if (step.kind === 'translate') label = nextStep && nextStep.kind === 'translate' ? '下一句' : '开始做题';
       else if (step.kind === 'passage') label = '开始做题';
       else if (step.kind === 'writing') label = '开始朗读';
+      else if (step.kind === 'review') label = nextStep && nextStep.kind === 'review' ? '下一个错词' : '完成复习';
       else label = '下一题';
       html += '<button class="btn-ghost" id="stage-next-btn" onclick="App.nextStep()">' + label + '</button>';
     }

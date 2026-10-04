@@ -97,7 +97,10 @@ const Recorder = {
 
 const src = fs.readFileSync(BASE + 'app.js', 'utf8');
 const dataSrc = fs.readFileSync(BASE + 'data.js', 'utf8');
-const HOMEWORK_DATA = new Function(dataSrc + '; return HOMEWORK_DATA;')();
+// 固定用第 1 周的题：HOMEWORK_DATA 按日历轮换，测试断言里写死了第 1 周
+// 的句子（tall / and / kind），不钉住周数的话，下周日历一翻这条就假失败。
+const scope = new Function(dataSrc + '; return { WEEKS: HOMEWORK_WEEKS, IDX: HOMEWORK_WEEK_IDX, DATA: HOMEWORK_DATA };')();
+const HOMEWORK_DATA = scope.WEEKS[0];
 
 process.on('unhandledRejection', () => {});
 

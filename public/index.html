@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="88">
+<meta name="app-version" content="89">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon.svg">
 <title>Amy老师英语打卡平台</title>
@@ -210,6 +210,20 @@ input,textarea,select{font-family:inherit;font-size:14px;outline:none}
 .repair-word.repair-done{border-color:#1F9D55;color:#1F9D55;background:#EDFFF4}
 .repair-word.repair-shake{animation:gateShake .42s cubic-bezier(.36,.07,.19,.97)}
 .repair-hint{margin-top:8px;font-size:12px;color:var(--text-sub,#888);min-height:16px}
+/* v89 错词巩固：错过的词在作业末尾逐个过，连对 2 次出队 */
+.review-step{text-align:center;padding:4px 2px}
+.review-badge{display:inline-block;background:var(--canvas,#F7F3EC);color:#B26A00;
+  font-size:12px;font-weight:600;padding:6px 14px;border-radius:999px;margin-bottom:14px}
+.review-card{background:var(--canvas);border:1px solid var(--line);border-radius:16px;
+  padding:24px 12px;margin-bottom:10px}
+.review-word{font-size:36px;font-weight:700;color:var(--ink-1,#222);
+  letter-spacing:.5px;cursor:pointer;word-break:break-word}
+.review-sub{font-size:12px;color:var(--ink-3,#999);margin-top:8px}
+.review-goal{font-size:13px;color:var(--info);margin:12px 0 16px;font-weight:600}
+.review-hint{font-size:13px;color:var(--ink-2,#444);margin-top:10px;min-height:20px}
+.review-skip{font-size:12px;color:var(--ink-3,#999);margin-top:16px;
+  text-decoration:underline;cursor:pointer}
+.word-read-btn.review-done{background:#1F9D55;border-color:#1F9D55;color:#fff}
 .w-miss{color:var(--ink-3);text-decoration:line-through}
 .align-key{display:flex;gap:14px;justify-content:center;margin-bottom:4px}
 .align-key span{font-size:11px}
@@ -937,12 +951,12 @@ button.gate-locked::before{content:'🔒 '}
   <div class="modal" id="modal-box"></div>
 </div>
 
-<script src="cloud.js?v=88"></script>
-<script src="data.js?v=88"></script>
+<script src="cloud.js?v=89"></script>
+<script src="data.js?v=89"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
-<script src="recorder.js?v=88"></script>
-<script src="api.js?v=88"></script>
-<script src="app.js?v=88"></script>
+<script src="recorder.js?v=89"></script>
+<script src="api.js?v=89"></script>
+<script src="app.js?v=89"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {
