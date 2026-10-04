@@ -370,13 +370,19 @@ function toBase64(bytes) {
 // 上传这段就是孩子"识别时间很长"的大头。turbo 走 base64（~213KB）加上模型
 // 本身更准，速度和准确度一起收。中文提示词按 Whisper 惯例给简体中文，
 // 引导它直接出简体（出繁体也没关系，客户端 _toSimplified 兜底）。
-function fastInput(bytes, mode) {
+//
+// prompt（v87）：跟读场景把目标句/目标词传进来做 initial_prompt 偏置 ——
+// 孩子是照着屏幕读的，提示词让 Whisper 朝这个内容解码，读对的词被误判
+// 成漏读的情况明显变少。只对英文生效；中文模式固定用简体提示词。
+function fastInput(bytes, mode, bias) {
   const input = { audio: toBase64(bytes), task: 'transcribe', language: 'en' };
   if (mode === 'letter') {
     input.initial_prompt = 'The speaker is reading single English alphabet letters aloud, one at a time.';
   } else if (mode === 'zh') {
     input.language = 'zh';
     input.initial_prompt = '以下是普通话的句子，请用简体中文输出。';
+  } else if (bias) {
+    input.initial_prompt = bias;
   }
   return input;
 }
@@ -403,13 +409,16 @@ async function transcribe(request, env) {
   const url = new URL(request.url);
   const mode = url.searchParams.get('mode') || 'sentence';
   const wantFast = url.searchParams.get('model') === 'turbo';
+  // 跟读的目标句/词（v87）：只留安全字符、限长，防注入和滥请求。
+  const bias = (url.searchParams.get('prompt') || '')
+    .replace(/[\r\n\t]+/g, ' ').replace(/[^\x20-\x7E]/g, '').trim().slice(0, 200);
 
   try {
     let out = null;
     let model = MODEL;
     if (wantFast) {
       try {
-        out = await env.AI.run(TURBO_MODEL, fastInput(bytes, mode));
+        out = await env.AI.run(TURBO_MODEL, fastInput(bytes, mode, bias));
         model = TURBO_MODEL;
       } catch (e) {
         // 快模型额度用尽、临时故障、入参不兼容 —— 任何一种都不能让孩子这

@@ -438,12 +438,21 @@ const Api = {
   // -- answers and check-ins ----------------------------------------------
   // Key shapes match what the existing renderers already read, so no render
   // code has to learn a new format.
+  //
+  // 多周轮换（v87）后，答题/打卡记录按周分段：第 2 周起 key 带上 _w<N>，
+  // 不同周的同一题不会互相顶掉。第 1 周（HOMEWORK_WEEK_IDX === 0）刻意
+  // 不加前缀 —— 沿用 v86 之前的 key 格式，孩子已积累的记录一条不丢。
+  _weekTag() {
+    const w = (typeof HOMEWORK_WEEK_IDX === 'number') ? HOMEWORK_WEEK_IDX : 0;
+    return w > 0 ? '_w' + w : '';
+  },
+
   answerKey(studentId, dayIdx, moduleIdx, qIdx) {
-    return studentId + '_d' + dayIdx + '_m' + moduleIdx + '_q' + qIdx;
+    return studentId + this._weekTag() + '_d' + dayIdx + '_m' + moduleIdx + '_q' + qIdx;
   },
 
   checkinKey(studentId, dayIdx) {
-    return studentId + '_d' + dayIdx;
+    return studentId + this._weekTag() + '_d' + dayIdx;
   },
 
   // First answer wins. Choice questions lock themselves after one tap, but a
@@ -840,7 +849,9 @@ const Api = {
     const timer = ctrl ? setTimeout(() => ctrl.abort(), this.TRANSCRIBE_TIMEOUT) : null;
     try {
       const lang = (opts && opts.lang) || '';
-      const qs = fast ? ('?model=turbo' + (lang === 'zh' ? '&mode=zh' : '')) : '';
+      const hint = String((opts && opts.hint) || '').slice(0, 200);
+      let qs = fast ? ('?model=turbo' + (lang === 'zh' ? '&mode=zh' : '')) : '';
+      if (hint) qs += (qs ? '&' : '?') + 'prompt=' + encodeURIComponent(hint);
       const res = await fetch(this.TRANSCRIBE_URL + qs, {
         method: 'POST',
         headers: { 'Content-Type': 'audio/wav' },

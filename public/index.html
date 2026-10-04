@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="86">
+<meta name="app-version" content="87">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon.svg">
 <title>Amy老师英语打卡平台</title>
@@ -201,6 +201,15 @@ input,textarea,select{font-family:inherit;font-size:14px;outline:none}
 .align-sentence{font-size:19px;line-height:1.9;margin:4px 0 8px;word-spacing:2px}
 .w-ok{color:var(--ink)}
 .w-bad{color:#D6321F;text-decoration:underline wavy #D6321F;text-underline-offset:4px;cursor:help}
+/* 读错单词修复（v87）：先读对单词，才能再读整句 */
+.repair-box{margin-top:10px;padding:12px;background:var(--bg);border:1px dashed var(--primary);border-radius:14px}
+.repair-title{font-size:14px;color:var(--ink-2,#444);margin-bottom:8px}
+.repair-words{display:flex;flex-wrap:wrap;gap:8px}
+.repair-word{border:2px solid #D6321F;background:#fff;color:var(--ink-1,#222);border-radius:999px;padding:10px 16px;font-size:16px;touch-action:none;user-select:none;-webkit-user-select:none}
+.repair-word.repair-locked{opacity:.55}
+.repair-word.repair-done{border-color:#1F9D55;color:#1F9D55;background:#EDFFF4}
+.repair-word.repair-shake{animation:gateShake .42s cubic-bezier(.36,.07,.19,.97)}
+.repair-hint{margin-top:8px;font-size:12px;color:var(--text-sub,#888);min-height:16px}
 .w-miss{color:var(--ink-3);text-decoration:line-through}
 .align-key{display:flex;gap:14px;justify-content:center;margin-bottom:4px}
 .align-key span{font-size:11px}
@@ -928,12 +937,12 @@ button.gate-locked::before{content:'🔒 '}
   <div class="modal" id="modal-box"></div>
 </div>
 
-<script src="cloud.js?v=85"></script>
-<script src="data.js?v=85"></script>
+<script src="cloud.js?v=87"></script>
+<script src="data.js?v=87"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
-<script src="recorder.js?v=85"></script>
-<script src="api.js?v=85"></script>
-<script src="app.js?v=85"></script>
+<script src="recorder.js?v=87"></script>
+<script src="api.js?v=87"></script>
+<script src="app.js?v=87"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {

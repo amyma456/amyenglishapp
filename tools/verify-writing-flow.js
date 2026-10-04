@@ -315,8 +315,25 @@ ok(getEl('wr-item-' + MI + '-0')._cls.has('done'), '第 1 句的卡变绿');
 
 read(1, sents[1].split(' ').slice(0, 3).join(' '));       // 漏词 → 低分
 ok(App._writingReadState(MI).passed[1] !== true, '第 2 句没读全 → 不记通过');
-ok(getEl('wr-result-' + MI + '-1').innerHTML.includes('请重试'), '提示重读这一句');
+// v87：漏读的词不再只是提示重读 —— 进单词修复面板，先读对单词才能再读整句
+ok(getEl('wr-result-' + MI + '-1').innerHTML.includes('repair-word'), '漏词 → 出单词修复面板');
+ok(getEl('wr-result-' + MI + '-1').innerHTML.includes('先把它们读会'), '修复面板写明先读单词');
+ok(getEl('wr-btn-' + MI + '-1').disabled === true, '整句按钮在修复完成前锁住');
 ok(App._writingReadGateOpen() === false, '还有句子没过 → 仍然不放行');
+
+// v87 单词修复闭环：每个词第一按听示范、第二按跟读，读对了就打勾；
+// 全部读对后「再读整句」解锁。
+ok(App._repair && App._repair.words.join(',') === 'tall,and,kind',
+   '修复面板收集到漏读词: ' + (App._repair && App._repair.words.join(',')));
+const repairEv = { preventDefault() {}, pointerId: 1, currentTarget: { setPointerCapture() {} } };
+App._repair.words.forEach((w, i) => {
+  App._repairWordStart(repairEv, 'wr', MI, 1, i);            // 第一按：听示范
+  ok(App._repair.listened[i] === true, '第 ' + (i + 1) + ' 个词先听后解锁');
+  App._repairWordStart(repairEv, 'wr', MI, 1, i);            // 第二按：按住跟读
+  cb({ blob: {}, samples: null }, w);                        // 识别 = 读对了
+});
+ok(getEl('wr-btn-' + MI + '-1').disabled === false, '单词全读对 → 整句按钮解锁');
+ok(getEl('wr-btn-' + MI + '-1').textContent === '再读整句', '按钮文案变成「再读整句」');
 
 read(1, sents[1]);                                        // 重读通过
 for (let si = 2; si < sents.length; si++) read(si, sents[si]);

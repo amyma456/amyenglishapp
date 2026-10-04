@@ -1538,6 +1538,15 @@ const App = {
   //      没轮到执行，录音压根不会启动 —— 不会留下"录了一半被掐断"的脏状态。
   _gates: {},
 
+  // 周号：多周轮换后，key 要按周分段（和 Api._weekTag 同一套规则）。
+  _weekIdx() {
+    return (typeof HOMEWORK_WEEK_IDX === 'number') ? HOMEWORK_WEEK_IDX : 0;
+  },
+  _weekTag() {
+    const w = this._weekIdx();
+    return w > 0 ? '_w' + w : '';
+  },
+
   _gateOpen(gid) { return !!this._gates[gid]; },
 
   // 门禁 id 统一从这里出，**必须带"第几天"**：题号 mi/qi 在不同天是重复的，
@@ -2522,7 +2531,7 @@ const App = {
 
   // ===== Teacher: Daily Detail =====
   renderDaily() {
-    let html = '<h2 style="color:var(--primary-dark);margin-bottom:12px">📅 每日作业详情</h2>';
+    let html = '<h2 style="color:var(--primary-dark);margin-bottom:12px">📅 每日作业详情 · 第 ' + (this._weekIdx() + 1) + ' 周</h2>';
     html += '<div class="day-grid mb-16">';
     HOMEWORK_DATA.forEach((day, i) => {
       html += '<div class="day-card ' + (i===this.state.currentDay?'':'') + '" style="' + (i===this.state.currentDay?'border-color:var(--primary)':'') + '" onclick="App.selectDay(' + i + ')">';
@@ -2670,7 +2679,7 @@ const App = {
     let totalDone = 0, totalUndone = 0;
     this.state.students.forEach(s => {
       HOMEWORK_DATA.forEach((d, di) => {
-        const k = s.id + '_d' + di;
+        const k = s.id + this._weekTag() + '_d' + di;
         if (this.state.checkins[k] && this.state.checkins[k].done) totalDone++;
         else totalUndone++;
       });
@@ -2688,7 +2697,7 @@ const App = {
       html += '<tr><td>' + s.name + '</td>';
       let doneCount = 0, totalCorrect = 0, correctCount = 0;
       HOMEWORK_DATA.forEach((d, di) => {
-        const k = s.id + '_d' + di;
+        const k = s.id + this._weekTag() + '_d' + di;
         const ck = this.state.checkins[k];
         // A record exists from the first answer on. Show the dot either way —
         // 'started but unfinished' is what the teacher most wants to see —
@@ -2720,7 +2729,7 @@ const App = {
         // Calculate demo scores
         const scores = [];
         this.state.students.forEach(s => {
-          const k = s.id + '_d' + di;
+          const k = s.id + this._weekTag() + '_d' + di;
           const ck = this.state.checkins[k];
           if (ck && ck.done && ck.correctRate) scores.push(ck.correctRate);
         });
@@ -3319,7 +3328,7 @@ const App = {
 
     const day = HOMEWORK_DATA[todayIdx];
     const dateLabel = this.getDayDateLabel(todayIdx, 0);
-    let html = '<h2 style="color:var(--primary-dark);margin-bottom:8px">📝 今日作业</h2>';
+    let html = '<h2 style="color:var(--primary-dark);margin-bottom:8px">📝 今日作业 · 第 ' + (this._weekIdx() + 1) + ' 周</h2>';
     html += '<div class="card mb-16" style="background:var(--primary-light);border:none">';
     html += '<div class="flex-between"><span>📅 ' + day.day_cn + ' · ' + dateLabel + (this.isDayToday(todayIdx, 0) ? '（今天）' : '') + '</span><span class="badge badge-primary">' + day.total_duration + '分钟</span></div>';
     html += '<div class="fs-12 text-sub mt-8">' + day.theme_cn + '</div>';
@@ -4642,11 +4651,28 @@ const App = {
       const audio = document.getElementById('sent-audio-' + mi + '-' + si);
       if (audio) { const p = audio.play(); if (p && p.catch) p.catch(function(){}); }
 
-      // Passing lights up the forward button; falling short leaves it locked
-      // and asks for another go.
-      const passed = self._gateStep(text ? a.score : 0, !!text);
+      // v87 修复流程：只要有读错/漏读的词，整句就不算过 —— 先把这些单词
+      // 一个个读对，才解锁「再读整句」，整句读对才放行下一句。
+      // （对齐结果里 wrong = 读错，miss = 漏读，两者都要修复。）
+      const wrongs = [];
+      if (text) {
+        a.items.forEach(function(x) {
+          if ((x.status === 'wrong' || x.status === 'missing') && wrongs.indexOf(x.target) < 0) {
+            wrongs.push(x.target);
+          }
+        });
+      }
+      const allOk = !!text && wrongs.length === 0;
+
+      const passed = self._gateStep(allOk ? a.score : 0, allOk);
       const slotEl = document.getElementById('sent-result-' + mi + '-' + si);
-      if (slotEl && !passed) slotEl.insertAdjacentHTML('beforeend', self._retryHint(false, !!text));
+      if (slotEl && !passed) {
+        if (wrongs.length) {
+          self._renderSentenceRepair('sent', mi, si, wrongs);
+        } else {
+          slotEl.insertAdjacentHTML('beforeend', self._retryHint(false, !!text));
+        }
+      }
 
       Api.submitSpeakingScore({
         studentId: self._myStudentId(), dayIdx: self.state.currentDay,
@@ -4658,7 +4684,78 @@ const App = {
         moduleIdx: mi, itemIdx: si, round: 1, type: 'sentence',
         label: sent, score: a.score,
       }).catch(function(){});
+    }, true, 'en', sent);
+  },
+
+  // ===== 读错单词修复（v87）：先读对单词，才能再读整句 ==================
+  // 规则来自家长：所有读错的词都必须重新读 —— 重新先读单词，单词读对了，
+  // 才能读句子。每个词两步：点一下听示范（先听后读的门禁在这也成立），
+  // 再按住跟读；识别比对 ≥60 分算过。全部读对后解锁「再读整句」。
+  // 阅读理解逐句（prefix='sent'）和写作朗读全文（prefix='wr'）共用。
+  // 词卡读错只是练习，不上传录音、不记分 —— 和"拼词是练习不是测试"同一条理。
+  _renderSentenceRepair(prefix, mi, si, words) {
+    const self = this;
+    const key = prefix + '-' + mi + '-' + si;
+    this._repair = { key: key, prefix: prefix, words: words.slice(), listened: {}, done: {}, total: words.length };
+    const btn = document.getElementById(prefix + '-btn-' + mi + '-' + si);
+    if (btn) { btn.disabled = true; btn.textContent = '先读对红色单词'; }
+    const slot = document.getElementById(prefix + '-result-' + mi + '-' + si);
+    if (!slot) return;
+    let html = '<div class="repair-box">';
+    html += '<div class="repair-title">📖 这些单词没读对，先把它们读会：</div>';
+    html += '<div class="repair-words">';
+    words.forEach(function(w, i) {
+      html += '<button class="repair-word repair-locked" id="repair-w-' + prefix + '-' + mi + '-' + si + '-' + i + '"'
+           + ' onpointerdown="App._repairWordStart(event,\'' + prefix + '\',' + mi + ',' + si + ',' + i + ')"'
+           + ' onpointerup="App._holdEnd(event)" onpointercancel="App._holdEnd(event)"'
+           + ' oncontextmenu="return false">🔊 ' + self._escHtml(w) + '</button>';
     });
+    html += '</div>';
+    html += '<div class="repair-hint" id="repair-hint-' + prefix + '-' + mi + '-' + si + '">先点一下单词听读音，再按住它跟读</div>';
+    html += '</div>';
+    slot.insertAdjacentHTML('beforeend', html);
+  },
+
+  _repairWordStart(ev, prefix, mi, si, idx) {
+    ev.preventDefault();
+    const r = this._repair;
+    if (!r || r.key !== prefix + '-' + mi + '-' + si) return;
+    if (ev.pointerId !== undefined && ev.currentTarget.setPointerCapture) {
+      try { ev.currentTarget.setPointerCapture(ev.pointerId); } catch (e) {}
+    }
+    const word = r.words[idx];
+    const chip = document.getElementById('repair-w-' + prefix + '-' + mi + '-' + si + '-' + idx);
+    const status = document.getElementById('repair-hint-' + prefix + '-' + mi + '-' + si);
+    if (!r.listened[idx]) {
+      r.listened[idx] = true;                    // 先听一遍示范才解锁跟读
+      if (chip) chip.classList.remove('repair-locked');
+      this.speak(word);
+      return;                                    // 这一按只听不录
+    }
+    if (r.done[idx]) return;                     // 已经读对的词不用再读
+    const self = this;
+    this._holdStart(ev, 'repair-' + prefix + '-' + mi + '-' + si + '-' + idx, word, status, function(out, text) {
+      if (!text) {
+        if (status) status.textContent = '没听清，点一下单词听读音，再按住读一次';
+        return;
+      }
+      const a = self.alignSpeech(word, text);
+      if (a.ok >= 1 && a.score >= 60) {
+        r.done[idx] = true;
+        if (chip) { chip.classList.add('repair-done'); chip.textContent = '✓ ' + word; chip.disabled = true; }
+        const n = Object.keys(r.done).length;
+        if (n >= r.total) {
+          if (status) status.innerHTML = '🎉 单词全对了！点上面「再读整句」';
+          const btn = document.getElementById(r.prefix + '-btn-' + mi + '-' + si);
+          if (btn) { btn.disabled = false; btn.textContent = '再读整句'; }
+        } else if (status) {
+          status.textContent = '✓ 读对了！还剩 ' + (r.total - n) + ' 个单词';
+        }
+      } else {
+        if (chip) { chip.classList.add('repair-shake'); setTimeout(function() { chip.classList.remove('repair-shake'); }, 500); }
+        if (status) status.innerHTML = '❌ 还没读对，再听一遍、再读一次（识别到：' + self._escHtml(text) + '）';
+      }
+    }, true, 'en', word);
   },
 
   // The whole passage, English only, once every sentence has been read.
@@ -5080,7 +5177,7 @@ const App = {
         label: wordText, score: a.score, spoken: text, source: 'asr',
       });
       self._spellProgress(mi);
-    });
+    }, null, 'en', wordText);
   },
 
   // Nothing advances on its own — the child decides when to finish.
@@ -5252,7 +5349,9 @@ const App = {
   // 中文 ?model=turbo&mode=zh（language=zh + 简体提示词，v86 起）。
   // 中文不再留在默认模型上 —— 那条路要整数数组 JSON，请求体膨胀三四倍，
   // 孩子说完要盯着"核对中"多等好几秒。
-  _holdStart(ev, key, promptLabel, statusEl, onDone, needsTranscript, lang) {
+  // asrHint（v87）：把目标句/目标词传给识别端做 initial_prompt 偏置，
+  // Whisper 会朝这个内容解码，读对的词被误判漏读的比例明显下降。
+  _holdStart(ev, key, promptLabel, statusEl, onDone, needsTranscript, lang, asrHint) {
     if (ev) {
       ev.preventDefault();
       if (ev.pointerId !== undefined && ev.currentTarget.setPointerCapture) {
@@ -5266,6 +5365,7 @@ const App = {
     this._holdDone = onDone;
     this._holdNeedsTranscript = needsTranscript !== false;
     this._holdFast = lang !== 'zh';
+    this._holdHint = String(asrHint || '').slice(0, 200);
     this._holdStatusEl = statusEl;
     this._holdStartedAt = Date.now();
 
@@ -5325,7 +5425,9 @@ const App = {
     var forAsr = (out.samples && Recorder.padForAsr(out.samples)) || out.blob;
     // 中文也走 turbo（mode=zh），worker 会传 language=zh + 简体提示词；
     // turbo 失败或返回空时服务端自动降级回默认多语种模型。
-    var res = await Api.transcribe(forAsr, null, fast ? { fast: true } : { fast: true, lang: 'zh' });
+    // hint：目标句/词的提示词偏置（v87），识别更准、误判漏读更少。
+    var res = await Api.transcribe(forAsr, null,
+      fast ? { fast: true, hint: this._holdHint || '' } : { fast: true, lang: 'zh' });
     var text = res && res.text ? res.text : null;
     if (Api.isFillerTranscript(text)) text = null;
     if (onDone) onDone(out, text);
@@ -5719,7 +5821,10 @@ const App = {
     }
     return this._wrStore;
   },
-  _writingReadKey(mi) { return this.state.currentDay + '-' + mi; },
+  _writingReadKey(mi) {
+    // 多周轮换（v87）：写作练习的本地进度按周分段，第 1 周沿用旧格式。
+    return (this._weekIdx() > 0 ? this._weekIdx() + '-' : '') + this.state.currentDay + '-' + mi;
+  },
   _writingReadState(mi) {
     const store = this._writingReadStore();
     const k = this._writingReadKey(mi);
@@ -5829,10 +5934,23 @@ const App = {
       const audio = document.getElementById('wr-audio-' + mi + '-' + si);
       if (audio) { const p = audio.play(); if (p && p.catch) p.catch(function(){}); }
 
-      // 这一句过了就记下来、变绿；没过就只提示重读，别的句子不受影响。
-      const passed = !!text && a.score >= self.PASS_SCORE;
-      if (passed) self._markWritingSentenceDone(mi, si, m);
-      else if (slot) slot.insertAdjacentHTML('beforeend', self._retryHint(false, !!text));
+      // v87：和阅读逐句同一条规则 —— 有读错/漏读的词就先进单词修复，
+      // 全部读对才能再读整句，整句读对（无错词）才算这句通过。
+      const wrongs = [];
+      if (text) {
+        a.items.forEach(function(x) {
+          if ((x.status === 'wrong' || x.status === 'missing') && wrongs.indexOf(x.target) < 0) {
+            wrongs.push(x.target);
+          }
+        });
+      }
+      const allOk = !!text && wrongs.length === 0;
+
+      if (allOk) self._markWritingSentenceDone(mi, si, m);
+      else if (slot) {
+        if (wrongs.length) self._renderSentenceRepair('wr', mi, si, wrongs);
+        else slot.insertAdjacentHTML('beforeend', self._retryHint(false, !!text));
+      }
 
       Api.submitSpeakingScore({
         studentId: self._myStudentId(), dayIdx: self.state.currentDay,
@@ -5844,7 +5962,7 @@ const App = {
         moduleIdx: mi, itemIdx: si, round: 1, type: 'writing-sentence',
         label: sent, score: a.score,
       }).catch(function(){});
-    });
+    }, true, 'en', sent);
   },
 
   _markWritingSentenceDone(mi, si, m) {
@@ -7448,7 +7566,7 @@ const App = {
     // Summary stats
     let doneCount = 0, totalCorrect = 0, correctCount = 0;
     HOMEWORK_DATA.forEach((d, di) => {
-      const k = myStudent.id + '_d' + di;
+      const k = myStudent.id + this._weekTag() + '_d' + di;
       const ck = this.state.checkins[k];
       if (ck && ck.done) {
         doneCount++;
@@ -7464,7 +7582,7 @@ const App = {
     // Daily detail table
     html += '<div class="card"><table class="data-table"><thead><tr><th>日期</th><th>类型</th><th>打卡状态</th><th>完成时间</th><th>正确率</th><th>错题数</th></tr></thead><tbody>';
     HOMEWORK_DATA.forEach((d, di) => {
-      const k = myStudent.id + '_d' + di;
+      const k = myStudent.id + this._weekTag() + '_d' + di;
       const ck = this.state.checkins[k];
       html += '<tr><td>' + d.day_cn + '（' + this.getDayDateLabel(di, 0) + '）' + (this.isDayToday(di, 0) ? ' 📍今天' : '') + '</td>';
       html += '<td>' + (d.is_speaking_day ? 'AI口语日' : '练习日') + '</td>';
@@ -7496,7 +7614,7 @@ const App = {
     const rankings = classStudents.map(s => {
       let doneCount = 0, totalCorrect = 0, correctCount = 0, firstTime = '';
       HOMEWORK_DATA.forEach((d, di) => {
-        const k = s.id + '_d' + di;
+        const k = s.id + this._weekTag() + '_d' + di;
         const ck = this.state.checkins[k];
         if (ck && ck.done) {
           doneCount++;
@@ -7532,7 +7650,7 @@ const App = {
       html += '<tr' + highlight + '><td>' + r.name + (r.isMe ? ' ⭐' : '') + '</td>';
       let doneCount = 0;
       HOMEWORK_DATA.forEach((d, di) => {
-        const k = student.id + '_d' + di;
+        const k = student.id + this._weekTag() + '_d' + di;
         const ck = this.state.checkins[k];
         if (ck) {
           if (ck.done) doneCount++;
