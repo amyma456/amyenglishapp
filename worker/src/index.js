@@ -387,6 +387,99 @@ function fastInput(bytes, mode, bias) {
   return input;
 }
 
+// ---------------------------------------------------------------------------
+// 阿里云百炼（v88）—— 中文翻译识别的主通道，同时兜住 Cloudflare 额度耗尽。
+//
+// 为什么切过去：
+//   1. 中文准确度。qwen3-asr-flash 是 LLM 架构的中文 ASR，实测孩子这种 3-5 秒
+//      短句带标点逐字正确；Whisper 的中文是靠多语种能力顺带支撑的，明显弱一档。
+//   2. 延迟。服务器在国内，实测一次 3 秒音频 0.5-0.9s 出结果，且不再跨境往返。
+//   3. 免费额度。36,000 秒（10 小时）/90 天，孩子一天用不到 1 小时 —— 花不到钱。
+//      计费 ¥0.00022/秒（≈¥0.79/小时），真超了也就几毛钱。
+//
+// 为什么英文不直接也切过来：qwen3-asr-flash 会把 "11-year-old" 规范化成
+// "eleven-year-old"，而客户端是拿目标句逐词比对的，这种数字改写会被判成读错。
+// Whisper + initial_prompt 偏置能逐字贴合。所以英文仍以 Cloudflare 为主，
+// 阿里云只做额度耗尽/故障时的兜底 —— 有它在，4006 不会再让孩子这次朗读失效。
+//
+// 上下文偏置（system message）实测有效：把目标句给它，"Sierra" 能纠回 "Sarah"。
+const ALIYUN_ASR_URL = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
+const ALIYUN_ASR_MODEL = 'qwen3-asr-flash';
+
+function aliyunSystem(mode, bias) {
+  if (mode === 'zh') return '以下是普通话的句子，请用简体中文输出。';
+  if (mode === 'letter') {
+    return 'The speaker is reading single English alphabet letters aloud, one at a time.';
+  }
+  if (bias) return 'The speaker is reading this text aloud: ' + bias;
+  return '';
+}
+
+function aliyunPayload(bytes, mode, bias, mime) {
+  const messages = [];
+  const sys = aliyunSystem(mode, bias);
+  if (sys) messages.push({ role: 'system', content: [{ type: 'text', text: sys }] });
+  messages.push({
+    role: 'user',
+    content: [{
+      type: 'input_audio',
+      input_audio: { data: 'data:' + mime + ';base64,' + toBase64(bytes) },
+    }],
+  });
+  return { model: ALIYUN_ASR_MODEL, messages: messages };
+}
+
+// 失败一律抛错、由调用方决定降级 —— 不在这里吞掉，否则分不清"没声音"和"没配上"。
+async function aliyunTranscribe(bytes, env, mode, bias, mime) {
+  const key = (env && (env.ALIYUN_KEY || env.DASHSCOPE_API_KEY)) || '';
+  if (!key) throw new Error('aliyun_key_missing');
+  const res = await fetch(ALIYUN_ASR_URL, {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' },
+    body: JSON.stringify(aliyunPayload(bytes, mode, bias, mime)),
+  });
+  if (!res.ok) throw new Error('aliyun_http_' + res.status);
+  const data = await res.json();
+  const choice = data && data.choices && data.choices[0];
+  let content = choice && choice.message ? choice.message.content : '';
+  // 少数模型会返回分段数组，拼起来。
+  if (Array.isArray(content)) {
+    content = content.map((p) => (typeof p === 'string' ? p : (p && p.text) || '')).join('');
+  }
+  return String(content || '').trim();
+}
+
+// 阿里云会把 "11-year-old" 规范化成 "eleven-year-old"。英文正常走 Cloudflare
+// 不碰这条；但兜底路径上一旦出现，客户端拿目标句逐词比对就会把读对的数字
+// 判成读错，孩子得白读一遍 —— 所以兜底结果要把数字词还原。
+//
+// 只在"目标句里写的是数字形式、且没写拼写形式"时才还原（E2E 实测
+// 英文强制阿里云返回 'Sarah is an eleven-year-old girl...'，还原后与目标一致），
+// 反过来目标句写的 "one" 就保持原样，不会把对的判成错的。
+const NUM_WORDS = {
+  zero: 0, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7,
+  eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12, thirteen: 13,
+  fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18,
+  nineteen: 19, twenty: 20, thirty: 30, forty: 40, fifty: 50, sixty: 60,
+  seventy: 70, eighty: 80, ninety: 90, hundred: 100,
+};
+const NUM_RE = /\b(zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred)(?:[-\s](one|two|three|four|five|six|seven|eight|nine))?\b/gi;
+
+function restoreDigits(text, bias) {
+  if (!text || !bias || !/\d/.test(bias)) return text;
+  const target = bias.toLowerCase();
+  return text.replace(NUM_RE, function (m, a, b) {
+    if (target.indexOf(m.toLowerCase()) >= 0) return m;   // 目标句本来就这么写
+    let val = NUM_WORDS[a.toLowerCase()];
+    if (b) {
+      const unit = NUM_WORDS[b.toLowerCase()];
+      if (val >= 20 && val % 10 === 0 && unit < 10) val += unit;
+    }
+    const digits = String(val);
+    return target.indexOf(digits) >= 0 ? digits : m;
+  });
+}
+
 async function transcribe(request, env) {
   // Reject oversized bodies before buffering them.
   const declared = Number(request.headers.get('content-length') || 0);
@@ -412,45 +505,85 @@ async function transcribe(request, env) {
   // 跟读的目标句/词（v87）：只留安全字符、限长，防注入和滥请求。
   const bias = (url.searchParams.get('prompt') || '')
     .replace(/[\r\n\t]+/g, ' ').replace(/[^\x20-\x7E]/g, '').trim().slice(0, 200);
+  // 客户端发的是 16k WAV；真出现 webm 兜底录音时，data URI 的 mime 要跟着变，
+  // 否则阿里云会按错误容器解析。
+  const mime = (request.headers.get('content-type') || 'audio/wav').split(';')[0].trim() || 'audio/wav';
+  // ?engine=ali|cf 可强制指定，用于线上排查是哪条通道在答。
+  const force = url.searchParams.get('engine') || '';
+  const hasAliyun = !!(env.ALIYUN_KEY || env.DASHSCOPE_API_KEY);
 
-  try {
-    let out = null;
-    let model = MODEL;
-    if (wantFast) {
-      try {
-        out = await env.AI.run(TURBO_MODEL, fastInput(bytes, mode, bias));
-        model = TURBO_MODEL;
-      } catch (e) {
-        // 快模型额度用尽、临时故障、入参不兼容 —— 任何一种都不能让孩子这
-        // 一次朗读变成"出分失败"。静默降级，下面用默认模型兜住。
-        out = null;
-      }
+  let out = null;
+  let model = '';
+  let text = '';
+  let cfDead = false;      // Cloudflare 抛错（额度耗尽 4006 / 故障）后不再重试它
+  let detail = '';
+
+  // 中文优先走阿里云：更准、更快、不占 Cloudflare 的神经元额度。失败再落回
+  // Cloudflare 的 turbo（v86 通道），不让孩子这一次翻译白说。
+  if (hasAliyun && mode === 'zh' && force !== 'cf') {
+    try {
+      text = await aliyunTranscribe(bytes, env, mode, bias, mime);
+      if (text) model = ALIYUN_ASR_MODEL;
+    } catch (e) { detail = String(e && e.message || e); }
+  }
+
+  const wantCf = !text && force !== 'ali';
+  if (wantCf && wantFast) {
+    try {
+      out = await env.AI.run(TURBO_MODEL, fastInput(bytes, mode, bias));
+      model = TURBO_MODEL;
+      text = ((out && out.text) || '').trim();
+    } catch (e) {
+      // 快模型额度用尽、临时故障、入参不兼容 —— 任何一种都不能让孩子这
+      // 一次朗读变成"出分失败"。静默降级，下面用默认模型兜住。
+      out = null;
+      model = '';
+      cfDead = true;
+      detail = String(e && e.message || e);
     }
+  }
 
-    let text = (out && out.text ? out.text : '').trim();
-    // 快模型对特别短的片段、或者声音很小的孩子可能返回空。这时多花一次调用
-    // 换回默认模型，孩子不用重读一遍。
-    //
-    // NOTE: @cf/openai/whisper accepts only `audio` — language and
-    // initial_prompt are ignored (tested: a Simplified-Chinese prompt still
-    // returned Traditional). Chinese is normalised on the client instead.
-    if (!text) {
+  // 快模型对特别短的片段、或者声音很小的孩子可能返回空。这时多花一次调用
+  // 换回默认模型，孩子不用重读一遍。
+  //
+  // NOTE: @cf/openai/whisper accepts only `audio` — language and
+  // initial_prompt are ignored (tested: a Simplified-Chinese prompt still
+  // returned Traditional). Chinese is normalised on the client instead.
+  // 但 Cloudflare 已经报错（多半是额度耗尽）时别再打一次，直接交给阿里云。
+  if (wantCf && !text && !cfDead) {
+    try {
       out = await env.AI.run(MODEL, { audio: [...bytes] });
       model = MODEL;
-      text = (out && out.text ? out.text : '').trim();
+      text = ((out && out.text) || '').trim();
+    } catch (e) {
+      out = null;
+      cfDead = true;
+      detail = String(e && e.message || e);
     }
-
-    return json({
-      model: model,
-      text: text,
-      words: (out && out.words) || null,
-      wordCount: (out && out.word_count) || null,
-    });
-  } catch (e) {
-    // Model errors and quota exhaustion both land here. The client falls back
-    // to self-assessment and queues the clip for a retry.
-    return json({ error: 'transcribe_failed', detail: String(e && e.message || e) }, 502);
   }
+
+  // 英文的兜底：Cloudflare 额度耗尽（傍晚高峰的 4006）时，这次朗读照样要出分。
+  if (!text && hasAliyun && mode !== 'zh' && force !== 'cf') {
+    try {
+      text = await aliyunTranscribe(bytes, env, mode, bias, mime);
+      if (text) { model = ALIYUN_ASR_MODEL; out = null; text = restoreDigits(text, bias); }
+    } catch (e) { detail = String(e && e.message || e); }
+  }
+
+  if (!text && !model) {
+    // 两条通道都没接上，或者确实一个字都没识别出来。前者按失败返回（客户端
+    // 会转自评并进重试队列），后者返回空文本让上层走"没听清"提示。
+    if (cfDead && (!hasAliyun || force === 'cf')) {
+      return json({ error: 'transcribe_failed', detail: detail || 'cloudflare_unavailable' }, 502);
+    }
+  }
+
+  return json({
+    model: model,
+    text: text,
+    words: (out && out.words) || null,
+    wordCount: (out && out.word_count) || null,
+  });
 }
 
 // ---------------------------------------------------------------------------
