@@ -1,0 +1,208 @@
+/* eslint-disable */
+// 回归红线（v90）：高频词汇「逐字母跟读」阶段必须读完才能进下一个单词，
+// 且按住格子时要有大字悬浮层（手指会挡住格子里的小字）。
+//
+//   1. 渲染 letter_read 阶段 → 底部「下一个单词」按钮锁死
+//   2. 没读完点「下一个单词」→ 不跳（vocabWordIdx 不变）
+//   3. 所有格子 + 整词读完（_spellProgress）→ 按钮就地解锁
+//   4. 解锁后点「下一个单词」→ 正常跳到下一个词
+//   5. 切到非拼读阶段（learn 等）→ _spell 清空、按钮不锁
+//   6. 按住格子 → spell-peek 大字层出现，松手（回调触发）→ 消失
+//
+// 用法：node tools/verify-spell-stage.js
+const fs = require('fs');
+const path = require('path');
+
+const BASE = path.join(__dirname, '..', 'public') + path.sep;
+let fail = 0;
+const ok = (cond, msg) => { console.log((cond ? '  OK   ' : '  FAIL ') + msg); if (!cond) fail++; };
+
+// ---------- 极简 DOM stub（同款，body 追踪子节点供 peek 测试） ----------
+function el(tag) {
+  const e = {
+    tagName: tag || 'div', _cls: new Set(), style: {}, _attrs: {}, value: '',
+    innerHTML: '', textContent: '', disabled: false, id: '',
+    classList: {
+      add: (...c) => c.forEach(x => e._cls.add(x)),
+      remove: (...c) => c.forEach(x => e._cls.delete(x)),
+      toggle: (c, on) => on ? e._cls.add(c) : e._cls.delete(c),
+      contains: c => e._cls.has(c),
+    },
+    querySelector: () => null,
+    querySelectorAll: () => [],
+    insertAdjacentHTML: (pos, h) => { e.innerHTML += h; },
+    setAttribute: (k, v) => { e._attrs[k] = String(v); },
+    getAttribute: k => (k in e._attrs ? e._attrs[k] : null),
+    removeAttribute: k => { delete e._attrs[k]; },
+    appendChild: () => {}, remove: () => {}, scrollIntoView: () => {},
+    play: () => Promise.resolve(), focus: () => {}, click: () => {},
+    addEventListener: () => {}, removeEventListener: () => {},
+  };
+  return e;
+}
+const byId = {};
+const getEl = id => (byId[id] = byId[id] || el('div'));
+const bodyEl = el('body');
+bodyEl.children = [];
+bodyEl.appendChild = (c) => {
+  bodyEl.children.push(c);
+  c.remove = () => bodyEl.removeChild(c);   // 让桩里的 remove() 有真实语义
+};
+bodyEl.removeChild = (c) => { const i = bodyEl.children.indexOf(c); if (i >= 0) bodyEl.children.splice(i, 1); };
+const document = {
+  getElementById: id => {
+    const kid = bodyEl.children.find(c => c.id === id);
+    if (kid) return kid;
+    return (byId[id] = byId[id] || el('div'));
+  },
+  querySelector: () => null,
+  querySelectorAll: () => [],
+  createElement: el,
+  addEventListener: () => {}, removeEventListener: () => {},
+  body: bodyEl, documentElement: el('html'),
+  hidden: false, visibilityState: 'visible', readyState: 'complete',
+};
+const lsData = {};
+const localStorage = {
+  getItem: k => (k in lsData ? lsData[k] : null),
+  setItem: (k, v) => { lsData[k] = String(v); },
+  removeItem: k => { delete lsData[k]; },
+};
+const window = {
+  addEventListener: () => {}, removeEventListener: () => {},
+  speechSynthesis: null, location: { search: '', href: '' },
+  matchMedia: () => ({ matches: false, addEventListener: () => {} }),
+};
+const location = window.location;
+const navigator = { userAgent: 'node', onLine: true, language: 'zh-CN' };
+
+const Api = {
+  answerKey: (sid, d, m, q) => sid + '_d' + d + '_m' + m + '_q' + q,
+  warmup: () => {}, isFillerTranscript: () => false,
+  saveAnswer: async () => ({ recorded: true }),
+  saveCheckin: async () => ({}),
+  reportWrongQuestion: async () => ({}),
+  submitSpeakingScore: async () => ({}),
+  uploadRecording: () => Promise.resolve({}),
+  dict: async () => null, transcribe: async () => ({ text: '' }),
+  load: async () => ({ answers: {}, checkins: {} }),
+  getAnswers: async () => [], loadWrongCache: async () => {},
+};
+const Recorder = {
+  supported: () => true, warmUp: () => {}, start: async () => {},
+  stop: async () => ({ blob: {}, samples: null }), join: () => null,
+  padForAsr: () => null, level: () => 0,
+};
+
+const src = fs.readFileSync(BASE + 'app.js', 'utf8');
+const dataSrc = fs.readFileSync(BASE + 'data.js', 'utf8');
+const scope = new Function(dataSrc + '; return { WEEKS: HOMEWORK_WEEKS, IDX: HOMEWORK_WEEK_IDX };')();
+const HOMEWORK_DATA = scope.WEEKS[0];   // 钉死第 1 周：断言引用具体单词
+
+process.on('unhandledRejection', () => {});
+
+const factory = new Function('stubs', `
+  const { document, window, location, navigator, localStorage, Api, Recorder,
+          HOMEWORK_DATA, URL, fetch, Cloud, SpeechRecognition, Audio, alert,
+          confirm, prompt, requestAnimationFrame } = stubs;
+  ${src}
+  return { App };
+`);
+let App;
+try {
+  App = factory({
+    document, window, location, navigator, localStorage, Api, Recorder, HOMEWORK_DATA,
+    URL: { createObjectURL: () => 'blob:x', revokeObjectURL: () => {} },
+    fetch: () => new Promise(() => {}),
+    Cloud: undefined, SpeechRecognition: undefined, Audio: undefined,
+    alert: () => {}, confirm: () => true, prompt: () => '',
+    requestAnimationFrame: cb => setTimeout(cb, 0),
+  }).App;
+} catch (e) {
+  console.log('app.js 装载失败：' + e.message);
+  process.exit(1);
+}
+
+App.state.phone = '13800000000';
+App.state.role = 'student';
+App.state.students = [{ id: 'stu1', phone: '13800000000', name: 'test' }];
+App.state.currentTab = 'today';
+App.state.audioEnabled = true;
+App.isTeacher = () => false;
+
+// ---- 插桩 speak：只记录不播 ----
+const spoken = [];
+App.speak = function (text, opts) { spoken.push(String(text)); if (opts && opts.onDone) opts.onDone(); };
+
+// ---- 找第 0 天第 1 个模块的 letter_read ----
+const DAY = 0, MI = 1;
+const m = HOMEWORK_DATA[DAY].modules[MI];
+let wordIdx = -1, stageIdx = -1, word = null;
+(m.words || []).forEach((w, wi) => w.stages.forEach((s, si) => {
+  if (wordIdx < 0 && s.type === 'letter_read') { wordIdx = wi; stageIdx = si; word = w; }
+}));
+if (wordIdx < 0) { console.log('  FAIL 第 1 周没有 letter_read 阶段'); process.exit(1); }
+
+function enterStage() {
+  App.state.vocabWordIdx = wordIdx;
+  App.state.vocabStage = stageIdx;
+  App._spell = null;
+  App.renderVocabStage(m, MI, DAY);
+}
+
+console.log('== 1) 渲染拼读阶段：_spell 就位、按钮锁死 ==');
+enterStage();
+ok(App._spell && App._spell.mi === MI && !App._spell.finished,
+   '_spell 就位（mi=' + MI + '，未完成）');
+ok(App._spell.total === word.word.length, '格子数 = 字母数（' + App._spell.total + '）');
+const btn = getEl('stage-next-' + MI);
+App._syncVocabFootLabel(MI, DAY);
+ok(btn.disabled === true, '「下一个单词」按钮未读完时是锁住的');
+
+console.log('\n== 2) 没读完点「下一个单词」：不跳 ==');
+App.nextVocabWord(MI, DAY);
+ok(App.state.vocabWordIdx === wordIdx, 'vocabWordIdx 不变（' + App.state.vocabWordIdx + '）');
+
+console.log('\n== 3) 全部格子 + 整词读完 → 按钮就地解锁 ==');
+for (let i = 0; i < App._spell.total; i++) App._spell.takes[i] = {};
+App._spell.wordTake = {};
+App._spellProgress(MI);
+ok(App._spell.finished === true, '读完判定 finished=true');
+ok(btn.disabled === false, '按钮解锁');
+
+console.log('\n== 4) 解锁后点「下一个单词」：正常跳 ==');
+App.nextVocabWord(MI, DAY);
+ok(App.state.vocabWordIdx === wordIdx + 1, '跳到下一个词（' + App.state.vocabWordIdx + '）');
+ok(App._spell === null, '切词后 _spell 已清空');
+
+console.log('\n== 5) 非拼读阶段（learn）不锁按钮 ==');
+App.state.vocabStage = 0;                     // learn 阶段
+App._spell = { mi: MI, finished: false };     // 模拟上一阶段残留
+App.renderVocabStage(m, MI, DAY);             // renderVocabStage 应清掉它
+ok(App._spell === null, '残留 _spell 被清空');
+App._syncVocabFootLabel(MI, DAY);
+ok(btn.disabled === false, 'learn 阶段按钮不锁');
+
+console.log('\n== 6) 按住格子：大字悬浮层出现/消失 ==');
+enterStage();
+ok(bodyEl.children.length === 0, '初始无悬浮层');
+App._spellPeekShow('B');
+ok(bodyEl.children.length === 1 && bodyEl.children[0].className === 'spell-peek'
+   && bodyEl.children[0].textContent === 'B', '按住 → spell-peek 显示「B」');
+App._spellPeekHide();
+ok(bodyEl.children.length === 0, '松手 → 悬浮层移除');
+// 走真实 _readUnit 链路：需要 _holdStart 能同步回调。临时替换。
+const origHold = App._holdStart;
+let holdCb = null;
+App._holdStart = function (ev, key, label, status, cb) { holdCb = cb; };
+App._gateOpen = function(){ return true; };
+getEl('spell-' + MI + '-0').textContent = 'B';   // 桩里格子的字要自己放
+App._readUnit({ preventDefault(){} }, MI, 0);
+ok(bodyEl.children.length === 1 && bodyEl.children[0].textContent === 'B'.toUpperCase(),
+   '_readUnit 按下 → 悬浮层出现');
+holdCb({}, '');                                // 松手（无识别结果）
+ok(bodyEl.children.length === 0, '回调触发 → 悬浮层消失');
+App._holdStart = origHold;
+
+console.log('\n' + (fail ? ('有 ' + fail + ' 项失败 ❌') : '全部通过 ✅'));
+process.exit(fail ? 1 : 0);

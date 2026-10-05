@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="90">
+<meta name="app-version" content="91">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon.svg">
 <title>Amy老师英语打卡平台</title>
@@ -131,6 +131,19 @@ input,textarea,select{font-family:inherit;font-size:14px;outline:none}
 .spell-box.read-done{border-color:var(--orange);color:var(--orange-press);
   background:var(--orange-wash)}
 .spell-box.read-miss{border-color:#D6321F;color:#D6321F;background:#FFF5F4}
+/* 按住格子时的大字悬浮层：手指会挡住格子里的小字，把孩子正在读的那个
+   字母/音节/单词放大放到页面上方，看得见才读得安心。不接手势、松手即散 */
+.spell-peek{position:fixed;top:11%;left:50%;transform:translateX(-50%);
+  z-index:9999;pointer-events:none;font-size:76px;font-weight:800;
+  color:var(--primary-dark,#1a56b0);background:var(--surface,#fff);
+  border:2px solid var(--primary,#2f7df6);border-radius:24px;
+  padding:6px 34px;line-height:1.15;letter-spacing:2px;
+  box-shadow:0 10px 34px rgba(31,71,136,.22);
+  animation:peekIn .16s var(--ease,ease-out)}
+@keyframes peekIn{from{opacity:0;transform:translateX(-50%) scale(.7)}
+  to{opacity:1;transform:translateX(-50%) scale(1)}}
+@media(max-width:768px){.spell-peek{font-size:60px;padding:4px 26px}}
+
 /* 整词自己一行，但宽度贴合内容——占满整行会显得像个横幅，不像格子 */
 .spell-break{flex-basis:100%;height:0;margin:0}
 .spell-word{font-size:24px;letter-spacing:.5px;padding-inline:26px}
@@ -951,12 +964,12 @@ button.gate-locked::before{content:'🔒 '}
   <div class="modal" id="modal-box"></div>
 </div>
 
-<script src="cloud.js?v=90"></script>
-<script src="data.js?v=90"></script>
+<script src="cloud.js?v=91"></script>
+<script src="data.js?v=91"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
-<script src="recorder.js?v=90"></script>
-<script src="api.js?v=90"></script>
-<script src="app.js?v=90"></script>
+<script src="recorder.js?v=91"></script>
+<script src="api.js?v=91"></script>
+<script src="app.js?v=91"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {

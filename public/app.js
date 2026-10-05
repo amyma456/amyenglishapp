@@ -4162,6 +4162,9 @@ const App = {
   },
 
   renderVocabStage(m, mi, dayIdx) {
+    // 拼读进度是「本阶段」的状态：切阶段/切单词必须清掉，否则上一个单词
+    // 的 _spell 残留会把底部按钮错误地锁住（或放行）。
+    this._spell = null;
     const wIdx = this.state.vocabWordIdx;
     const sIdx = this.state.vocabStage;
     if (wIdx >= m.words.length) {
@@ -4429,6 +4432,12 @@ const App = {
     var m = HOMEWORK_DATA[dayIdx] && HOMEWORK_DATA[dayIdx].modules[mi];
     if (!m || !m.words) { this.nextStep(); return; }
     if (this.state.vocabWordIdx >= m.words.length - 1) { this.nextStep(); return; }
+    // 拼读阶段（逐字母/音节）没读完不放行 —— 双保险：按钮本身 disabled，
+    // 这里再挡一道（防止旧缓存页面里的按钮、或程序化调用绕过去）。
+    if (this._spell && this._spell.mi === mi && !this._spell.finished && !this.isTeacher()) {
+      this._gateNudge(this._gid('spellg', mi));
+      return;
+    }
     this.state.vocabWordIdx++;
     this.state.vocabStage = 0;
     var el = document.getElementById('vocab-game-' + mi);
@@ -4443,6 +4452,10 @@ const App = {
     if (!m || !m.words || !btn) return;
     var last = this.state.vocabWordIdx >= m.words.length - 1;
     btn.textContent = last ? '下一题' : '下一个单词';
+    // 逐字母/音节阶段：每个格子 + 整词都读完（_spell.finished）之前锁死。
+    // 老师预览不锁。_finishSpell 完成后会再调到这里，按钮就地解锁。
+    var locked = !this.isTeacher() && this._spell && this._spell.mi === mi && !this._spell.finished;
+    btn.disabled = !!locked;
   },
 
   // Every word picture is a play button. Children reach for the picture, not
@@ -5113,6 +5126,22 @@ const App = {
     return html;
   },
 
+  // 按住格子的瞬间，把正在读的字母/音节放大悬浮在页面上方 —— 手指正好
+  // 挡住格子里的小字，孩子按着 D 却看不见 D（家长实测反馈）。悬浮层
+  // pointer-events:none，不挡任何手势，松手即消失。
+  _spellPeekShow(label) {
+    this._spellPeekHide();
+    var d = document.createElement('div');
+    d.id = 'spell-peek';
+    d.className = 'spell-peek';
+    d.textContent = label;
+    document.body.appendChild(d);
+  },
+  _spellPeekHide() {
+    var d = document.getElementById('spell-peek');
+    if (d && d.remove) { try { d.remove(); } catch (e) {} }
+  },
+
   _readUnit(ev, mi, idx) {
     var self = this;
     var gid = this._gid('spellg', mi);
@@ -5123,8 +5152,10 @@ const App = {
     var status = document.getElementById('spell-status-' + mi);
     var scored = this._spell.kind === 'syllable';
     el.classList.add('reading');
+    this._spellPeekShow(this._spell.kind === 'letter' ? label.toUpperCase() : label);
     this._holdStart(ev, 'unit-' + mi + '-' + idx, label, status, function(out, text) {
       el.classList.remove('reading');
+      self._spellPeekHide();
       if (!out) return;
       el.classList.add('read-done');
       if (out.samples) self._spell.takes[idx] = out.samples;   // kept for the joined playback
@@ -5165,8 +5196,10 @@ const App = {
     var status = document.getElementById('spell-status-' + mi);
     var wordText = this._spell.word;
     if (el) el.classList.add('reading');
+    this._spellPeekShow(wordText);
     this._holdStart(ev, 'word-' + mi, wordText, status, async function(out, text) {
       if (el) el.classList.remove('reading');
+      self._spellPeekHide();
       if (!out) return;
       if (el) el.classList.add('read-done');
       self.speak(wordText);
@@ -5236,7 +5269,10 @@ const App = {
     html += '<button class="word-read-btn" onclick="App.startContinuous(' + mi + ')">连续读一遍 →</button>';
     html += '</div>';
     area.innerHTML = html;
-    this._playCelebrate();
+    // v90 修复：这里原来调的 this._playCelebrate() 根本不存在（历史笔误），
+    // 每次读完都会抛 TypeError，把后面的 _syncVocabFootLabel 一起打断 ——
+    // 在新的「读完才放行」逻辑下这会让孩子永远过不去。换成真函数。
+    this._showCelebration(area);
     this._syncVocabFootLabel(mi, this.state.currentDay);
   },
 
@@ -6436,7 +6472,11 @@ const App = {
     html += '<div class="stage-foot">';
     html += '<button class="btn-ghost" onclick="App.prevStep()"' + (this.state.stepIdx === 0 ? ' disabled' : '') + '>上一题</button>';
     if (step.kind === 'vocab') {
-      html += '<button class="btn-ghost" id="stage-next-' + step.mi + '" onclick="App.nextVocabWord(' + step.mi + ',' + dayIdx + ')">下一个单词</button>';
+      // 拼读阶段没读完先禁用（_renderSpellRead 刚设置过 _spell），0ms 后
+      // _syncVocabFootLabel 会再校准一次 —— 这里先按当前状态渲染，避免闪一下。
+      var vLocked = !this.isTeacher() && this._spell && this._spell.mi === step.mi && !this._spell.finished;
+      html += '<button class="btn-ghost" id="stage-next-' + step.mi + '"' + (vLocked ? ' disabled' : '')
+           + ' onclick="App.nextVocabWord(' + step.mi + ',' + dayIdx + ')">下一个单词</button>';
     } else {
       // Name the button after what actually comes next: reading a passage is
       // a run of sentences, not a run of questions.

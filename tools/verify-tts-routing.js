@@ -118,7 +118,15 @@ function ttsReq(text) {
   ok(res.status === 200 && res.headers.get('X-TTS-Source') === 'aliyun', '中文文本同样走阿里云');
   ok((r.rec.bodies || []).some(b => b.indexOf('"language_type":"Chinese"') >= 0), '含中文 → language_type=Chinese');
 
-  console.log('== 4) 超日上限 → 落 Cloudflare ==');
+  console.log('== 4) 单个字母直走有道（v90：阿里云读字母名不准）==');
+  r = load({});
+  res = await r.call(ttsReq('B'));
+  ok(res.status === 200 && res.headers.get('X-TTS-Source') === 'youdao', '字母 B → 有道 dictvoice');
+  ok(r.rec.fetches.some(u => u.indexOf('dict.youdao.com/dictvoice') >= 0), '调了有道');
+  ok(!r.rec.fetches.some(u => u.indexOf('dashscope') >= 0), '没碰阿里云');
+  ok(r.rec.aiCalls === 0 && r.rec.charsAdded === 0, '不烧 neurons、不记字符');
+
+  console.log('== 5) 超日上限 → 落 Cloudflare ==');
   r = load({ usedChars: 30000 });
   res = await r.call(ttsReq('apple'));
   ok(res.status === 200 && res.headers.get('X-TTS-Source') === 'cf', '字符超 30000 → 直接走 Cloudflare');
@@ -126,7 +134,7 @@ function ttsReq(text) {
   ok(!r.rec.fetches.some(u => u.indexOf('dashscope') >= 0), '没碰阿里云（账单封顶）');
   ok(r.rec.charsAdded === 0, '不记阿里云字符');
 
-  console.log('== 5) 阿里云挂 → Cloudflare；Cloudflare 也挂 → 免费兜底 ==');
+  console.log('== 6) 阿里云挂 → Cloudflare；Cloudflare 也挂 → 免费兜底 ==');
   r = load({ aliThrows: true });
   res = await r.call(ttsReq('apple'));
   ok(res.status === 200 && res.headers.get('X-TTS-Source') === 'cf', '阿里云挂 → Cloudflare 接住，孩子有声音听');
@@ -137,7 +145,7 @@ function ttsReq(text) {
   res = await r.call(ttsReq('apple'));
   ok(res.status === 502, '三条通道全挂 → 502（客户端走 speechSynthesis）');
 
-  console.log('== 6) 防御 ==');
+  console.log('== 7) 防御 ==');
   r = load({});
   res = await r.call(ttsReq(''));
   ok(res.status === 400, '空文本 → 400');

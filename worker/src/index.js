@@ -259,20 +259,37 @@ async function tts(request, env, ctx) {
   if (!text) return json({ error: 'no_text' }, 400);
   if (text.length > TTS_MAX_CHARS) return json({ error: 'too_long' }, 413);
 
-  const cacheKey = new Request(url.origin + '/api/tts?text=' + encodeURIComponent(text), { method: 'GET' });
+  // 缓存键带版本：朗读路由一变就 +1，让旧读音立刻全部失效（immutable
+  // 缓存赖一年，v89 的字母旧音频就是这么留着的）。v2 = 字母改走有道。
+  const cacheKey = new Request(url.origin + '/api/tts?v2&text=' + encodeURIComponent(text), { method: 'GET' });
   const cache = caches.default;
   const hit = await cache.match(cacheKey);
   if (hit) return hit;
 
+  // 单个字母直走有道 dictvoice（v90）：字母跟读的示范音是整个练习的根，
+  // qwen3-tts 把孤立的字母读得又怪又不准（家长实测"每个字母都是读错的，
+  // 整个单词读下来很奇怪"），Deepgram 也没验证过字母名。有道读字母名
+  // 标准（v85 起就是字母的兜底通道），免费、不烧 neurons、不计字符。
+  const isSingleLetter = /^[a-z]$/i.test(text.trim());
   let body = null;
   let source = 'aliyun';
-  const usage = await ttsCharsToday(env);
-  if (usage.used < ALIYUN_TTS_DAILY_CHAR_CAP) {
+  if (isSingleLetter) {
     try {
-      body = await aliyunTtsAudio(text, env);
-      ctx.waitUntil(usage.add(text.length));
+      body = await ttsFallbackAudio(text);
+      source = 'youdao';
     } catch (e) {
-      body = null;   // Key 没配 / 上游抖动 / 取音频失败 —— 静默走老路
+      body = null;   // 有道挂了才落到下面的免费模型，读到什么算什么
+    }
+  }
+  if (!body) {
+    const usage = await ttsCharsToday(env);
+    if (usage.used < ALIYUN_TTS_DAILY_CHAR_CAP) {
+      try {
+        body = await aliyunTtsAudio(text, env);
+        ctx.waitUntil(usage.add(text.length));
+      } catch (e) {
+        body = null;   // Key 没配 / 上游抖动 / 取音频失败 —— 静默走老路
+      }
     }
   }
   if (!body) {
