@@ -5138,25 +5138,10 @@ const App = {
 
     // 先听再读：这一排格子由一个门禁统管。示范不再是一段一段拼（v91 前串播
     // 6 段字母 + 1 段整词，段间停顿把 B-K-F-A-S-T 拆得七零八落，家长实测
-    // "整个音太分散"）—— 拼成一句话交给阿里云一次合成：字母用逗号连、整词
-    // 用句号接，实测逐字母清晰且连读自然（"B, K, F, A, S, T. Breakfast."），
-    // 音色也和整词一致。
+    // "整个音太分散"）—— 拼成一句话交给阿里云一次合成，音色与整词一致。
+    // 具体怎么写见 _spellDemo（v94 起统一在那一处，两个阶段共用）。
     var gid = this._gid('spellg', mi);
-    // v93：字母串和整词之间改用**破折号**。原来这里是句号，线上实测（TTS →
-    // ASR 往返）发现：当这串字母正好拼得出一个真单词时（B-E-A-U-T-I-F-U-L
-    // 拼出 beautiful），阿里云会把字母串**直接读成那个单词的音** ——
-    // "B, E, A, U, T, I, F, U, L. Beautiful." 识别回来是
-    // "BEAUTIFUL BEAUTIFUL"，孩子压根没听到逐字母，家长形容为
-    // "不够丝滑、不自然"。破折号能掐断这个"智能拼读"，实测变成
-    // "B-E-A-U-T-I-F-U-L. Beautiful."（逐字母清晰）。
-    // 音节串拼起来本来就是这个词，没有这个问题，沿用逗号 + 句号。
-    var demo;
-    if (kind === 'letter') {
-      demo = units.map(function(u) { return String(u).toUpperCase(); }).join(', ')
-           + ' - ' + word.word;
-    } else {
-      demo = units.join(', ') + '. ' + word.word;
-    }
+    var demo = this._spellDemo(kind, units, word.word);
     html += '<div class="gate-bar"><button type="button" class="gate-listen" data-gate="' + gid
          + '" data-say="' + this._escHtml(demo) + '">🔊 先听一遍（'
          + (kind === 'letter' ? '逐字母连读 + 整词' : '按音节 + 整词') + '）</button></div>';
@@ -5200,6 +5185,30 @@ const App = {
   _spellPeekHide() {
     var d = document.getElementById('spell-peek');
     if (d && d.remove) { try { d.remove(); } catch (e) {} }
+  },
+
+  // 拼读示范串（v94）：字母阶段 = "Letters: G-U-I-T-A-R, guitar"。
+  //
+  // 这一句是整块拼读的地基，写法是实测出来的，改之前先看这段结论
+  // （线上 TTS → ASR 往返，20 个高频词 × 一轮格式矩阵）：
+  //   · 逗号分隔（v93 前："G, U, I, T, A, R. guitar"）：字母串本身正好能
+  //     拼成真词时，阿里云会"自作聪明"把整串读成那个单词 —— guitar 听到
+  //     "GUITAR GUITAR"、beautiful 听到 "BEAUTIFUL BEAUTIFUL"，孩子根本
+  //     没听到字母。家长说"不自然、不够丝滑"根子在这。
+  //   · 换成连字符接整词（v93："G-U-I-T-A-R - guitar"）：guitar 修好了，
+  //     camera 又栽了（C-A-M-E-R-A 同样被读成 "CAMERA CAMERA"）—— 只换
+  //     分隔符是按不住的，它换一种拼读路径照样能合并。
+  //   · 句点分隔（"G. U. I. T. A. R."）、斜杠、零宽字符：全部更差，成段乱读。
+  //   · 真正稳的是「先声明这是字母，再一口气连读，最后用逗号接整词」：
+  //     "Letters: C-A-M-E-R-A, camera" —— 20 个词全部逐字母读对，
+  //     字母之间没有停顿（比逗号版本更连），也不再触发那个"智能拼读"。
+  // 音节阶段（beau, ti, ful）拼起来本来就是词的读音，就是教学目标，沿用原样。
+  _spellDemo(kind, units, word) {
+    if (kind === 'letter') {
+      var us = (units || []).map(function(u) { return String(u).toUpperCase(); });
+      return 'Letters: ' + us.join('-') + ', ' + word;
+    }
+    return (units || []).join(', ') + '. ' + word;
   },
 
   _readUnit(ev, mi, idx) {
@@ -5386,18 +5395,10 @@ const App = {
     if (instr) instr.textContent = '按住不放，把下面的字母和单词连着读一遍';
 
     // 先听再读：连读也要先听一遍完整串法，孩子才知道"连着读"是什么节奏。
-    // 示范同样合成一段（字母逗号连读 + 句号 + 整词），不再逐段串播。
+    // 示范同样合成一段，与上面"逐字母"那屏用同一句（_spellDemo）——
+    // 两屏示范必须一模一样，否则孩子听到两种串法，不知道跟哪个。
     var cgid = this._gid('contg', mi);
-    // v93：同上面的理由，字母串与整词之间用破折号而不是句号 —— 否则遇到
-    // 能拼出真单词的字母串（beautiful），阿里云会把整串读成单词音。
-    var contDemo = seq.map(function(x, i) {
-      return (sp.kind === 'letter' && i < seq.length - 1) ? String(x).toUpperCase() : x;
-    }).join(', ');
-    // 注意捕获组里已经带了逗号后面那个空格（", beautiful" → " beautiful"），
-    // 所以替换串不能再补一个空格，否则会出现两个空格（已验证过一次）。
-    contDemo = sp.kind === 'letter'
-      ? contDemo.replace(/,([^,]*)$/, ' -$1')
-      : contDemo.replace(/,([^,]*)$/, '.$1');
+    var contDemo = this._spellDemo(sp.kind, sp.units, sp.word);
     var html = '<div class="gate-bar"><button type="button" class="gate-listen" data-gate="' + cgid
          + '" data-say="' + this._escHtml(contDemo) + '">🔊 先听一遍（连起来读）</button></div>';
     html += '<div class="cont-seq gate-locked" data-gate="' + cgid + '">' + seq.map(function(x, i) {

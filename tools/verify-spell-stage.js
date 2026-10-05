@@ -206,6 +206,9 @@ App._holdStart = origHold;
 
 // ---------- v92 红线 ----------
 // 7. 示范必须是单段连读（data-say），不许退回逐段串播（data-seq）
+//    v94 起写法固定为 "Letters: G-U-I-T-A-R, guitar" —— 逗号分隔的字母串
+//    会被阿里云"智能拼读"成单词音（guitar → "GUITAR GUITAR"），只有
+//    「前置 Letters + 连字符连读 + 逗号接整词」在 20 词实测里全对。
 console.log('== 7) 示范单段连读 ==');
 App._spell = null;
 document.body.innerHTML = '';
@@ -218,15 +221,28 @@ const stageHtml = App._renderSpellRead(mod0, 0, 0, mod0.words[wi0], mod0.words[w
 ok(stageHtml.indexOf('data-seq=') < 0, '示范按钮不再用 data-seq 逐段串播');
 const sayM = stageHtml.match(/data-say="([^"]*)"/);
 ok(!!sayM, '示范按钮带 data-say');
+let say = '';
 if (sayM) {
-  const say = sayM[1].replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
-  ok(/[A-Z], [A-Z]/.test(say), '字母用逗号连读（' + say.slice(0, 30) + '…）');
-  ok(/ - \S+$/.test(say), '字母串与整词之间是破折号（' + say.slice(-18) + '）');
+  say = sayM[1].replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+  ok(/^Letters: /.test(say), '前置 Letters 声明，挡住阿里的"智能拼读"（' + say.slice(0, 32) + '…）');
+  ok(/[A-Z]-[A-Z]/.test(say), '字母之间用连字符一口气连读（比逗号更顺）');
+  ok(!/[A-Z], [A-Z]/.test(say), '字母之间不能再用逗号（逗号版把 guitar 读成单词音）');
+  ok(/, [A-Za-z]+$/.test(say), '整词用逗号接在字母串后面（' + say.slice(-14) + '）');
   ok(/\. [A-Za-z]+$/.test(say) === false,
-     '不再用句号分隔字母串和整词（句号会让阿里云把字母读成单词）');
+     '不用句号分隔字母串和整词（句号会让阿里云把字母读成单词）');
+  ok(/ - \S+$/.test(say) === false, '不再用破折号接整词（camera 会被读成 CAMERA CAMERA）');
   ok(say.toUpperCase().indexOf(mod0.words[wi0].word.toUpperCase()) >= 0, '整词在示范里');
+} else {
+  ok(false, '示范按钮带 data-say');
 }
-// v93：连读阶段的示范也必须用破折号，同一个坑
+// _spellDemo 直接单测：camera 是实测最坑的词（C-A-M-E-R-A 正好拼出 camera）
+ok(App._spellDemo('letter', ['c', 'a', 'm', 'e', 'r', 'a'], 'camera')
+   === 'Letters: C-A-M-E-R-A, camera', '_spellDemo(letter) 文本正确');
+ok(App._spellDemo('letter', 'guitar'.split(''), 'guitar')
+   === 'Letters: G-U-I-T-A-R, guitar', '_spellDemo 大小写归一（guitar）');
+ok(App._spellDemo('syllable', ['beau', 'ti', 'ful'], 'beautiful')
+   === 'beau, ti, ful. beautiful', '音节阶段保持逗号 + 句号（拼起来就是词的读音）');
+// v94：连读阶段的示范必须与逐字母那屏**逐字相同**，否则孩子听到两种串法
 enterStage();
 App.startContinuous(MI);
 {
@@ -235,7 +251,9 @@ App.startContinuous(MI);
   ok(!!cm, '连读示范带 data-say');
   if (cm) {
     const csay = cm[1].replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
-    ok(/ - \S+$/.test(csay), '连读示范字母串与整词之间也是破折号（' + csay.slice(0, 42) + '…）');
+    ok(/^Letters: /.test(csay) && /, [A-Za-z]+$/.test(csay),
+       '连读示范同样是 Letters + 连读 + 逗号整词（' + csay.slice(0, 42) + '…）');
+    ok(csay === say, '连读示范与逐字母示范完全一致（避免两种串法）');
   }
 }
 // 音节拼读同理
