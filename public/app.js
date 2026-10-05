@@ -6750,11 +6750,15 @@ const App = {
       if (followEl) followEl.innerHTML = '';
       // 和口语模块一致：把点错的这句立刻读出来给他听——听力题尤其重要，
       // 孩子要靠耳朵发现自己选的句子和原文差在哪。绿色高亮不朗读，不用
-      // 等读完就能改选。选项是完整句子才读（听力类）；短语选项保持原样。
-      // 这句的音频在题目渲染时就已经预取好了，点下去基本零等待开口。
+      // 等读完就能改选。**任何选项都读**（v90）：单词/短语选项也一样 ——
+      // 第 2 周题库一半选项是单个词（England / Canada / went...），旧逻辑
+      // 「带空格才算句子才读」让这些点了完全没声音，家长当成 bug 报上来。
+      // speak() 自己会分流：单词走有道、句子走自家端点；渲染时四个选项
+      // 全都预取好了（见 prefetchUpcoming 的 copts 循环），点下去零等待。
+      // 这是 v70/v76 两次修过的行为，删掉守卫等于回归红线，勿再收窄。
       var pickedText = (q.options && q.options[oi] != null) ? String(q.options[oi]) : '';
       var self = this;
-      if (pickedText && /\s/.test(pickedText.trim()) && this.state.audioEnabled) {
+      if (pickedText && this.state.audioEnabled) {
         this.speak(pickedText, { onDone: function() {
           var el = document.getElementById('ans-' + mi + '-' + qi);
           var pick = self._lastPick && self._lastPick[mi + '-' + qi];
