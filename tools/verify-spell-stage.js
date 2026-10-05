@@ -221,8 +221,22 @@ ok(!!sayM, '示范按钮带 data-say');
 if (sayM) {
   const say = sayM[1].replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
   ok(/[A-Z], [A-Z]/.test(say), '字母用逗号连读（' + say.slice(0, 30) + '…）');
-  ok(/\. \S+$/.test(say), '整词用句号接在后面');
+  ok(/ - \S+$/.test(say), '字母串与整词之间是破折号（' + say.slice(-18) + '）');
+  ok(/\. [A-Za-z]+$/.test(say) === false,
+     '不再用句号分隔字母串和整词（句号会让阿里云把字母读成单词）');
   ok(say.toUpperCase().indexOf(mod0.words[wi0].word.toUpperCase()) >= 0, '整词在示范里');
+}
+// v93：连读阶段的示范也必须用破折号，同一个坑
+enterStage();
+App.startContinuous(MI);
+{
+  const contHtml = getEl('spell-result-area-' + MI).innerHTML;
+  const cm = contHtml.match(/data-say="([^"]*)"/);
+  ok(!!cm, '连读示范带 data-say');
+  if (cm) {
+    const csay = cm[1].replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+    ok(/ - \S+$/.test(csay), '连读示范字母串与整词之间也是破折号（' + csay.slice(0, 42) + '…）');
+  }
 }
 // 音节拼读同理
 const wiS = mod0.words.findIndex(w => w.stages.some(s => s.type === 'syllable_read'));
@@ -254,6 +268,79 @@ ok(seqRes.hits[6] === true, '整词被拆词 → 仍判读到');
 ok(seqRes.ok === 7 && seqRes.score === 100, '全部读到 → 100 分（' + seqRes.score + '）');
 const seqRes2 = App._scoreSequence(['b', 'k', 'f', 'a', 's', 't', 'breakfast'], 'b k f a s t okay');
 ok(seqRes2.hits[6] === false, '整词没读 → 不放水');
+
+// ---------- v93 红线 ----------
+// 10. _letterOk：严格到能区分 b/p，又不把字母名拼写（bee）当错
+console.log('== 10) 字母判定 _letterOk ==');
+ok(App._letterOk('b', 'b') === true, '读 B、识别 "b" → 判对');
+ok(App._letterOk('B', 'B.') === true, '大小写与句点不影响（"B."）');
+ok(App._letterOk('b', 'bee') === true, '识别成字母名 "bee" → 判对');
+ok(App._letterOk('b', 'be') === true, '识别成 "be" → 判对');
+ok(App._letterOk('w', 'double u') === true, 'W 的字母名 "double u" → 判对');
+ok(App._letterOk('u', 'you') === true, 'U 的字母名 "you" → 判对');
+ok(App._letterOk('b', 'p') === false, '读成 P → 判错（关键：不能拿 _soundAlike 判单字母）');
+ok(App._letterOk('b', 'd') === false, '读成 D → 判错');
+ok(App._letterOk('e', 'sea') === false, 'C 的字母名不会反过来算成 E 读对');
+ok(App._letterOk('b', 'breakfast') === false, '整串不会蒙混过关');
+ok(App._letterOk('b', '') === false, '没识别出 → 判错，要求重读');
+ok(App._soundAlike('b', 'p') === true,
+   '反证：_soundAlike 认为 b 和 p 相同 —— 所以单字母必须走 _letterOk');
+
+// 11. 有字母没读对 → 汇总后按钮仍锁；重读读对 → 解锁
+console.log('\n== 11) 字母没全读对就不放行 ==');
+enterStage();
+const totUnit = App._spell.total;
+for (let i = 0; i < totUnit; i++) {
+  App._spell.takes[i] = {};
+  App._spell.unitScores[i] = { label: 'X', ok: true, heard: 'x' };
+}
+App._spell.unitScores[0] = { label: 'B', ok: false, heard: 'p' };   // 第 1 个读错了
+App._spell.wordTake = {}; App._spell.score = 90; App._spell.heard = 'beautiful';
+App._spellProgress(MI);
+ok(App._spell.finished === true, '读完仍然触发汇总（finished=true）');
+ok(App._spell.allOk === false, 'allOk=false（有字母没读对）');
+App._syncVocabFootLabel(MI, DAY);
+ok(btn.disabled === true, '还有错字母 → 「下一个单词」保持锁住');
+App.nextVocabWord(MI, DAY);
+ok(App.state.vocabWordIdx === wordIdx, '没全读对时点它也不跳（双保险）');
+// 孩子重读那个字母、这次读对了
+App._spell.finished = false;                 // 重读把 finished 打回 false
+App._spell.unitScores[0] = { label: 'B', ok: true, heard: 'b' };
+App._spellProgress(MI);
+App._syncVocabFootLabel(MI, DAY);
+ok(App._spell.allOk === true, '重读读对 → allOk=true');
+ok(btn.disabled === false, '全读对 → 解锁');
+
+// 12. 字母跟读全程静音（家长："读 B 就不要读出来 B，学生自己说"）
+console.log('\n== 12) 字母跟读不放机器音 ==');
+enterStage();
+App._gateOpen = function () { return true; };
+const origHold2 = App._holdStart;
+let cb2 = null;
+App._holdStart = function (ev, key, label, status, cb) { cb2 = cb; };
+getEl('spell-' + MI + '-0').textContent = 'B';
+spoken.length = 0;
+App._readUnit({ preventDefault(){} }, MI, 0);
+cb2({}, 'b');
+ok(spoken.indexOf('B') < 0 && spoken.indexOf('b') < 0,
+   '字母读完后没有机器回放音（spoken=' + JSON.stringify(spoken) + '）');
+ok(!!(App._spell.unitScores[0] && App._spell.unitScores[0].ok === true),
+   '同一个回调里字母被判定为读对');
+App._holdStart = origHold2;
+
+// 13. 连续读漏字母 → contMiss 把按钮重新按下
+console.log('\n== 13) 连续读漏了也不放行 ==');
+const seq2 = ['b', 'k', 'f', 'a', 's', 't', 'breakfast'];
+ok(App._scoreSequence(seq2, 'b k f a s t').ok === 6, '整词没读到 → 只中 6/7');
+ok(App._scoreSequence(seq2, 'b k f a s t breakfast').ok === 7, '整串读全 → 7/7');
+ok(App._scoreSequence(seq2, 'b k f a s breakfast').ok === 6, '中间漏一个字母 → 不放水');
+enterStage();
+App._spell.finished = true; App._spell.allOk = true; App._spell.contMiss = true;
+App._syncVocabFootLabel(MI, DAY);
+ok(btn.disabled === true, '连读没读全 → 按钮重新锁住');
+App._spell.contMiss = false;
+App._syncVocabFootLabel(MI, DAY);
+ok(btn.disabled === false, '读全了 → 解锁');
 
 console.log('\n' + (fail ? ('有 ' + fail + ' 项失败 ❌') : '全部通过 ✅'));
 process.exit(fail ? 1 : 0);

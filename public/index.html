@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="92">
+<meta name="app-version" content="93">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon.svg">
 <title>Amy老师英语打卡平台</title>
@@ -202,6 +202,12 @@ input,textarea,select{font-family:inherit;font-size:14px;outline:none}
 .sc-cell.done{border-color:var(--line);color:var(--ink)}
 .ss-actions{display:flex;gap:8px;justify-content:center;margin-top:8px}
 .retry-hint{margin-top:8px;font-size:14px;font-weight:500;color:#D6321F}
+/* v93：还有字母没读对时，底部「下一个单词」保持锁着并列出要重读的格子 */
+.spell-retry-hint{margin-top:10px;padding:9px 12px;border-radius:10px;
+  background:#FFF5F4;border:1px solid #F3C0BA;font-size:14px;font-weight:500;
+  color:#D6321F;line-height:1.5}
+.spell-retry-hint span{display:block;margin-top:3px;font-size:12px;
+  font-weight:400;color:var(--ink-2)}
 
 /* 连续读 */
 .cont-seq{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:12px 0}
@@ -964,12 +970,12 @@ button.gate-locked::before{content:'🔒 '}
   <div class="modal" id="modal-box"></div>
 </div>
 
-<script src="cloud.js?v=92"></script>
-<script src="data.js?v=92"></script>
+<script src="cloud.js?v=93"></script>
+<script src="data.js?v=93"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
-<script src="recorder.js?v=92"></script>
-<script src="api.js?v=92"></script>
-<script src="app.js?v=92"></script>
+<script src="recorder.js?v=93"></script>
+<script src="api.js?v=93"></script>
+<script src="app.js?v=93"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {

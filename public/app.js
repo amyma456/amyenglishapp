@@ -4434,9 +4434,12 @@ const App = {
     var m = HOMEWORK_DATA[dayIdx] && HOMEWORK_DATA[dayIdx].modules[mi];
     if (!m || !m.words) { this.nextStep(); return; }
     if (this.state.vocabWordIdx >= m.words.length - 1) { this.nextStep(); return; }
-    // 拼读阶段（逐字母/音节）没读完不放行 —— 双保险：按钮本身 disabled，
-    // 这里再挡一道（防止旧缓存页面里的按钮、或程序化调用绕过去）。
-    if (this._spell && this._spell.mi === mi && !this._spell.finished && !this.isTeacher()) {
+    // 拼读阶段（逐字母/音节）没读完、或还有字母没读对，都不放行 —— 双保险：
+    // 按钮本身 disabled，这里再挡一道（防止旧缓存页面里的按钮、或程序化
+    // 调用绕过去）。v93 起加了 allOk / contMiss 两个条件。
+    var sp0 = this._spell;
+    if (!this.isTeacher() && sp0 && sp0.mi === mi
+        && (!sp0.finished || sp0.allOk === false || sp0.contMiss === true)) {
       this._gateNudge(this._gid('spellg', mi));
       return;
     }
@@ -4455,8 +4458,13 @@ const App = {
     var last = this.state.vocabWordIdx >= m.words.length - 1;
     btn.textContent = last ? '下一题' : '下一个单词';
     // 逐字母/音节阶段：每个格子 + 整词都读完（_spell.finished）之前锁死。
+    // v93 起还要「全部读对」：_finishSpell 算出 allOk=false 时按钮继续锁着，
+    // 孩子重读那个字母会把 finished 打回 false，走完汇总才可能解锁。
+    // 连续读（phase B）同理，读漏了靠 contMiss 把按钮重新按下去。
     // 老师预览不锁。_finishSpell 完成后会再调到这里，按钮就地解锁。
-    var locked = !this.isTeacher() && this._spell && this._spell.mi === mi && !this._spell.finished;
+    var sp = this._spell;
+    var locked = !this.isTeacher() && sp && sp.mi === mi
+              && (!sp.finished || sp.allOk === false || sp.contMiss === true);
     btn.disabled = !!locked;
   },
 
@@ -5071,6 +5079,39 @@ const App = {
     });
   },
 
+  // v93：字母判定。_soundAlike 不能拿来判单个字母 —— 它最后那条
+  // `_editDistance <= 1` 在 26 个字母的宇宙里等于"几乎都对"：
+  // B 和 P、B 和 D、M 和 N 的距离都是 1，会被判成读对了。
+  // 这里只认两件事：识别结果里直接出现了这个字母（"b"），或者出现了
+  // 它的字母名拼写（B → "bee" / "be"）。whisper 把串读的字母连成一个
+  // token（"bkfast"）时按包含关系再兜一次。
+  _letterOk(target, heard) {
+    var t = String(target || '').toLowerCase().replace(/[^a-z]/g, '');
+    if (!t) return false;
+    if (t.length !== 1) return this._soundAlike(target, heard);
+    var s = String(heard || '').toLowerCase();
+    if (!s) return false;
+    var LNAMES = {
+      a: 'ay eh ei',     b: 'be bee bi',     c: 'ce see sea cee',
+      d: 'de dee di',    e: 'ee ei',         f: 'ef eff',
+      g: 'ge gee',       h: 'aitch ech',     i: 'eye ai',
+      j: 'jay je',       k: 'kay ka',        l: 'el ell',
+      m: 'em',           n: 'en',            o: 'oh',
+      p: 'pe pee pea',   q: 'cue queue',     r: 'are ar',
+      s: 'es ess',       t: 'te tea tee ti', u: 'you yu',
+      v: 've vee',       w: 'double www',    x: 'ex eks',
+      y: 'why',          z: 'zee zed ze',
+    };
+    var allowed = (t + ' ' + (LNAMES[t] || '')).split(' ');
+    var toks = s.replace(/[^a-z\s]/g, ' ').split(/\s+/).filter(Boolean);
+    for (var i = 0; i < toks.length; i++) {
+      if (allowed.indexOf(toks[i]) >= 0) return true;
+    }
+    // 注意：这里**不**做"子串包含"兜底（比如 "sea" 里含 e 就算 e 读对）——
+    // 那会让 c 的字母名反过来匹配给 e，把读错的判成读对。宁可让它重读。
+    return false;
+  },
+
   // ===== Spell-then-say =====
   // One implementation for every spelling exercise (letters, syllables, and
   // anything added later): hold each piece to read it, hold the whole word,
@@ -5101,9 +5142,21 @@ const App = {
     // 用句号接，实测逐字母清晰且连读自然（"B, K, F, A, S, T. Breakfast."），
     // 音色也和整词一致。
     var gid = this._gid('spellg', mi);
-    var demo = (kind === 'letter'
-      ? units.map(function(u) { return String(u).toUpperCase(); }).join(', ')
-      : units.join(', ')) + '. ' + word.word;
+    // v93：字母串和整词之间改用**破折号**。原来这里是句号，线上实测（TTS →
+    // ASR 往返）发现：当这串字母正好拼得出一个真单词时（B-E-A-U-T-I-F-U-L
+    // 拼出 beautiful），阿里云会把字母串**直接读成那个单词的音** ——
+    // "B, E, A, U, T, I, F, U, L. Beautiful." 识别回来是
+    // "BEAUTIFUL BEAUTIFUL"，孩子压根没听到逐字母，家长形容为
+    // "不够丝滑、不自然"。破折号能掐断这个"智能拼读"，实测变成
+    // "B-E-A-U-T-I-F-U-L. Beautiful."（逐字母清晰）。
+    // 音节串拼起来本来就是这个词，没有这个问题，沿用逗号 + 句号。
+    var demo;
+    if (kind === 'letter') {
+      demo = units.map(function(u) { return String(u).toUpperCase(); }).join(', ')
+           + ' - ' + word.word;
+    } else {
+      demo = units.join(', ') + '. ' + word.word;
+    }
     html += '<div class="gate-bar"><button type="button" class="gate-listen" data-gate="' + gid
          + '" data-say="' + this._escHtml(demo) + '">🔊 先听一遍（'
          + (kind === 'letter' ? '逐字母连读 + 整词' : '按音节 + 整词') + '）</button></div>';
@@ -5157,9 +5210,13 @@ const App = {
     if (!el) return;
     var label = el.textContent.trim();
     var status = document.getElementById('spell-status-' + mi);
-    var scored = this._spell.kind === 'syllable';
+    var isLetter = this._spell.kind === 'letter';
+    // v93：把整串字母喂给识别端当 initial_prompt。孤立字母本来就是
+    // whisper 的软肋（v91 实测 E 回来是 "Capitoli"、W 是 "www."），
+    // 偏置之后它朝这串字母解码，读对的字母被听岔的比例明显下降。
+    var hint = isLetter ? this._spell.units.join(', ') : label;
     el.classList.add('reading');
-    this._spellPeekShow(this._spell.kind === 'letter' ? label.toUpperCase() : label);
+    this._spellPeekShow(isLetter ? label.toUpperCase() : label);
     this._holdStart(ev, 'unit-' + mi + '-' + idx, label, status, function(out, text) {
       el.classList.remove('reading');
       self._spellPeekHide();
@@ -5168,31 +5225,32 @@ const App = {
       if (out.samples) self._spell.takes[idx] = out.samples;   // kept for the joined playback
       self._spell.finished = false;      // a new take must re-run the summary
 
-      // Hear the model right after your own attempt — that comparison is the
-      // point of the drill, and it replaces the stitched playback that used
-      // to come only at the very end.
-      self.speak(label);
+      // v93：这里原来有一句 self.speak(label) —— 松开手后机器念一遍这个字母。
+      // 家长明确不要（"读 B 就不要读出来 B，直接让学生点一下 B，学生自己说 B"），
+      // 所以字母跟读全程静音，示范统一交给上面那颗「先听一遍」。音节保留回放。
+      if (!isLetter) self.speak(label);
 
-      if (!scored) {
-        if (status) status.innerHTML = '<div class="tap-result good">已读「' + label + '」</div>';
-      } else {
-        var ok = self._soundAlike(label, text);
-        self._spell.unitScores[idx] = { label: label, ok: ok, heard: text };
-        el.classList.toggle('read-miss', !ok);
-        if (status) {
-          status.innerHTML = '<div class="tap-result ' + (ok ? 'good' : 'bad') + '">'
-            + (ok ? '读对了：' + label : '再读一次「' + label + '」')
-            + (text ? '<span class="tap-heard">识别：' + text + '</span>'
-                    : '<span class="tap-heard">没识别出内容</span>') + '</div>';
-        }
-        Api.submitSpeakingScore({
-          studentId: self._myStudentId(), dayIdx: self.state.currentDay,
-          moduleIdx: mi, itemIdx: idx, round: 1, type: 'syllable',
-          label: label, score: ok ? 100 : 0, spoken: text, source: 'asr',
-        });
+      // v93：字母从现在起也判对错 —— 家长的规则是「哪个字母读错了要显出来，
+      // 全部读对才能走到下一个单词」。以前字母是 needsTranscript=false
+      // （不识别、不判分），读错照样放行。判定用专门的 _letterOk，不能拿
+      // _soundAlike 判单字母：它容忍一个编辑距离，而 26 个字母两两距离
+      // 几乎都是 1（b/p、b/d、m/n 全判"对"），等于没判。
+      var ok = isLetter ? self._letterOk(label, text) : self._soundAlike(label, text);
+      self._spell.unitScores[idx] = { label: label, ok: ok, heard: text };
+      el.classList.toggle('read-miss', !ok);
+      if (status) {
+        status.innerHTML = '<div class="tap-result ' + (ok ? 'good' : 'bad') + '">'
+          + (ok ? '读对了：' + label : '再读一次「' + label + '」')
+          + (text ? '<span class="tap-heard">识别：' + text + '</span>'
+                  : '<span class="tap-heard">没识别出内容</span>') + '</div>';
       }
+      Api.submitSpeakingScore({
+        studentId: self._myStudentId(), dayIdx: self.state.currentDay,
+        moduleIdx: mi, itemIdx: idx, round: 1, type: isLetter ? 'letter' : 'syllable',
+        label: label, score: ok ? 100 : 0, spoken: text, source: 'asr',
+      });
       self._spellProgress(mi);
-    }, scored);
+    }, true, 'en', hint);
   },
 
   async _readFullWord(ev, mi) {
@@ -5274,13 +5332,18 @@ const App = {
     if (!area) return;
 
     var cells = '';
+    var missed = [];
     for (var i = 0; i < sp.total; i++) {
       var u = sp.unitScores[i];
       var lbl = (u && u.label) || (sp.units && sp.units[i]) || '·';
       if (sp.kind === 'letter') lbl = String(lbl).toUpperCase();
       var state = !u ? 'na' : (u.ok === undefined ? 'done' : (u.ok ? 'ok' : 'bad'));
+      if (state === 'bad') missed.push(lbl);
       cells += '<span class="sc-cell ' + state + '">' + lbl + '</span>';
     }
+    // v93：家长要求「哪个字母读错了要显出来，全部读对才能走到下一个单词」。
+    // 以前这里只看「每个格子都读过了」，读错照样解锁 —— 现在按对错解锁。
+    sp.allOk = missed.length === 0;
     var noSpeech = !sp.heard;
 
     var html = '<div class="spell-summary">';
@@ -5288,13 +5351,19 @@ const App = {
          + (noSpeech || sp.score === null ? '—' : sp.score) + '</span>'
          + '<span class="ss-label">' + (noSpeech ? '整词没听清' : '整词得分') + '</span></div>';
     html += '<div class="sc-grid">' + cells + '</div>';
-    html += '<button class="word-read-btn" onclick="App.startContinuous(' + mi + ')">连续读一遍 →</button>';
+    if (sp.allOk) {
+      html += '<button class="word-read-btn" onclick="App.startContinuous(' + mi + ')">连续读一遍 →</button>';
+    } else {
+      html += '<div class="spell-retry-hint">还有 ' + missed.length + ' 个要重读：'
+           + missed.join('、') + '<span>按住红色格子再读一次</span></div>';
+    }
     html += '</div>';
     area.innerHTML = html;
     // v90 修复：这里原来调的 this._playCelebrate() 根本不存在（历史笔误），
     // 每次读完都会抛 TypeError，把后面的 _syncVocabFootLabel 一起打断 ——
     // 在新的「读完才放行」逻辑下这会让孩子永远过不去。换成真函数。
-    this._showCelebration(area);
+    // v93：只有全读对才庆祝 —— 还有错字母时放庆祝动画等于告诉他"过了"。
+    if (sp.allOk) this._showCelebration(area);
     this._syncVocabFootLabel(mi, this.state.currentDay);
   },
 
@@ -5306,6 +5375,7 @@ const App = {
     var sp = this._spell;
     if (!sp) return;
     sp.phase = 'continuous';
+    sp.contMiss = false;     // v93：重进连读阶段时清掉上一次的判定
     var seq = (sp.units || []).map(function(u) {
       return sp.kind === 'letter' ? String(u).toUpperCase() : u;
     }).concat([sp.word]);
@@ -5318,9 +5388,16 @@ const App = {
     // 先听再读：连读也要先听一遍完整串法，孩子才知道"连着读"是什么节奏。
     // 示范同样合成一段（字母逗号连读 + 句号 + 整词），不再逐段串播。
     var cgid = this._gid('contg', mi);
+    // v93：同上面的理由，字母串与整词之间用破折号而不是句号 —— 否则遇到
+    // 能拼出真单词的字母串（beautiful），阿里云会把整串读成单词音。
     var contDemo = seq.map(function(x, i) {
       return (sp.kind === 'letter' && i < seq.length - 1) ? String(x).toUpperCase() : x;
-    }).join(', ').replace(/,([^,]*)$/, '.$1');
+    }).join(', ');
+    // 注意捕获组里已经带了逗号后面那个空格（", beautiful" → " beautiful"），
+    // 所以替换串不能再补一个空格，否则会出现两个空格（已验证过一次）。
+    contDemo = sp.kind === 'letter'
+      ? contDemo.replace(/,([^,]*)$/, ' -$1')
+      : contDemo.replace(/,([^,]*)$/, '.$1');
     var html = '<div class="gate-bar"><button type="button" class="gate-listen" data-gate="' + cgid
          + '" data-say="' + this._escHtml(contDemo) + '">🔊 先听一遍（连起来读）</button></div>';
     html += '<div class="cont-seq gate-locked" data-gate="' + cgid + '">' + seq.map(function(x, i) {
@@ -5344,6 +5421,11 @@ const App = {
     var status = document.getElementById('cont-status-' + mi);
     var seq = (sp.units || []).concat([sp.word]);
     if (btn) btn.classList.add('reading');
+    // v93：把整串（字母 + 整词）喂给识别端做 initial_prompt 偏置 —— 串读时
+    // whisper 更容易按顺序把每个字母听出来，这是「全对才放行」能成立的前提。
+    var contHint = seq.map(function(x) {
+      return sp.kind === 'letter' ? String(x).toUpperCase() : x;
+    }).join(', ');
 
     this._holdStart(ev, 'cont-' + mi, sp.word, status, function(out, text) {
       if (btn) btn.classList.remove('reading');
@@ -5351,6 +5433,10 @@ const App = {
       var res = self._scoreSequence(seq, text);
       sp.contScore = res.score;
       sp.contHeard = text;
+      // v93：连续读也必须整串都被听到才放行（家长："同样也是全部读的
+      // 没问题了才能走"）。没读全就把底部按钮重新按下去；上面已经给每个
+      // 片段标了 ok / miss，孩子看得见漏的是哪个。
+      sp.contMiss = !text || res.ok < seq.length;
 
       // Mark which pieces were actually heard.
       seq.forEach(function(x, i) {
@@ -5388,7 +5474,7 @@ const App = {
         label: sp.word, score: res.score, spoken: text, source: 'asr',
       });
       self._syncVocabFootLabel(mi, self.state.currentDay);
-    });
+    }, true, 'en', contHint);
   },
 
   // How much of the expected sequence turned up, in order. Each expected item
@@ -5403,8 +5489,14 @@ const App = {
     var self = this;
     for (var i = 0; i < expected.length; i++) {
       var hit = false;
+      // v93：单个字母改走 _letterOk —— _soundAlike 对 26 个字母等于不判
+      // （任意两个的距离基本都是 1）。音节和整词仍用 _soundAlike。
+      var one = String(expected[i]).replace(/[^a-zA-Z]/g, '');
       for (var j = cursor; j < toks.length; j++) {
-        if (this._soundAlike(expected[i], toks[j])) {
+        var match = (one.length === 1)
+          ? this._letterOk(expected[i], toks[j])
+          : this._soundAlike(expected[i], toks[j]);
+        if (match) {
           hits[i] = true; ok++; cursor = j + 1; hit = true; break;
         }
       }
