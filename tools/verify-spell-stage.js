@@ -204,5 +204,56 @@ holdCb({}, '');                                // 松手（无识别结果）
 ok(bodyEl.children.length === 0, '回调触发 → 悬浮层消失');
 App._holdStart = origHold;
 
+// ---------- v92 红线 ----------
+// 7. 示范必须是单段连读（data-say），不许退回逐段串播（data-seq）
+console.log('== 7) 示范单段连读 ==');
+App._spell = null;
+document.body.innerHTML = '';
+// 重新渲染 letter_read 阶段，抓 gate 按钮
+const mod0 = HOMEWORK_DATA[0].modules.find(m => m.words && m.words[0] &&
+  m.words[0].stages.some(s => s.type === 'letter_read'));
+ok(!!mod0, '第 1 天有 letter_read 词卡模块');
+const wi0 = mod0.words.findIndex(w => w.stages.some(s => s.type === 'letter_read'));
+const stageHtml = App._renderSpellRead(mod0, 0, 0, mod0.words[wi0], mod0.words[wi0].word.split(''), 'letter');
+ok(stageHtml.indexOf('data-seq=') < 0, '示范按钮不再用 data-seq 逐段串播');
+const sayM = stageHtml.match(/data-say="([^"]*)"/);
+ok(!!sayM, '示范按钮带 data-say');
+if (sayM) {
+  const say = sayM[1].replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+  ok(/[A-Z], [A-Z]/.test(say), '字母用逗号连读（' + say.slice(0, 30) + '…）');
+  ok(/\. \S+$/.test(say), '整词用句号接在后面');
+  ok(say.toUpperCase().indexOf(mod0.words[wi0].word.toUpperCase()) >= 0, '整词在示范里');
+}
+// 音节拼读同理
+const wiS = mod0.words.findIndex(w => w.stages.some(s => s.type === 'syllable_read'));
+if (wiS >= 0) {
+  const wS = mod0.words[wiS];
+  const sy = wS.stages.find(s => s.type === 'syllable_read');
+  const unitsS = (sy.units || sy.pieces || wS.word.match(/[^aeiou]*[aeiou]+(?:[^aeiou]+)?/g) || [wS.word]);
+  const h2 = App._renderSpellRead(mod0, 0, 0, wS, unitsS, 'syllable');
+  ok(h2.indexOf('data-seq=') < 0 && /data-say="/.test(h2), '音节示范同为单段连读');
+}
+
+// 8. 整词判分：字符级放宽 —— "break fast" 必须拿满分（v91 前是 0 分）
+console.log('== 8) 整词判分放宽（字符级）==');
+ok(App._wordTakeScore('breakfast', 'break fast', null) === 100,
+   '识别拆词（break fast）→ 100 分');
+ok(App._wordTakeScore('breakfast', 'breakfast', null) === 100, '完全一致 → 100 分');
+ok(App._wordTakeScore('apple', 'apples', null) >= 70, '多一个音素（apples）→ 不重罚（' + App._wordTakeScore('apple', 'apples', null) + '）');
+ok(App._wordTakeScore('apple', 'appo', null) < 60, '读错音（appo）→ 不过关');
+ok(App._wordTakeScore('apple', 'okay thank you', null) < 60, '幻觉词 → 不过关');
+ok(App._wordTakeScore('apple', '', null) === 0, '没识别出 → 0 分');
+// 逐词对齐更严的结果也取 max（句子路径不受影响）
+const alignDemo = App.alignSpeech('I like apples', 'I like apples');
+ok(App._wordTakeScore('apples', 'I like apples', alignDemo) >= alignDemo.score, '取两把尺子的较高分');
+
+// 9. 连续读：整词被拆词时字符级兜底
+console.log('== 9) 连续读整词兜底 ==');
+const seqRes = App._scoreSequence(['b', 'k', 'f', 'a', 's', 't', 'breakfast'], 'b k f a s t break fast');
+ok(seqRes.hits[6] === true, '整词被拆词 → 仍判读到');
+ok(seqRes.ok === 7 && seqRes.score === 100, '全部读到 → 100 分（' + seqRes.score + '）');
+const seqRes2 = App._scoreSequence(['b', 'k', 'f', 'a', 's', 't', 'breakfast'], 'b k f a s t okay');
+ok(seqRes2.hits[6] === false, '整词没读 → 不放水');
+
 console.log('\n' + (fail ? ('有 ' + fail + ' 项失败 ❌') : '全部通过 ✅'));
 process.exit(fail ? 1 : 0);

@@ -261,7 +261,10 @@ async function tts(request, env, ctx) {
 
   // 缓存键带版本：朗读路由一变就 +1，让旧读音立刻全部失效（immutable
   // 缓存赖一年，v89 的字母旧音频就是这么留着的）。v2 = 字母改走有道。
-  const cacheKey = new Request(url.origin + '/api/tts?v2&text=' + encodeURIComponent(text), { method: 'GET' });
+  // engine 也要进键：同一段文字不同通道的音频不同，不能互相串。
+  const forceTtsQ = (url.searchParams.get('engine') || '').toLowerCase();
+  const cacheKey = new Request(url.origin + '/api/tts?v2' + (forceTtsQ ? '&engine=' + forceTtsQ : '')
+    + '&text=' + encodeURIComponent(text), { method: 'GET' });
   const cache = caches.default;
   const hit = await cache.match(cacheKey);
   if (hit) return hit;
@@ -273,7 +276,7 @@ async function tts(request, env, ctx) {
   const isSingleLetter = /^[a-z]$/i.test(text.trim());
   let body = null;
   let source = 'aliyun';
-  if (isSingleLetter) {
+  if (isSingleLetter && forceTtsQ !== 'cf') {
     try {
       body = await ttsFallbackAudio(text);
       source = 'youdao';
@@ -281,7 +284,7 @@ async function tts(request, env, ctx) {
       body = null;   // 有道挂了才落到下面的免费模型，读到什么算什么
     }
   }
-  if (!body) {
+  if (!body && forceTtsQ !== 'cf') {
     const usage = await ttsCharsToday(env);
     if (usage.used < ALIYUN_TTS_DAILY_CHAR_CAP) {
       try {
@@ -463,6 +466,62 @@ function toBase64(bytes) {
   return btoa(bin);
 }
 
+// 裁掉 16k 单声道 16-bit WAV 首尾的静音（v92）。孩子按住→松手的录音两头
+// 总有一截没声：白占上传体积和识别时长，更要命的是给 Whisper 留了"自由发
+// 挥"的空拍 —— 边缘静音里出现的幻觉词（Okay / Thank you）正是"读对了却被
+// 判错"的一个来源。裁剪后留 120ms 缓冲，防止把起音/尾音削掉。
+// 只处理标准 RIFF/PCM；任何形状不对、多声道、非 16-bit 一律原样返回。
+const TRIM_SILENCE_LEVEL = 320;      // ~1% 满幅，呼吸声/房间噪声在这之下
+const TRIM_PAD_SAMPLES = 1920;       // 120ms @16kHz
+
+function trimWavSilence(bytes) {
+  try {
+    if (bytes.length < 44) return bytes;
+    const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    if (dv.getUint32(0, true) !== 0x46464952) return bytes;          // 'RIFF'
+    if (dv.getUint32(8, true) !== 0x45564157) return bytes;          // 'WAVE'
+    // 找 fmt 和 data 块
+    let pos = 12, fmt = null, dataOff = -1, dataLen = -1;
+    while (pos + 8 <= bytes.length) {
+      const id = dv.getUint32(pos, true);
+      const size = dv.getUint32(pos + 4, true);
+      if (id === 0x20746D66) {                                       // 'fmt '
+        fmt = { ch: dv.getUint16(pos + 10, true), bits: dv.getUint16(pos + 22, true) };
+      } else if (id === 0x61746164) {                                // 'data'
+        dataOff = pos + 8;
+        dataLen = Math.min(size, bytes.length - dataOff);
+        break;
+      }
+      pos += 8 + size + (size % 2);
+    }
+    if (!fmt || dataOff < 0 || fmt.ch !== 1 || fmt.bits !== 16) return bytes;
+    const n = Math.floor(dataLen / 2);
+    if (n < TRIM_PAD_SAMPLES * 4) return bytes;
+    let first = -1, last = -1;
+    for (let i = 0; i < n; i++) {
+      if (Math.abs(dv.getInt16(dataOff + i * 2, true)) > TRIM_SILENCE_LEVEL) {
+        if (first < 0) first = i;
+        last = i;
+      }
+    }
+    if (first < 0) return bytes;                                     // 整段没声，交给模型去说"没识别出"
+    const from = Math.max(0, first - TRIM_PAD_SAMPLES);
+    const to = Math.min(n, last + 1 + TRIM_PAD_SAMPLES);
+    if (from === 0 && to === n) return bytes;
+    const kept = to - from;
+    if (kept < TRIM_PAD_SAMPLES) return bytes;                       // 剩太短不裁，防误伤
+    const newLen = dataOff + kept * 2 + (dataLen % 2);
+    const out = new Uint8Array(newLen);
+    out.set(bytes.subarray(0, dataOff), 0);                          // 原样头 + 块头
+    out.set(bytes.subarray(dataOff + from * 2, dataOff + to * 2), dataOff);
+    new DataView(out.buffer).setUint32(dataOff - 8 + 4, kept * 2, true);   // data 块大小
+    new DataView(out.buffer).setUint32(4, newLen - 8, true);               // RIFF 大小
+    return out;
+  } catch (e) {
+    return bytes;
+  }
+}
+
 // turbo 要 base64 字符串；默认 whisper 要 [0..255,...] 整数数组。形状不能混，
 // 混了不是"效果差一点"，而是直接 500 —— 孩子这一次朗读的分数就没了。
 //
@@ -592,7 +651,7 @@ async function transcribe(request, env) {
     const buf = await request.arrayBuffer();
     if (buf.byteLength === 0) return json({ error: 'empty_audio' }, 400);
     if (buf.byteLength > MAX_BYTES) return json({ error: 'too_large' }, 413);
-    bytes = new Uint8Array(buf);
+    bytes = trimWavSilence(new Uint8Array(buf));
   } catch (e) {
     return json({ error: 'bad_body' }, 400);
   }

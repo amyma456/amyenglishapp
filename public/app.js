@@ -1631,9 +1631,11 @@ const App = {
 
   // 兜底放行时间：示范可能因为断网/系统静音根本没响，onDone 就永远不来。
   // 按句子长短给一个上限，最迟也会放行 —— 不能因为听不到声把孩子锁死在题目里。
+  // v92：拼读示范从逐段串播改成单段连读（首次要等阿里云合成 + 完整播放），
+  // 上限从 2500+n*450 提到 3500+n*600，避免合成慢的时候提前解锁。
   _gateFallbackMs(say) {
     const n = String(say || '').split(/\s+/).filter(Boolean).length;
-    return Math.max(4000, Math.min(12000, 2500 + n * 450));
+    return Math.max(5000, Math.min(15000, 3500 + n * 600));
   },
 
   _gateGuardBound: false,
@@ -5093,13 +5095,18 @@ const App = {
     html += '<div class="vocab-phonetic">' + word.phonetic + '</div>';
     html += '<div class="read-instruction">先听完示范，再按住每个格子读，松开结束</div>';
 
-    // 先听再读：这一排格子由一个门禁统管。点「先听一遍」会从上到下依次播
-    // 每个字母（音节）再播整词，听完这串才解锁，孩子才知道每个格子该发什么音。
+    // 先听再读：这一排格子由一个门禁统管。示范不再是一段一段拼（v91 前串播
+    // 6 段字母 + 1 段整词，段间停顿把 B-K-F-A-S-T 拆得七零八落，家长实测
+    // "整个音太分散"）—— 拼成一句话交给阿里云一次合成：字母用逗号连、整词
+    // 用句号接，实测逐字母清晰且连读自然（"B, K, F, A, S, T. Breakfast."），
+    // 音色也和整词一致。
     var gid = this._gid('spellg', mi);
-    var seq = units.map(function(u) { return kind === 'letter' ? String(u) : u; }).concat([word.word]);
+    var demo = (kind === 'letter'
+      ? units.map(function(u) { return String(u).toUpperCase(); }).join(', ')
+      : units.join(', ')) + '. ' + word.word;
     html += '<div class="gate-bar"><button type="button" class="gate-listen" data-gate="' + gid
-         + '" data-seq="' + this._escHtml(seq.join('|')) + '">🔊 先听一遍（'
-         + (kind === 'letter' ? '逐字母 + 整词' : '按音节 + 整词') + '）</button></div>';
+         + '" data-say="' + this._escHtml(demo) + '">🔊 先听一遍（'
+         + (kind === 'letter' ? '逐字母连读 + 整词' : '按音节 + 整词') + '）</button></div>';
 
     html += '<div class="spell-row gate-locked" id="spell-row-' + mi + '" data-gate="' + gid + '">';
     units.forEach(function(u, i) {
@@ -5205,22 +5212,37 @@ const App = {
       self.speak(wordText);
       self._spell.finished = false;      // re-reading must re-score and redraw
       var a = self.alignSpeech(wordText, text || '');
+      var score = self._wordTakeScore(wordText, text || '', a);
       self._spell.wordTake = out.samples || null;
-      self._spell.score = a.score;
+      self._spell.score = score;
       self._spell.heard = text;
       if (status) {
-        status.innerHTML = '<div class="tap-result ' + (a.score >= 60 ? 'good' : 'bad') + '">'
-          + '整词 ' + a.score + ' 分'
+        status.innerHTML = '<div class="tap-result ' + (score >= 60 ? 'good' : 'bad') + '">'
+          + '整词 ' + score + ' 分'
           + (text ? '<span class="tap-heard">识别：' + text + '</span>'
                   : '<span class="tap-heard">没识别出内容</span>') + '</div>';
       }
       Api.submitSpeakingScore({
         studentId: self._myStudentId(), dayIdx: self.state.currentDay,
         moduleIdx: mi, itemIdx: 99, round: 1, type: 'word',
-        label: wordText, score: a.score, spoken: text, source: 'asr',
+        label: wordText, score: score, spoken: text, source: 'asr',
       });
       self._spellProgress(mi);
     }, null, 'en', wordText);
+  },
+
+  // 整词打分（v92）：逐词对齐对"目标只有一个词"的目标太狠了 —— 识别把
+  // breakfast 听成 "break fast" 两个词，逐词对齐 0 分；孩子明明读对了。
+  // 单词目标改成字符级比对：把识别结果的字母连成一串和目标比编辑距离，
+  // 轻微口音/个别字母含糊扣得少，多出来的幻觉音节照实扣。
+  _wordTakeScore(target, heard, align) {
+    var t = String(target || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    var s = String(heard || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (!t || !s) return align ? align.score : 0;
+    if (s === t) return 100;
+    var dist = this._editDistance(t, s);
+    var pen = (dist / Math.max(t.length, s.length)) * 100 * 1.3;   // 放宽：个别字母含糊不挡过关
+    return Math.max(align ? align.score : 0, Math.max(0, Math.round(100 - pen)));
   },
 
   // Nothing advances on its own — the child decides when to finish.
@@ -5293,10 +5315,14 @@ const App = {
     var instr = document.querySelector('.read-instruction');
     if (instr) instr.textContent = '按住不放，把下面的字母和单词连着读一遍';
 
-    // 先听再读：连读也要先听一遍完整串法，孩子才知道"连着读"是什么节奏
+    // 先听再读：连读也要先听一遍完整串法，孩子才知道"连着读"是什么节奏。
+    // 示范同样合成一段（字母逗号连读 + 句号 + 整词），不再逐段串播。
     var cgid = this._gid('contg', mi);
+    var contDemo = seq.map(function(x, i) {
+      return (sp.kind === 'letter' && i < seq.length - 1) ? String(x).toUpperCase() : x;
+    }).join(', ').replace(/,([^,]*)$/, '.$1');
     var html = '<div class="gate-bar"><button type="button" class="gate-listen" data-gate="' + cgid
-         + '" data-seq="' + this._escHtml(seq.join('|')) + '">🔊 先听一遍（连起来读）</button></div>';
+         + '" data-say="' + this._escHtml(contDemo) + '">🔊 先听一遍（连起来读）</button></div>';
     html += '<div class="cont-seq gate-locked" data-gate="' + cgid + '">' + seq.map(function(x, i) {
       return '<span class="cont-item" id="cont-' + mi + '-' + i + '">' + x + '</span>';
     }).join('') + '</div>';
@@ -5374,10 +5400,20 @@ const App = {
     var toks = String(transcript).toLowerCase().replace(/[^a-z0-9\s]/g, ' ')
                  .split(/\s+/).filter(Boolean);
     var cursor = 0, ok = 0;
+    var self = this;
     for (var i = 0; i < expected.length; i++) {
+      var hit = false;
       for (var j = cursor; j < toks.length; j++) {
         if (this._soundAlike(expected[i], toks[j])) {
-          hits[i] = true; ok++; cursor = j + 1; break;
+          hits[i] = true; ok++; cursor = j + 1; hit = true; break;
+        }
+      }
+      // 整词和 _readFullWord 同一把尺子：识别把 breakfast 听成 "break fast"
+      // 两个词时，逐词匹配必挂 —— 用剩余 token 连成一串做字符级比对。
+      if (!hit && i === expected.length - 1 && String(expected[i]).indexOf(' ') < 0) {
+        var rest = toks.slice(cursor).join('');
+        if (rest && self._wordTakeScore(expected[i], rest, null) >= 70) {
+          hits[i] = true; ok++;
         }
       }
     }
