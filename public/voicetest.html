@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>示范读音音色试听 · Amy 老师英语打卡平台</title>
+<style>
+  :root {
+    --bg: #f5f7fb; --card: #ffffff; --text: #1f2937; --sub: #6b7280;
+    --primary: #2f6fed; --ok: #16a34a; --line: #e5e7eb;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0; padding: 16px 14px 40px; background: var(--bg); color: var(--text);
+    font: 16px/1.6 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  h1 { font-size: 20px; margin: 4px 0 6px; }
+  .lead { color: var(--sub); font-size: 14px; margin: 0 0 14px; }
+  .sentence {
+    background: #eef3ff; border: 1px solid #d7e2ff; border-radius: 12px;
+    padding: 10px 12px; font-size: 15px; margin-bottom: 16px;
+  }
+  .sentence b { color: var(--primary); }
+  h2 { font-size: 15px; margin: 22px 0 8px; color: var(--sub); font-weight: 600; }
+  .item {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 12px 14px; margin-bottom: 10px;
+    box-shadow: 0 1px 2px rgba(16,24,40,.04);
+  }
+  .item.top { border-color: #bcd0ff; box-shadow: 0 2px 10px rgba(47,111,237,.10); }
+  .name { font-weight: 700; font-size: 16px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .tag {
+    font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px;
+    background: #eef3ff; color: var(--primary); border: 1px solid #d7e2ff;
+  }
+  .tag.ok { background: #eafaef; color: var(--ok); border-color: #c8ecd4; }
+  .desc { color: var(--sub); font-size: 13px; margin: 4px 0 8px; }
+  audio { width: 100%; height: 38px; }
+  .note { color: var(--sub); font-size: 13px; margin-top: 18px; padding-top: 14px; border-top: 1px dashed var(--line); }
+  .note b { color: var(--text); }
+</style>
+</head>
+<body>
+  <h1>示范读音音色试听</h1>
+  <p class="lead">同一句英语，不同音色读一遍。听完告诉 Amy 老师哪个最好听就行。</p>
+
+  <div class="sentence">试听句子：<b>What's your favorite subject at school?</b></div>
+
+  <h2>① 云端 · 英语母语音色（AI 口语练习现在用它）</h2>
+  <div class="item top">
+    <div class="name">Cloudflare 母语音色 <span class="tag ok">口语练习默认</span></div>
+    <div class="desc">英语母语者音色，最自然。孩子每天先用它，额度用完会自动换成下面的阿里云音色。</div>
+    <audio controls preload="none" src="/voicetest/cf-default-1.mp3"></audio>
+  </div>
+
+  <h2>② 阿里云音色（额度用完时的兜底 / 其它模块在用）</h2>
+
+  <div class="item top">
+    <div class="name">Jennifer 詹妮弗 <span class="tag ok">英文默认</span></div>
+    <div class="desc">英文女声。现在阿里云读英文都用它（原来的 Cherry 读英文带口音）。</div>
+    <audio controls preload="none" src="/voicetest/ali-jennifer.wav"></audio>
+  </div>
+
+  <div class="item">
+    <div class="name">Cherry 芊悦 <span class="tag">原来的音色</span></div>
+    <div class="desc">中英双语音色。读中文自然，读英文口音重 —— 换成 Jennifer 之前的全站默认。</div>
+    <audio controls preload="none" src="/voicetest/ali-cherry.wav"></audio>
+  </div>
+
+  <div class="item">
+    <div class="name">Ryan 甜茶</div>
+    <div class="desc">英文男声。如果想要男老师的声音，可以用这个。</div>
+    <audio controls preload="none" src="/voicetest/ali-ryan.wav"></audio>
+  </div>
+
+  <div class="item">
+    <div class="name">Serena 苏瑶</div>
+    <div class="desc">中文女声（中英双语）。</div>
+    <audio controls preload="none" src="/voicetest/ali-serena.wav"></audio>
+  </div>
+
+  <div class="item">
+    <div class="name">Ethan 晨煦</div>
+    <div class="desc">中文男声（中英双语）。</div>
+    <audio controls preload="none" src="/voicetest/ali-ethan.wav"></audio>
+  </div>
+
+  <div class="item">
+    <div class="name">Katerina 卡捷琳娜</div>
+    <div class="desc">女声，带一点欧洲口音。</div>
+    <audio controls preload="none" src="/voicetest/ali-katerina.wav"></audio>
+  </div>
+
+  <div class="item">
+    <div class="name">Aiden 艾登</div>
+    <div class="desc">男声。</div>
+    <audio controls preload="none" src="/voicetest/ali-aiden.wav"></audio>
+  </div>
+
+  <div class="item">
+    <div class="name">Maia 四月</div>
+    <div class="desc">女声，语调偏活泼。</div>
+    <audio controls preload="none" src="/voicetest/ali-maia.wav"></audio>
+  </div>
+
+  <p class="note">
+    <b>怎么听：</b>点每张小卡片下面的播放键。手机音量别开太小，最好用耳机。<br>
+    <b>为什么会有两套：</b>Cloudflare 的母语音色最好听，但每天有免费额度，用完就没了；
+    阿里云按字数计费、几乎不可能用完。所以口语练习先用 Cloudflare，不够了自动落到阿里云，
+    孩子任何时候都有声音听。
+  </p>
+</body>
+</html>

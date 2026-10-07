@@ -90,6 +90,10 @@ function load(opts) {
 function ttsReq(text) {
   return new Request('https://x.test/api/tts?text=' + encodeURIComponent(text), { method: 'GET' });
 }
+function ttsReqP(text, prefer) {
+  return new Request('https://x.test/api/tts?text=' + encodeURIComponent(text)
+    + '&prefer=' + encodeURIComponent(prefer), { method: 'GET' });
+}
 
 (async function main() {
   console.log('== 1) 缓存命中 ==');
@@ -152,6 +156,48 @@ function ttsReq(text) {
   r = load({});
   res = await r.call(ttsReq('x'.repeat(901)));
   ok(res.status === 413, '超长文本 → 413');
+
+  console.log('== 8) 音色：英文 Jennifer / 中文 Cherry（v95）==');
+  r = load({});
+  await r.call(ttsReq('my favorite subject is english'));
+  ok((r.rec.bodies || []).some(b => b.indexOf('"voice":"Jennifer"') >= 0),
+     '英文用 Jennifer —— Cherry 读英文带口音（家长："发音太烂了"）');
+  r = load({});
+  await r.call(ttsReq('苹果很好吃'));
+  ok((r.rec.bodies || []).some(b => b.indexOf('"voice":"Cherry"') >= 0),
+     '中文仍用 Cherry（中英双语音色读中文自然）');
+
+  console.log('== 9) prefer=cf：AI 口语练习先走 CF，不够用自动落阿里云（v95）==');
+  r = load({});
+  res = await r.call(ttsReqP('my favorite subject is english', 'cf'));
+  ok(res.status === 200 && res.headers.get('X-TTS-Source') === 'cf',
+     'prefer=cf → 先用 Cloudflare 的母语音色');
+  ok(r.rec.aiCalls === 1 && r.rec.aiModel === '@cf/deepgram/aura-2-en', '调的是 Deepgram aura');
+  ok(!r.rec.fetches.some(u => u.indexOf('dashscope') >= 0), 'CF 成功时不去动阿里云');
+  ok(r.rec.charsAdded === 0, '不记阿里云字符');
+
+  r = load({ aiThrows: true });                    // CF 每日 neurons 额度耗尽
+  res = await r.call(ttsReqP('my favorite subject is english', 'cf'));
+  ok(res.status === 200 && res.headers.get('X-TTS-Source') === 'aliyun',
+     'CF 额度耗尽 → 自动落阿里云，孩子照样听得到声音');
+  ok(r.rec.fetches.some(u => u.indexOf('dashscope') >= 0), '确实走了 dashscope');
+
+  r = load({ aiThrows: true, aliThrows: true });
+  res = await r.call(ttsReqP('my favorite subject is english', 'cf'));
+  ok(res.status === 200 && res.headers.get('X-TTS-Source') === 'fallback',
+     'CF + 阿里云都挂 → 百度/有道兜底');
+
+  r = load({});
+  res = await r.call(new Request('https://x.test/api/tts?text=my%20favorite%20subject%20is%20english&prefer=cf&engine=cf',
+    { method: 'GET' }));
+  ok(res.status === 200 && res.headers.get('X-TTS-Source') === 'cf', 'engine=cf 与 prefer=cf 同用仍然只走 CF');
+  ok(!r.rec.fetches.some(u => u.indexOf('dashscope') >= 0), '强制 CF 时不碰阿里云');
+
+  r = load({});
+  res = await r.call(ttsReqP('B', 'cf'));
+  ok(res.status === 200 && res.headers.get('X-TTS-Source') === 'youdao',
+     '单个字母即使带 prefer=cf 也仍走有道（字母名只有有道读得准）');
+  ok(r.rec.aiCalls === 0, '字母不烧 CF neurons');
 
   console.log(fail === 0 ? '\n全部通过（' + pass + ' 项）✅' : '\n有 ' + fail + ' 项失败 ❌');
   process.exit(fail === 0 ? 0 : 1);

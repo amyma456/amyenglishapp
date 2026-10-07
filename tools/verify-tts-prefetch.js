@@ -83,10 +83,20 @@ const Recorder = {
 };
 
 // ---------- 可控的 fetch：记账并发与时序 ----------
-let inflight = 0, maxInflight = 0, requested = [], order = [];
+let inflight = 0, maxInflight = 0, requested = [], order = [], urls = [];
 let resolveAll = [];
 const fakeFetch = url => {
-  const text = decodeURIComponent(String(url).replace(/^.*[?&]text=/, ''));
+  // 请求里除了 text 还可能有 prefer（音色偏好），所以按参数名解析，
+  // 不能再用"从 ?text= 截到末尾"那种偷懒写法。
+  const u = String(url);
+  urls.push(u);
+  const qs = u.indexOf('?') >= 0 ? u.slice(u.indexOf('?') + 1) : '';
+  const params = {};
+  qs.split('&').forEach(kv => {
+    const i = kv.indexOf('=');
+    if (i > 0) params[kv.slice(0, i)] = decodeURIComponent(kv.slice(i + 1));
+  });
+  const text = params.text || '';
   requested.push(text);
   inflight++;
   if (inflight > maxInflight) maxInflight = inflight;
@@ -135,7 +145,7 @@ const localTexts = () => Object.keys(App._ttsBlobs || {});
 const reset = () => {
   App._ttsBlobs = {}; App._ttsPending = {}; App._ttsBlobStep = {};
   App._ttsBlobOrder = []; App._ttsQueue = []; App._ttsRunning = 0;
-  inflight = 0; maxInflight = 0; requested = []; order = []; resolveAll = [];
+  inflight = 0; maxInflight = 0; requested = []; order = []; resolveAll = []; urls = [];
 };
 
 (async () => {
@@ -250,6 +260,47 @@ const reset = () => {
   App._syncGates(gateBox);                 // 再触发一次不得重复取
   await settle();
   ok(requested.length === reqBefore, '重复触发 _syncGates 不会重复发请求（多发 ' + (requested.length - reqBefore) + ' 个）');
+
+  console.log('\n=== 10. 口语模块的音色偏好：预取也要带 prefer=cf（v95）===');
+  reset();
+  App.state.stepIdx = 0;
+  App.state.currentDay = 0;
+  ok(App._stepTtsPrefer({ kind: 'speaking' }) === 'cf', '口语步骤 → prefer=cf');
+  ok(App._stepTtsPrefer({ kind: 'question' }) === '', '听力/选择题 → 不带偏好（继续走便宜的阿里云）');
+  ok(App._ttsKey('apple', '') === 'apple' && App._ttsKey('apple', 'cf') === 'cf|apple',
+     '两种音色的本地键分开，不会互相顶替');
+
+  App.prefetchTts('my favorite subject is english', 1, 'cf');
+  await settle();
+  ok(urls.some(u => u.indexOf('prefer=cf') >= 0), 'cf 偏好的预取请求带上了 prefer=cf');
+  ok(!!App._ttsBlobs['cf|my favorite subject is english'],
+     '音频落在 cf| 前缀的键上');
+  ok(!App._ttsBlobs['my favorite subject is english'], '不会占用默认音色的键');
+
+  // 同一句话两种音色各取一次，谁都不用等谁、也不会把对方顶掉
+  App.prefetchTts('my favorite subject is english', 1);
+  await settle();
+  ok(!!App._ttsBlobs['my favorite subject is english'] &&
+     !!App._ttsBlobs['cf|my favorite subject is english'],
+     '同一句话的两种音色各自持有（走 A 屏听到的是 A 音色，不会被 B 顶掉）');
+
+  // 口语步骤走 prefetchUpcoming：题面和四个选项都得按 cf 预取
+  reset();
+  App.state.stepIdx = 0;
+  const spMi = HOMEWORK_DATA[0].modules.findIndex(m => m.type === 'speaking');
+  ok(spMi >= 0, '题库里有口语模块');
+  const spQ = HOMEWORK_DATA[0].modules[spMi].questions[0];
+  App.prefetchUpcoming([{ kind: 'speaking', mi: spMi, qi: 0 }], 0, 0);
+  await settle();
+  const spSay = App._ttsText(spQ.sentence);
+  ok(!!App._ttsBlobs['cf|' + spSay], '口语屏的题面按 cf 音色预取');
+  const cfOpts = (spQ.options || []).filter(o => App._ttsBlobs['cf|' + App._ttsText(String(o))]);
+  ok(cfOpts.length === (spQ.options || []).length,
+     '四个选项也都按 cf 音色预取（' + cfOpts.length + '/' + (spQ.options || []).length + '）——点选后零等待');
+
+  // 点下去要读的那一句，命中的必须是 cf 那份音频
+  const cached = App._ttsBlobs[App._ttsKey(App._ttsText(spQ.sentence), 'cf')];
+  ok(!!cached, 'speak() 按 opts.prefer 取到的正是 cf 那份音频');
 
   console.log('\n' + (fail ? '❌ ' + fail + ' 项未通过' : '✅ 全部通过'));
   process.exit(fail ? 1 : 0);

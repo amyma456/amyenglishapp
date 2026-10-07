@@ -154,9 +154,16 @@ async function gradeTranslation(request, env) {
 // Responses are cached — every child reads the same sentences over and over,
 // so almost every request after the first is a cache hit and costs nothing.
 //
-// 通道顺序（v89 起）：阿里云 qwen3-tts-flash（主，按字符计费、音色最好）
+// 通道顺序（v89 起）：阿里云 qwen3-tts-flash（主，按字符计费、不烧 neurons）
 //   → Cloudflare Deepgram aura（备，烧 neurons，额度大头就是它）
 //   → 百度/有道代理（免费兜底）。见下方 aliyunTtsAudio / tts()。
+//
+// v95 增加 per-request 的音色偏好 `?prefer=cf`（AI 口语练习专用）：
+// 家长反馈"口语练习的发音太烂了，默认给我走 Cloudflare"。Deepgram aura 是
+// 英语母语音色，明显好听过阿里云的中英双语音色；但它每次朗读烧 90~145
+// neurons，是每天 10,000 免费额度的真正大头，全站都切过去半天就烧光。
+// 所以只有口语练习这一个模块写 prefer=cf：日常先用 CF 的好音色，额度用完
+// 或上游故障时**自动落阿里云**（仍是按字符计费，不影响孩子听到声音）。
 const TTS_MODEL = '@cf/deepgram/aura-2-en';
 const TTS_MAX_CHARS = 900;
 
@@ -192,7 +199,13 @@ async function ttsFallbackAudio(text) {
 // Deepgram 更自然。Cherry 是中英双语音色，一个声音通吃单词和中文释义。
 const ALIYUN_TTS_URL = 'https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation';
 const ALIYUN_TTS_MODEL = 'qwen3-tts-flash';
-const ALIYUN_TTS_VOICE = 'Cherry';
+// 音色分中英文两套（v95）：Cherry 是中英双语音色，读中文自然，但读英文带
+// 口音 —— 家长的原话是"这个发音真是太烂了"。英文改用阿里云专为英语训练的
+// 女声（Jennifer），中英混排（单词 + 中文释义）仍用 Cherry。
+// 选型依据：tools/tts-voice-bench.js（合成 → qwen3-asr-flash 反听 → 逐词比对）
+// + public/voicetest/ 的人耳试听样本。
+const ALIYUN_TTS_VOICE_CN = 'Cherry';
+const ALIYUN_TTS_VOICE_EN = 'Jennifer';
 
 // 消费上限：qwen3-tts-flash ¥0.8/万字符 → 30,000 字符/天 ≈ ¥2.4 封顶。
 // 正常流量远到不了（题库固定 + 边缘缓存），这道闸只防缓存失效/刷量时的
@@ -239,7 +252,11 @@ async function aliyunTtsAudio(text, env) {
     headers: { Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: ALIYUN_TTS_MODEL,
-      input: { text: text, voice: ALIYUN_TTS_VOICE, language_type: hasCJK ? 'Chinese' : 'English' },
+      input: {
+        text: text,
+        voice: hasCJK ? ALIYUN_TTS_VOICE_CN : ALIYUN_TTS_VOICE_EN,
+        language_type: hasCJK ? 'Chinese' : 'English',
+      },
     }),
   });
   if (!res.ok) throw new Error('aliyun_tts_http_' + res.status);
@@ -253,6 +270,29 @@ async function aliyunTtsAudio(text, env) {
   return buf;
 }
 
+// Cloudflare Workers AI 的 TTS（Deepgram aura，英语母语音色）。
+// 返回 null 表示这条通道这次不可用（每日 neurons 额度耗尽 / 模型报错），
+// 由调用方决定往哪儿降级；不在这里吞掉整条请求。
+// 入参形状的坑见「已知坑」：aura 返回 base64 对象或 ReadableStream，两种都要认。
+async function cfTtsAudio(text, env) {
+  try {
+    const audio = await env.AI.run(TTS_MODEL, { text: text });
+    // The binding returns either a ReadableStream or an object holding base64.
+    let body = audio;
+    if (audio && typeof audio === 'object' && !(audio instanceof ReadableStream)) {
+      if (audio.audio) {
+        const bin = atob(audio.audio);
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        body = bytes;
+      }
+    }
+    return body || null;
+  } catch (e) {
+    return null;
+  }
+}
+
 async function tts(request, env, ctx) {
   const url = new URL(request.url);
   const text = (url.searchParams.get('text') || '').trim();
@@ -260,10 +300,13 @@ async function tts(request, env, ctx) {
   if (text.length > TTS_MAX_CHARS) return json({ error: 'too_long' }, 413);
 
   // 缓存键带版本：朗读路由一变就 +1，让旧读音立刻全部失效（immutable
-  // 缓存赖一年，v89 的字母旧音频就是这么留着的）。v2 = 字母改走有道。
-  // engine 也要进键：同一段文字不同通道的音频不同，不能互相串。
+  // 缓存赖一年）。v2 = 字母改走有道；v3 = 英文音色换人 + 新增 prefer 维度。
+  // engine / prefer 也要进键：同一段文字不同通道音色不同，不能互相串。
   const forceTtsQ = (url.searchParams.get('engine') || '').toLowerCase();
-  const cacheKey = new Request(url.origin + '/api/tts?v2' + (forceTtsQ ? '&engine=' + forceTtsQ : '')
+  const preferCf = (url.searchParams.get('prefer') || '').toLowerCase() === 'cf';
+  const cacheKey = new Request(url.origin + '/api/tts?v3'
+    + (forceTtsQ ? '&engine=' + forceTtsQ : '')
+    + (preferCf ? '&prefer=cf' : '')
     + '&text=' + encodeURIComponent(text), { method: 'GET' });
   const cache = caches.default;
   const hit = await cache.match(cacheKey);
@@ -284,34 +327,27 @@ async function tts(request, env, ctx) {
       body = null;   // 有道挂了才落到下面的免费模型，读到什么算什么
     }
   }
+  // prefer=cf（AI 口语练习）：先用 Cloudflare 的母语音色。额度用完/上游报错
+  // 时 body 还是 null，下面照常落阿里云 —— 孩子不会因为额度耗尽就没声音。
+  if (!body && preferCf && forceTtsQ !== 'ali') {
+    body = await cfTtsAudio(text, env);
+    if (body) source = 'cf';
+  }
   if (!body && forceTtsQ !== 'cf') {
     const usage = await ttsCharsToday(env);
     if (usage.used < ALIYUN_TTS_DAILY_CHAR_CAP) {
       try {
         body = await aliyunTtsAudio(text, env);
+        source = 'aliyun';
         ctx.waitUntil(usage.add(text.length));
       } catch (e) {
         body = null;   // Key 没配 / 上游抖动 / 取音频失败 —— 静默走老路
       }
     }
   }
-  if (!body) {
+  if (!body && !preferCf) {
     source = 'cf';
-    try {
-      const audio = await env.AI.run(TTS_MODEL, { text: text });
-      // The binding returns either a ReadableStream or an object holding base64.
-      body = audio;
-      if (audio && typeof audio === 'object' && !(audio instanceof ReadableStream)) {
-        if (audio.audio) {
-          const bin = atob(audio.audio);
-          const bytes = new Uint8Array(bin.length);
-          for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-          body = bytes;
-        }
-      }
-    } catch (e) {
-      body = null;
-    }
+    body = await cfTtsAudio(text, env);
   }
   if (!body) {
     // 额度用完 / 模型出错：换备用通道。再不行才真的报错，让客户端走

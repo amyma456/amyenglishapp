@@ -956,6 +956,20 @@ const App = {
   TTS_PREFETCH_AHEAD: 5,         // 往前预取几步
   TTS_PREFETCH_CONCURRENCY: 5,   // 预取请求同时在路上的上限
 
+  // 示范读音的"音色偏好"（v95）。只有 AI 口语练习用 'cf'：家长反馈阿里云
+  // 读英文"太烂了"，而这个模块整屏都是英文对话句，量又小（每天 5 题 ×
+  // 三四句），用得起 Cloudflare Deepgram 的母语音色。额度用完时服务端会
+  // 自动落回阿里云，客户端不用管。其它模块保持默认（阿里云，便宜）。
+  _stepTtsPrefer(step) {
+    return (step && step.kind === 'speaking') ? 'cf' : '';
+  },
+
+  // 本地音频缓存的键。同一句话在两种音色下是两段不同的音频，键必须分开，
+  // 否则谁先取到谁就一直被播（孩子在口语屏听到阿里云的口音就是这么来的）。
+  _ttsKey(text, prefer) {
+    return (prefer ? prefer + '|' : '') + text;
+  },
+
   // 某一步会朗读的英文（和各个 step 渲染时读的是同一份文本）
   _stepSpeechText(steps, dayIdx, i) {
     var s = steps && steps[i];
@@ -1014,6 +1028,7 @@ const App = {
   prefetchUpcoming(steps, dayIdx, fromIdx) {
     if (!steps || typeof fetch !== 'function') return;
     var curStep = steps[fromIdx];
+    var curPref = this._stepTtsPrefer(curStep);
 
     if (curStep) {
       var day0 = HOMEWORK_DATA[dayIdx];
@@ -1021,32 +1036,36 @@ const App = {
       var cq = cm && cm.questions && cm.questions[curStep.qi];
       var copts = (cq && cq.options) || [];
       for (var k = 0; k < copts.length; k++) {
-        if (copts[k]) this.prefetchTts(String(copts[k]), fromIdx);
+        if (copts[k]) this.prefetchTts(String(copts[k]), fromIdx, curPref);
       }
       // 当前屏自己的示范句也要：口语跟读的「先听一遍」读的是问句+答句整句，
       // 阅读逐句的听入口就是那句话本身 —— 孩子落在这屏的头几秒就会去点，
       // 不能等点了才现场生成。
       var curSay = this._stepSpeechText(steps, dayIdx, fromIdx);
-      if (curSay) this.prefetchTts(curSay, fromIdx);
+      if (curSay) this.prefetchTts(curSay, fromIdx, curPref);
       // writingread 这一屏的句子孩子会一句句点着听，先全取回来
       var curTaps = this._stepTapSpeechTexts(steps, dayIdx, fromIdx);
-      for (var n = 0; n < curTaps.length; n++) this.prefetchTts(curTaps[n], fromIdx);
+      for (var n = 0; n < curTaps.length; n++) this.prefetchTts(curTaps[n], fromIdx, curPref);
     }
 
     for (var i = fromIdx + 1; i <= fromIdx + this.TTS_PREFETCH_AHEAD; i++) {
-      this.prefetchTts(this._stepSpeechText(steps, dayIdx, i), i);
+      var pref = this._stepTtsPrefer(steps[i]);
+      this.prefetchTts(this._stepSpeechText(steps, dayIdx, i), i, pref);
       var taps = this._stepTapSpeechTexts(steps, dayIdx, i);
-      for (var j = 0; j < taps.length; j++) this.prefetchTts(taps[j], i);
+      for (var j = 0; j < taps.length; j++) this.prefetchTts(taps[j], i, pref);
     }
     this._ttsTrim();
   },
 
   // 把一句英文排进预取队列。stepIdx 是"这句话属于第几步"—— 取和扔都靠它
   // 排序：越靠近孩子当前这一步，越先取、越不容易被释放。
-  prefetchTts(text, stepIdx) {
+  // prefer 是音色偏好（'cf' = Cloudflare 母语音色，见 _stepTtsPrefer）。
+  prefetchTts(text, stepIdx, prefer) {
     var t = this._ttsText(text);
     if (!t) return;
     t = t.substring(0, 500).trim();
+    var pref = prefer || '';
+    var key = this._ttsKey(t, pref);
     // 单词/字母也要预取：词汇模块"先听一遍"是串行播 5~6 段（逐字母 + 整词），
     // 每段现场去取的话中间全是空档，孩子看着格子干等。现在统一走自家端点
     // （服务端在额度用完时会自动换道有道/百度），取回来存本地，点哪段秒播。
@@ -1057,16 +1076,16 @@ const App = {
 
     var st = (typeof stepIdx === 'number') ? stepIdx
            : ((this.state && typeof this.state.stepIdx === 'number') ? this.state.stepIdx : 0);
-    var prev = this._ttsBlobStep[t];
+    var prev = this._ttsBlobStep[key];
     // 同一句可能在好几屏里都要用，记最早的那一步：走过它才允许释放。
-    this._ttsBlobStep[t] = (typeof prev === 'number') ? Math.min(prev, st) : st;
+    this._ttsBlobStep[key] = (typeof prev === 'number') ? Math.min(prev, st) : st;
 
-    if (this._ttsBlobs[t] || this._ttsPending[t]) return;      // 已经取到 / 正在路上
+    if (this._ttsBlobs[key] || this._ttsPending[key]) return;      // 已经取到 / 正在路上
     var q = this._ttsQueue = this._ttsQueue || [];
     for (var i = 0; i < q.length; i++) {
-      if (q[i].text === t) return;                             // 已经排在队里
+      if (q[i].key === key) return;                                // 已经排在队里
     }
-    q.push({ text: t, step: st });
+    q.push({ key: key, text: t, prefer: pref, step: st });
     this._ttsPump();
   },
 
@@ -1083,43 +1102,51 @@ const App = {
         if (q[i].step < q[best].step) best = i;
       }
       var job = q.splice(best, 1)[0];
-      var t = job.text;
-      if (this._ttsBlobs[t]) continue;                          // 等的时候已经到手了
+      if (this._ttsBlobs[job.key]) continue;                    // 等的时候已经到手了
       this._ttsRunning++;
-      this._ttsPending[t] = true;
-      fetch('/api/tts?text=' + encodeURIComponent(t))
-        .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.blob(); })
-        .then(function(b) {
-          self._ttsBlobs[t] = URL.createObjectURL(b);
-          self._ttsBlobOrder = self._ttsBlobOrder || [];
-          self._ttsBlobOrder.push(t);
-          self._ttsTrim();
-        })
-        .catch(function() {
-          // 取不到就照旧走网络路径，孩子那边不用等、也不需要知道
-        })
-        .then(function() {
-          delete self._ttsPending[t];
-          self._ttsRunning--;
-          self._ttsPump();
-        });
+      this._ttsPending[job.key] = true;
+      // 每句的 key/text/prefer 都要绑在这次请求自己的闭包里：循环里的 var 是
+      // 共享的，回调异步跑起来时早就被下一次迭代覆盖了 —— 那会把取回来的
+      // 音频记到别人的键上，孩子点读时本地永远没有，白预取一场。
+      (function(job) {
+        var u = '/api/tts?text=' + encodeURIComponent(job.text)
+              + (job.prefer ? '&prefer=' + encodeURIComponent(job.prefer) : '');
+        fetch(u)
+          .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.blob(); })
+          .then(function(b) {
+            self._ttsBlobs[job.key] = URL.createObjectURL(b);
+            self._ttsBlobOrder = self._ttsBlobOrder || [];
+            self._ttsBlobOrder.push(job.key);
+            self._ttsTrim();
+          })
+          .catch(function() {
+            // 取不到就照旧走网络路径，孩子那边不用等、也不需要知道
+          })
+          .then(function() {
+            delete self._ttsPending[job.key];
+            self._ttsRunning--;
+            self._ttsPump();
+          });
+      })(job);
     }
   },
 
   // 孩子正在等这一句（他刚点下去）—— 把它插到队头，别排在一堆预取后面。
-  _ttsPrioritize(text) {
+  _ttsPrioritize(text, prefer) {
     var q = this._ttsQueue;
     if (!q) return;
+    var key = this._ttsKey(text, prefer || '');
     for (var i = 0; i < q.length; i++) {
-      if (q[i].text === text) { q[i].step = -999; this._ttsPump(); return; }
+      if (q[i].key === key) { q[i].step = -999; this._ttsPump(); return; }
     }
   },
 
-  _ttsQueued(text) {
+  _ttsQueued(text, prefer) {
     var q = this._ttsQueue;
     if (!q) return false;
+    var key = this._ttsKey(text, prefer || '');
     for (var i = 0; i < q.length; i++) {
-      if (q[i].text === text) return true;
+      if (q[i].key === key) return true;
     }
     return false;
   },
@@ -1197,6 +1224,10 @@ const App = {
     var self = this;
     var cleanText = text.substring(0, 500).trim();
     var encoded = encodeURIComponent(cleanText);
+    // 音色偏好（v95）：'cf' = 先要 Cloudflare 的母语音色（AI 口语练习用）。
+    // 缓存的键和请求参数都要跟着它走，否则会拿到另一条通道的旧音频。
+    var prefer = opts.prefer || '';
+    var tkey = this._ttsKey(cleanText, prefer);
 
     var audioEl = document.getElementById('tts-player');
     if (!audioEl) { audioEl = new Audio(); }
@@ -1215,7 +1246,7 @@ const App = {
     var isSentence = /\s/.test(cleanText.trim());
     var youdao = 'https://dict.youdao.com/dictvoice?audio=' + encoded + '&type=2';
     var baidu  = 'https://fanyi.baidu.com/gettts?lan=en&text=' + encoded + '&spd=3&source=web';
-    var ownTts = '/api/tts?text=' + encoded;
+    var ownTts = '/api/tts?text=' + encoded + (prefer ? '&prefer=' + encodeURIComponent(prefer) : '');
     // Sentences go to our own origin FIRST. Routing them to Baidu instead of
     // Youdao fixed nothing on the phones — words still played and sentences
     // still did not, on both iOS Safari and Xiaomi's browser. Both remaining
@@ -1226,7 +1257,7 @@ const App = {
     // 这是"题一出来就开始读"的关键：绝大多数时候音频早就躺在本地了。
     // 单词/字母也走缓存：词汇模块的"先听一遍"要串行播 5~6 个字母 + 整词，
     // 每一段都现场去有道取一次的话中间全是空档；预取回来就是一段接一段。
-    var cachedTts = (self._ttsBlobs && self._ttsBlobs[cleanText]) || null;
+    var cachedTts = (self._ttsBlobs && self._ttsBlobs[tkey]) || null;
     var ttsUrl      = cachedTts || (isSentence ? ownTts : youdao);
     var fallbackUrl = isSentence ? baidu  : baidu;
 
@@ -1365,15 +1396,15 @@ const App = {
     // 一下并让它插队 —— 直接再发一次请求等于两份音频赛跑，还要跟一堆预取
     // 抢浏览器连接，反而更慢。最多等 2.5 秒，等不到就照旧走网络，行为不变。
     var waitingForPrefetch = !cachedTts
-      && ((self._ttsPending && self._ttsPending[cleanText]) || this._ttsQueued(cleanText));
+      && ((self._ttsPending && self._ttsPending[tkey]) || this._ttsQueued(cleanText, prefer));
     if (waitingForPrefetch) {
-      this._ttsPrioritize(cleanText);
+      this._ttsPrioritize(cleanText, prefer);
       var waitedMs = 0;
       (function waitForPrefetch() {
         if (self._ttsDone || myToken !== self._speakToken) return;
-        var hit = self._ttsBlobs && self._ttsBlobs[cleanText];
+        var hit = self._ttsBlobs && self._ttsBlobs[tkey];
         if (hit) { ttsUrl = hit; startPlayback(); return; }
-        var busy = (self._ttsPending && self._ttsPending[cleanText]) || self._ttsQueued(cleanText);
+        var busy = (self._ttsPending && self._ttsPending[tkey]) || self._ttsQueued(cleanText, prefer);
         if (waitedMs >= 2500 || !busy) { startPlayback(); return; }
         waitedMs += 120;
         setTimeout(waitForPrefetch, 120);
@@ -1580,12 +1611,13 @@ const App = {
       // 听入口一出现就把它要播的东西预取好：孩子点「先听一遍」时音频应该
       // 已经在本地了，点下去就是 0 延迟，而不是现场等网络生成那两三秒。
       // prefetchTts 自带去重，这里反复触发也不会重复发请求。
+      const pref = el.getAttribute('data-prefer') || '';
       const seq = el.getAttribute('data-seq');
       if (seq) {
-        seq.split('|').forEach(function(item) { if (item) self.prefetchTts(item); });
+        seq.split('|').forEach(function(item) { if (item) self.prefetchTts(item, undefined, pref); });
       } else {
         const say = el.getAttribute('data-say');
-        if (say) self.prefetchTts(say);
+        if (say) self.prefetchTts(say, undefined, pref);
       }
     });
   },
@@ -1610,21 +1642,25 @@ const App = {
   },
 
   // 那颗「🔊 先听一遍」按钮。say 是示范内容（英文），label 可换措辞。
-  _gateListenHtml(gid, say, label) {
+  // prefer 是音色偏好（'cf' = Cloudflare 母语音色，AI 口语练习用），
+  // 挂在 data-prefer 上，播放和预取都从属性里读 —— 免得每处各写一份。
+  _gateListenHtml(gid, say, label, prefer) {
     return '<button type="button" class="gate-listen" data-gate="' + gid
-      + '" data-say="' + this._escHtml(say) + '">' + (label || '🔊 先听一遍') + '</button>';
+      + '" data-say="' + this._escHtml(say) + '"'
+      + (prefer ? ' data-prefer="' + this._escHtml(prefer) + '"' : '')
+      + '>' + (label || '🔊 先听一遍') + '</button>';
   },
 
   // 依次播放一串示范音（字母 → 音节 → 整词）。TTS 一次只放一条，所以上一条
   // 播完了才放下一条；中间任何一条哑火也不会卡住，外层的兜底计时器会放行。
-  _speakSeq(items, onAllDone) {
+  _speakSeq(items, onAllDone, prefer) {
     const self = this;
     let i = 0;
     const next = function() {
       if (i >= items.length) { if (onAllDone) onAllDone(); return; }
       const t = items[i++];
       if (!t) { next(); return; }
-      self.speak(t, { onDone: function() { setTimeout(next, 0); } });
+      self.speak(t, { onDone: function() { setTimeout(next, 0); }, prefer: prefer || '' });
     };
     next();
   },
@@ -1665,6 +1701,7 @@ const App = {
       }
       const say = el.getAttribute('data-say') || '';
       const seq = el.getAttribute('data-seq');         // 一串示范（字母→音节→整词）
+      const pref = el.getAttribute('data-prefer') || '';
       const done = function() {
         if (el.dataset.playing !== '1') return;
         el.dataset.playing = '';
@@ -1675,8 +1712,8 @@ const App = {
       };
       clearTimeout(el._gateTimer);
       el._gateTimer = setTimeout(done, self._gateFallbackMs(seq ? seq.split('|').join(' ') : say));
-      if (seq) self._speakSeq(seq.split('|'), done);
-      else self.speak(say, { onDone: done });
+      if (seq) self._speakSeq(seq.split('|'), done, pref);
+      else self.speak(say, { onDone: done, prefer: pref });
     };
 
     // ① 「先听一遍」按钮 + "还没听就想读"的拦截。
@@ -1738,9 +1775,9 @@ const App = {
   },
 
   // Auto-speak with callback - minimal delay for fast response
-  autoSpeak(text, callback) {
+  autoSpeak(text, callback, prefer) {
     if (this.state.audioEnabled && text) {
-      this.speak(text, { onDone: callback });
+      this.speak(text, { onDone: callback, prefer: prefer || '' });
     } else if (callback) {
       callback();
     }
@@ -3456,12 +3493,13 @@ const App = {
     html += '<div id="sp-read-' + mi + '"></div>';
     html += '</div>';
     // Auto-play the sentence, then enable options
+    // 'cf' = 这一屏的示范读音要 Cloudflare 的母语音色（见 _stepTtsPrefer）
     this.autoSpeak(q.sentence, function() {
       var optsEl = document.getElementById('sp-opts-' + mi);
       var waitEl = document.getElementById('sp-wait-' + mi);
       if (optsEl) { optsEl.style.opacity = '1'; optsEl.style.pointerEvents = 'auto'; }
       if (waitEl) { waitEl.style.display = 'none'; }
-    });
+    }, 'cf');
     return html;
   },
 
@@ -3473,7 +3511,7 @@ const App = {
     var waitEl = document.getElementById('sp-wait-' + mi);
     if (optsEl) { optsEl.style.opacity = '0.4'; optsEl.style.pointerEvents = 'none'; }
     if (waitEl) { waitEl.style.display = 'block'; waitEl.textContent = '⏳ 请先听完整朗读，再选择答案'; }
-    this.speak(q.sentence, { onDone: function() {
+    this.speak(q.sentence, { prefer: 'cf', onDone: function() {
       if (optsEl) { optsEl.style.opacity = '1'; optsEl.style.pointerEvents = 'auto'; }
       if (waitEl) { waitEl.style.display = 'none'; }
     }});
@@ -3514,7 +3552,7 @@ const App = {
         tip.classList.add('show');
         tip.innerHTML = '📖 ' + q.explanation_cn;
       }
-      this.speak(selectedText, { onDone: function() {
+      this.speak(selectedText, { prefer: 'cf', onDone: function() {
         if (waitEl) waitEl.textContent = '❌ 选错了。点绿色的正确选项，再选一次';
       }});
       return;
@@ -3543,7 +3581,7 @@ const App = {
     }
 
     var self2 = this;
-    this.speak(selectedText, { onDone: function() {
+    this.speak(selectedText, { prefer: 'cf', onDone: function() {
       if (waitEl) waitEl.style.display = 'none';
       if (tip && q.pronunciation_tips) {
         tip.classList.add('show');
@@ -3565,7 +3603,7 @@ const App = {
       + '<p class="fs-12 text-sub">请把问句和答句连起来读：</p>'
       + '<div class="rd-sentence" id="rd-sent-' + mi + '-' + qi + '">' + this._readSentenceHtml(sentence) + '</div>'
       + '<div class="rd-live-hint" id="rd-live-' + mi + '-' + qi + '"></div>'
-      + '<div class="gate-bar">' + this._gateListenHtml(gid, sentence, '🔊 先听一遍示范') + '</div>'
+      + '<div class="gate-bar">' + this._gateListenHtml(gid, sentence, '🔊 先听一遍示范', 'cf') + '</div>'
       + '<div id="sp-status-' + mi + '-' + qi + '" style="min-height:18px;margin:6px 0;color:var(--text-sub);font-size:14px"></div>'
       + '<button id="sphr-' + mi + '-' + qi + '" class="speak-btn gate-locked" data-gate="' + gid + '" '
       + 'style="background:var(--primary);margin-top:8px;font-size:18px;padding:18px 32px;'
@@ -3833,10 +3871,10 @@ const App = {
     }
   },
 
-  // 重读前先听一遍标准示范（问句 + 答句整句）。
+  // 重读前先听一遍标准示范（问句 + 答句整句）。音色跟上面那一屏一致（cf）。
   _spReplay(mi, qi, dayIdx) {
     const s = this._speakingReadSentence(mi, qi, dayIdx);
-    if (s) this.speak(s);
+    if (s) this.speak(s, { prefer: 'cf' });
   },
 
   // Self-assessment mode (when speech recognition is not available)
@@ -3848,7 +3886,7 @@ const App = {
     // Be explicit about why the automatic comparison is not shown.
     html += '<p class="fs-12 text-sub mb-8">' + (reason ? reason + '，改为自评。' : '')
          + '听一听标准发音，对比自己的朗读</p>';
-    html += '<button class="speak-btn play" style="margin-bottom:12px" onclick="App.speak(\'' + sentence + '\')">🔊 听标准发音</button>';
+    html += '<button class="speak-btn play" style="margin-bottom:12px" onclick="App.speak(\'' + sentence + '\',{prefer:\'cf\'})">🔊 听标准发音</button>';
     html += '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">';
     html += '<button class="speak-btn" style="background:var(--success)" onclick="App._selfScore(' + mi + ',' + qi + ',\'' + dayIdx + '\',90)">⭐ 很好 (90分)</button>';
     html += '<button class="speak-btn" style="background:var(--warning)" onclick="App._selfScore(' + mi + ',' + qi + ',\'' + dayIdx + '\',75)">👍 还不错 (75分)</button>';
