@@ -5495,11 +5495,26 @@ const App = {
   //   · 真正稳的是「先声明这是字母，再一口气连读，最后用逗号接整词」：
   //     "Letters: C-A-M-E-R-A, camera" —— 20 个词全部逐字母读对，
   //     字母之间没有停顿（比逗号版本更连），也不再触发那个"智能拼读"。
+  //
+  // v102：连字符版漏了一类情况 —— **局部**子串拼成真词。前缀 + 连字符只挡住
+  // 了"整串拼成词"（GUITAR），挡不住"中间几个字母恰好是一个词"：
+  //   panda  的 P-[A-N-D]-A     → A-N-D 被读成英文单词 "and"
+  //   island 的 I-S-L-[A-N-D]   → 同上
+  // 实测（线上 TTS → ASR 回灌）：
+  //   "Letters: P-A-N-D-A, panda"  → 识别 "Letters P, A, and D."
+  //   ↑ N 的字母名 /en/ 直接消失（听感就是 /n/），末尾的 A 和整词 panda 也没读。
+  //   这正是家长反馈的"字母 N 发音不好，读成了 n"。
+  // 换成逗号（保留 Letters: 前缀，它负责挡"智能拼读"）后同一句实测：
+  //   "Letters: P, A, N, D, A, panda" → "Letters P A N D"
+  //   "Letters: I, S, L, A, N, D, island" → "Letters I S L A N D island."
+  //   "Letters: G, U, I, T, A, R, guitar" → "Letters G U I T A R guitar."
+  // 字母与整词都完整。逗号本身不会被读出来（斜杠就会 —— 实测 "P/A/N/D/A"
+  // 识别成 "P S L E San"，那是在读单词 slash）。
   // 音节阶段（beau, ti, ful）拼起来本来就是词的读音，就是教学目标，沿用原样。
   _spellDemo(kind, units, word) {
     if (kind === 'letter') {
       var us = (units || []).map(function(u) { return String(u).toUpperCase(); });
-      return 'Letters: ' + us.join('-') + ', ' + word;
+      return 'Letters: ' + us.join(', ') + ', ' + word;
     }
     return (units || []).join(', ') + '. ' + word;
   },

@@ -206,9 +206,13 @@ App._holdStart = origHold;
 
 // ---------- v92 红线 ----------
 // 7. 示范必须是单段连读（data-say），不许退回逐段串播（data-seq）
-//    v94 起写法固定为 "Letters: G-U-I-T-A-R, guitar" —— 逗号分隔的字母串
-//    会被阿里云"智能拼读"成单词音（guitar → "GUITAR GUITAR"），只有
-//    「前置 Letters + 连字符连读 + 逗号接整词」在 20 词实测里全对。
+//    v94 起写法 = "Letters: G-U-I-T-A-R, guitar"（前置 Letters + 连字符连读
+//    + 逗号接整词）；v102 起字母之间改成逗号 —— 连字符挡得住"整串拼成词"
+//    （guitar），挡不住"中间几个字母恰好是真词"：panda 的 A-N-D、island 的
+//    A-N-D 都会被读成英文单词 "and"，N 的字母名直接消失（家长实测反馈
+//    「字母 N 发音不好，读成了 n」）。实测逗号版两句都读全：
+//      "Letters: P, A, N, D, A, panda"      → "Letters P A N D"
+//      "Letters: I, S, L, A, N, D, island"  → "Letters I S L A N D island."
 console.log('== 7) 示范单段连读 ==');
 App._spell = null;
 document.body.innerHTML = '';
@@ -225,8 +229,8 @@ let say = '';
 if (sayM) {
   say = sayM[1].replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
   ok(/^Letters: /.test(say), '前置 Letters 声明，挡住阿里的"智能拼读"（' + say.slice(0, 32) + '…）');
-  ok(/[A-Z]-[A-Z]/.test(say), '字母之间用连字符一口气连读（比逗号更顺）');
-  ok(!/[A-Z], [A-Z]/.test(say), '字母之间不能再用逗号（逗号版把 guitar 读成单词音）');
+  ok(/[A-Z], [A-Z]/.test(say), '字母之间用逗号分隔（v102：连字符会让 A-N-D 被读成 and）');
+  ok(!/[A-Z]-[A-Z]/.test(say), '字母之间不能再出现连字符（局部真词会被读掉）');
   ok(/, [A-Za-z]+$/.test(say), '整词用逗号接在字母串后面（' + say.slice(-14) + '）');
   ok(/\. [A-Za-z]+$/.test(say) === false,
      '不用句号分隔字母串和整词（句号会让阿里云把字母读成单词）');
@@ -237,9 +241,16 @@ if (sayM) {
 }
 // _spellDemo 直接单测：camera 是实测最坑的词（C-A-M-E-R-A 正好拼出 camera）
 ok(App._spellDemo('letter', ['c', 'a', 'm', 'e', 'r', 'a'], 'camera')
-   === 'Letters: C-A-M-E-R-A, camera', '_spellDemo(letter) 文本正确');
+   === 'Letters: C, A, M, E, R, A, camera', '_spellDemo(letter) 文本正确');
 ok(App._spellDemo('letter', 'guitar'.split(''), 'guitar')
-   === 'Letters: G-U-I-T-A-R, guitar', '_spellDemo 大小写归一（guitar）');
+   === 'Letters: G, U, I, T, A, R, guitar', '_spellDemo 大小写归一（guitar）');
+// v102 专项：局部真词的三类代表词，示范串里都不许出现连字符
+[['panda', 'and'], ['island', 'and'], ['camera', 'am/me'], ['breakfast', 'as']]
+  .forEach(function (pair) {
+    var w = pair[0];
+    var s = App._spellDemo('letter', w.split(''), w);
+    ok(s.indexOf('-') < 0, w + ' 的示范串不含连字符（避开局部真词 ' + pair[1] + '）→ ' + s);
+  });
 ok(App._spellDemo('syllable', ['beau', 'ti', 'ful'], 'beautiful')
    === 'beau, ti, ful. beautiful', '音节阶段保持逗号 + 句号（拼起来就是词的读音）');
 // v94：连读阶段的示范必须与逐字母那屏**逐字相同**，否则孩子听到两种串法
@@ -252,7 +263,7 @@ App.startContinuous(MI);
   if (cm) {
     const csay = cm[1].replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
     ok(/^Letters: /.test(csay) && /, [A-Za-z]+$/.test(csay),
-       '连读示范同样是 Letters + 连读 + 逗号整词（' + csay.slice(0, 42) + '…）');
+       '连读示范同样是 Letters + 逗号字母串 + 逗号整词（' + csay.slice(0, 42) + '…）');
     ok(csay === say, '连读示范与逐字母示范完全一致（避免两种串法）');
   }
 }
