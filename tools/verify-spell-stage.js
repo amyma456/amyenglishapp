@@ -520,5 +520,53 @@ console.log('\n== 18) 连续读：读对了不能只有十几分（v100） ==');
   App._holdStart = origHoldC;
 }
 
+// ---------- v101 红线（家长：发音不准就给过 60 分以上；单字母读错了该错就错） ----------
+// 19. 字母判定分四档：读对 / 发音不准（算过）/ 没听清（不判红）/ 读错（重读）
+console.log('\n== 19) 发音不准算过，读错才重读（v101） ==');
+{
+  // 发音不准 → 给过
+  ok(App._letterOk('b', 'buh') === true, '读 B、识别成读音 "buh" → 读对');
+  ok(App._letterNear('d', 'deek') === true, '识别拖长（"deek"）→ 算「发音不准」给过');
+  ok(App._letterNear('x', 'ks') === true, 'X 被写成 "ks"（同音换拼法）→ 给过');
+  ok(App._letterNear('w', 'dabble') === true, 'W 的 "double" 被听走形 → 给过');
+  ok(App._letterNear('o', 'ow') === true, '"ow" ≈ "oh" → 给过');
+  // 读到别的字母 → 该错就错，仍然锁按钮
+  ok(App._letterOk('b', 'puh') === false && App._letterNear('b', 'puh') === false,
+     'B 读成 P 的读音 → 判错（清浊对不放行）');
+  ok(App._letterNear('d', 'tee') === false, 'D 读成 T 的字母名 → 判错');
+  ok(App._letterNear('m', 'nuh') === false, 'M 读成 N → 判错');
+  ok(App._letterNear('c', 'kay') === false, 'C 读成 K 的字母名 → 判错');
+  ok(App._letterNear('g', 'jay') === false, 'G 读成 J 的字母名 → 判错');
+  ok(App._letterOk('l', 'hello') === false && App._letterNear('l', 'hello') === false,
+     '整词里的 "l" 不会算成字母 L 读对（不许子串兜底）');
+  // 定不了性的 → 没听清，不判红
+  ok(App._singleLetterGuess('N') === true, '孤立单字母 "N" = 识别端在猜，判「没听清」');
+  ok(App._letterish('Capitoli') === false, '幻觉词 "Capitoli" 不像任何字母音');
+
+  // 端到端：发音不准的字母既要给过（不判红），又不能污染"读错"那条路
+  enterStage();
+  App._gateOpen = function () { return true; };
+  const origHoldN = App._holdStart;
+  let cbN = null;
+  App._holdStart = function () { cbN = arguments[4]; };
+  const L0 = String(App._spell.units[0]).toLowerCase();
+  const nearish = [L0 + 'eek', L0 + 'uh', L0 + 'ah', L0 + 'ee']
+    .find(x => App._letterNear(L0, x) && !App._letterOk(L0, x));
+  ok(!!nearish, '造出一个「发音不准」的识别结果（' + L0 + ' ← ' + nearish + '）');
+  App._readUnit({ preventDefault() {} }, MI, 0);
+  cbN({}, nearish);
+  ok(App._spell.unitScores[0].near === true, 'unitScores[0].near=true');
+  ok(App._spell.unitScores[0].ok === true, '发音不准记成「过」（不挡路）');
+  ok(getEl('spell-' + MI + '-0').classList.contains('read-miss') === false, '不判红');
+  ok(getEl('spell-' + MI + '-0').classList.contains('read-near') === true, '格子标为「发音不准算过」');
+  // 读错仍然要红
+  const wrong = App._MIX_PAIRS[L0] ? App._LNAMES[App._MIX_PAIRS[L0]].split(' ')[0] : 'bee';
+  App._readUnit({ preventDefault() {} }, MI, 0);
+  cbN({}, wrong);
+  ok(App._spell.unitScores[0].ok === false, '读到别的字母（' + L0 + ' ← ' + wrong + '）→ 判错');
+  ok(getEl('spell-' + MI + '-0').classList.contains('read-miss') === true, '读错仍然判红');
+  App._holdStart = origHoldN;
+}
+
 console.log('\n' + (fail ? ('有 ' + fail + ' 项失败 ❌') : '全部通过 ✅'));
 process.exit(fail ? 1 : 0);

@@ -5282,17 +5282,7 @@ const App = {
     if (t.length !== 1) return this._soundAlike(target, heard);
     var s = String(heard || '').toLowerCase();
     if (!s) return false;
-    var LNAMES = {
-      a: 'ay eh ei ey ah uh',  b: 'be bee bi buh',    c: 'ce see sea cee',
-      d: 'de dee di duh',      e: 'ee eh ey',         f: 'ef eff fuh',
-      g: 'ge gee guh',         h: 'aitch haitch ech huh',
-      i: 'eye ai ay ih',       j: 'jay je juh',       k: 'kay ka kuh',
-      l: 'el ell luh',         m: 'em emm muh',       n: 'en enn nuh',
-      o: 'oh owe',             p: 'pe pee pea puh',   q: 'cue queue que',
-      r: 'are ar ruh',         s: 'es ess suh',       t: 'te tea tee ti tuh',
-      u: 'you yu uh',          v: 've vee vuh',       w: 'double www wuh',
-      x: 'ex eks axe',         y: 'why wye',          z: 'zee zed ze',
-    };
+    var LNAMES = this._LNAMES;
     // v99：两边都先把重复字母压成一个再比 —— 识别端把短音写成 "peee"、"mmm"、
     // "buh"（读的是 /p/ /m/ /b/ 的音而不是字母名）很常见。以前只认字母名，
     // 孩子读对了反而被要求重读，卡在"全部读对才能走"上过不去（家长反馈）。
@@ -5305,6 +5295,113 @@ const App = {
     }
     // 注意：这里**不**做"子串包含"兜底（比如 "sea" 里含 e 就算 e 读对）——
     // 那会让 c 的字母名反过来匹配给 e，把读错的判成读对。宁可让它重读。
+    return false;
+  },
+
+  // 26 个字母的"字母名 / 读音 / 字母本身"三种写法（v99 建立，v101 提到外面
+  // 给 _letterNear、_letterish 共用）。识别端对同一个字母可能吐出其中任一种。
+  _LNAMES: {
+    a: 'ay eh ei ey ah uh',  b: 'be bee bi buh',    c: 'ce see sea cee',
+    d: 'de dee di duh',      e: 'ee eh ey',         f: 'ef eff fuh',
+    g: 'ge gee guh',         h: 'aitch haitch ech huh',
+    i: 'eye ai ay ih',       j: 'jay je juh',       k: 'kay ka kah kuh',
+    l: 'el ell luh',         m: 'em emm muh',       n: 'en enn nuh',
+    o: 'oh owe',             p: 'pe pee pea puh',   q: 'cue queue que kyu',
+    r: 'are ar ruh',         s: 'es ess suh',       t: 'te tea tee ti tuh',
+    u: 'you yu uh',          v: 've vee vuh',       w: 'double www wuh',
+    x: 'ex eks axe',         y: 'why wye',          z: 'zee zed ze',
+  },
+
+  // 清浊 / 易混辅音对（v101）。这两者之间只差一个音，但**是另一个字母** ——
+  // 孩子把 B 读成 /p/、把 D 读成 /t/，那是真读错，不许走"发音不准"这条放行路。
+  _MIX_PAIRS: { b: 'p', p: 'b', d: 't', t: 'd', g: 'k', k: 'g', v: 'f', f: 'v',
+                z: 's', s: 'z', m: 'n', n: 'm' },
+
+  // 字母名首音相同的一小撮（g/j 都是 /dʒ/，c/k 都是 /k/，s/c 都是 /s/）：
+  // 识别端把 G 写成 "jee"、把 K 写成 "see" 是同一个音换了拼法，不是读错。
+  _SAME_INITIAL: { g: 'j', j: 'g', c: 's', s: 'c', k: 'c', i: 'y', y: 'i',
+                   u: 'w', w: 'u', o: 'u' },
+
+  // v101：发音**不准** ≠ 读**错**。家长原话：「如果是字母发音不准，不是很严重
+  // 的话，就给过 60 分以上。如果单个字母读错了，那该错的就是错，要求重读。」
+  //
+  // 识别回来的东西不是目标字母的标准写法，但听得出就是它 —— 口音、拖长
+  // （"deek" ≈ dee）、被写成同音的另一种拼法（x → "ks"、g → "jee"）—— 算过。
+  // 拦在门外的是 _MIX_PAIRS：一步之差落到另一个字母的读音上，那是读错。
+  _letterNear(target, heard) {
+    var t = String(target || '').toLowerCase().replace(/[^a-z]/g, '');
+    if (t.length !== 1) return false;
+    var toks = String(heard || '').toLowerCase().replace(/[^a-z\s]/g, ' ').split(/\s+/).filter(Boolean);
+    if (!toks.length) return false;
+    var self = this;
+    var squash = function (x) { return String(x).replace(/([a-z])\1+/g, '$1'); };
+    var forms = ((this._LNAMES[t] || '') + ' ' + t).split(' ').filter(Boolean).map(squash);
+    for (var i = 0; i < toks.length; i++) {
+      var tok = squash(toks[i]);
+      if (!tok || tok.length > 7) continue;
+      if (this._letterOk(t, tok)) return true;
+      // 明确是**另一个字母**的读法（K 的 "kay" 出现在读 C 的时候、P 的 "puh"
+      // 出现在读 B 的时候）—— 那不是"发音不准"，是真读错，走重读。
+      var other = false;
+      for (var c = 97; c <= 122; c++) {
+        var L = String.fromCharCode(c);
+        if (L !== t && this._letterOk(L, tok)) { other = true; break; }
+      }
+      if (other) continue;
+      for (var j = 0; j < forms.length; j++) {
+        var f = forms[j];
+        var sameHead = tok.charAt(0) === f.charAt(0);
+        var sameSoundHead = self._SAME_INITIAL[tok.charAt(0)] === f.charAt(0);
+        // 尾音写法（X 的 "ks" ⊂ "eks"）：首字母对不上，但尾部一模一样
+        var suffixy = tok.length >= 2 && f.length >= 2 && f.slice(-tok.length) === tok;
+        var prefixy = tok.length >= 2 && f.length >= 2 && tok.indexOf(f) === 0;
+        if (!(sameHead || sameSoundHead || suffixy || prefixy)) continue;
+        var dist = this._editDistance(tok, f);
+        var close = Math.abs(tok.length - f.length) <= 2;
+        if (dist <= 1 && !this._mixOnly(tok, f)) return true;
+        // 长字母名（W 的 "double"、H 的 "aitch"）容易被听走形一位两位；
+        // 短形式（"ah" ↑ "are"）只认长度差不超过 1 的吞音。
+        if (dist === 2 && close && Math.min(tok.length, f.length) >= 2) return true;
+      }
+    }
+    return false;
+  },
+
+  // 两个短 token 的唯一差别是不是"清浊 / 易混对"那一步（b↔p、d↔t…）。
+  _mixOnly(a, b) {
+    if (a.length !== b.length) return false;
+    var diff = -1;
+    for (var i = 0; i < a.length; i++) {
+      if (a.charAt(i) === b.charAt(i)) continue;
+      if (diff >= 0) return false;
+      diff = i;
+    }
+    if (diff < 0) return false;
+    return this._MIX_PAIRS[a.charAt(diff)] === b.charAt(diff);
+  },
+
+  // 识别结果到底像不像"某个字母音"。不像 = 识别幻觉（实测 E 回来 "Capitoli"、
+  // W 回来 "www."），不该算孩子读错，归到"没听清"。
+  _letterish(heard) {
+    var toks = String(heard || '').toLowerCase().replace(/[^a-z\s]/g, ' ').split(/\s+/).filter(Boolean);
+    if (!toks.length) return false;
+    var squash = function (x) { return String(x).replace(/([a-z])\1+/g, '$1'); };
+    for (var i = 0; i < toks.length; i++) {
+      var tok = squash(toks[i]);
+      if (!tok || tok.length > 7) continue;
+      for (var c = 97; c <= 122; c++) {
+        var L = String.fromCharCode(c);
+        if (this._letterOk(L, tok) || this._letterNear(L, tok)) return true;
+      }
+    }
+    return false;
+  },
+
+  // 识别端只回了一个孤立单字母、而且不是目标字母 —— 这是它自己在猜（实测孩子
+  // 读 D 回来 "N"），不足以定性"读错"。真读错要有读音证据（"puh" 之类）。
+  _singleLetterGuess(heard) {
+    var toks = String(heard || '').toLowerCase().replace(/[^a-z\s]/g, ' ').split(/\s+/).filter(Boolean);
+    for (var i = 0; i < toks.length; i++) if (toks[i].length === 1) return true;
     return false;
   },
 
@@ -5444,20 +5541,30 @@ const App = {
       // _soundAlike 判单字母：它容忍一个编辑距离，而 26 个字母两两距离
       // 几乎都是 1（b/p、b/d、m/n 全判"对"），等于没判。
       var ok = isLetter ? self._letterOk(label, text) : self._soundAlike(label, text);
+      // v101：发音**不准**但听得出就是这个字母 → 也算过。家长原话：「如果是字母
+      // 发音不准，不是很严重的话，就给过 60 分以上；如果单个字母读错了，那该错
+      // 的就是错，要求重读」。落到另一个字母的读音上（b→"puh"、d→"tee"）由
+      // _letterNear 里的 _MIX_PAIRS 拦住，仍然算错。
+      var near = !ok && isLetter && self._letterNear(label, text);
+      if (near) ok = true;
       // v99：识别端一个字都没回来 ≠ 孩子读错了。孤立字母/短音节本来就难识别
       // （见 _readUnit 顶部 prefer=cf 的说明），把"没听清"也算成错，孩子就会
       // 卡在"全部读对才能走"上永远过不去 —— 家长反馈的"跑不通"就是这个。
-      // 所以这种情况不判红、不计入要重读的名单，只提示再读一次。
-      var unclear = !text;
+      // v101 再补两种"定不了性"的情形：识别端自己猜的孤立单字母（实测读 D 回来
+      // "N"）、以及根本不像任何字母音的幻觉词（读 E 回来 "Capitoli"）——
+      // 两者都没有"孩子读了别的字母"的证据，不该判红。
+      var unclear = !text || (!ok && isLetter
+        && (self._singleLetterGuess(text) || !self._letterish(text)));
       self._spell.unitScores[idx] = { label: label, ok: unclear ? undefined : ok,
-                                     unclear: unclear, heard: text };
+                                     unclear: unclear, near: near, heard: text };
       el.classList.toggle('read-miss', !unclear && !ok);
       el.classList.toggle('read-unclear', unclear);
+      el.classList.toggle('read-near', near);
       if (status) {
         // v96：一个字都没识别出来 ≠ 读错了。原来两种情况共用一句"再读一次
         // 「B」"，孩子（和家长）看到的是"我明明读对了"的指控。现在分开说。
         status.innerHTML = '<div class="tap-result ' + (ok ? 'good' : 'bad') + '">'
-          + (ok ? '读对了：' + label
+          + (ok ? (near ? '发音有点不准，这次算你过：' + label : '读对了：' + label)
                 : (unclear ? '⚠️ 没听清，再读一次「' + label + '」（这次不算读错）'
                            : '再读一次「' + label + '」'))
           + (text ? '<span class="tap-heard">识别：' + text + '</span>'
@@ -5466,7 +5573,8 @@ const App = {
       Api.submitSpeakingScore({
         studentId: self._myStudentId(), dayIdx: self.state.currentDay,
         moduleIdx: mi, itemIdx: idx, round: 1, type: isLetter ? 'letter' : 'syllable',
-        label: label, score: ok ? 100 : 0, spoken: text, source: 'asr',
+        // v101：发音不准但算过给 70 分（家长的"过 60 分以上"），读准了才是 100。
+        label: label, score: ok ? (near ? 70 : 100) : 0, spoken: text, source: 'asr',
       });
       self._spellProgress(mi);
     }, true, 'en', hint, 'cf');   // v99：v96 的注释说字母/音节要 CF 先认，代码却
@@ -5559,9 +5667,12 @@ const App = {
       var u = sp.unitScores[i];
       var lbl = (u && u.label) || (sp.units && sp.units[i]) || '·';
       if (sp.kind === 'letter') lbl = String(lbl).toUpperCase();
+      // v101：多一档 near（发音不准但算过）—— 汇总里它既不是红（读错）也不是
+      // 纯黄（没听清），单独一色，家长一眼能看出"这个音还要再练"。
       var state = !u ? 'na'
         : (u.unclear ? 'unclear'
-                     : (u.ok === undefined ? 'done' : (u.ok ? 'ok' : 'bad')));
+                     : (u.ok === undefined ? 'done'
+                                           : (u.near ? 'near' : (u.ok ? 'ok' : 'bad'))));
       // v99：只有"确认读错"才进重读名单。"没听清"（识别端没回内容）不算 ——
       // 把识别失败当成孩子的错，就是这条路上"永远过不去"的根源。
       if (state === 'bad') missed.push(lbl);
@@ -5716,10 +5827,11 @@ const App = {
       var hit = false;
       // v93：单个字母改走 _letterOk —— _soundAlike 对 26 个字母等于不判
       // （任意两个的距离基本都是 1）。音节和整词仍用 _soundAlike。
+      // v101：字母再加一档 _letterNear（发音不准也算过），与逐字母阶段同一把尺子。
       var one = String(expected[i]).replace(/[^a-zA-Z]/g, '');
       for (var j = cursor; j < toks.length; j++) {
         var match = (one.length === 1)
-          ? this._letterOk(expected[i], toks[j])
+          ? (this._letterOk(expected[i], toks[j]) || this._letterNear(expected[i], toks[j]))
           : this._soundAlike(expected[i], toks[j]);
         if (match) {
           hits[i] = true; ok++; cursor = j + 1; hit = true; break;

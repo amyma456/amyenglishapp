@@ -138,6 +138,10 @@ input,textarea,select{font-family:inherit;font-size:14px;outline:none}
   box-shadow:0 0 0 3px rgba(198,40,40,.18)}
 .spell-box.read-unclear{border-color:var(--warning);color:#B26B00;
   background:var(--warning-light)}
+/* v101：发音不准但算过（near）。四态分开：读对=浅橘、发音不准算过=浅绿、
+   没听清=琥珀、读错=实心红。写在 read-done 之后，同优先级下这一条生效。 */
+.spell-box.read-near{border-color:var(--success);color:#237804;
+  background:var(--success-light)}
 /* 按住格子时的大字悬浮层：手指会挡住格子里的小字，把孩子正在读的那个
    字母/音节/单词放大放到页面上方，看得见才读得安心。不接手势、松手即散 */
 .spell-peek{position:fixed;top:11%;left:50%;transform:translateX(-50%);
@@ -207,6 +211,7 @@ input,textarea,select{font-family:inherit;font-size:14px;outline:none}
 .sc-cell.ok{border-color:var(--orange);color:var(--orange-press);background:var(--orange-wash)}
 .sc-cell.bad{border-color:#C62828;color:#fff;background:#C62828}
 .sc-cell.unclear{border-color:var(--warning);color:#B26B00;background:var(--warning-light)}
+.sc-cell.near{border-color:var(--success);color:#237804;background:var(--success-light)}
 .sc-cell.done{border-color:var(--line);color:var(--ink)}
 .ss-actions{display:flex;gap:8px;justify-content:center;margin-top:8px}
 .retry-hint{margin-top:8px;font-size:14px;font-weight:500;color:#D6321F}
