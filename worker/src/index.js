@@ -11,6 +11,8 @@
  * says what happened rather than hanging.
  */
 
+import TTS_STATIC from './tts-manifest.js';
+
 const MODEL = '@cf/openai/whisper';
 
 // Same constant as public/api.js. Teacher-only endpoints check this; it is
@@ -304,6 +306,41 @@ async function tts(request, env, ctx) {
   // engine / prefer 也要进键：同一段文字不同通道音色不同，不能互相串。
   const forceTtsQ = (url.searchParams.get('engine') || '').toLowerCase();
   const preferCf = (url.searchParams.get('prefer') || '').toLowerCase() === 'cf';
+
+  // 静态预生成表（v97）：固定课程的朗读音频已经用 tools/pregen-tts.js 一次性
+  // 合成好、放在 public/tts/ 里。命中就直接回文件 —— 不调上游、不计字符费、
+  // 不烧 neurons，而且静态资源由边缘直出，比在线通道更快。
+  //
+  // 两条例外，都要绕开这张表：
+  //   · prefer=cf —— AI 口语练习是家长点名的 Cloudflare 母语音色，不能被
+  //     静态表里另一种音色顶掉（同一句话在两处听起来必须是同一个人）。
+  //   · engine=... —— 那是线上排查"到底谁在答"的开关，走静态就查不出来了。
+  // 表是空的（还没跑过预生成）时，这里整段都命不中，行为与以前完全一致。
+  if (!preferCf && !forceTtsQ && env.ASSETS
+      && Object.prototype.hasOwnProperty.call(TTS_STATIC, text)) {
+    try {
+      // 用一个假域名，别用 url.origin：实测拿 amyeng.top 这个自家域名去
+      // ASSETS.fetch 会绕回本 Worker 自己，请求直接挂住不返回（4 分钟没响应）。
+      // 官方文档的示例也是 assets.local —— 只有 pathname 参与匹配，host 无意义。
+      const assetUrl = 'https://assets.local/tts/' + TTS_STATIC[text];
+      // 再上一道保险：静态这条通道再怎么样也不能把孩子的朗读卡住。1.5 秒拿不到
+      // 就当没命中，直接走在线通道。
+      const res = await Promise.race([
+        env.ASSETS.fetch(assetUrl),
+        new Promise((r) => setTimeout(() => r(null), 1500)),
+      ]);
+      if (res && res.ok) {
+        const out = new Response(res.body, res);
+        out.headers.set('X-TTS-Source', 'static');
+        out.headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+        return out;
+      }
+      // 表里有、盘上没有（生成到一半就发了版）：当作没命中，走在线通道。
+    } catch (e) {
+      // ASSETS 绑定缺失或取文件失败 —— 绝不能让朗读因此挂掉，静默走老路。
+    }
+  }
+
   const cacheKey = new Request(url.origin + '/api/tts?v3'
     + (forceTtsQ ? '&engine=' + forceTtsQ : '')
     + (preferCf ? '&prefer=cf' : '')

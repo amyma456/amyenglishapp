@@ -4,6 +4,9 @@
 # Temp files
 *.tmp
 
+# 预生成音频的本地进度（几千条，只是断点续跑用的，不进仓库）
+tools/.pregen-tts-state.json
+
 # 临时 commit 消息文件（曾经被 git add -A 误提交进仓库一次）
 .commit-msg-*.txt
 

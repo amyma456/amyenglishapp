@@ -30,7 +30,10 @@
     "directory": "../public/",
     // Assets are served first for everything else; only /api/* reaches the
     // Worker script, so no static file can ever shadow the API.
-    "run_worker_first": ["/api/*"]
+    "run_worker_first": ["/api/*"],
+    // 必须显式起名，否则 env.ASSETS 根本不存在（文档里 binding 是可选的，
+    // 少了它 /api/tts 的静态优先那段会静默跳过 —— 实测踩过，别删）。
+    "binding": "ASSETS"
   },
 
   // Same-origin routes are the primary path: the page and /api/* share

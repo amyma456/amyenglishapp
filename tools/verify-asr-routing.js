@@ -13,6 +13,10 @@ const vm = require('vm');
 const path = require('path');
 
 const src = fs.readFileSync(path.join(__dirname, '../worker/src/index.js'), 'utf8')
+  // 静态预生成表是 ESM import，vm 里跑不了 —— 换成读沙箱里的同名全局量。
+  // 没设 __TTS_STATIC 的用例自动拿到空表，行为跟以前一致。
+  .replace("import TTS_STATIC from './tts-manifest.js';",
+           'const TTS_STATIC = (typeof __TTS_STATIC === "object" && __TTS_STATIC) || {};')
   .replace('export default {', 'const __worker = {');
 
 let pass = 0;
