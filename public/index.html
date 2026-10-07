@@ -128,9 +128,16 @@ input,textarea,select{font-family:inherit;font-size:14px;outline:none}
   border:1.5px solid var(--line);background:var(--surface);color:var(--ink);
   font-size:22px;font-weight:600;text-align:center;line-height:1.2;
   transition:background var(--fast) var(--ease),border-color var(--fast) var(--ease)}
+/* v99：三态一眼分得开 —— 录音中=深灰、读对=浅橘、读错=实心红（白字）。
+   家长反馈"读错的词和橘黄太接近，孩子看不出来"，所以读错从"浅底深字"
+   改成实心红底白字，和浅橘的"读对"格子在手机小屏上一眼就能分开。 */
+.spell-box.reading{background:#4A4A55;color:#fff;border-color:#4A4A55}
 .spell-box.read-done{border-color:var(--orange);color:var(--orange-press);
   background:var(--orange-wash)}
-.spell-box.read-miss{border-color:#D6321F;color:#D6321F;background:#FFF5F4}
+.spell-box.read-miss{border-color:#C62828;color:#fff;background:#C62828;
+  box-shadow:0 0 0 3px rgba(198,40,40,.18)}
+.spell-box.read-unclear{border-color:var(--warning);color:#B26B00;
+  background:var(--warning-light)}
 /* 按住格子时的大字悬浮层：手指会挡住格子里的小字，把孩子正在读的那个
    字母/音节/单词放大放到页面上方，看得见才读得安心。不接手势、松手即散 */
 .spell-peek{position:fixed;top:11%;left:50%;transform:translateX(-50%);
@@ -198,7 +205,8 @@ input,textarea,select{font-family:inherit;font-size:14px;outline:none}
 .sc-cell{min-width:30px;padding:4px 7px;border-radius:6px;font-size:14px;
   font-weight:600;border:1px solid var(--line);color:var(--ink-3)}
 .sc-cell.ok{border-color:var(--orange);color:var(--orange-press);background:var(--orange-wash)}
-.sc-cell.bad{border-color:#D6321F;color:#D6321F;background:#FFF5F4}
+.sc-cell.bad{border-color:#C62828;color:#fff;background:#C62828}
+.sc-cell.unclear{border-color:var(--warning);color:#B26B00;background:var(--warning-light)}
 .sc-cell.done{border-color:var(--line);color:var(--ink)}
 .ss-actions{display:flex;gap:8px;justify-content:center;margin-top:8px}
 .retry-hint{margin-top:8px;font-size:14px;font-weight:500;color:#D6321F}
@@ -542,7 +550,20 @@ body.stage-mode .content-area{padding-block:0}
   50%{background:#FFE0C7;box-shadow:0 0 0 3px rgba(255,138,0,.34)}}
 .rd-w.rd-ok{color:var(--success)}
 .rd-w.rd-ok::after{content:'✓';font-size:11px;vertical-align:super;margin-left:1px;opacity:.85}
-.rd-w.rd-bad{color:var(--danger);text-decoration:underline wavy var(--danger);text-underline-offset:4px}
+/* v99：读错的词改成实心红底白字。以前是浅红字 + 波浪线，和"正在读"的橘黄
+   光标（浅橘底 + 橘字）在手机小屏上几乎是同一个色系，孩子分不清哪个词是
+   读错了、哪个是光标。现在明度差拉开，另外给读错的词补一个 ✗ —— 不靠
+   颜色也能认出来。 */
+.rd-w.rd-bad{background:#C62828;color:#fff;border-radius:6px;text-decoration:none;
+  box-shadow:0 0 0 2px rgba(198,40,40,.18)}
+.rd-w.rd-bad::after{content:'✗';font-size:11px;vertical-align:super;margin-left:2px;
+  color:#FFD9D9}
+.rd-w.rd-bad.rd-cur{background:#C62828;color:#fff;
+  animation:rdPulseBad .85s ease-in-out infinite}
+@keyframes rdPulseBad{
+  0%,100%{box-shadow:0 0 0 2px rgba(198,40,40,.22)}
+  50%{box-shadow:0 0 0 5px rgba(198,40,40,.45)}
+}
 .rd-live-hint{font-size:11px;color:var(--teal);margin-top:2px}
 
 /* ---- 先听后读门禁 ---------------------------------------------------- */

@@ -762,6 +762,16 @@ function restoreDigits(text, bias) {
 }
 
 async function transcribe(request, env) {
+  // 耗时埋点（v99）。家长问"为什么这么慢"，吵架没有意义，把时间切开看：
+  //   upload = 孩子的音频从手机爬到边缘这段（跨境链路，代码管不了）
+  //   ali/cf = 两条识别通道各自花的时间（上游模型，代码只能设上限）
+  //   total  = 整体。三个数字一起看，一眼就知道该怪谁。
+  // 从手机浏览器里也能读到（同域直接读，跨域已在 cors() 里 expose）。
+  const t0 = Date.now();
+  let uploadMs = 0;
+  let aliMs = 0;
+  let cfMs = 0;
+
   // Reject oversized bodies before buffering them.
   const declared = Number(request.headers.get('content-length') || 0);
   if (declared > MAX_BYTES) return json({ error: 'too_large' }, 413);
@@ -769,6 +779,7 @@ async function transcribe(request, env) {
   let bytes;
   try {
     const buf = await request.arrayBuffer();
+    uploadMs = Date.now() - t0;
     if (buf.byteLength === 0) return json({ error: 'empty_audio' }, 400);
     if (buf.byteLength > MAX_BYTES) return json({ error: 'too_large' }, 413);
     bytes = trimWavSilence(new Uint8Array(buf));
@@ -818,8 +829,10 @@ async function transcribe(request, env) {
   async function runAliyun() {
     if (!hasAliyun || force === 'cf') return { text: '' };
     if (!force && Date.now() < aliyunDownUntil) return { text: '', dead: true };
+    const a0 = Date.now();
     try {
       const t = await aliyunTranscribe(bytes, env, mode, bias, mime);
+      aliMs = Date.now() - a0;
       // 中文是目标语言本身，不做数字还原；英文还原见 restoreDigits 注释。
       return {
         text: t ? (mode === 'zh' ? t : restoreDigits(t, bias)) : '',
@@ -827,6 +840,7 @@ async function transcribe(request, env) {
         answered: !!t,
       };
     } catch (e) {
+      aliMs = Date.now() - a0;
       return { text: '', dead: true, err: String(e && e.message || e) };
     }
   }
@@ -838,25 +852,29 @@ async function transcribe(request, env) {
   // returned Traditional). Chinese is normalised on the client instead.
   async function runCloudflare() {
     if (force === 'ali') return { text: '' };
+    const c0 = Date.now();
     if (wantFast) {
       try {
         const o = await env.AI.run(TURBO_MODEL, fastInput(bytes, mode, bias));
         const t = ((o && o.text) || '').trim();
-        if (t) return { text: t, model: TURBO_MODEL, raw: o, answered: true };
+        if (t) { cfMs = Date.now() - c0; return { text: t, model: TURBO_MODEL, raw: o, answered: true }; }
         // turbo 答了但是空的：再用默认模型听一遍（它的 initial_prompt 更宽松）。
       } catch (e) {
         // 额度耗尽就没必要再打一次默认模型 —— 同一个额度，只会白等半秒。
         // 其它错误（入参不兼容 / 临时故障）继续往下试默认模型。
         const msg = String(e && e.message || e);
         if (/4006|free allocation|neurons/i.test(msg)) {
+          cfMs = Date.now() - c0;
           return { text: '', dead: true, err: msg };
         }
       }
     }
     try {
       const o = await env.AI.run(MODEL, { audio: [...bytes] });
+      cfMs = Date.now() - c0;
       return { text: ((o && o.text) || '').trim(), model: MODEL, raw: o, answered: true };
     } catch (e) {
+      cfMs = Date.now() - c0;
       return { text: '', dead: true, err: String(e && e.message || e) };
     }
   }
@@ -936,11 +954,22 @@ async function transcribe(request, env) {
     detail = ((ali && ali.err) || (cf && cf.err)) || '';
   }
 
+  // 埋点打包成响应头。孩子手机上也能看到这三段各自多少毫秒。
+  function timingHeaders() {
+    const channel = model.indexOf('qwen') >= 0 ? 'aliyun' : (model ? 'cf' : 'none');
+    return {
+      'Server-Timing': 'upload;dur=' + uploadMs + ', ali;dur=' + aliMs +
+        ', cf;dur=' + cfMs + ', total;dur=' + (Date.now() - t0),
+      'X-Asr-Channel': channel,
+      'X-Edge-Colo': (request.cf && request.cf.colo) || '',
+    };
+  }
+
   if (!text && !answered && deadAny) {
     // 两条通道都没接上（不是"识别出来是空的"，而是压根没答上来）：按失败返回，
     // 客户端会转自评并进重试队列。两条都正常答了、只是内容为空的话，返回
     // 200 + 空文本，上层走"没听清，再读一次"。
-    return json({ error: 'transcribe_failed', detail: detail || 'no_channel' }, 502);
+    return json({ error: 'transcribe_failed', detail: detail || 'no_channel' }, 502, timingHeaders());
   }
 
   return json({
@@ -948,7 +977,7 @@ async function transcribe(request, env) {
     text: text,
     words: (raw && raw.words) || null,
     wordCount: (raw && raw.word_count) || null,
-  });
+  }, 200, timingHeaders());
 }
 
 // ---------------------------------------------------------------------------
@@ -1190,11 +1219,14 @@ async function readJsonBody(request) {
   try { return await request.json(); } catch (e) { return null; }
 }
 
-function json(body, status) {
-  return new Response(JSON.stringify(body), {
-    status: status || 200,
-    headers: { 'Content-Type': 'application/json; charset=utf-8' },
-  });
+function json(body, status, extra) {
+  const h = { 'Content-Type': 'application/json; charset=utf-8' };
+  if (extra) {
+    Object.keys(extra).forEach(function (k) {
+      if (extra[k] !== undefined && extra[k] !== null) h[k] = String(extra[k]);
+    });
+  }
+  return new Response(JSON.stringify(body), { status: status || 200, headers: h });
 }
 
 // The app is served from the same origin in production, so CORS only matters
@@ -1205,6 +1237,8 @@ function cors(res, env) {
   h.set('Access-Control-Allow-Origin', allowed);
   h.set('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
   h.set('Access-Control-Allow-Headers', 'Content-Type');
+  // 让 api. 子域这条跨域路也能读到耗时埋点（同域本来就能读）。
+  h.set('Access-Control-Expose-Headers', 'Server-Timing, X-Asr-Channel, X-Edge-Colo');
   h.set('Access-Control-Max-Age', '86400');
   return new Response(res.body, { status: res.status, headers: h });
 }

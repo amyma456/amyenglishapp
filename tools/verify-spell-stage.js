@@ -360,5 +360,124 @@ App._spell.contMiss = false;
 App._syncVocabFootLabel(MI, DAY);
 ok(btn.disabled === false, '读全了 → 解锁');
 
+// ---------- v99 红线（家长：读 panda 的时候，单个字母识别很久、还老过不去） ----------
+// 14. _letterOk 放宽：识别端换了写法（读音、重复字母）不该冤枉孩子
+console.log('\n== 14) 字母判定放宽（v99） ==');
+ok(App._letterOk('p', 'puh') === true, '读 P、识别成读音 "puh" → 判对');
+ok(App._letterOk('p', 'peee') === true, '识别把音写长（"peee"）→ 判对');
+ok(App._letterOk('n', 'enn') === true, '识别成 "enn" → 判对');
+ok(App._letterOk('d', 'duh') === true, '识别成 "duh" → 判对');
+ok(App._letterOk('a', 'uh') === true, 'A 的模糊读音 "uh" → 判对');
+ok(App._letterOk('m', 'm') === true, '纯辅音音 "m" → 判对');
+ok(App._letterOk('s', 'sss') === true, '重复辅音 "sss" → 判对');
+ok(App._letterOk('c', 'see') === true, 'C 的字母名 "see" 仍然判对（压重复字母不能压坏它）');
+// 放宽之后判别力不能丢：易混的那几对还是错的
+ok(App._letterOk('b', 'puh') === false, 'P 的读音不会算成 B 读对');
+ok(App._letterOk('d', 'buh') === false, 'B 的读音不会算成 D 读对');
+ok(App._letterOk('n', 'muh') === false, 'M 的读音不会算成 N 读对');
+ok(App._letterOk('m', 'n') === false, '读成 N → 仍判错');
+
+// 15. 识别端没回内容 ≠ 读错：不判红、不挡路
+console.log('\n== 15) 没听清不算读错（不挡路） ==');
+enterStage();
+App._gateOpen = function () { return true; };
+const origHold3 = App._holdStart;
+const holdArgs = [];
+let cb3 = null;
+App._holdStart = function () { holdArgs.push([].slice.call(arguments)); cb3 = arguments[4]; };
+getEl('spell-' + MI + '-0').textContent = 'b';
+App._readUnit({ preventDefault(){} }, MI, 0);
+cb3({}, null);                                  // 识别端一个字都没回来
+ok(App._spell.unitScores[0].unclear === true, 'unitScores[0].unclear=true');
+ok(App._spell.unitScores[0].ok === undefined, 'ok=undefined（既不算对也不算错）');
+ok(getEl('spell-' + MI + '-0').classList.contains('read-miss') === false, '格子不判红');
+ok(getEl('spell-' + MI + '-0').classList.contains('read-unclear') === true, '格子标为「没听清」');
+App._holdStart = origHold3;
+
+// 全是"没听清" → 也不该挡住孩子（否则识别失败就成了孩子的错）
+enterStage();
+for (let i = 0; i < App._spell.total; i++) {
+  App._spell.takes[i] = {};
+  App._spell.unitScores[i] = { label: 'X', unclear: true, heard: null };
+}
+App._spell.wordTake = {}; App._spell.score = 80; App._spell.heard = 'beautiful';
+App._spellProgress(MI);
+ok(App._spell.allOk === true, '全是「没听清」→ allOk=true（不把识别失败算成孩子的错）');
+App._syncVocabFootLabel(MI, DAY);
+ok(btn.disabled === false, '不挡路：按钮解锁');
+
+// 16. 字母/音节跟读必须让 Cloudflare 先认（v96 的注释写了，v99 才真正落到代码）
+console.log('\n== 16) 孤立音先给 Cloudflare 认 ==');
+ok(holdArgs.length === 1, '捕获到一次字母跟读（' + holdArgs.length + '）');
+ok(holdArgs[0] && holdArgs[0][8] === 'cf',
+   "asrPrefer='cf'（实际：" + (holdArgs[0] && holdArgs[0][8]) + '）');
+ok(holdArgs[0] && holdArgs[0][7] && holdArgs[0][7].indexOf('b') >= 0,
+   '仍然带上字母串提示词（hint=' + (holdArgs[0] && holdArgs[0][7]) + '）');
+
+// 17. 配色对比（v99）：家长"读错的词和橘黄太接近，孩子看不出来"。
+//     这条不钉具体色值，只钉关系 —— 读错 / 读对 / 录音中三态必须拉得开，
+//     而且读错不能只靠颜色区分。以后调色板随便改，只要还分得开就过。
+console.log('\n== 17) 读错和橘黄的对比度 ==');
+{
+  const css = fs.readFileSync(BASE + 'index.html', 'utf8');
+  const blockOf = (sel) => {
+    const i = css.indexOf(sel + '{');
+    if (i < 0) return null;
+    return css.slice(i, css.indexOf('}', i));
+  };
+  const declOf = (sel, prop) => {
+    const b = blockOf(sel);
+    if (!b) return null;
+    const m = b.match(new RegExp('(?:^|[;{\\s])' + prop + '\\s*:\\s*([^;}]+)'));
+    return m ? m[1].trim() : null;
+  };
+  const cssVar = (name) => {
+    const m = css.match(new RegExp('--' + name + '\\s*:\\s*(#[0-9a-fA-F]{3,6})'));
+    return m ? m[1] : null;
+  };
+  const bgOf = (sel) => {
+    const v = declOf(sel, 'background');
+    if (!v) return null;
+    const vm = v.match(/var\(\s*--([a-z-]+)\s*\)/);
+    if (vm) return cssVar(vm[1]);
+    const hm = v.match(/#[0-9a-fA-F]{3,6}/);
+    return hm ? hm[0] : null;
+  };
+  const rgb = (hex) => {
+    let h = String(hex).replace('#', '');
+    if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+    return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+  };
+  const dist = (a, b) => {
+    const x = rgb(a), y = rgb(b);
+    return Math.round(Math.sqrt(Math.pow(x[0] - y[0], 2) + Math.pow(x[1] - y[1], 2) + Math.pow(x[2] - y[2], 2)));
+  };
+
+  const missBg = bgOf('.spell-box.read-miss');
+  const doneBg = bgOf('.spell-box.read-done');
+  const recBg = bgOf('.spell-box.reading');
+  const badBg = bgOf('.rd-w.rd-bad');
+  const curBg = bgOf('.rd-w.rd-cur');
+
+  ok(!!missBg && !!doneBg, '读错 / 读对两态都有底色（' + missBg + ' / ' + doneBg + '）');
+  ok(missBg !== doneBg, '读错 ≠ 读对的底色（' + missBg + ' vs ' + doneBg + '）');
+  ok(!!recBg && recBg !== missBg, '「录音中」不再和「读错」同为红色（' + recBg + '）');
+  ok(!!missBg && !!doneBg && dist(missBg, doneBg) >= 100,
+     '读错与读对的底色距离够大（' + dist(missBg, doneBg) + '）');
+  ok(!!missBg && !!recBg && dist(missBg, recBg) >= 100,
+     '读错与录音中的底色距离够大（' + dist(missBg, recBg) + '）');
+  ok(!!badBg && !!curBg && dist(badBg, curBg) >= 100,
+     '跟读面板：读错与「正在读」橘黄光标的距离够大（' + dist(badBg, curBg) + '）');
+  ok(!/underline\s+wavy/.test(blockOf('.rd-w.rd-bad') || ''),
+     '读错不再只靠红色波浪线');
+  ok(css.indexOf('.rd-w.rd-bad::after') >= 0
+     && /content\s*:\s*'.{1,3}'/.test(css.slice(css.indexOf('.rd-w.rd-bad::after'),
+                                              css.indexOf('.rd-w.rd-bad::after') + 120)),
+     '读错的词带一个符号标记（不靠颜色也能认出来）');
+  ok(css.indexOf('.sc-cell.bad{border-color:#C62828;color:#fff;background:#C62828}') >= 0
+     || dist(bgOf('.sc-cell.bad') || '#FFFFFF', doneBg || '#FFF4EA') >= 100,
+     '汇总格子里的「读错」同样拉得开');
+}
+
 console.log('\n' + (fail ? ('有 ' + fail + ' 项失败 ❌') : '全部通过 ✅'));
 process.exit(fail ? 1 : 0);

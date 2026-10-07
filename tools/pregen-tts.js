@@ -21,6 +21,11 @@
  *   node tools/pregen-tts.js --limit=20          本次最多生成 20 条（先小批试跑用这个）
  *   node tools/pregen-tts.js --audit             体检已生成的音频，时长不合常理的挑出来重做
  *   node tools/pregen-tts.js --engine=cf         换成 Cloudflare 音色
+ *   node tools/pregen-tts.js --select=short      只做「单词 / 2~3 词短语」
+ *   node tools/pregen-tts.js --select=short --force --engine=cf
+ *                                                把短词的示范音换成 CF 音色（v98）
+ *   node tools/pregen-tts.js --select=short --todo=noncf --engine=cf
+ *                                                补漏：只做还没换到 CF 的那几条
  *   node tools/pregen-tts.js --reset             清空状态，全部重来（覆盖已有文件）
  *   node tools/pregen-tts.js --concurrency=4     并发（默认 3，别调太高）
  *
@@ -66,6 +71,9 @@ const LIMIT = parseInt(arg('limit', '0'), 10) || 0;
 const SELECT = (arg('select', '') || '').toLowerCase();
 // --force：忽略状态文件里已有的记录，把选中的条目全部重做（换音色时用）。
 const FORCE = process.argv.includes('--force');
+// --todo=noncf：只做「还没换到 CF 音色」的那些。整批跑完之后补漏用 ——
+// 个别条目会因为上游抖动 / 超时掉队，重跑一遍整批不值当（既慢又费额度）。
+const TODO = (arg('todo', '') || '').toLowerCase();
 const CONCURRENCY = Math.max(1, Math.min(6, parseInt(arg('concurrency', '3'), 10) || 3));
 const RETRY = 3;
 
@@ -496,6 +504,10 @@ async function main() {
     console.log('  --select=short：「单词 / 2~3 词短语」共 ' + pool.length + ' 条');
   }
   const todo = pool.filter((t) => {
+    if (TODO === 'noncf') {
+      const f = state.files[t];
+      return !f || f.source !== 'cf';
+    }
     if (FORCE) return true;
     const f = state.files[t];
     if (!f) return true;

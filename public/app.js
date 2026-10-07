@@ -3838,7 +3838,7 @@ const App = {
         const bad = (extra && extra.badWords) || [];
         let html = '<div style="font-size:34px;font-weight:700;color:var(--danger);line-height:1.15">'
                  + score + ' 分</div>'
-                 + '<span style="color:var(--danger);font-weight:600">⚠️ 不到 60 分，红色波浪线的词再读清楚些</span>';
+                 + '<span style="color:var(--danger);font-weight:600">⚠️ 不到 60 分，带 ✗ 的红词再读清楚些</span>';
         if (bad.length) {
           const list = bad.slice(0, 6).map(function(x) {
             return x.heard ? '<b>' + x.expected + '</b>（听成了 ' + x.heard + '）' : '<b>' + x.expected + '</b>（没读到）';
@@ -5272,9 +5272,10 @@ const App = {
   // v93：字母判定。_soundAlike 不能拿来判单个字母 —— 它最后那条
   // `_editDistance <= 1` 在 26 个字母的宇宙里等于"几乎都对"：
   // B 和 P、B 和 D、M 和 N 的距离都是 1，会被判成读对了。
-  // 这里只认两件事：识别结果里直接出现了这个字母（"b"），或者出现了
-  // 它的字母名拼写（B → "bee" / "be"）。whisper 把串读的字母连成一个
-  // token（"bkfast"）时按包含关系再兜一次。
+  // 这里认三件事：识别结果里直接出现了这个字母（"b"）、出现了它的字母名
+  // 拼写（B → "bee" / "be"）、或者出现了它的读音写法（B → "buh"）。
+  // v99 补齐第三类并压掉重复字母（"peee" → "pe"）—— 判别力不变（b/p、b/d、
+  // m/n 仍然分得开），但识别端换一种写法不会再冤枉孩子。
   _letterOk(target, heard) {
     var t = String(target || '').toLowerCase().replace(/[^a-z]/g, '');
     if (!t) return false;
@@ -5282,20 +5283,25 @@ const App = {
     var s = String(heard || '').toLowerCase();
     if (!s) return false;
     var LNAMES = {
-      a: 'ay eh ei',     b: 'be bee bi',     c: 'ce see sea cee',
-      d: 'de dee di',    e: 'ee ei',         f: 'ef eff',
-      g: 'ge gee',       h: 'aitch ech',     i: 'eye ai',
-      j: 'jay je',       k: 'kay ka',        l: 'el ell',
-      m: 'em',           n: 'en',            o: 'oh',
-      p: 'pe pee pea',   q: 'cue queue',     r: 'are ar',
-      s: 'es ess',       t: 'te tea tee ti', u: 'you yu',
-      v: 've vee',       w: 'double www',    x: 'ex eks',
-      y: 'why',          z: 'zee zed ze',
+      a: 'ay eh ei ey ah uh',  b: 'be bee bi buh',    c: 'ce see sea cee',
+      d: 'de dee di duh',      e: 'ee eh ey',         f: 'ef eff fuh',
+      g: 'ge gee guh',         h: 'aitch haitch ech huh',
+      i: 'eye ai ay ih',       j: 'jay je juh',       k: 'kay ka kuh',
+      l: 'el ell luh',         m: 'em emm muh',       n: 'en enn nuh',
+      o: 'oh owe',             p: 'pe pee pea puh',   q: 'cue queue que',
+      r: 'are ar ruh',         s: 'es ess suh',       t: 'te tea tee ti tuh',
+      u: 'you yu uh',          v: 've vee vuh',       w: 'double www wuh',
+      x: 'ex eks axe',         y: 'why wye',          z: 'zee zed ze',
     };
-    var allowed = (t + ' ' + (LNAMES[t] || '')).split(' ');
+    // v99：两边都先把重复字母压成一个再比 —— 识别端把短音写成 "peee"、"mmm"、
+    // "buh"（读的是 /p/ /m/ /b/ 的音而不是字母名）很常见。以前只认字母名，
+    // 孩子读对了反而被要求重读，卡在"全部读对才能走"上过不去（家长反馈）。
+    var squash = function (x) { return String(x).replace(/([a-z])\1+/g, '$1'); };
+    var allowed = (t + ' ' + (LNAMES[t] || '')).split(' ')
+                   .filter(Boolean).map(squash);
     var toks = s.replace(/[^a-z\s]/g, ' ').split(/\s+/).filter(Boolean);
     for (var i = 0; i < toks.length; i++) {
-      if (allowed.indexOf(toks[i]) >= 0) return true;
+      if (allowed.indexOf(squash(toks[i])) >= 0) return true;
     }
     // 注意：这里**不**做"子串包含"兜底（比如 "sea" 里含 e 就算 e 读对）——
     // 那会让 c 的字母名反过来匹配给 e，把读错的判成读对。宁可让它重读。
@@ -5438,14 +5444,22 @@ const App = {
       // _soundAlike 判单字母：它容忍一个编辑距离，而 26 个字母两两距离
       // 几乎都是 1（b/p、b/d、m/n 全判"对"），等于没判。
       var ok = isLetter ? self._letterOk(label, text) : self._soundAlike(label, text);
-      self._spell.unitScores[idx] = { label: label, ok: ok, heard: text };
-      el.classList.toggle('read-miss', !ok);
+      // v99：识别端一个字都没回来 ≠ 孩子读错了。孤立字母/短音节本来就难识别
+      // （见 _readUnit 顶部 prefer=cf 的说明），把"没听清"也算成错，孩子就会
+      // 卡在"全部读对才能走"上永远过不去 —— 家长反馈的"跑不通"就是这个。
+      // 所以这种情况不判红、不计入要重读的名单，只提示再读一次。
+      var unclear = !text;
+      self._spell.unitScores[idx] = { label: label, ok: unclear ? undefined : ok,
+                                     unclear: unclear, heard: text };
+      el.classList.toggle('read-miss', !unclear && !ok);
+      el.classList.toggle('read-unclear', unclear);
       if (status) {
         // v96：一个字都没识别出来 ≠ 读错了。原来两种情况共用一句"再读一次
         // 「B」"，孩子（和家长）看到的是"我明明读对了"的指控。现在分开说。
         status.innerHTML = '<div class="tap-result ' + (ok ? 'good' : 'bad') + '">'
           + (ok ? '读对了：' + label
-                : (!text ? '⚠️ 没听清，再读一次「' + label + '」' : '再读一次「' + label + '」'))
+                : (unclear ? '⚠️ 没听清，再读一次「' + label + '」（这次不算读错）'
+                           : '再读一次「' + label + '」'))
           + (text ? '<span class="tap-heard">识别：' + text + '</span>'
                   : '<span class="tap-heard">' + (ok ? '' : '这次没有识别到内容') + '</span>') + '</div>';
       }
@@ -5455,7 +5469,10 @@ const App = {
         label: label, score: ok ? 100 : 0, spoken: text, source: 'asr',
       });
       self._spellProgress(mi);
-    }, true, 'en', hint);
+    }, true, 'en', hint, 'cf');   // v99：v96 的注释说字母/音节要 CF 先认，代码却
+                                  // 一直没把 'cf' 传下来 —— 结果是先白等阿里云
+                                  // （它对孤立音基本吐空）再排 CF。补上，
+                                  // 单个字母的识别时长直接砍掉一段。
   },
 
   async _readFullWord(ev, mi) {
@@ -5542,7 +5559,11 @@ const App = {
       var u = sp.unitScores[i];
       var lbl = (u && u.label) || (sp.units && sp.units[i]) || '·';
       if (sp.kind === 'letter') lbl = String(lbl).toUpperCase();
-      var state = !u ? 'na' : (u.ok === undefined ? 'done' : (u.ok ? 'ok' : 'bad'));
+      var state = !u ? 'na'
+        : (u.unclear ? 'unclear'
+                     : (u.ok === undefined ? 'done' : (u.ok ? 'ok' : 'bad')));
+      // v99：只有"确认读错"才进重读名单。"没听清"（识别端没回内容）不算 ——
+      // 把识别失败当成孩子的错，就是这条路上"永远过不去"的根源。
       if (state === 'bad') missed.push(lbl);
       cells += '<span class="sc-cell ' + state + '">' + lbl + '</span>';
     }
@@ -5800,12 +5821,18 @@ const App = {
     // 中文也走 turbo（mode=zh），worker 会传 language=zh + 简体提示词；
     // turbo 失败或返回空时服务端自动降级回默认多语种模型。
     // hint：目标句/词的提示词偏置（v87），识别更准、误判漏读更少。
-    var res = await Api.transcribe(forAsr, null,
-      fast ? { fast: true, hint: this._holdHint || '', prefer: this._holdPrefer || '' }
-           : { fast: true, lang: 'zh' });
+    // v99：这一层必须自己兜住错误。以前没兜，识别链路整个抛错时 onDone
+    // 不会被调用 —— 页面就永远停在"核对中，马上出分…"，孩子白读一遍、
+    // 按钮也一直是按不下去的红色（家长反馈的"这里跑不通"）。
+    var res = null;
+    try {
+      res = await Api.transcribe(forAsr, null,
+        fast ? { fast: true, hint: this._holdHint || '', prefer: this._holdPrefer || '' }
+             : { fast: true, lang: 'zh' });
+    } catch (e) { console.warn('hold transcribe failed:', e); }
     var text = res && res.text ? res.text : null;
     if (Api.isFillerTranscript(text)) text = null;
-    if (onDone) onDone(out, text);
+    if (onDone) { try { onDone(out, text); } catch (e) { console.warn('hold onDone failed:', e); } }
   },
 
   // Writing template
@@ -7887,7 +7914,7 @@ const App = {
           const list = bad.slice(0, 6).map(function(x) {
             return x.heard ? '<b>' + x.expected + '</b>（听成了 ' + x.heard + '）' : '<b>' + x.expected + '</b>（没读到）';
           }).join('、');
-          html += '<div class="rd-retry">红色波浪线的词就是没读对的：' + list
+          html += '<div class="rd-retry">带 ✗ 的红词就是没读对的：' + list
                 + '<br>先听一遍示范，再把<b>整句</b>重读一次。'
                 + '<div><button class="speak-btn rd-again-btn" style="font-size:13px;padding:6px 14px" '
                 + 'onclick="App._replayReadSentence(' + mi + ',' + qi + ')">🔊 听一遍示范</button></div></div>';
