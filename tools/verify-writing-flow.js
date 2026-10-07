@@ -326,7 +326,11 @@ ok(App._writingReadGateOpen() === false, '还有句子没过 → 仍然不放行
 
 // v87 单词修复闭环：每个词第一按听示范、第二按跟读，读对了就打勾；
 // 全部读对后「再读整句」解锁。
-ok(App._repair && App._repair.words.join(',') === 'tall,and,kind',
+//
+// v96：这里原来期待 'tall,and,kind'，现在只剩 'tall,kind' —— 因为 "and" 是
+// 纯语法连接词，被识别吞掉不再算错词（见 app.js 的 GLUE_WORDS）。孩子读到
+// 一半停下来，"and" 这种词本来也听不出有没有读，不该因此被拉去单独重读。
+ok(App._repair && App._repair.words.join(',') === 'tall,kind',
    '修复面板收集到漏读词: ' + (App._repair && App._repair.words.join(',')));
 const repairEv = { preventDefault() {}, pointerId: 1, currentTarget: { setPointerCapture() {} } };
 App._repair.words.forEach((w, i) => {

@@ -138,33 +138,68 @@ async function run(qs, opts) {
   ok('engine=cf 强制 Cloudflare', r.body.model === '@cf/openai/whisper-large-v3-turbo');
   ok('强制 cf 时一次阿里云都不打', r.rec.fetches.length === 0);
 
-  // ---- 4. 路由：英文 -----------------------------------------------------
-  console.log('\n4. 路由 · 英文留 Cloudflare + 额度兜底');
-  r = await run('?model=turbo&prompt=' + encodeURIComponent(EN), { text: EN });
-  ok('正常走 turbo', r.body.model === '@cf/openai/whisper-large-v3-turbo', JSON.stringify(r.body));
-  ok('文本逐字一致', r.body.text === EN);
-  ok('不浪费阿里云调用', r.rec.fetches.length === 0, 'fetches=' + r.rec.fetches.length);
+  // ---- 4. 路由：英文也优先阿里云（v96），Cloudflare 降为兜底 --------------
+  // 依据：同一段 2.6 秒音频交叉对照 9 轮，阿里云中位 1.2s、Cloudflare turbo
+  // 中位 2.3s；识别文本两者一致（tools/pron-scoring-bench.js）。孩子读完盯着
+  // "核对中"干等的那几秒就出在这里。
+  console.log('\n4. 路由 · 英文优先阿里云（v96）+ Cloudflare 兜底');
+  r = await run('?model=turbo&prompt=' + encodeURIComponent(EN), { aliText: EN_ALI });
+  ok('默认走阿里云', r.body.model === 'qwen3-asr-flash', JSON.stringify(r.body));
+  ok('阿里云兜底结果里的数字已还原成 11', r.body.text === EN, r.body.text);
+  ok('既然阿里云接了，就一次 Cloudflare 都不打（省额度）', r.rec.aiCalls === 0,
+    'aiCalls=' + r.rec.aiCalls);
+  ok('阿里云请求带偏置（目标句）', r.rec.fetches[0].init.body.indexOf('11-year-old') > 0);
 
-  r = await run('?model=turbo&prompt=' + encodeURIComponent(EN), { aiThrows: true });
-  ok('额度耗尽 → 阿里云兜底出分', r.body.model === 'qwen3-asr-flash', JSON.stringify(r.body));
-  ok('兜底带偏置（目标句）', r.rec.fetches[0].init.body.indexOf('11-year-old') > 0);
-  ok('兜底结果数字已还原', r.body.text === EN, r.body.text);
+  r = await run('?model=turbo&prompt=' + encodeURIComponent(EN), { aliThrows: true, text: EN });
+  ok('阿里云挂了 → 落回 turbo 出分', r.body.model === '@cf/openai/whisper-large-v3-turbo', JSON.stringify(r.body));
+  ok('落回后文本仍拿得到', r.body.text === EN);
 
-  r = await run('?model=turbo&prompt=' + encodeURIComponent(EN), { turboEmpty: true });
-  ok('turbo 返回空 → 默认模型接住', r.rec.aiModels[1] === '@cf/openai/whisper', r.rec.aiModels.join(','));
-  ok('默认模型接住后不再打阿里云', r.rec.fetches.length === 0);
+  r = await run('?model=turbo&prompt=' + encodeURIComponent(EN), { aliText: '', text: EN });
+  ok('阿里云一个字没识别出 → 也走 Cloudflare 兜底', r.body.model === '@cf/openai/whisper-large-v3-turbo',
+    JSON.stringify(r.body));
+
+  r = await run('?model=turbo&prompt=' + encodeURIComponent(EN), { aliThrows: true, turboEmpty: true });
+  ok('阿里云挂 + turbo 空 → 默认模型接住', r.rec.aiModels[1] === '@cf/openai/whisper', r.rec.aiModels.join(','));
 
   r = await run('?model=turbo&prompt=' + encodeURIComponent(EN), { allEmpty: true, aliText: EN_ALI });
-  ok('两个 CF 模型都没声 → 阿里云兜底', r.body.model === 'qwen3-asr-flash', JSON.stringify(r.body));
-  ok('兜底文本数字同样还原', r.body.text === EN, r.body.text);
+  ok('CF 两个模型都没声时阿里云早就答了', r.body.model === 'qwen3-asr-flash', JSON.stringify(r.body));
 
-  r = await run('?model=turbo&prompt=' + encodeURIComponent(EN), { allEmpty: true, aliText: '' });
-  ok('连阿里云也没声 → 返回空文本而不是报错', r.status === 200 && r.body.text === '',
+  r = await run('?model=turbo&prompt=' + encodeURIComponent(EN), { aliThrows: true, aiThrows: true });
+  ok('两条通道都接不上 → 502 失败码', r.status === 502, 'status=' + r.status + ' ' + JSON.stringify(r.body));
+  ok('错误里带上原因', !!r.body.detail, JSON.stringify(r.body));
+
+  r = await run('?model=turbo&prompt=' + encodeURIComponent(EN), { aliText: '', allEmpty: true });
+  ok('两条通道都没识别出内容 → 200 空文本，走"没听清"', r.status === 200 && r.body.text === '',
     'status=' + r.status + ' ' + JSON.stringify(r.body));
 
-  r = await run('?model=turbo&prompt=' + encodeURIComponent(EN) + '&engine=ali', { text: EN });
-  ok('engine=ali 强制走阿里云（= 兜底自查）', r.body.model === 'qwen3-asr-flash');
+  r = await run('?model=turbo&prompt=' + encodeURIComponent(EN) + '&engine=cf', { aliText: EN_ALI, text: EN });
+  ok('engine=cf 强制走 Cloudflare', r.body.model === '@cf/openai/whisper-large-v3-turbo', JSON.stringify(r.body));
+  ok('强制 cf 时一次阿里云都不打', r.rec.fetches.length === 0);
+
+  r = await run('?model=turbo&prompt=' + encodeURIComponent(EN) + '&engine=ali', { aliText: EN_ALI, text: EN });
+  ok('engine=ali 强制走阿里云', r.body.model === 'qwen3-asr-flash');
   ok('强制 ali 时不打 Cloudflare', r.rec.aiCalls === 0);
+
+  // ---- 4b. prefer=cf：字母/音节这类极短孤立音必须让 Cloudflare 先上 -------
+  // 依据：实测 10 个孤立字母，阿里云 9 个返回空文本（F 还拖了 47 秒），
+  // Cloudflare 靠 initial_prompt 偏置能报出 7 个。
+  console.log('\n4b. prefer=cf（字母/音节专用：Cloudflare 先上）');
+  r = await run('?model=turbo&prompt=A,+B,+C&prefer=cf', { text: 'A B C' });
+  ok('prefer=cf → 先打 turbo', r.body.model === '@cf/openai/whisper-large-v3-turbo', JSON.stringify(r.body));
+  ok('Cloudflare 答上了就不打阿里云', r.rec.fetches.length === 0, 'fetches=' + r.rec.fetches.length);
+
+  r = await run('?model=turbo&prompt=A,+B,+C&prefer=cf', { aiThrows: true, aliText: 'A B C' });
+  ok('Cloudflare 挂了 → 阿里云兜底', r.body.model === 'qwen3-asr-flash', JSON.stringify(r.body));
+
+  r = await run('?model=turbo&prompt=A,+B,+C&prefer=cf', { turboEmpty: true, aliText: 'A B C' });
+  ok('turbo 空 → 默认模型接住（不打阿里云）', r.rec.aiModels[1] === '@cf/openai/whisper');
+  ok('默认模型接住后就不再打阿里云', r.rec.fetches.length === 0, 'fetches=' + r.rec.fetches.length);
+
+  r = await run('?model=turbo&prompt=A,+B,+C&prefer=cf', { allEmpty: true, aliText: 'A B C' });
+  ok('两个 CF 模型都空 → 阿里云兜底', r.body.model === 'qwen3-asr-flash', JSON.stringify(r.body));
+
+  r = await run('?model=turbo&prompt=A,+B,+C&prefer=cf', { allEmpty: true, aliText: '' });
+  ok('都没有内容 → 200 空文本（不是 502）', r.status === 200 && r.body.text === '', 'status=' + r.status);
 
   // ---- 5. 没有 Key 时的退路 ----------------------------------------------
   console.log('\n5. 未配置 ALIYUN_KEY（部署漏了 secret 的情况）');

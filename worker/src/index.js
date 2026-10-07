@@ -585,19 +585,26 @@ function fastInput(bytes, mode, bias) {
 }
 
 // ---------------------------------------------------------------------------
-// 阿里云百炼（v88）—— 中文翻译识别的主通道，同时兜住 Cloudflare 额度耗尽。
+// 阿里云百炼（v88 起中文优先，v96 起英文也优先）—— 跟读评分的主通道。
 //
 // 为什么切过去：
-//   1. 中文准确度。qwen3-asr-flash 是 LLM 架构的中文 ASR，实测孩子这种 3-5 秒
+//   1. 延迟。服务器在国内，不再跨境往返。同一段 2.6 秒音频交叉对照 9 轮：
+//      阿里云中位 1.2s（最快 1.0s），Cloudflare turbo 中位 2.3s（最慢 3.9s）。
+//      "孩子读完盯着'核对中'干等"的那几秒，差的就是这一条。
+//      tools/pron-scoring-bench.js 可以复现这组数。
+//   2. 中文准确度。qwen3-asr-flash 是 LLM 架构的中文 ASR，实测孩子这种 3-5 秒
 //      短句带标点逐字正确；Whisper 的中文是靠多语种能力顺带支撑的，明显弱一档。
-//   2. 延迟。服务器在国内，实测一次 3 秒音频 0.5-0.9s 出结果，且不再跨境往返。
 //   3. 免费额度。36,000 秒（10 小时）/90 天，孩子一天用不到 1 小时 —— 花不到钱。
 //      计费 ¥0.00022/秒（≈¥0.79/小时），真超了也就几毛钱。
 //
-// 为什么英文不直接也切过来：qwen3-asr-flash 会把 "11-year-old" 规范化成
-// "eleven-year-old"，而客户端是拿目标句逐词比对的，这种数字改写会被判成读错。
-// Whisper + initial_prompt 偏置能逐字贴合。所以英文仍以 Cloudflare 为主，
-// 阿里云只做额度耗尽/故障时的兜底 —— 有它在，4006 不会再让孩子这次朗读失效。
+// v96 把英文也挪过来的理由（原来只做兜底）：
+//   · 唯一的历史顾虑是 qwen3-asr-flash 会把 "11-year-old" 规范化成
+//     "eleven-year-old"。这条在 v87 就已经消掉了 —— 客户端 _tokens 会把目标句
+//     里的数字也摊成英文词（11 → "eleven"），两边本来就对得上；万一方向相反
+//     （阿里云反而吐了数字），下面还有 restoreDigits 顶着。
+//   · tools/pron-scoring-bench.js 拿 12 句真实口语题跑过：阿里云逐词 100 分、
+//     12/12 判定通过，与 Cloudflare 完全一致，但快一倍。
+//   · Cloudflare 的额度与跨境抖动从此只作为兜底，不再挡在必经路上。
 //
 // 上下文偏置（system message）实测有效：把目标句给它，"Sierra" 能纠回 "Sarah"。
 const ALIYUN_ASR_URL = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
@@ -626,6 +633,24 @@ function aliyunPayload(bytes, mode, bias, mime) {
   return { model: ALIYUN_ASR_MODEL, messages: messages };
 }
 
+// 阿里云"熔断"（v96）。
+//
+// 起因：账户欠费时 dashscope 对每一次请求都回 400 Arrearage（约 0.5 秒），
+// 而客户端感知到的是"识别又慢又不出分"。阿里云现在是首选通道，如果每次都
+// 先去撞一次欠费，等于把首选变成净亏。所以一旦收到欠费/鉴权类错误，就跳过
+// 阿里云 CANCEL_MS，这段时间所有请求直接走 Cloudflare；到点了再放一次过去
+// 试探，充值到账后自动恢复，不用重新部署。
+//
+// 用模块级变量而不是 KV：同一个 isolate 会复用，命中率足够高，而且零成本、
+// 零依赖。isolate 被回收也无所谓 —— 大不了多探一次。
+let aliyunDownUntil = 0;
+const ALIYUN_CANCEL_MS = 60 * 1000;
+
+// 阿里云单次调用上限（v96）。实测它在异常时会"挂住"——字母测试里出现过
+// 47 秒和 19 秒才回包的请求。孩子那边感知到的是"核对中"转圈转到最后没有分，
+// 等于白读一遍。给一个上限，超了就立刻落 Cloudflare 兜底，最坏情况也被压住。
+const ALIYUN_ASR_TIMEOUT_MS = 4000;
+
 // 失败一律抛错、由调用方决定降级 —— 不在这里吞掉，否则分不清"没声音"和"没配上"。
 async function aliyunTranscribe(bytes, env, mode, bias, mime) {
   const key = (env && (env.ALIYUN_KEY || env.DASHSCOPE_API_KEY)) || '';
@@ -634,8 +659,19 @@ async function aliyunTranscribe(bytes, env, mode, bias, mime) {
     method: 'POST',
     headers: { Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' },
     body: JSON.stringify(aliyunPayload(bytes, mode, bias, mime)),
+    signal: AbortSignal.timeout(ALIYUN_ASR_TIMEOUT_MS),
   });
-  if (!res.ok) throw new Error('aliyun_http_' + res.status);
+  if (!res.ok) {
+    // 欠费 / Key 失效这类"重试也没用"的错误才熔断；4xx 里的入参问题不熔断，
+    // 免得一个坏请求把整条通道关掉一分钟。请求体很小，读出来只为分类。
+    let body = '';
+    try { body = (await res.text()).slice(0, 300); } catch (e) {}
+    if (res.status === 401 || res.status === 403
+        || /Arrearage|overdue|good standing|InvalidApiKey|Unauthorized/i.test(body)) {
+      aliyunDownUntil = Date.now() + ALIYUN_CANCEL_MS;
+    }
+    throw new Error('aliyun_http_' + res.status);
+  }
   const data = await res.json();
   const choice = data && data.choices && data.choices[0];
   let content = choice && choice.message ? choice.message.content : '';
@@ -707,47 +743,64 @@ async function transcribe(request, env) {
   const mime = (request.headers.get('content-type') || 'audio/wav').split(';')[0].trim() || 'audio/wav';
   // ?engine=ali|cf 可强制指定，用于线上排查是哪条通道在答。
   const force = url.searchParams.get('engine') || '';
+  // ?prefer=cf（v96）：把 Cloudflare 提到首选。
+  //
+  // 为什么字母跟读非要它不可：字母是一段 0.5 秒、不含真实语言的孤立音，
+  // qwen3-asr-flash 对它几乎不工作 —— 实测 10 个字母里 9 个直接返回空文本
+  // （B 读到 "B."，K/S/T/E/G/U 全空），其中 F 拖了 47 秒、W 拖了 19 秒；
+  // 而 whisper 靠 initial_prompt 偏置能把字母名报出来（7/10）。口语跟读那种
+  // 完整句子不存在这个问题，所以默认（整句、单词）仍走更快的阿里云。
+  const preferCf = url.searchParams.get('prefer') === 'cf';
   const hasAliyun = !!(env.ALIYUN_KEY || env.DASHSCOPE_API_KEY);
 
   let out = null;
   let model = '';
   let text = '';
   let cfDead = false;      // Cloudflare 抛错（额度耗尽 4006 / 故障）后不再重试它
+  let aliDead = false;     // 阿里云抛错（Key 错 / 限流 / 抖动）后不再重试它
   let detail = '';
 
-  // 中文优先走阿里云：更准、更快、不占 Cloudflare 的神经元额度。失败再落回
-  // Cloudflare 的 turbo（v86 通道），不让孩子这一次翻译白说。
-  if (hasAliyun && mode === 'zh' && force !== 'cf') {
+  // 阿里云一条。熔断期内直接跳过 —— 见 aliyunDownUntil 的注释。
+  async function tryAliyun() {
+    if (aliDead || !hasAliyun || force === 'cf') return;
+    if (!force && Date.now() < aliyunDownUntil) { aliDead = true; return; }
     try {
-      text = await aliyunTranscribe(bytes, env, mode, bias, mime);
-      if (text) model = ALIYUN_ASR_MODEL;
-    } catch (e) { detail = String(e && e.message || e); }
-  }
-
-  const wantCf = !text && force !== 'ali';
-  if (wantCf && wantFast) {
-    try {
-      out = await env.AI.run(TURBO_MODEL, fastInput(bytes, mode, bias));
-      model = TURBO_MODEL;
-      text = ((out && out.text) || '').trim();
+      const t = await aliyunTranscribe(bytes, env, mode, bias, mime);
+      if (t) {
+        model = ALIYUN_ASR_MODEL;
+        out = null;
+        // 中文是目标语言本身，不做数字还原；英文还原见 restoreDigits 注释。
+        text = mode === 'zh' ? t : restoreDigits(t, bias);
+      }
     } catch (e) {
-      // 快模型额度用尽、临时故障、入参不兼容 —— 任何一种都不能让孩子这
-      // 一次朗读变成"出分失败"。静默降级，下面用默认模型兜住。
-      out = null;
-      model = '';
-      cfDead = true;
+      aliDead = true;
       detail = String(e && e.message || e);
     }
   }
 
-  // 快模型对特别短的片段、或者声音很小的孩子可能返回空。这时多花一次调用
-  // 换回默认模型，孩子不用重读一遍。
+  // Cloudflare 一条：先 turbo（更准），空/报错再退默认模型。
   //
   // NOTE: @cf/openai/whisper accepts only `audio` — language and
   // initial_prompt are ignored (tested: a Simplified-Chinese prompt still
   // returned Traditional). Chinese is normalised on the client instead.
-  // 但 Cloudflare 已经报错（多半是额度耗尽）时别再打一次，直接交给阿里云。
-  if (wantCf && !text && !cfDead) {
+  // 但它已经报错（多半是额度耗尽）时别再打一次。
+  async function tryCloudflare() {
+    if (text || force === 'ali') return;
+    if (wantFast) {
+      try {
+        out = await env.AI.run(TURBO_MODEL, fastInput(bytes, mode, bias));
+        model = TURBO_MODEL;
+        text = ((out && out.text) || '').trim();
+      } catch (e) {
+        // 快模型额度用尽、临时故障、入参不兼容 —— 任何一种都不能让孩子这
+        // 一次朗读变成"出分失败"。静默降级，下面用默认模型兜住。
+        out = null;
+        model = '';
+        cfDead = true;
+        detail = String(e && e.message || e);
+      }
+    }
+    if (text || cfDead) return;
     try {
       out = await env.AI.run(MODEL, { audio: [...bytes] });
       model = MODEL;
@@ -759,20 +812,24 @@ async function transcribe(request, env) {
     }
   }
 
-  // 英文的兜底：Cloudflare 额度耗尽（傍晚高峰的 4006）时，这次朗读照样要出分。
-  if (!text && hasAliyun && mode !== 'zh' && force !== 'cf') {
-    try {
-      text = await aliyunTranscribe(bytes, env, mode, bias, mime);
-      if (text) { model = ALIYUN_ASR_MODEL; out = null; text = restoreDigits(text, bias); }
-    } catch (e) { detail = String(e && e.message || e); }
+  // 两条通道的先后顺序：默认阿里云优先（更快，见函数上方注释），
+  // prefer=cf 时反过来（字母这种极短音频只有 Cloudflare 认得出来）。
+  if (preferCf) {
+    await tryCloudflare();
+    if (!text) await tryAliyun();
+  } else {
+    await tryAliyun();
+    await tryCloudflare();
   }
 
-  if (!text && !model) {
-    // 两条通道都没接上，或者确实一个字都没识别出来。前者按失败返回（客户端
-    // 会转自评并进重试队列），后者返回空文本让上层走"没听清"提示。
-    if (cfDead && (!hasAliyun || force === 'cf')) {
-      return json({ error: 'transcribe_failed', detail: detail || 'cloudflare_unavailable' }, 502);
-    }
+  if (!text && !model && (cfDead || aliDead)) {
+    // 两条通道都没接上（不是"识别出来是空的"，而是压根没答上来）：按失败返回，
+    // 客户端会转自评并进重试队列。两条都正常答了、只是内容为空的话，返回
+    // 200 + 空文本，上层走"没听清，再读一次"。
+    //
+    // 注意 cfDead/aliDead 在"熔断跳过"时也会置位：那种情况下面这条只在两条
+    // 真的都没结果时才成立，语义仍然对。
+    return json({ error: 'transcribe_failed', detail: detail || 'no_channel' }, 502);
   }
 
   return json({

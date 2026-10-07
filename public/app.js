@@ -4035,12 +4035,119 @@ const App = {
     return String(v);
   },
 
+  // 缩写摊平表（v96）。识别端经常把 "I'm" 吐成 "I am"、"don't" 吐成
+  // "do not"、"what's" 吐成 "what is" —— 孩子嘴里读的就是一个词，逐字比对
+  // 却会把它判成读错。两边都先摊平成同一个写法，这一整类误判消失。
+  CONTRACTIONS: {
+    "i'm": 'i am', "i've": 'i have', "i'll": 'i will', "i'd": 'i would',
+    "you're": 'you are', "you've": 'you have', "you'll": 'you will', "you'd": 'you would',
+    "we're": 'we are', "we've": 'we have', "we'll": 'we will', "we'd": 'we would',
+    "they're": 'they are', "they've": 'they have', "they'll": 'they will', "they'd": 'they would',
+    "he's": 'he is', "she's": 'she is', "it's": 'it is', "that's": 'that is',
+    "what's": 'what is', "where's": 'where is', "who's": 'who is', "how's": 'how is',
+    "there's": 'there is', "here's": 'here is', "let's": 'let us',
+    "don't": 'do not', "doesn't": 'does not', "didn't": 'did not',
+    "isn't": 'is not', "aren't": 'are not', "wasn't": 'was not', "weren't": 'were not',
+    "can't": 'cannot', "couldn't": 'could not', "won't": 'will not', "wouldn't": 'would not',
+    "shouldn't": 'should not', "mustn't": 'must not',
+    "haven't": 'have not', "hasn't": 'has not', "hadn't": 'had not',
+    "gonna": 'going to', "wanna": 'want to', "gotta": 'got to', "ok": 'okay',
+  },
+
+  _expandContractions(toks) {
+    const map = this.CONTRACTIONS;
+    const out = [];
+    for (let i = 0; i < toks.length; i++) {
+      const t = toks[i];
+      // "can not" / "cannot" / "can't" 在识别结果里三种写法都出现过，统一
+      // 收成 "cannot"，否则同一个词会因为写法不同被判成读错。
+      if (t === 'can' && toks[i + 1] === 'not') { out.push('cannot'); i++; continue; }
+      const e = map[t];
+      if (e) { const parts = e.split(' '); for (let k = 0; k < parts.length; k++) out.push(parts[k]); }
+      else out.push(t);
+    }
+    return out;
+  },
+
   _tokens(s) {
     const self = this;
-    return String(s).toLowerCase()
+    const raw = String(s).toLowerCase()
       .replace(/(\d+)/g, function(_, d) { return ' ' + self._spellNumber(d) + ' '; })
       .replace(/[^a-z'\s]/g, ' ')
       .split(/\s+/).filter(Boolean);
+    // 缩写摊平放在最后一步：_readTokens 也是逐词调这里，所以显示格子的
+    // data-n 会自动跟着变成 2（"What's" 占两个词位），高亮与判分仍然对齐
+    // —— tools/verify-read-tokens.js 守着这条一致性。
+    return this._expandContractions(raw);
+  },
+
+  // 纯语法连接词（v96）。识别端最爱吞的就是这一小撮：孩子嘴里读了 "the"，
+  // 回来的转写里没有它。判定要求"一个红词都不许有"，被吞一个 the 就能把整句
+  // 卡死 —— 而句子的实词一个都没少。这类词漏读/听岔不计入错词。
+  GLUE_WORDS: {
+    a: 1, an: 1, the: 1, is: 1, am: 1, are: 1, was: 1, were: 1, be: 1, been: 1,
+    do: 1, does: 1, did: 1, of: 1, to: 1, and: 1, or: 1, in: 1, on: 1, at: 1,
+    as: 1, so: 1, but: 1, for: 1, with: 1, that: 1, this: 1, us: 1, not: 1,
+  },
+
+  // 词尾变化（v96）：同一个词的复数 / 三单 / 过去式 / 进行时 / 比较级。
+  // cats/cat 那条由 _wordSame ③ 覆盖掉了；helped/help、visited/visit、
+  // years/year、reading/read 得剥掉 -ed/-s/-ing 才相等，单独补一条。
+  // 要求两边都不短于 4 个字母 —— 否则 an/and、be/bed 这种短词会互相认领。
+  _inflectSame(a, b) {
+    if (a.length < 4 || b.length < 4) return false;
+    const rules = [['ies', 'y'], ['ing', ''], ['est', ''], ['ed', ''], ['es', ''],
+                   ['er', ''], ['ly', ''], ['s', ''], ['d', '']];
+    const strip = function(w) {
+      const out = [w];
+      for (let i = 0; i < rules.length; i++) {
+        const suf = rules[i][0];
+        // 剥完至少还剩 3 个字母，免得把 help 剥成 he
+        if (w.length > suf.length + 2 && w.slice(-suf.length) === suf) {
+          out.push(w.slice(0, w.length - suf.length) + rules[i][1]);
+        }
+      }
+      return out;
+    };
+    const A = strip(a), B = strip(b);
+    for (let i = 0; i < A.length; i++) {
+      for (let j = 0; j < B.length; j++) if (A[i] === B[j]) return true;
+    }
+    return false;
+  },
+
+  // 一个词算不算「读的就是这个」（v96）。判分要同时满足两件相反的事：
+  // 读对的别冤枉（识别噪声、拼写变体），读错的别放过（think/sink 要能分开）。
+  // 四条口径，一条比一条松：
+  //   ① 拼写完全一样
+  //   ② 音形归一后一样（favorite/favourite、library/libary、full/ful）
+  //   ③ 音形归一只差一个字母 —— 但只认"长度不一样"的那种差（多一个 s / d / ed
+  //      的去尾：cats/cat、subjects/subject、help/helped），因为那是同一个词的
+  //      词形变化；等长的一个字母之差（cat/cut、pen/pan、run/ran）是另一个词，
+  //      不认。两边都 ≥4 个字母时放宽到等长也认（school/schoo 之类的手滑）。
+  //   ④ 剥掉词尾后相等（helped/help、visited/visit、years/year）
+  //   ⑤ 音形归一后互为前缀，且都不短于 6 个字母（recognize/recognition）
+  _wordSame(expected, heard) {
+    const a0 = String(expected == null ? '' : expected).toLowerCase();
+    const b0 = String(heard == null ? '' : heard).toLowerCase();
+    if (!a0 || !b0) return false;
+    if (a0 === b0) return true;
+    const x = this._soundKey(a0), y = this._soundKey(b0);
+    if (!x || !y) return false;
+    if (x === y) return true;
+    if (this._editDistance(x, y) <= 1 && (x.length !== y.length || (x.length >= 4 && y.length >= 4))) return true;
+    if (this._inflectSame(a0, b0)) return true;
+    if (x.length >= 6 && y.length >= 6 && (x.indexOf(y) === 0 || y.indexOf(x) === 0)) return true;
+    return false;
+  },
+
+  // 「这一串识别结果里有没有出现过这个词」—— 不看位置。单词纠错用。
+  _heardAny(expected, heard) {
+    const toks = String(heard || '').toLowerCase().replace(/[^a-z0-9'\s]/g, ' ').split(/\s+/).filter(Boolean);
+    for (let i = 0; i < toks.length; i++) {
+      if (this._wordSame(expected, toks[i])) return true;
+    }
+    return false;
   },
 
   _editDistance(a, b) {
@@ -4065,6 +4172,10 @@ const App = {
   // Levenshtein over word arrays, with backtrace, so each target word gets a
   // verdict: ok / wrong (something else was said there) / missing (skipped),
   // plus any extra words that were not in the sentence.
+  //
+  // v96：位置上的「一样」不再要求拼写逐字相同，改走 _wordSame（音形归一 +
+  // 一个字母的容错）——识别噪声本来就不该算孩子读错。虚词（a/the/is/to…）
+  // 一旦漏读或被吞，也不计入错词（见 GLUE_WORDS）。
   alignSpeech(target, spoken) {
     const t = this._tokens(target), s = this._tokens(spoken);
     const n = t.length, m = s.length;
@@ -4074,7 +4185,7 @@ const App = {
     for (let j = 1; j <= m; j++) { d[0][j] = j; bt[0][j] = 'ins'; }
     for (let i = 1; i <= n; i++) {
       for (let j = 1; j <= m; j++) {
-        const same = t[i - 1] === s[j - 1];
+        const same = this._wordSame(t[i - 1], s[j - 1]);
         const sub = d[i - 1][j - 1] + (same ? 0 : 1);
         const del = d[i - 1][j] + 1;
         const ins = d[i][j - 1] + 1;
@@ -4097,16 +4208,68 @@ const App = {
       }
     }
     out.reverse();
+    // 复合词拆合（v96）：识别端很爱把 storybooks 写成 "story book"、basketball
+    // 写成 "basket ball" —— 孩子读得完全没错，逐词比对却必挂。做一次局部合并：
+    // ① 一个没判过的目标词，把它左右紧邻的"多出来的词"拼进来再比一次
+    //    （storybooks ← "story" + "book" 两半，哪一半落在左边都可能）；
+    // ② 反过来（目标句是 "story books" 两个词、识别回来粘成 "storybooks"）。
+    const self = this;
+    for (let i = 0; i < out.length; i++) {
+      const it = out[i];
+      if (!it.target || it.status === 'ok') continue;
+      const left = [], right = [];
+      for (let j = i - 1; j >= 0; j--) {
+        const pv = out[j];
+        if (!pv || pv.target || pv.status !== 'extra') break;
+        left.unshift(j);
+      }
+      for (let j = i + 1; j < out.length; j++) {
+        const nx = out[j];
+        if (!nx || nx.target || nx.status !== 'extra') break;
+        right.push(j);
+      }
+      if (!left.length && !right.length) continue;
+      const L = left.map(function(k) { return String(out[k].spoken || ''); });
+      const R = right.map(function(k) { return String(out[k].spoken || ''); });
+      let hit = null;
+      for (let a = L.length; a >= 0 && !hit; a--) {
+        for (let b = 0; b <= R.length && !hit; b++) {
+          const acc = L.slice(0, a).join('') + String(it.spoken || '') + R.slice(0, b).join('');
+          if (acc.length > 1 && self._wordSame(it.target, acc)) hit = { a: a, b: b, acc: acc };
+        }
+      }
+      if (hit) {
+        it.status = 'ok'; it.merged = hit.acc;
+        for (let k = 0; k < hit.a; k++) out[left[k]].consumed = true;
+        for (let k = 0; k < hit.b; k++) out[right[k]].consumed = true;
+      }
+    }
+    for (let i = 0; i + 1 < out.length; i++) {
+      const a = out[i], b = out[i + 1];
+      if (!a || !b || !a.target || !b.target) continue;
+      if (a.status === 'ok' && b.status === 'ok') continue;
+      const joined = String(a.target) + String(b.target);
+      if (a.spoken && this._wordSame(joined, a.spoken)) {
+        a.status = 'ok'; b.status = 'ok'; a.merged = joined;
+      }
+    }
+    const items = out.filter(function(x) { return !x.consumed; });
+    // 虚词豁免：漏读 / 听岔的连接词按"读到了"记，soft 标记留下来给排查用。
+    const glue = this.GLUE_WORDS;
+    for (let k = 0; k < items.length; k++) {
+      const it = items[k];
+      if (it.target && it.status !== 'ok' && glue[it.target]) { it.status = 'ok'; it.soft = true; }
+    }
     const total = n || 1;
-    const ok = out.filter(x => x.status === 'ok').length;
+    const ok = items.filter(x => x.status === 'ok').length;
     return {
-      items: out,
+      items: items,
       total: n,
       ok: ok,
       score: Math.round(ok / total * 100),
-      wrong: out.filter(x => x.status === 'wrong'),
-      missing: out.filter(x => x.status === 'missing'),
-      extra: out.filter(x => x.status === 'extra'),
+      wrong: items.filter(x => x.status === 'wrong'),
+      missing: items.filter(x => x.status === 'missing'),
+      extra: items.filter(x => x.status === 'extra'),
     };
   },
 
@@ -5264,6 +5427,9 @@ const App = {
     var hint = isLetter ? this._spell.units.join(', ') : label;
     el.classList.add('reading');
     this._spellPeekShow(isLetter ? label.toUpperCase() : label);
+    // v96：这一格是「一个字母」或「一个音节」，都是 0.5 秒上下的孤立音，
+    // 先要 Cloudflare 认 —— 阿里云对这类音频基本吐空（实测 10 个字母 9 个
+    // 返回空）。整句跟读不受影响，仍走更快的阿里云。
     this._holdStart(ev, 'unit-' + mi + '-' + idx, label, status, function(out, text) {
       el.classList.remove('reading');
       self._spellPeekHide();
@@ -5286,10 +5452,13 @@ const App = {
       self._spell.unitScores[idx] = { label: label, ok: ok, heard: text };
       el.classList.toggle('read-miss', !ok);
       if (status) {
+        // v96：一个字都没识别出来 ≠ 读错了。原来两种情况共用一句"再读一次
+        // 「B」"，孩子（和家长）看到的是"我明明读对了"的指控。现在分开说。
         status.innerHTML = '<div class="tap-result ' + (ok ? 'good' : 'bad') + '">'
-          + (ok ? '读对了：' + label : '再读一次「' + label + '」')
+          + (ok ? '读对了：' + label
+                : (!text ? '⚠️ 没听清，再读一次「' + label + '」' : '再读一次「' + label + '」'))
           + (text ? '<span class="tap-heard">识别：' + text + '</span>'
-                  : '<span class="tap-heard">没识别出内容</span>') + '</div>';
+                  : '<span class="tap-heard">' + (ok ? '' : '这次没有识别到内容') + '</span>') + '</div>';
       }
       Api.submitSpeakingScore({
         studentId: self._myStudentId(), dayIdx: self.state.currentDay,
@@ -5513,7 +5682,7 @@ const App = {
         label: sp.word, score: res.score, spoken: text, source: 'asr',
       });
       self._syncVocabFootLabel(mi, self.state.currentDay);
-    }, true, 'en', contHint);
+    }, true, 'en', contHint, 'cf');    // v96：连读是一串字母，同 _readUnit 走 Cloudflare
   },
 
   // How much of the expected sequence turned up, in order. Each expected item
@@ -5564,7 +5733,9 @@ const App = {
   // 孩子说完要盯着"核对中"多等好几秒。
   // asrHint（v87）：把目标句/目标词传给识别端做 initial_prompt 偏置，
   // Whisper 会朝这个内容解码，读对的词被误判漏读的比例明显下降。
-  _holdStart(ev, key, promptLabel, statusEl, onDone, needsTranscript, lang, asrHint) {
+  // asrPrefer（v96）：'cf' = 这次朗读先要 Cloudflare 认（字母/音节这种极短
+  // 孤立音只有它认得出来，见 Api.transcribe 的注释），不传就走更快的阿里云。
+  _holdStart(ev, key, promptLabel, statusEl, onDone, needsTranscript, lang, asrHint, asrPrefer) {
     if (ev) {
       ev.preventDefault();
       if (ev.pointerId !== undefined && ev.currentTarget.setPointerCapture) {
@@ -5579,6 +5750,7 @@ const App = {
     this._holdNeedsTranscript = needsTranscript !== false;
     this._holdFast = lang !== 'zh';
     this._holdHint = String(asrHint || '').slice(0, 200);
+    this._holdPrefer = asrPrefer || '';
     this._holdStatusEl = statusEl;
     this._holdStartedAt = Date.now();
 
@@ -5640,7 +5812,8 @@ const App = {
     // turbo 失败或返回空时服务端自动降级回默认多语种模型。
     // hint：目标句/词的提示词偏置（v87），识别更准、误判漏读更少。
     var res = await Api.transcribe(forAsr, null,
-      fast ? { fast: true, hint: this._holdHint || '' } : { fast: true, lang: 'zh' });
+      fast ? { fast: true, hint: this._holdHint || '', prefer: this._holdPrefer || '' }
+           : { fast: true, lang: 'zh' });
     var text = res && res.text ? res.text : null;
     if (Api.isFillerTranscript(text)) text = null;
     if (onDone) onDone(out, text);
@@ -7434,8 +7607,15 @@ const App = {
     const btn = document.getElementById('wrep-btn');
     const hint = document.getElementById('wrep-hint');
     if (btn) { btn.disabled = false; btn.innerHTML = '🎤 点我读这个单词'; }
+    // v96：单词语音本来就是识别最不稳的场景（一个孤立的词没有任何上下文），
+    // 原来这里用逐字比对，识别把 subject 写成 subjects、把 library 写成
+    // libary 就判"读错"，孩子得一遍遍重读、每遍还要等一次识别 —— 家长反馈
+    // 的"读得好好的却判错、还特别慢"有一大半是这一处。
+    // 现在两把尺子任意一把过就算过：句子对齐里这个位置是 ok，或者这段识别
+    // 结果里任何一处跟目标词同音形（_soundAlike，孤立词的宽口径）。
     const a = this.alignSpeech(R.word || '', text || '');
-    const ok = !!(a && a.items && a.items.some(function(x) { return x.target && x.status === 'ok'; }));
+    const aligned = !!(a && a.items && a.items.some(function(x) { return x.target && x.status === 'ok'; }));
+    const ok = aligned || this._heardAny(R.word, text) || this._soundAlike(R.word || '', text);
     if (ok) {
       // 在原单词的位置上：红波浪线当场变绿打勾。
       const panel = document.getElementById('rd-sent-' + R.mi + '-' + R.qi);

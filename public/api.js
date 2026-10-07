@@ -741,7 +741,7 @@ const Api = {
     const sameZone = h === 'amyeng.top' || h.endsWith('.amyeng.top');
     return (sameZone ? '' : this.API_HOST) + '/api/transcribe';
   },
-  TRANSCRIBE_TIMEOUT: 12000,
+  TRANSCRIBE_TIMEOUT: 15000,
 
   get HEALTH_URL() {
     const h = (typeof location !== 'undefined' && location.hostname) || '';
@@ -851,6 +851,11 @@ const Api = {
       const lang = (opts && opts.lang) || '';
       const hint = String((opts && opts.hint) || '').slice(0, 200);
       let qs = fast ? ('?model=turbo' + (lang === 'zh' ? '&mode=zh' : '')) : '';
+      // prefer='cf'（v96）：字母/音节这类"极短、不含真实语言"的孤立音必须先给
+      // Cloudflare —— 阿里云的 qwen3-asr-flash 对孤立字母基本不工作（实测 10 个
+      // 字母 9 个返回空）。整句跟读没有这个问题，仍走更快的阿里云（默认）。
+      // 服务端两条互为兜底，这里只是决定谁先上。
+      if (opts && opts.prefer) qs += (qs ? '&' : '?') + 'prefer=' + encodeURIComponent(opts.prefer);
       if (hint) qs += (qs ? '&' : '?') + 'prompt=' + encodeURIComponent(hint);
       const res = await fetch(this.TRANSCRIBE_URL + qs, {
         method: 'POST',
