@@ -741,7 +741,10 @@ const Api = {
     const sameZone = h === 'amyeng.top' || h.endsWith('.amyeng.top');
     return (sameZone ? '' : this.API_HOST) + '/api/transcribe';
   },
-  TRANSCRIBE_TIMEOUT: 15000,
+  // v98：服务端两条通道改成并行竞速（阿里云 2.6s 上限 / Cloudflare 7s 上限），
+  // 最坏情况已经压到 9 秒以内。之前 15 秒的上限形同虚设 —— 孩子早就不耐烦了，
+  // 而且真到 15 秒才 abort，这一次朗读直接变成"识别失败"，白读。
+  TRANSCRIBE_TIMEOUT: 12000,
 
   get HEALTH_URL() {
     const h = (typeof location !== 'undefined' && location.hostname) || '';

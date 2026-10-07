@@ -61,8 +61,22 @@ const AUDIT = process.argv.includes('--audit');
 //               整批跑不完，只适合试听对比。
 const ENGINE = (arg('engine', 'ali') || 'ali').toLowerCase();
 const LIMIT = parseInt(arg('limit', '0'), 10) || 0;
+// --select=short：只处理「孩子单独点一下听的那个音」—— 单词、2~3 个词的短语。
+// 句子不在内：句子的音色家长没意见，而且量大、跑一遍贵。见 isShortDemo。
+const SELECT = (arg('select', '') || '').toLowerCase();
+// --force：忽略状态文件里已有的记录，把选中的条目全部重做（换音色时用）。
+const FORCE = process.argv.includes('--force');
 const CONCURRENCY = Math.max(1, Math.min(6, parseInt(arg('concurrency', '3'), 10) || 3));
 const RETRY = 3;
+
+// 「短词/短语」的口径。之所以单拎出来，是因为这两类的听感是家长最容易挑的：
+// 单词单独念一遍，机器味、口音、重音全暴露；句子一整句念过去反而听不出来。
+function isShortDemo(t) {
+  if (/[\u4e00-\u9fff]/.test(t)) return false;             // 中文归中文那条路
+  if (t.length > 24) return false;
+  if (!/^[A-Za-z][A-Za-z0-9'\- ]*$/.test(t)) return false;  // 纯英文词/短语
+  return t.trim().split(/\s+/).length <= 3;
+}
 
 const ALIYUN_TTS_URL = 'https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation';
 const ALIYUN_TTS_MODEL = 'qwen3-tts-flash';
@@ -313,8 +327,12 @@ function readState() {
 function writeState(st) {
   fs.writeFileSync(STATE_FILE, JSON.stringify(st, null, 0));
 }
-function fileNameFor(text) {
-  return crypto.createHash('sha1').update(text, 'utf8').digest('hex').slice(0, 20) + '.mp3';
+function fileNameFor(text, engine) {
+  // 文件名带上音色（v98）。原因：静态文件是按路径长缓存的（一年 immutable），
+  // 换音色时如果沿用同一个文件名，孩子手机里那份旧读音一年都换不掉。把音色
+  // 编进哈希，换音色 = 换文件名 = 天然破缓存，旧文件由下面的孤儿清理收走。
+  const tag = (engine || ENGINE || 'ali') + '|';
+  return crypto.createHash('sha1').update(tag + text, 'utf8').digest('hex').slice(0, 20) + '.mp3';
 }
 
 // -------------------------------------------------------------------- 生成
@@ -376,13 +394,21 @@ async function fetchAliyunDirect(text) {
 // 走自家 worker（--engine=cf 时用）。
 async function fetchViaWorker(text, engine) {
   const qs = '?text=' + encodeURIComponent(text) + (engine ? '&engine=' + engine : '');
-  const res = await fetch(ENDPOINT + '/api/tts' + qs, { headers: { 'User-Agent': 'curl/8.4.0' } });
+  const res = await fetch(ENDPOINT + '/api/tts' + qs, {
+    headers: { 'User-Agent': 'curl/8.4.0' },
+    // 一条不回来不能把整批拖死 —— 上游抖动时 25 秒还没影子就直接重试。
+    signal: AbortSignal.timeout(25000),
+  });
   if (!res.ok) throw new Error('HTTP ' + res.status);
   const ct = res.headers.get('content-type') || '';
   const buf = Buffer.from(await res.arrayBuffer());
   if (buf.length < 200) throw new Error('音频过短 ' + buf.length + 'B');
   if (ct && !/audio|octet-stream|mpeg|wav/i.test(ct)) throw new Error('content-type ' + ct);
-  return { buf, source: res.headers.get('x-tts-source') || 'worker' };
+  const source = res.headers.get('x-tts-source') || 'worker';
+  // 指定了 engine=cf 却拿到别的来源（额度耗尽时 worker 会落到免费兜底通道）：
+  // 这不是我们要的音色，当失败处理，让上层重试 / 留给人工。
+  if (engine === 'cf' && source !== 'cf') throw new Error('不是 cf 音色（source=' + source + '）');
+  return { buf, source };
 }
 
 async function fetchOne(text, lame) {
@@ -463,12 +489,27 @@ async function main() {
   const state = readState();
   state.files = state.files || {};
 
-  const todo = texts.filter((t) => {
+  // 选出本次要处理的范围。默认是全部；--select=short 只挑单词/短语。
+  let pool = texts;
+  if (SELECT === 'short') {
+    pool = texts.filter(isShortDemo);
+    console.log('  --select=short：「单词 / 2~3 词短语」共 ' + pool.length + ' 条');
+  }
+  const todo = pool.filter((t) => {
+    if (FORCE) return true;
     const f = state.files[t];
     if (!f) return true;
     return !fs.existsSync(path.join(OUT_DIR, f.file));
   });
   const batch = LIMIT > 0 ? todo.slice(0, LIMIT) : todo;
+
+  // 旧文件：换音色会换文件名（见 fileNameFor），被替下来的那份就没人引用了。
+  // 先记下来，全跑完再统一清，中途出错也不会误删还在用的文件。
+  const retired = [];
+  batch.forEach((t) => {
+    const f = state.files[t];
+    if (f && f.file) retired.push(f.file);
+  });
 
   const lame = loadLame();
   if (ENGINE !== 'cf' && !lame) {
@@ -494,9 +535,15 @@ async function main() {
   async function worker() {
     while (cursor < batch.length) {
       const text = batch[cursor++];
-      const file = fileNameFor(text);
+      const file = fileNameFor(text, ENGINE);
       try {
         const { buf, source } = await fetchOne(text, lame);
+        // 体积体检：同一段文字换音色，时长不会差出好几倍。差太多说明合成跑偏了
+        // —— 阿里云出过"forget 生成 10.8 秒日文"这种，换 CF 也一样要防。
+        const prev = state.files[text];
+        if (prev && prev.bytes && (buf.length > prev.bytes * 6 || buf.length < prev.bytes / 6)) {
+          throw new Error('体积异常 ' + buf.length + 'B vs 上一版 ' + prev.bytes + 'B');
+        }
         fs.writeFileSync(path.join(OUT_DIR, file), buf);
         state.files[text] = { file, bytes: buf.length, source, at: new Date().toISOString() };
         bytes += buf.length;
@@ -517,11 +564,31 @@ async function main() {
 
   writeState(state);
 
+  // 孤儿清理：只有 state 里记着的文件才算"在用"。被换掉的旧音色文件、或者
+  // 生成到一半留下的半成品，都在这儿收走 —— 不然每换一次音色，仓库里就多
+  // 躺一份没人引用的死重量。
+  const alive = new Set(Object.keys(state.files).map((t) => state.files[t].file));
+  alive.add(PROBE_FILE);
+  let pruned = 0;
+  let prunedBytes = 0;
+  if (fs.existsSync(OUT_DIR)) {
+    for (const f of fs.readdirSync(OUT_DIR)) {
+      if (alive.has(f)) continue;
+      try {
+        const p = path.join(OUT_DIR, f);
+        prunedBytes += fs.statSync(p).size;
+        fs.rmSync(p);
+        pruned++;
+      } catch (e) {}
+    }
+  }
+
   const manifest = writeManifests(state);
 
   const secs = (Date.now() - t0) / 1000;
   console.log('');
   console.log('  ✅ 本次生成 ' + done + ' 条，失败 ' + fail + ' 条，共 ' + (bytes / 1048576).toFixed(1) + 'MB，用时 ' + secs.toFixed(0) + 's');
+  if (pruned) console.log('  🧹 清掉无人引用的旧文件 ' + pruned + ' 个（' + (prunedBytes / 1048576).toFixed(2) + 'MB）');
   console.log('  清单累计 ' + Object.keys(manifest).length + ' 条 → public/tts-manifest.json');
   if (todo.length > batch.length) {
     console.log('  ⏳ 还剩 ' + (todo.length - batch.length) + ' 条没生成（--limit 限制），再跑一次本脚本继续。');
@@ -529,6 +596,10 @@ async function main() {
   if (errors.length) {
     console.log('  失败样例：');
     errors.slice(0, 8).forEach((e) => console.log('    ' + JSON.stringify(e.text) + '  ' + e.err));
+  }
+  // 失败超过一半就明确提示：多半是 Cloudflare 当天额度用完了，明天再跑。
+  if (fail && fail >= Math.max(3, batch.length * 0.5)) {
+    console.log('  ⚠️ 失败率过半：如果是 --engine=cf，基本就是当天免费额度用完了，隔天再跑剩下的。');
   }
 }
 

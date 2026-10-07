@@ -3697,35 +3697,21 @@ const App = {
     const liveP = this._liveStop();
     const clipP = this._finishClipCapture();
     Promise.all([liveP, clipP]).then(async function(res) {
-      const liveText = res[0];
-      const blob = res[1];
-      let spoken = null;
-      let source = null;
-      // A 路优先：识别已经给了文字，直接出分，不等网络。
-      if (liveText && !Api.isFillerTranscript(liveText)) {
-        spoken = liveText.toLowerCase();
-        source = 'live';
-      }
-      // B 路兜底：录下来的音频送 whisper。
-      if (!spoken && blob) {
-        const forAsr = (self._spClipSamples && Recorder.padForAsr(self._spClipSamples)) || blob;
-        try {
-          const out = await Api.transcribe(forAsr, null, { fast: true });
-          if (out && out.text && !Api.isFillerTranscript(out.text)) {
-            spoken = out.text.toLowerCase();
-            source = 'whisper';
-          }
-        } catch (e) { console.warn('Speaking read transcribe failed:', e); }
-      }
-      self._spShowResult(mi, qi, dayIdx, ctx, spoken, source);
+      // 两路择优（v98）：A 路（手机自带识别）判过就立即出分，判不过才等
+      // B 路（云端）复核 —— 见 _bestTranscript 的注释。
+      const best = await self._bestTranscript(ctx.sentence, res[0], res[1], self._spClipSamples);
+      self._spShowResult(mi, qi, dayIdx, ctx,
+        best ? best.spoken : null,
+        best ? best.source : null,
+        best ? best.verdict : null);
     }).catch(function(e) {
       console.warn('Speaking read capture failed:', e);
-      self._spShowResult(mi, qi, dayIdx, ctx, null, null);
+      self._spShowResult(mi, qi, dayIdx, ctx, null, null, null);
     });
   },
 
   // 出分：逐词上色（绿勾/红波浪线），≥60 过、<60 锁下一题必须重读。
-  _spShowResult(mi, qi, dayIdx, ctx, spoken, source) {
+  _spShowResult(mi, qi, dayIdx, ctx, spoken, source, verdict) {
     const sentence = ctx.sentence;
     if (!spoken) {
       // 没识别出内容：清掉标记让孩子重来，不自造分数。
@@ -3733,12 +3719,14 @@ const App = {
       this._spReadUI(mi, qi, dayIdx, 'noaudio');
       return;
     }
-    const marked = this._markReadProgress(mi, qi, sentence, spoken, false);
-    const score = marked ? marked.align.score : this.calcPronScore(sentence.toLowerCase(), spoken);
-    const badWords = marked ? marked.badWords : [];
+    // 判定和上色同源：都用同一个对齐结果，红词不会再因为显示格子对不上而错算。
+    const v = verdict || this._readVerdict(sentence, spoken);
+    this._markReadProgress(mi, qi, sentence, spoken, false, v.align);
+    const score = v.score;
+    const badWords = v.badWords;
     // 通过 = 分数够 60 且没有读错的词。红色波浪线的词要原处重读对了
     // 才能进下一题（见 _startWordRepair）。
-    const passed = score >= 60 && badWords.length === 0;
+    const passed = v.passed;
     if (passed) {
       this._playCorrectSound();
       this._spReadUI(mi, qi, dayIdx, 'passed', score);
@@ -3755,15 +3743,14 @@ const App = {
       });
     } else {
       this._playWrongSound();
-      this._spReadUI(mi, qi, dayIdx, 'failed', score,
-        { badWords: marked ? marked.badWords : [] });
+      this._spReadUI(mi, qi, dayIdx, 'failed', score, { badWords: badWords });
     }
     this._persistSpeakingClip(mi, qi, dayIdx, ctx.q, score, {
       spoken: spoken, source: source,
-      okCount: marked ? marked.align.ok : null,
-      wordTotal: marked ? marked.align.total : null,
-      wrongWords: marked ? marked.badWords.map(x => ({ expected: x.expected, heard: x.heard })) : [],
-      missedWords: marked ? marked.align.missing.map(x => x.target) : [],
+      okCount: v.align.ok,
+      wordTotal: v.align.total,
+      wrongWords: badWords.map(x => ({ expected: x.expected, heard: x.heard })),
+      missedWords: v.align.missing.map(x => x.target),
     });
   },
 
@@ -4963,7 +4950,9 @@ const App = {
     if (!r.listened[idx]) {
       r.listened[idx] = true;                    // 先听一遍示范才解锁跟读
       if (chip) chip.classList.remove('repair-locked');
-      this.speak(word);
+      // 句子里的词不在静态朗读表里（表里只有整句和固定单词），走 CF 的母语
+      // 音色（v98）—— 跟词汇模块、查词的单词示范音保持一致，同一个人。
+      this.speak(word, { prefer: 'cf' });
       return;                                    // 这一按只听不录
     }
     if (r.done[idx]) return;                     // 已经读对的词不用再读
@@ -7420,14 +7409,72 @@ const App = {
     }
   },
 
+  // 出分口径的**唯一入口**（v98）：句子 + 识别文本 → 分数 / 红词 / 过没过。
+  //
+  // 以前这个判断散在 _spShowResult 和 _showHoldReadResult 里，各自读一遍
+  // _markReadProgress 的 spans 结果；而 spans 是"显示格子"，万一某个格子对不上
+  // 目标词的个数，红词就会漏算或多算。这里直接从对齐结果里取，永远和分数同源。
+  _readVerdict(sentence, spoken) {
+    const a = this.alignSpeech(sentence, spoken || '');
+    const badWords = a.items
+      .filter(function (x) { return x.target && x.status !== 'ok'; })
+      .map(function (x) { return { expected: x.target, heard: x.spoken || null }; });
+    return {
+      align: a,
+      score: a.score,
+      badWords: badWords,
+      passed: a.score >= 60 && badWords.length === 0,
+    };
+  },
+
+  // 两个候选转写谁更"像这句"：先看有没有过，再看分数，最后看红词多少。
+  _verdictRank(v) {
+    return (v.passed ? 1000 : 0) + v.score - v.badWords.length * 3;
+  },
+
+  // 两路识别结果比一遍，取更像目标句的那个（v98）。
+  //
+  // 为什么必须比：A 路是手机自带的语音识别 —— 快（不用出网，孩子松手就有分），
+  // 但它本质是个语言模型，孩子读得稍微含糊，它会把整句"润色"成另一句通顺的话。
+  // 孩子明明读对了，逐词一比却红成一片，还得进纠错重读一遍。B 路（云端阿里云 /
+  // whisper）是照声音转写，宽容得多。
+  //
+  // 所以：A 路先判一次，**过了就立刻出分，一秒都不多等**（绝大多数情况走这里）；
+  // 没过才等 B 路复核，谁更接近目标句就用谁的结果。代价只有一个 —— 判不过的那
+  // 次多等一两秒，可它本来就要重读，比冤枉人强得多。
+  async _bestTranscript(sentence, liveText, blob, samples) {
+    let best = null;
+    if (liveText && !Api.isFillerTranscript(liveText)) {
+      const t = String(liveText).toLowerCase();
+      best = { spoken: t, source: 'live', verdict: this._readVerdict(sentence, t) };
+      if (best.verdict.passed) return best;
+    }
+    if (!blob) return best;
+    const forAsr = (samples && Recorder.padForAsr(samples)) || blob;
+    try {
+      // hint 把目标句喂给识别端当偏置（v98）：题库是固定的，孩子要读的就是这
+      // 一句 —— 把句子给它，同音词（there/their、`see/sea`）和吞音都会少一大截。
+      const out = await Api.transcribe(forAsr, null, { fast: true, hint: sentence });
+      if (out && out.text && !Api.isFillerTranscript(out.text)) {
+        const t = out.text.toLowerCase();
+        const v = this._readVerdict(sentence, t);
+        if (!best || this._verdictRank(v) > this._verdictRank(best.verdict)) {
+          best = { spoken: t, source: 'whisper', verdict: v };
+        }
+      }
+    } catch (e) { console.warn('verify transcribe failed:', e); }
+    return best;
+  },
+
   // 按逐词对齐结果给句子上色。live=true 直接交给前缀推进那条快路；live=false
   // 才做全局对齐，逐词判 ok / wrong / missing，红色只在这时候出现才作数。
-  _markReadProgress(mi, qi, sentence, spoken, live) {
+  // preAlign 是已经算好的对齐结果，出分路径会传进来，省掉一次重复计算。
+  _markReadProgress(mi, qi, sentence, spoken, live, preAlign) {
     if (live) { this._liveAdvance(mi, qi, sentence, spoken); return null; }
     const panel = document.getElementById('rd-sent-' + mi + '-' + qi);
     if (!panel) return null;
     const spans = panel.querySelectorAll('.rd-w');
-    const a = this.alignSpeech(sentence, spoken || '');
+    const a = preAlign || this.alignSpeech(sentence, spoken || '');
     const targets = a.items.filter(function(x) { return x.target; });
     const badWords = [];
     let k = 0;
@@ -7776,31 +7823,15 @@ const App = {
     const clipP = this._finishClipCapture();
 
     Promise.all([liveP, clipP]).then(async function(res) {
-      const liveText = res[0];
-      const blob = res[1];
-      let spoken = null;
-      let source = null;
-
-      // A 路优先：手机自带识别已经给了文字，直接出分，不等网络。
-      if (liveText && !Api.isFillerTranscript(liveText)) {
-        spoken = liveText.toLowerCase();
-        source = 'live';
-      }
-      // B 路兜底：录下来的音频送 whisper。
-      if (!spoken && blob) {
-        const forAsr = (self._spClipSamples && Recorder.padForAsr(self._spClipSamples)) || blob;
-        try {
-          const out = await Api.transcribe(forAsr, null, { fast: true });
-          if (out && out.text && !Api.isFillerTranscript(out.text)) {
-            spoken = out.text.toLowerCase();
-            source = 'whisper';
-          }
-        } catch (e) { console.warn('Hold-read transcribe failed:', e); }
-      }
-      self._showHoldReadResult(mi, qi, dayIdx, ctx.sentence, spoken, source);
+      // 两路择优（v98）：A 路判过就立即出分，判不过才等 B 路复核。
+      const best = await self._bestTranscript(ctx.sentence, res[0], res[1], self._spClipSamples);
+      self._showHoldReadResult(mi, qi, dayIdx, ctx.sentence,
+        best ? best.spoken : null,
+        best ? best.source : null,
+        best ? best.verdict : null);
     }).catch(function(e) {
       console.warn('Hold-read capture failed:', e);
-      self._showHoldReadResult(mi, qi, dayIdx, ctx.sentence, null, null);
+      self._showHoldReadResult(mi, qi, dayIdx, ctx.sentence, null, null, null);
     });
   },
 
@@ -7894,7 +7925,7 @@ const App = {
     if (s) this.speak(s);
   },
 
-  _showHoldReadResult(mi, qi, dayIdx, sentence, spoken, source) {
+  _showHoldReadResult(mi, qi, dayIdx, sentence, spoken, source, verdict) {
     const m = HOMEWORK_DATA[dayIdx].modules[mi];
     const q = m.questions[qi];
     const lastPick = this._lastPick && this._lastPick[mi + '-' + qi];
@@ -7913,12 +7944,14 @@ const App = {
     }
 
     // 逐词上色：读对的绿勾、读错/漏读的红色波浪线，光标全部撤掉。
-    const marked = this._markReadProgress(mi, qi, sentence, spoken, false);
-    const score = marked ? marked.align.score : this.calcPronScore(sentence.toLowerCase(), spoken);
-    const badWords = marked ? marked.badWords : [];
+    // 判定和上色同源（v98）：红词直接取对齐结果，不再依赖显示格子的个数。
+    const v = verdict || this._readVerdict(sentence, spoken);
+    this._markReadProgress(mi, qi, sentence, spoken, false, v.align);
+    const score = v.score;
+    const badWords = v.badWords;
     // 通过 = 分数够 60 且没有读错的词。红色波浪线的词要原处重读对了
     // 才能进下一题（见 _startWordRepair）。
-    const passed = score >= 60 && badWords.length === 0;
+    const passed = v.passed;
 
     if (this._debugRead) console.log('[read] source=' + source + ' score=' + score + ' spoken=' + spoken);
 
@@ -8370,7 +8403,7 @@ const App = {
     wrap.querySelector('.ws-mask').addEventListener('click', function() { self._closeWordSheet(); });
     wrap.querySelector('#ws-close').addEventListener('click', function() { self._closeWordSheet(); });
     wrap.querySelector('#ws-speak').addEventListener('click', function() {
-      if (self._lookupWord) self.speak(self._lookupWord);
+      if (self._lookupWord) self.speak(self._lookupWord, { prefer: 'cf' });
     });
     this._lookupEl = wrap;
     return wrap;
@@ -8389,7 +8422,9 @@ const App = {
     el.classList.add('show');
 
     // 点词即读：孩子点这个词多半就是不认识，先让他听见怎么念。
-    this.speak(word);
+    // 走 CF 的母语音色（v98）：查词是任意单词，不在静态朗读表里 —— 表内那些
+    // 单词的示范音已经换成 CF 音色了，这里跟着走，两处听起来才是同一个人。
+    this.speak(word, { prefer: 'cf' });
 
     const info = await Api.dict(word);
     if (this._lookupWord !== word.toLowerCase()) return;   // 已经点了别的词

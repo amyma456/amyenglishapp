@@ -75,6 +75,8 @@ function fakeEnv(opts) {
   // worker 只对阿里云发 fetch；stub 掉它，把请求记下来。
   globalThis.__stub = async function (url, init) {
     rec.fetches.push({ url: String(url), init: init });
+    // 模拟阿里云"慢慢才回"：对冲逻辑只在它超时之后才请 Cloudflare。
+    if (opts.aliDelayMs) await new Promise(function (r) { setTimeout(r, opts.aliDelayMs); });
     if (opts.aliThrows) throw new Error('aliyun down');
     if (opts.aliHttp) return new Response('nope', { status: opts.aliHttp });
     const body = JSON.parse(init.body);
@@ -222,6 +224,20 @@ async function run(qs, opts) {
     method: 'POST', headers: { 'Content-Type': 'audio/wav' }, body: new Uint8Array([]),
   }), { AI: { run: async function () { return { text: '' }; } }, ALLOWED_ORIGIN: 'x' }, {});
   ok('空音频返回 400', emptyRes.status === 400, 'status=' + emptyRes.status);
+
+  // ---- 7. 对冲（v98）：阿里云慢下来时，孩子不该干等 ------------------------
+  console.log('\n7. 对冲：阿里云慢 → Cloudflare 提前起跑');
+  let t0 = Date.now();
+  let rh = await run('?model=turbo&prompt=' + encodeURIComponent(EN), { aliDelayMs: 2500, text: 'hi there' });
+  const hedgedMs = Date.now() - t0;
+  ok('阿里云卡住时照样出分', rh.status === 200 && rh.body.text === 'hi there', JSON.stringify(rh.body));
+  ok('这一分是 Cloudflare 给的', rh.body.model === '@cf/openai/whisper-large-v3-turbo', rh.body.model);
+  ok('对冲点 1.5s 起跑 → 总耗时没被 2.5s 的阿里云拖住', hedgedMs < 2300, hedgedMs + 'ms');
+
+  t0 = Date.now();
+  rh = await run('?model=turbo&prompt=' + encodeURIComponent(EN), { aliDelayMs: 0, text: 'hi there' });
+  ok('阿里云正常时一次 CF 都不打（neuron 留给兜底）', rh.rec.aiCalls === 0, 'aiCalls=' + rh.rec.aiCalls);
+  ok('阿里云正常时总耗时不受影响', Date.now() - t0 < 800, (Date.now() - t0) + 'ms');
 
   console.log('\n' + pass + ' 项通过, ' + fail + ' 项失败');
   process.exit(fail ? 1 : 0);

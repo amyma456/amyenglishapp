@@ -686,7 +686,18 @@ const ALIYUN_CANCEL_MS = 60 * 1000;
 // 阿里云单次调用上限（v96）。实测它在异常时会"挂住"——字母测试里出现过
 // 47 秒和 19 秒才回包的请求。孩子那边感知到的是"核对中"转圈转到最后没有分，
 // 等于白读一遍。给一个上限，超了就立刻落 Cloudflare 兜底，最坏情况也被压住。
-const ALIYUN_ASR_TIMEOUT_MS = 4000;
+// v98 收到 2600ms：默认路径现在是两条并行，阿里云这条不再是"唯一希望" ——
+// 它超时了 Cloudflare 那条早就在路上。把上限收紧是为了压住最坏情况的总时长。
+const ALIYUN_ASR_TIMEOUT_MS = 2600;
+
+// Cloudflare 那条的上限（v98）。env.AI.run 不收 signal，只能在外层 race。
+// 之前它没有上限：字母测试里出现过 8.4 秒才回包，孩子那边就是干等。
+const CF_ASR_TIMEOUT_MS = 7000;
+
+// 对冲点（v98）：阿里云超过这么久还没回，才把 Cloudflare 叫上一起跑。
+// 取值依据是实测延迟分布（tools/pron-scoring-bench.js，9 轮交叉）：阿里云中位
+// 1.2 秒 —— 1.5 秒足以让绝大多数请求"单通道解决"，一次 CF neurons 都不烧。
+const ALIYUN_HEDGE_MS = 1500;
 
 // 失败一律抛错、由调用方决定降级 —— 不在这里吞掉，否则分不清"没声音"和"没配上"。
 async function aliyunTranscribe(bytes, env, mode, bias, mime) {
@@ -790,28 +801,33 @@ async function transcribe(request, env) {
   const preferCf = url.searchParams.get('prefer') === 'cf';
   const hasAliyun = !!(env.ALIYUN_KEY || env.DASHSCOPE_API_KEY);
 
-  let out = null;
   let model = '';
   let text = '';
-  let cfDead = false;      // Cloudflare 抛错（额度耗尽 4006 / 故障）后不再重试它
-  let aliDead = false;     // 阿里云抛错（Key 错 / 限流 / 抖动）后不再重试它
+  let raw = null;          // Cloudflare 的原始输出（只有它给 words / word_count）
+  let answered = false;    // 有没有哪条通道真的答上来了（空文本也算答了）
+  let deadAny = false;     // 有通道抛错（额度耗尽 / Key 失效 / 超时）
   let detail = '';
 
-  // 阿里云一条。熔断期内直接跳过 —— 见 aliyunDownUntil 的注释。
-  async function tryAliyun() {
-    if (aliDead || !hasAliyun || force === 'cf') return;
-    if (!force && Date.now() < aliyunDownUntil) { aliDead = true; return; }
+  // 两条通道各自跑一次、各回各的结果。
+  //
+  // v98：不再用闭包共享变量，因为默认路径要把两条**同时发出去**。
+  // 之前是串行 —— 阿里云回了个空文本，才从零开始叫 Cloudflare，总时长是两条
+  // 相加（实测 1.2s + 2.3s ≈ 3.5s）。家长的原话是"合分速度还是很慢"。并行之后
+  // 总时长是 max(两条) 而不是和；阿里云仍然是"谁说了算"的那条，Cloudflare 只是
+  // 已经在路上，随时可以顶上来。
+  async function runAliyun() {
+    if (!hasAliyun || force === 'cf') return { text: '' };
+    if (!force && Date.now() < aliyunDownUntil) return { text: '', dead: true };
     try {
       const t = await aliyunTranscribe(bytes, env, mode, bias, mime);
-      if (t) {
-        model = ALIYUN_ASR_MODEL;
-        out = null;
-        // 中文是目标语言本身，不做数字还原；英文还原见 restoreDigits 注释。
-        text = mode === 'zh' ? t : restoreDigits(t, bias);
-      }
+      // 中文是目标语言本身，不做数字还原；英文还原见 restoreDigits 注释。
+      return {
+        text: t ? (mode === 'zh' ? t : restoreDigits(t, bias)) : '',
+        model: ALIYUN_ASR_MODEL,
+        answered: !!t,
+      };
     } catch (e) {
-      aliDead = true;
-      detail = String(e && e.message || e);
+      return { text: '', dead: true, err: String(e && e.message || e) };
     }
   }
 
@@ -820,60 +836,118 @@ async function transcribe(request, env) {
   // NOTE: @cf/openai/whisper accepts only `audio` — language and
   // initial_prompt are ignored (tested: a Simplified-Chinese prompt still
   // returned Traditional). Chinese is normalised on the client instead.
-  // 但它已经报错（多半是额度耗尽）时别再打一次。
-  async function tryCloudflare() {
-    if (text || force === 'ali') return;
+  async function runCloudflare() {
+    if (force === 'ali') return { text: '' };
     if (wantFast) {
       try {
-        out = await env.AI.run(TURBO_MODEL, fastInput(bytes, mode, bias));
-        model = TURBO_MODEL;
-        text = ((out && out.text) || '').trim();
+        const o = await env.AI.run(TURBO_MODEL, fastInput(bytes, mode, bias));
+        const t = ((o && o.text) || '').trim();
+        if (t) return { text: t, model: TURBO_MODEL, raw: o, answered: true };
+        // turbo 答了但是空的：再用默认模型听一遍（它的 initial_prompt 更宽松）。
       } catch (e) {
-        // 快模型额度用尽、临时故障、入参不兼容 —— 任何一种都不能让孩子这
-        // 一次朗读变成"出分失败"。静默降级，下面用默认模型兜住。
-        out = null;
-        model = '';
-        cfDead = true;
-        detail = String(e && e.message || e);
+        // 额度耗尽就没必要再打一次默认模型 —— 同一个额度，只会白等半秒。
+        // 其它错误（入参不兼容 / 临时故障）继续往下试默认模型。
+        const msg = String(e && e.message || e);
+        if (/4006|free allocation|neurons/i.test(msg)) {
+          return { text: '', dead: true, err: msg };
+        }
       }
     }
-    if (text || cfDead) return;
     try {
-      out = await env.AI.run(MODEL, { audio: [...bytes] });
-      model = MODEL;
-      text = ((out && out.text) || '').trim();
+      const o = await env.AI.run(MODEL, { audio: [...bytes] });
+      return { text: ((o && o.text) || '').trim(), model: MODEL, raw: o, answered: true };
     } catch (e) {
-      out = null;
-      cfDead = true;
-      detail = String(e && e.message || e);
+      return { text: '', dead: true, err: String(e && e.message || e) };
     }
+  }
+
+  // 给 Cloudflare 那条也加个上限。env.AI.run 不吃 signal，只能外面套一层
+  // race：到点就当作没结果，由另一条通道说了算。孩子宁可用稍差一点的转写，
+  // 也不能盯着一句"核对中"转十几秒。
+  function withTimeout(p, ms) {
+    return Promise.race([
+      p,
+      new Promise(function (r) { setTimeout(function () { r({ text: '', dead: true, err: 'timeout' }); }, ms); }),
+    ]);
   }
 
   // 两条通道的先后顺序：默认阿里云优先（更快，见函数上方注释），
   // prefer=cf 时反过来（字母这种极短音频只有 Cloudflare 认得出来）。
   if (preferCf) {
-    await tryCloudflare();
-    if (!text) await tryAliyun();
+    const cf = await withTimeout(runCloudflare(), CF_ASR_TIMEOUT_MS);
+    if (cf.text) { text = cf.text; model = cf.model; raw = cf.raw; answered = true; }
+    if (cf.dead) deadAny = true;
+    if (!text) {
+      const ali = await runAliyun();
+      if (ali.text) { text = ali.text; model = ali.model; answered = true; }
+      if (ali.answered) answered = true;
+      if (ali.dead) deadAny = true;
+      detail = (ali.err || cf.err) || '';
+    }
   } else {
-    await tryAliyun();
-    await tryCloudflare();
+    // 对冲，不是并行发（v98）。
+    //
+    // 为什么不两条都发：Cloudflare 每天只有 1 万 neurons 免费额度，跟读的兜底
+    // 识别和 AI 口语的母语音色都指着它。每条跟读请求都顺手打一次 CF，一天几十
+    // 个孩子就把额度烧光，结果是"最需要 CF 的时候它没了"。
+    //
+    // 所以给阿里云 HEDGE_MS 先跑：它正常 1.2 秒左右就回来了，这段时间一次
+    // Cloudflare 都不碰。只有到点还没回来（上游抖动、或者 2.6 秒超时），才把
+    // Cloudflare 也叫上，两条赛跑。既保住了额度，又把最坏情况从"2.6 秒超时 +
+    // 再等 CF 2.3 秒"压到"1.5 秒起跑、谁先到用谁"。
+    const HEDGE = { hedge: true };
+    const aliP = runAliyun();
+    let ali = null;
+    let cf = null;
+    const hedged = await Promise.race([
+      aliP,
+      new Promise(function (r) { setTimeout(function () { r(HEDGE); }, ALIYUN_HEDGE_MS); }),
+    ]);
+    if (hedged !== HEDGE) {
+      ali = hedged;                       // 阿里云赶在对冲点之前就回来了
+      // 快是快，但它空手而归（报错 / 识别为空）——照样得请 Cloudflare 兜底。
+      if (!ali.text) cf = await withTimeout(runCloudflare(), CF_ASR_TIMEOUT_MS);
+    } else {
+      const cfP = withTimeout(runCloudflare(), CF_ASR_TIMEOUT_MS);
+      const win = await Promise.race([
+        aliP.then(function (r) { return { who: 'ali', r: r }; }),
+        cfP.then(function (r) { return { who: 'cf', r: r }; }),
+      ]);
+      if (win.who === 'ali') {
+        ali = win.r;
+        if (ali.text) cfP.catch(function () {});
+        else cf = await cfP;              // 阿里云空手而归，等 CF 那一手
+      } else {
+        cf = win.r;
+        if (cf.text) aliP.catch(function () {});
+        else ali = await aliP;
+      }
+    }
+    if (ali) {
+      if (ali.text) { text = ali.text; model = ali.model; answered = true; }
+      if (ali.answered) answered = true;
+      if (ali.dead) deadAny = true;
+    }
+    if (cf) {
+      if (!text && cf.text) { text = cf.text; model = cf.model; raw = cf.raw; answered = true; }
+      if (cf.answered) answered = true;
+      if (cf.dead) deadAny = true;
+    }
+    detail = ((ali && ali.err) || (cf && cf.err)) || '';
   }
 
-  if (!text && !model && (cfDead || aliDead)) {
+  if (!text && !answered && deadAny) {
     // 两条通道都没接上（不是"识别出来是空的"，而是压根没答上来）：按失败返回，
     // 客户端会转自评并进重试队列。两条都正常答了、只是内容为空的话，返回
     // 200 + 空文本，上层走"没听清，再读一次"。
-    //
-    // 注意 cfDead/aliDead 在"熔断跳过"时也会置位：那种情况下面这条只在两条
-    // 真的都没结果时才成立，语义仍然对。
     return json({ error: 'transcribe_failed', detail: detail || 'no_channel' }, 502);
   }
 
   return json({
     model: model,
     text: text,
-    words: (out && out.words) || null,
-    wordCount: (out && out.word_count) || null,
+    words: (raw && raw.words) || null,
+    wordCount: (raw && raw.word_count) || null,
   });
 }
 
