@@ -479,5 +479,46 @@ console.log('\n== 17) 读错和橘黄的对比度 ==');
      '汇总格子里的「读错」同样拉得开');
 }
 
+// ---------- v100 红线（家长：学生读得很好，还是读了好几次，十几分） ----------
+// 18. 连续读的分数不能只看「逐格听到几个」—— 孤立字母识别不到不是孩子的错
+console.log('\n== 18) 连续读：读对了不能只有十几分（v100） ==');
+{
+  const L = ['p', 'a', 'n', 'd', 'a', 'panda'];
+  const sc = (e, t) => App._scoreSequence(e, t);
+  const only = sc(L, 'panda');                     // 历史 bug：这句 17 分
+  ok(only.score >= 60, '只听到整词 → 过线（' + only.score + ' 分；旧版 17 分）');
+  ok(only.wordHit === true, 'wordHit=true：整词被听到 → 连读成立');
+  ok(only.hits[L.length - 1] === true, '整词格标为「听到」（孩子看得见哪一格过了）');
+  ok(sc(L, 'pandapanda').score >= 60, '串读被黏成一个词 → 过线');
+  ok(sc(L, 'panda panda').score >= 60, '整词被听成两遍 → 过线');
+  ok(sc(L, 'p a n d a panda').score === 100, '整串都听到 → 满分');
+  // 判松之后判别力不能丢
+  ok(sc(L, 'p e n d a').score < 60, '整词读成 penda → 仍不过线');
+  ok(sc(L, 'apple').score < 60, '读成别的词 → 仍不过线');
+  ok(sc(L, '').score === 0, '没识别到 → 0 分');
+  ok(sc(L, 'p a n').score < 60, '只读了三个字母 → 仍不过线');
+  ok(sc(['pan', 'da', 'panda'], 'panda').score >= 60, '音节型只听到整词 → 也过线');
+
+  // 端到端：连续读回调里的 contMiss 必须认 wordHit，别把孩子锁在门外
+  enterStage();
+  App._gateOpen = function () { return true; };
+  const origHoldC = App._holdStart;
+  let cbC = null;
+  App._holdStart = function () { cbC = arguments[4]; };
+  App.startContinuous(MI);
+  const WORD_C = App._spell.word;                  // 这个阶段实际要读的词
+  App._spell.contMiss = true;
+  App._readContinuous({ preventDefault() {} }, MI);
+  cbC({ blob: {}, samples: null }, WORD_C);        // 孩子读对，识别只回了整词
+  ok(App._spell.contMiss === false, '只听到整词 → contMiss=false（不锁「下一个单词」）');
+  ok(App._spell.contScore >= 60, '连续读得分 ≥60（' + App._spell.contScore + ' 分）');
+  // 反面：整词读错，仍然锁住
+  App._spell.contMiss = false;
+  App._readContinuous({ preventDefault() {} }, MI);
+  cbC({ blob: {}, samples: null }, 'zzz zzz');     // 反面：读的完全不是这个词
+  ok(App._spell.contMiss === true, '整词读错 → contMiss=true（重读）');
+  App._holdStart = origHoldC;
+}
+
 console.log('\n' + (fail ? ('有 ' + fail + ' 项失败 ❌') : '全部通过 ✅'));
 process.exit(fail ? 1 : 0);

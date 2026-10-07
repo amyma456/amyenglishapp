@@ -5654,7 +5654,9 @@ const App = {
       // v93：连续读也必须整串都被听到才放行（家长："同样也是全部读的
       // 没问题了才能走"）。没读全就把底部按钮重新按下去；上面已经给每个
       // 片段标了 ok / miss，孩子看得见漏的是哪个。
-      sp.contMiss = !text || res.ok < seq.length;
+      // v100：整词被听到（res.wordHit）就算连读成立 —— 孤立字母识别不到不是
+      // 孩子的错，不能因为这个把人锁在门外（家长：读得很好却十几分、过不去）。
+      sp.contMiss = !text || (!res.wordHit && res.ok < seq.length);
 
       // Mark which pieces were actually heard.
       seq.forEach(function(x, i) {
@@ -5666,7 +5668,12 @@ const App = {
       var html = '<div class="spell-summary">';
       html += '<div class="ss-head"><span class="ss-score">'
            + (text ? res.score : '—') + '</span><span class="ss-label">'
-           + (text ? '连续读得分 · 读到 ' + res.ok + '/' + seq.length : '没听清，再读一次') + '</span></div>';
+           + (text ? (res.wordHit
+                        // v100：整词读对但字母格没被识别到时，别再写「读到 2/6」
+                        // 让孩子以为读漏了大半 —— 那句话本身就是误报。
+                        ? '连续读得分 · 整词读对了'
+                        : '连续读得分 · 读到 ' + res.ok + '/' + seq.length)
+                   : '没听清，再读一次') + '</span></div>';
       if (joined) {
         html += '<audio id="cont-audio-' + mi + '" controls src="' + URL.createObjectURL(joined.blob)
              + '" style="width:100%;max-width:280px;height:32px"></audio>';
@@ -5727,7 +5734,31 @@ const App = {
         }
       }
     }
-    return { score: Math.round(ok / expected.length * 100), ok: ok, hits: hits };
+    // v100：连读的分数不能只看「逐格听到几个」。孤立字母是识别端最不稳的输入
+    // —— 孩子把 "p a n d a panda" 整串读得清清楚楚，回来常常只剩一个
+    // "panda"（字母全被吞掉），逐格一算 1/6 = 17 分。家长实测就是这句：
+    // 「学生读得很好，还是读了好几次，十几分」。整词的识别比孤立字母可靠得多，
+    // 所以把「整词被听到」当作连读成立的凭证：字母格只决定 82~99 的细节分，
+    // 整词有没有读出来决定过不过。读错整词（panda 读成 penda）仍然不给保底。
+    const total = expected.length || 1;
+    const lastIdx = total - 1;
+    const word = String(expected[lastIdx] || '').replace(/[^a-zA-Z]/g, '');
+    let wordHit = false;
+    if (word.length >= 3) {
+      for (let j = 0; j < toks.length; j++) {
+        if (toks[j].length < 3) continue;   // 单字母 token 不算整词凭证
+        if (this._soundAlike(word, toks[j])
+            || this._wordTakeScore(word, toks[j], null) >= 70) { wordHit = true; break; }
+      }
+    }
+    if (wordHit && !hits[lastIdx]) { hits[lastIdx] = true; ok++; }
+    let score = Math.round(ok / total * 100);
+    if (wordHit) {
+      const pieces = Math.max(0, total - 1);
+      const pieceOk = hits.slice(0, lastIdx).filter(Boolean).length;
+      score = Math.max(score, Math.round(82 + 17 * (pieces ? pieceOk / pieces : 1)));
+    }
+    return { score: score, ok: ok, hits: hits, wordHit: wordHit };
   },
 
 
