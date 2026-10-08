@@ -1896,6 +1896,115 @@ const App = {
     ]);
   },
 
+  // ===== 答错引导（v104）=====
+  //
+  // 以前孩子答错，正确选项当场亮成绿框、下面一行"点绿色正确答案" —— 那等于
+  // 把答案递到手里，孩子照着点一下就过关，脑子没动。家长的原话是"不要一下
+  // 提示答案，要用中文提示词一步步引导他选出来"。
+  //
+  // 所以现在答错只做三件事：把他点错的那一项就地划掉（范围越选越小）、给一句
+  // 中文提示、**始终不点亮正确项**。提示一次比一次具体：
+  //   第 1 次错 → 只说"不是这个"，告诉他答案还在剩下的哪几个里面；
+  //   第 2 次错 → 描述正确答案的"长相"（首字母 / 字母数 / 词数）+ 中文讲解；
+  //   第 3 次起 → 直接点名，但最后那一下仍然要他自己点下去。
+  // 全程没有自动选中、没有"替我点亮"，答对的那一刻才亮绿。
+  _wrongTry: {},
+  _wrongTries(key) { return (this._wrongTry && this._wrongTry[key]) || 0; },
+  _wrongTryBump(key) {
+    if (!this._wrongTry) this._wrongTry = {};
+    this._wrongTry[key] = this._wrongTries(key) + 1;
+    return this._wrongTry[key];
+  },
+  _wrongTryClear(key) { if (this._wrongTry) delete this._wrongTry[key]; },
+
+  // 正确选项的"长相"—— 让孩子能在剩下几个里自己认出它，但不报字母。
+  // 图片/表情选项（词汇游戏的"选图片"）没有字可描述，返回空串，让调用方
+  // 用中文释义去提示。
+  _choiceShape(text) {
+    const s = String(text == null ? '' : text).trim();
+    if (!s || !/^[A-Za-z\u4e00-\u9fa5]/.test(s)) return '';
+    if (/[\u4e00-\u9fa5]/.test(s)) {
+      return '它是一句中文，共 ' + s.replace(/\s/g, '').length + ' 个字';
+    }
+    const letters = s.replace(/[^A-Za-z]/g, '');
+    const words = s.split(/\s+/).filter(Boolean).length;
+    let out = '它的第一个字母是“' + s[0] + '”';
+    if (letters.length > 1) {
+      out += '，一共 ' + letters.length + ' 个字母';
+      if (words > 1) out += '、' + words + ' 个单词';
+    }
+    return out;
+  },
+
+  // 答错后要显示的那段中文提示。
+  //   o.attempt     连错第几次（从 1 起）
+  //   o.opts        选项文案数组（填空题不给）
+  //   o.answer      正确项下标（选择题）/ 填空题不用
+  //   o.correctText 正确选项的文案（选择题）/ 正确答案（填空题）
+  //   o.picked      刚点错的下标（可空）
+  //   o.clue2       只给第 2 级用的一句中文线索（词汇题用来给"这个词什么意思"）
+  //   o.clue3       第 3 级点名时附上的中文讲解（题库里的 explanation_cn）
+  //   o.retryTip    第 1 次错时附加的一句"怎么办"
+  //   o.finalTail   第 3 次起收尾那句（填空题要"打进去"而不是"点一下"）
+  //
+  // 讲解（explanation_cn）只放在第 3 级：题库里不少解析本身就是答案（"……用 is"、
+  // "……two hundred and thirty (230)"），提前端出来跟直接报答案没区别。
+  _wrongHintHtml(o) {
+    o = o || {};
+    const attempt = o.attempt || 1;
+    const opts = o.opts || null;
+    const picked = (o.picked == null) ? null : o.picked;
+    const correctText = String(o.correctText == null ? '' : o.correctText);
+    // 词汇游戏的卡片上没有 A/B/C/D，只能说"第几个"（naming: 'index'）
+    const byIndex = (o.naming === 'index');
+    const nameOf = function (i) {
+      return byIndex ? '第 ' + (i + 1) + ' 个' : String.fromCharCode(65 + i);
+    };
+    let pickedLetter = '';
+    const left = [];
+    let correctLetter = '';
+    if (opts && opts.length) {
+      if (picked != null) pickedLetter = nameOf(picked);
+      opts.forEach(function (_, i) { if (i !== picked) left.push(nameOf(i)); });
+      if (o.answer != null && o.answer >= 0) correctLetter = nameOf(o.answer);
+    }
+    const shape = this._choiceShape(correctText);
+
+    if (attempt <= 1) {
+      let t = '🤔 不是这个。';
+      if (pickedLetter) t += '已经划掉 ' + pickedLetter + ' 了，';
+      t += left.length
+        ? '答案' + (byIndex ? '就在剩下 ' + left.length + ' 个里面' : '在 ' + left.join('、') + ' 里面') + '，再选一次。'
+        : '再选一次。';
+      if (o.retryTip) t += '<br><span class="fs-12">' + o.retryTip + '</span>';
+      return t;
+    }
+
+    if (attempt === 2) {
+      let t = '🔎 再仔细看看。';
+      if (shape) t += '正确答案' + shape + '。';
+      if (left.length && !byIndex) t += '<br>在 ' + left.join('、') + ' 里面挑一个。';
+      if (o.clue2) t += (shape || left.length ? '<br>' : '') + '💡 ' + o.clue2;
+      return t;
+    }
+
+    let t = '👉 就差一点啦。答案是 '
+          + (correctLetter ? correctLetter + '：' : '')
+          + '“' + correctText + '”。<br>'
+          + (o.finalTail || '点它一下，我们就往下走。');
+    if (o.clue3) t += '<br>📖 ' + o.clue3;
+    return t;
+  },
+
+  // 把提示落进页面上的某个容器（统一换色 + 淡入，免得各处样式走样）
+  _showWrongHint(el, html) {
+    if (!el) return;
+    el.style.display = 'block';
+    el.classList.add('q-hint');
+    el.innerHTML = html;
+  },
+  _clearWrongHint(el) { if (el) el.classList.remove('q-hint'); },
+
   // Show celebration animation
   _showCelebration(el) {
     if (!el) return;
@@ -3530,31 +3639,37 @@ const App = {
     const opts = document.querySelectorAll('#sp-opts-' + mi + ' .speak-option');
     const waitEl = document.getElementById('sp-wait-' + mi);
     const tip = document.getElementById('sp-tip-' + mi);
-    var self = this;
 
     if (!isCorrect) {
-      // 选错：立刻把点的这个标红锁死、正确选项亮绿色——不等朗读，
-      // 孩子马上能看到要点回哪一个（朗读要是卡住，绿色提示也还在）。
-      // 同时把点错的这句读出来给他听，读完再提醒一次。
+      // 选错不点答案（v104）：划掉他选的那一句、把中文提示挂出来，正确项
+      // 一律不亮绿 —— 让他自己听着、看着把对的那句找出来。
+      const tryKey = 'sp-' + mi + '-' + qi;
+      const attempt = this._wrongTryBump(tryKey);
       this._playWrongSound();
       opts.forEach((el, i) => {
-        el.classList.remove('correct', 'wrong');
-        if (i === oi) { el.classList.add('wrong'); el.style.pointerEvents = 'none'; }
-        else if (i === correctAnswer) el.classList.add('correct');
-        else el.style.pointerEvents = 'auto';
+        el.classList.remove('correct');
+        if (i === oi || el.classList.contains('wrong')) {
+          el.classList.add('wrong');
+          el.style.pointerEvents = 'none';
+        } else {
+          el.style.pointerEvents = 'auto';
+        }
       });
-      if (waitEl) {
-        waitEl.style.display = 'block';
-        waitEl.style.color = 'var(--danger)';
-        waitEl.textContent = '❌ 选错了。正在朗读你选的句子，请认真听…';
+      const correctText = (options && options[correctAnswer] != null) ? String(options[correctAnswer]) : '';
+      if (tip) {
+        this._showWrongHint(tip, this._wrongHintHtml({
+          attempt: attempt,
+          opts: options,
+          answer: correctAnswer,
+          correctText: correctText,
+          picked: oi,
+          clue3: q.explanation_cn,
+          retryTip: '先听完问题再选，注意问的是 What / Where 还是 When。',
+        }));
       }
-      if (tip && q.explanation_cn) {
-        tip.classList.add('show');
-        tip.innerHTML = '📖 ' + q.explanation_cn;
-      }
-      this.speak(selectedText, { prefer: 'cf', onDone: function() {
-        if (waitEl) waitEl.textContent = '❌ 选错了。点绿色的正确选项，再选一次';
-      }});
+      // 把选错的这句读出来给他听 —— 靠耳朵就能发现差在哪。提示词挂着不动，
+      // 不用等读完就能改选。
+      this.speak(selectedText, { prefer: 'cf' });
       return;
     }
 
@@ -3569,6 +3684,8 @@ const App = {
     this._showSpeakingIndicator(false);
     this._playCorrectSound();
     this._recordAnswer(dayIdx, mi, qi, selectedText, true);
+    this._wrongTryClear('sp-' + mi + '-' + qi);
+    this._clearWrongHint(tip);
     opts.forEach((el, i) => {
       el.classList.remove('wrong', 'selected');
       el.style.pointerEvents = 'none';
@@ -4488,30 +4605,42 @@ const App = {
 
   checkVocabAnswer(mi, selected, correct, dayIdx, wordCount, stageCount) {
     const opts = document.querySelectorAll('#vocab-game-' + mi + ' .vocab-option-card');
+    const mod = HOMEWORK_DATA[dayIdx].modules[mi] || {};
+    const vw = (mod.words || [])[this.state.vocabWordIdx];
+    const stage = vw && vw.stages ? vw.stages[this.state.vocabStage] : null;
+    const optTexts = stage && stage.options ? stage.options.slice() : null;
 
     if (selected === correct) {
       // Correct answer
+      const tryKey = 'v-' + mi + '-' + this.state.vocabWordIdx + '-' + this.state.vocabStage;
+      // 只有第一次就点对才计分 —— 试错之后点对的算"改对了"，跟原来"错的那张
+      // 只能点绿框跳过、不计分"的口径一致，星级不会被刷高。
+      const firstTry = this._wrongTries(tryKey) === 0;
+      this._wrongTryClear(tryKey);
       opts.forEach((el, i) => {
         el.style.pointerEvents = 'none';
         if (i === correct) el.classList.add('correct');
       });
-      this.state.vocabScore++;
+      if (firstTry) this.state.vocabScore++;
       this._playCorrectSound();
       var correctEl = opts[correct];
       if (correctEl) this._showCelebration(correctEl);
       var resultDiv = document.getElementById('spell-result-' + mi) || document.getElementById('vocab-retry-area-' + mi);
-      if (resultDiv) resultDiv.innerHTML = '<div style="color:var(--success);font-size:14px;font-weight:600;margin-top:8px">✅ 正确！</div>';
+      if (resultDiv) { this._clearWrongHint(resultDiv); resultDiv.innerHTML = '<div style="color:var(--success);font-size:14px;font-weight:600;margin-top:8px">✅ 正确！</div>'; }
       setTimeout(() => this.nextVocabStage(mi, dayIdx, wordCount, stageCount), 1200);
     } else {
-      // Wrong answer - show in orange, highlight correct answer, make it clickable
+      // 答错不点答案（v104）：卡片上没有 A/B/C/D，提示词只能说"第几个"；
+      // 正确卡片一律不亮绿、也不代替孩子点。他自己点对了才进下一阶段。
       // 错词进复习队列（v89）：今天作业末尾的"错词巩固"会再练它
-      const vw = ((HOMEWORK_DATA[dayIdx].modules[mi] || {}).words || [])[this.state.vocabWordIdx];
       if (vw && vw.word) this._reviewAdd(vw.word);
+      const tryKey = 'v-' + mi + '-' + this.state.vocabWordIdx + '-' + this.state.vocabStage;
+      const attempt = this._wrongTryBump(tryKey);
       opts.forEach((el, i) => {
-        el.style.pointerEvents = 'none';
-        if (i === selected) el.classList.add('wrong');
-        if (i === correct) {
-          el.classList.add('correct', 'clickable-correct');
+        if (i === selected || el.classList.contains('wrong')) {
+          el.classList.add('wrong');           // 选错的那张当场划掉
+          el.style.pointerEvents = 'none';
+        } else {
+          el.style.pointerEvents = 'auto';     // 没点过的还能再点
         }
       });
       this._playWrongSound();
@@ -4522,16 +4651,30 @@ const App = {
         var stageEl = document.getElementById('vocab-game-' + mi);
         if (stageEl) stageEl.appendChild(resultDiv);
       }
-      resultDiv.innerHTML = '<div style="color:var(--warning);font-size:13px;margin-top:8px">👉 点亮绿色正确答案，继续学习</div>';
-      // Make correct answer clickable to advance
-      var correctEl = opts[correct];
-      if (correctEl) {
-        correctEl.style.pointerEvents = 'auto';
-        correctEl.onclick = null;
-        correctEl.addEventListener('click', () => {
-          this.nextVocabStage(mi, dayIdx, wordCount, stageCount);
-        });
+      // 中文提示：第 2 次错给一条线索，第 3 次起才报是哪一张。
+      //   "选图片"那题（选项是表情）→ 线索是这个单词的中文意思（要懂意思才
+      //     选得对图），但**不给表情本身**，表情就是答案；
+      //   "选意思"那题（选项就是中文释义）→ 不给释义原文（那等于报答案），
+      //     让 _choiceShape 去说"这几个字的长度"，够他排除掉别的了。
+      var isImagePick = !!(stage && stage.type === 'image_choice');
+      var clue2 = '';
+      var clue3 = '';
+      if (vw) {
+        var meaningNote = '复习一下：' + vw.word + ' 的意思是「' + vw.meaning + '」。';
+        clue2 = isImagePick ? meaningNote + '挑和它对得上的那张图。' : '';
+        clue3 = meaningNote;
       }
+      this._showWrongHint(resultDiv, this._wrongHintHtml({
+        attempt: attempt,
+        naming: 'index',
+        opts: optTexts,
+        answer: correct,
+        correctText: optTexts ? String(optTexts[correct]) : '',
+        picked: selected,
+        clue2: clue2,
+        clue3: clue3,
+        retryTip: '先点一下 🔊 再听一遍发音，想想它是什么意思。',
+      }));
     }
   },
 
@@ -7280,48 +7423,43 @@ const App = {
     const ansEl = document.getElementById('ans-' + mi + '-' + qi);
 
     if (!isCorrect) {
+      // 答错不点答案（v104）：只划掉他点错的那一项、给一句中文提示，
+      // 正确项一律不亮绿 —— 孩子得自己把它找出来。
+      const tryKey = 'q-' + mi + '-' + qi;
+      const attempt = this._wrongTryBump(tryKey);
       opts.forEach((el, i) => {
         el.classList.remove('correct', 'selected');
-        if (i === oi) {
-          el.classList.add('wrong');
+        if (i === oi || el.classList.contains('wrong')) {
+          el.classList.add('wrong');            // 错过的就地划掉，越选范围越小
           el.style.pointerEvents = 'none';
         } else {
           el.style.pointerEvents = 'auto';
         }
-        // 和口语模块一致：正确选项立刻亮绿，孩子知道要点回哪一个。
-        if (i === q.answer) el.classList.add('correct');
       });
-      if (ansEl) {
-        ansEl.style.display = 'block';
-        ansEl.innerHTML = '❌ 选错了。正在朗读你选的句子，请认真听…';
-      }
+      this._showWrongHint(ansEl, this._wrongHintHtml({
+        attempt: attempt,
+        opts: q.options,
+        answer: q.answer,
+        correctText: (q.options && q.options[q.answer]) || '',
+        picked: oi,
+        clue3: q.explanation_cn,
+        retryTip: '把题目再听一遍，先弄清楚它在问什么。',
+      }));
       this._playWrongSound();
-      const expEl = document.getElementById('exp-' + mi + '-' + qi);
-      if (expEl) expEl.classList.add('show');
       // Wrong pick clears any stale hold-read panel — a wrong pick is just a
       // "try again" hint, no recording has happened yet.
       const followEl = document.getElementById('qr-follow-' + mi + '-' + qi);
       if (followEl) followEl.innerHTML = '';
       // 和口语模块一致：把点错的这句立刻读出来给他听——听力题尤其重要，
-      // 孩子要靠耳朵发现自己选的句子和原文差在哪。绿色高亮不朗读，不用
-      // 等读完就能改选。**任何选项都读**（v90）：单词/短语选项也一样 ——
-      // 第 2 周题库一半选项是单个词（England / Canada / went...），旧逻辑
-      // 「带空格才算句子才读」让这些点了完全没声音，家长当成 bug 报上来。
+      // 孩子要靠耳朵发现自己选的句子和原文差在哪。**提示词全程挂着**，
+      // 不用等读完就能改选（v104：不再等朗读结束去改写提示，改写等于把
+      // 孩子刚读到的引导擦掉）。
       // speak() 自己会分流：单词走有道、句子走自家端点；渲染时四个选项
       // 全都预取好了（见 prefetchUpcoming 的 copts 循环），点下去零等待。
       // 这是 v70/v76 两次修过的行为，删掉守卫等于回归红线，勿再收窄。
       var pickedText = (q.options && q.options[oi] != null) ? String(q.options[oi]) : '';
-      var self = this;
       if (pickedText && this.state.audioEnabled) {
-        this.speak(pickedText, { onDone: function() {
-          var el = document.getElementById('ans-' + mi + '-' + qi);
-          var pick = self._lastPick && self._lastPick[mi + '-' + qi];
-          if (el && pick && pick.oi === oi && !pick.isCorrect) {
-            el.innerHTML = '❌ 选错了。点绿色的正确选项，再选一次';
-          }
-        }});
-      } else if (ansEl) {
-        ansEl.innerHTML = '❌ 当前选项错误。请在原 ABCD 上点选正确答案。';
+        this.speak(pickedText);
       }
       return;
     }
@@ -7332,16 +7470,19 @@ const App = {
     this._stopCurrentAudio();
     this._showSpeakingIndicator(false);
     this._playCorrectSound();
+    this._wrongTryClear('q-' + mi + '-' + qi);
     opts.forEach((el, i) => {
       el.classList.remove('correct', 'wrong', 'selected');
       el.style.pointerEvents = 'none';
       // 点对哪一项，那一项就当场亮绿 —— 提示音得有个"落点"，不然孩子
       // 听到一声响却不知道是冲着哪一项来的。跟读门槛完全不受影响：
       // 下一题仍然要读够 60 分才开（见 _setHoldReadUI 的 passed 分支）。
+      // 这是全程唯一一处"亮绿"（v104）：答错时一次都不会亮。
       if (i === q.answer) el.classList.add('correct');
     });
     if (ansEl) {
       ansEl.style.display = 'block';
+      this._clearWrongHint(ansEl);
       ansEl.innerHTML = '✅ 选对了！点下方按钮把问句和答案读出来（≥60 分通过）';
     }
 
@@ -8239,15 +8380,26 @@ const App = {
     const ansEl = document.getElementById('ans-' + mi + '-' + qi);
     ansEl.style.display = 'block';
     if (isCorrect) {
+      this._wrongTryClear('f-' + mi + '-' + qi);
+      this._clearWrongHint(ansEl);
       ansEl.innerHTML = '✅ 正确！';
       input.style.borderColor = 'var(--success)';
       input.style.color = 'var(--success)';
       this._playCorrectSound();
     } else {
-      ansEl.innerHTML = '❌ 错误。正确答案：' + q.answer
-        + '<br><span class="fs-12 text-sub">就在上面的框里，重新输入改正后的答案</span>';
+      // 答错不报答案（v104）：先用中文提示一步步收窄（词性/时态 → 首字母
+      // 和字数 → 整词），最后一次才把答案给全 —— 但永远是他自己打进去。
+      const attempt = this._wrongTryBump('f-' + mi + '-' + qi);
+      this._showWrongHint(ansEl, this._wrongHintHtml({
+        attempt: attempt,
+        correctText: ans,
+        clue3: q.explanation_cn,
+        retryTip: '先想这句话缺的是什么词、什么时态，再想拼写。',
+        finalTail: '照着打进上面的框里就对了。',
+      }));
       input.style.borderColor = 'var(--danger)';
-      document.getElementById('exp-' + mi + '-' + qi).classList.add('show');
+      // 解析面板不再一上来就摊开——它常常等于答案，改由提示词按层级带出来
+      // （见 _wrongHintHtml 的第 2/3 级）。
       // 改在原框里：清掉错的、光标放进去，直接重打。以前会再弹一个"请手写
       // 改正"的框，等于让孩子把同一个答案写两遍。
       input.value = '';

@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="103">
+<meta name="app-version" content="104">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon.svg">
 <title>Amy老师英语打卡平台</title>
@@ -374,6 +374,13 @@ body.stage-mode .content-area{padding-block:0}
 .q-option.correct{background:var(--success-light);border-color:var(--success);color:var(--success);animation:ackPop .42s ease}
 .q-option.wrong{background:var(--danger-light);border-color:var(--danger);color:var(--danger)}
 .q-answer{font-size:12px;color:var(--success);margin-top:6px;font-weight:600}
+/* 答错引导提示（v104）。同一套样式也给口语模块的 .speak-tip 用 ——
+   答错时那里显示的是中文提示词，不再是"点绿色正确答案"。 */
+.q-answer.q-hint,.speak-tip.q-hint{
+  display:block;color:var(--warning);font-weight:600;line-height:1.75;
+  background:var(--warning-light);border-radius:var(--radius-sm);
+  padding:10px 12px;margin-top:8px;font-size:13px;animation:ackPop .3s ease}
+.q-hint .fs-12{color:var(--text-sub);font-weight:500}
 .q-explanation{background:var(--info-light);border-radius:var(--radius-sm);padding:10px;margin-top:8px;font-size:12px;display:none}
 .q-explanation.show{display:block}
 .q-explanation .cn{color:var(--text);margin-bottom:4px}
@@ -762,8 +769,8 @@ button.gate-locked::before{content:'🔒 '}
 .vocab-option-card:hover{border-color:var(--primary);background:var(--primary-light);transform:translateY(-2px)}
 .vocab-option-card.correct{border-color:var(--success);background:var(--success-light);animation:pop .3s ease}
 .vocab-option-card.wrong{border-color:var(--warning);background:var(--warning-light);opacity:0.5;animation:shake .3s ease}
-.vocab-option-card.clickable-correct{cursor:pointer;animation:pop .4s ease;box-shadow:0 0 0 3px rgba(82,196,26,.3)}
-.vocab-option-card.clickable-correct:hover{transform:scale(1.05);box-shadow:0 0 0 4px rgba(82,196,26,.5)}
+/* 「点亮绿色正确答案，继续学习」那条路已取消（v104）：答错只给中文提示，
+   正确卡片不亮绿、也不代替孩子点。对应的那张"可点击绿卡片"样式一并删掉。 */
 .vocab-option-card .opt-label{font-size:12px;color:var(--text-sub);font-weight:600}
 @keyframes bounceIn{0%{transform:scale(0);opacity:0}60%{transform:scale(1.1);opacity:1}100%{transform:scale(1)}}
 @keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.15)}100%{transform:scale(1)}}
@@ -999,9 +1006,9 @@ button.gate-locked::before{content:'🔒 '}
 <script src="cloud.js?v=94"></script>
 <script src="data.js?v=94"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
-<script src="recorder.js?v=103"></script>
-<script src="api.js?v=103"></script>
-<script src="app.js?v=103"></script>
+<script src="recorder.js?v=104"></script>
+<script src="api.js?v=104"></script>
+<script src="app.js?v=104"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {

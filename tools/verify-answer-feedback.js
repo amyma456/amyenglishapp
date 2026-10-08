@@ -330,8 +330,15 @@ else {
     document.querySelectorAll = realQSA;
     ok(soundLog.length === 1, '选错也是当场响一声');
     ok(soundLog[0].notes.length === 2, '选错响的是那两记下沉音，不是选对的"叮铃"（' + soundLog[0].notes.length + ' 个音）');
-    ok(optEls[wrongIdx].classList.contains('wrong') && optEls[correctIdx].classList.contains('correct'),
-       '选错的标红、正确的同时亮绿，孩子马上知道该点回哪一个');
+    // v104 起：答错不再把正确项亮绿（那是"把答案递到手里"）。只划掉他点错的
+    // 那一项，给一句中文提示，答案要孩子自己找出来 —— 详细校验见
+    // tools/verify-wrong-hint.js。
+    ok(optEls[wrongIdx].classList.contains('wrong'), '选错的当场划掉');
+    ok(!optEls[correctIdx].classList.contains('correct'),
+       '答错时正确选项**不亮绿**（答案不递到手里，孩子自己找）');
+    const tipEl = byId['sp-tip-' + mi];
+    ok(!!tipEl && /不是这个|再仔细看看/.test(tipEl.innerHTML || ''),
+       '答错当场出现中文提示词（"' + String(tipEl && tipEl.innerHTML).slice(0, 24) + '…"）');
   }
 }
 
