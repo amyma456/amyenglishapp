@@ -539,6 +539,83 @@ function toBase64(bytes) {
   return btoa(bin);
 }
 
+// 8-bit µ-law WAV → 16-bit PCM WAV（v103）。
+//
+// 客户端把"送识别的那一份"压成 8-bit µ-law（体积砍半，见 public/recorder.js）：
+// 孩子松手后等的那几秒，最大一块是音频从手机爬到边缘这段跨境上行，砍半就是
+// 实打实地少传一半。阿里云 qwen3-asr-flash 直接吃 µ-law（实测转写逐字一致、
+// 还快了约 380ms），所以那一份原样转发；Cloudflare Whisper 只吃 16-bit PCM，
+// 所以这里给 CF 单独解一份。
+//
+// 形状不认识（不是 RIFF / fmt 不是 7 / 多声道 / 缺块）返回 null，调用方保持
+// 原样透传 —— 和 trimWavSilence 一个脾气：认不出来就别动它。
+let ULAW_TABLE = null;
+function ulawTable() {
+  if (ULAW_TABLE) return ULAW_TABLE;
+  const t = new Int16Array(256);
+  for (let i = 0; i < 256; i++) {
+    const u = ~i & 0xff;
+    const e = (u >> 4) & 0x07;
+    const mant = u & 0x0f;
+    let v = ((mant << 3) + 0x84) << e;         // 0x84 = BIAS
+    t[i] = (u & 0x80) ? (0x84 - v) : (v - 0x84);
+  }
+  ULAW_TABLE = t;
+  return t;
+}
+
+function ulawWavToPcmWav(bytes) {
+  try {
+    if (bytes.length < 44) return null;
+    const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    if (dv.getUint32(0, true) !== 0x46464952) return null;          // 'RIFF'
+    if (dv.getUint32(8, true) !== 0x45564157) return null;          // 'WAVE'
+    let pos = 12, fmt = null, dataOff = -1, dataLen = -1;
+    while (pos + 8 <= bytes.length) {
+      const id = dv.getUint32(pos, true);
+      const size = dv.getUint32(pos + 4, true);
+      if (id === 0x20746D66) {                                      // 'fmt '
+        fmt = {
+          tag: dv.getUint16(pos + 8, true),
+          ch: dv.getUint16(pos + 10, true),
+          rate: dv.getUint32(pos + 12, true),
+          bits: dv.getUint16(pos + 22, true),
+        };
+      } else if (id === 0x61746164) {                               // 'data'
+        dataOff = pos + 8;
+        dataLen = Math.min(size, bytes.length - dataOff);
+        break;
+      }
+      pos += 8 + size + (size % 2);
+    }
+    if (!fmt || dataOff < 0) return null;
+    if (fmt.tag !== 7 || fmt.ch !== 1 || fmt.bits !== 8) return null;
+    const n = dataLen;
+    if (n <= 0) return null;
+    const table = ulawTable();
+    const out = new Uint8Array(44 + n * 2);
+    const ov = new DataView(out.buffer);
+    const str = (off, s) => { for (let i = 0; i < s.length; i++) ov.setUint8(off + i, s.charCodeAt(i)); };
+    str(0, 'RIFF');
+    ov.setUint32(4, 36 + n * 2, true);
+    str(8, 'WAVE');
+    str(12, 'fmt ');
+    ov.setUint32(16, 16, true);
+    ov.setUint16(20, 1, true);                                     // PCM
+    ov.setUint16(22, 1, true);
+    ov.setUint32(24, fmt.rate, true);
+    ov.setUint32(28, fmt.rate * 2, true);
+    ov.setUint16(32, 2, true);
+    ov.setUint16(34, 16, true);
+    str(36, 'data');
+    ov.setUint32(40, n * 2, true);
+    for (let i = 0; i < n; i++) ov.setInt16(44 + i * 2, table[bytes[dataOff + i]], true);
+    return out;
+  } catch (e) {
+    return null;
+  }
+}
+
 // 裁掉 16k 单声道 16-bit WAV 首尾的静音（v92）。孩子按住→松手的录音两头
 // 总有一截没声：白占上传体积和识别时长，更要命的是给 Whisper 留了"自由发
 // 挥"的空拍 —— 边缘静音里出现的幻觉词（Okay / Thank you）正是"读对了却被
@@ -694,10 +771,27 @@ const ALIYUN_ASR_TIMEOUT_MS = 2600;
 // 之前它没有上限：字母测试里出现过 8.4 秒才回包，孩子那边就是干等。
 const CF_ASR_TIMEOUT_MS = 7000;
 
-// 对冲点（v98）：阿里云超过这么久还没回，才把 Cloudflare 叫上一起跑。
-// 取值依据是实测延迟分布（tools/pron-scoring-bench.js，9 轮交叉）：阿里云中位
-// 1.2 秒 —— 1.5 秒足以让绝大多数请求"单通道解决"，一次 CF neurons 都不烧。
-const ALIYUN_HEDGE_MS = 1500;
+// 对冲点（v98 引入，v103 收紧）。
+//
+// 取值依据是实测延迟分布（tools/scoring-latency-probe.js，线上交叉对照）：
+// 边缘（LAX）到阿里云的这一段，p50 约 1.2s，但尾巴很长 —— 实测出现过
+// 1.6s / 1.7s / 2.0s / 2.3s，还有直接挂住不回的。而对冲一旦起跑，
+// 总耗时就是「对冲点 + Cloudflare 那一趟（实测 1.0~2.4s）」。
+//   对冲点 1500ms（v98）→ 慢的那一半请求，孩子等 2.5~3.9s；
+//   对冲点  450ms（v103）→ 同一批请求压到 1.5~2.9s，快的那一半毫发无损。
+// 代价只是偶尔多调一次 whisper-turbo，而它实测 1~3 neurons/次
+// （见 Cloudflare 每日额度表：最忙的一天 534 次也才 930/10000）——
+// 省下来的等待远比这点额度值钱。
+//
+// 中文要另算：中文是阿里云的强项，Whisper 的中文是"顺带支持"，明显弱一档。
+// 为了快一点就把中文分交给 CF 是本末倒置，所以中文的对冲点留在 1.2s ——
+// 只有阿里云真的拖住了才让它兜底。
+const ALIYUN_HEDGE_MS = 450;
+const ALIYUN_HEDGE_MS_ZH = 1200;
+
+function hedgeMsFor(mode) {
+  return mode === 'zh' ? ALIYUN_HEDGE_MS_ZH : ALIYUN_HEDGE_MS;
+}
 
 // 失败一律抛错、由调用方决定降级 —— 不在这里吞掉，否则分不清"没声音"和"没配上"。
 async function aliyunTranscribe(bytes, env, mode, bias, mime) {
@@ -771,18 +865,36 @@ async function transcribe(request, env) {
   let uploadMs = 0;
   let aliMs = 0;
   let cfMs = 0;
+  let hedgeUsed = 0;
 
   // Reject oversized bodies before buffering them.
   const declared = Number(request.headers.get('content-length') || 0);
   if (declared > MAX_BYTES) return json({ error: 'too_large' }, 413);
 
   let bytes;
+  let aliBytes;
+  let cfBytes;
+  let audioIn = 'pcm';
   try {
     const buf = await request.arrayBuffer();
     uploadMs = Date.now() - t0;
     if (buf.byteLength === 0) return json({ error: 'empty_audio' }, 400);
     if (buf.byteLength > MAX_BYTES) return json({ error: 'too_large' }, 413);
-    bytes = trimWavSilence(new Uint8Array(buf));
+    bytes = new Uint8Array(buf);
+    // µ-law 那一份（v103）：客户端已经压到 8 bit，体积砍半。
+    //   阿里云 —— 吃 µ-law，原样转发（它的入参越小，LAX→杭州那一跳越快，
+    //             实测同一段音频 862ms → 496ms）；
+    //   Cloudflare —— Whisper 只吃 16-bit PCM，解一份给它。
+    // 不是 µ-law（老客户端 / 手工测试）时两条通道拿的都是原来的 PCM 副本，
+    // 跟 v103 之前一模一样。
+    const pcm = ulawWavToPcmWav(bytes);
+    if (pcm) {
+      audioIn = 'ulaw';
+      aliBytes = bytes;
+      cfBytes = trimWavSilence(pcm);
+    } else {
+      aliBytes = cfBytes = trimWavSilence(bytes);
+    }
   } catch (e) {
     return json({ error: 'bad_body' }, 400);
   }
@@ -831,7 +943,7 @@ async function transcribe(request, env) {
     if (!force && Date.now() < aliyunDownUntil) return { text: '', dead: true };
     const a0 = Date.now();
     try {
-      const t = await aliyunTranscribe(bytes, env, mode, bias, mime);
+      const t = await aliyunTranscribe(aliBytes, env, mode, bias, mime);
       aliMs = Date.now() - a0;
       // 中文是目标语言本身，不做数字还原；英文还原见 restoreDigits 注释。
       return {
@@ -855,7 +967,7 @@ async function transcribe(request, env) {
     const c0 = Date.now();
     if (wantFast) {
       try {
-        const o = await env.AI.run(TURBO_MODEL, fastInput(bytes, mode, bias));
+        const o = await env.AI.run(TURBO_MODEL, fastInput(cfBytes, mode, bias));
         const t = ((o && o.text) || '').trim();
         if (t) { cfMs = Date.now() - c0; return { text: t, model: TURBO_MODEL, raw: o, answered: true }; }
         // turbo 答了但是空的：再用默认模型听一遍（它的 initial_prompt 更宽松）。
@@ -870,7 +982,7 @@ async function transcribe(request, env) {
       }
     }
     try {
-      const o = await env.AI.run(MODEL, { audio: [...bytes] });
+      const o = await env.AI.run(MODEL, { audio: [...cfBytes] });
       cfMs = Date.now() - c0;
       return { text: ((o && o.text) || '').trim(), model: MODEL, raw: o, answered: true };
     } catch (e) {
@@ -903,23 +1015,24 @@ async function transcribe(request, env) {
       detail = (ali.err || cf.err) || '';
     }
   } else {
-    // 对冲，不是并行发（v98）。
+    // 对冲，不是并行发（v98；对冲点 v103 收紧到 450ms / 中文 1200ms）。
     //
-    // 为什么不两条都发：Cloudflare 每天只有 1 万 neurons 免费额度，跟读的兜底
-    // 识别和 AI 口语的母语音色都指着它。每条跟读请求都顺手打一次 CF，一天几十
-    // 个孩子就把额度烧光，结果是"最需要 CF 的时候它没了"。
-    //
-    // 所以给阿里云 HEDGE_MS 先跑：它正常 1.2 秒左右就回来了，这段时间一次
-    // Cloudflare 都不碰。只有到点还没回来（上游抖动、或者 2.6 秒超时），才把
-    // Cloudflare 也叫上，两条赛跑。既保住了额度，又把最坏情况从"2.6 秒超时 +
-    // 再等 CF 2.3 秒"压到"1.5 秒起跑、谁先到用谁"。
+    // 为什么不是两条无条件都发：Cloudflare 每天 1 万 neurons 免费额度，跟读兜底
+    // 识别和 AI 口语的母语音色都指着它。让阿里云先跑一段，它正常就一次 CF 都不碰。
+    // 但这段"先跑"不能太长 —— 它直接决定了慢请求的下限：
+    //   总耗时 ≈ 对冲点 + CF 那一趟（1.0~2.4s），对冲点 1500 时就是 2.5~3.9s，
+    //   孩子这边就是"评分怎么这么慢"。收到 450ms 之后同一批请求压到 1.5~2.9s。
+    // 实测 whisper-turbo 只要 1~3 neurons/次（最忙的一天 534 次 = 930/10000），
+    // 多打几次换来少等一秒，这笔账是划算的。
     const HEDGE = { hedge: true };
+    const hedgeMs = hedgeMsFor(mode);
+    hedgeUsed = hedgeMs;
     const aliP = runAliyun();
     let ali = null;
     let cf = null;
     const hedged = await Promise.race([
       aliP,
-      new Promise(function (r) { setTimeout(function () { r(HEDGE); }, ALIYUN_HEDGE_MS); }),
+      new Promise(function (r) { setTimeout(function () { r(HEDGE); }, hedgeMs); }),
     ]);
     if (hedged !== HEDGE) {
       ali = hedged;                       // 阿里云赶在对冲点之前就回来了
@@ -959,8 +1072,11 @@ async function transcribe(request, env) {
     const channel = model.indexOf('qwen') >= 0 ? 'aliyun' : (model ? 'cf' : 'none');
     return {
       'Server-Timing': 'upload;dur=' + uploadMs + ', ali;dur=' + aliMs +
-        ', cf;dur=' + cfMs + ', total;dur=' + (Date.now() - t0),
+        ', cf;dur=' + cfMs + ', hedge;dur=' + hedgeUsed + ', total;dur=' + (Date.now() - t0),
       'X-Asr-Channel': channel,
+      // 实际收进来的是什么编码 + 多少字节（v103）。µ-law 生效时字节数应该是
+      // 老客户端的一半 —— 排查"压缩到底有没有上"直接看这个，不用猜。
+      'X-Audio-In': audioIn + ';bytes=' + (bytes ? bytes.length : 0),
       'X-Edge-Colo': (request.cf && request.cf.colo) || '',
     };
   }
@@ -1238,7 +1354,7 @@ function cors(res, env) {
   h.set('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
   h.set('Access-Control-Allow-Headers', 'Content-Type');
   // 让 api. 子域这条跨域路也能读到耗时埋点（同域本来就能读）。
-  h.set('Access-Control-Expose-Headers', 'Server-Timing, X-Asr-Channel, X-Edge-Colo');
+  h.set('Access-Control-Expose-Headers', 'Server-Timing, X-Asr-Channel, X-Edge-Colo, X-Audio-In');
   h.set('Access-Control-Max-Age', '86400');
   return new Response(res.body, { status: res.status, headers: h });
 }

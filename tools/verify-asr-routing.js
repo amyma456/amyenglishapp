@@ -96,6 +96,8 @@ async function run(qs, opts) {
   const res = await ctx.fetch(makeRequest(qs), holder.env, {});
   let body = {};
   try { body = await res.json(); } catch (e) {}
+  // 耗时埋点也留一份：hedge;dur= 是这一轮实际用的对冲点，v103 起可以断言它。
+  holder.rec.hedge = (res.headers && res.headers.get('Server-Timing')) || '';
   return { status: res.status, body: body, rec: holder.rec };
 }
 
@@ -225,18 +227,28 @@ async function run(qs, opts) {
   }), { AI: { run: async function () { return { text: '' }; } }, ALLOWED_ORIGIN: 'x' }, {});
   ok('空音频返回 400', emptyRes.status === 400, 'status=' + emptyRes.status);
 
-  // ---- 7. 对冲（v98）：阿里云慢下来时，孩子不该干等 ------------------------
+  // ---- 7. 对冲（v98 引入，v103 收紧对冲点）--------------------------------
+  // 慢请求的总耗时 ≈ 对冲点 + Cloudflare 那一趟。v98 的对冲点是 1500ms，
+  // 慢的一半请求孩子要等 2.5~3.9s；v103 收到 450ms（中文仍留 1200ms）。
   console.log('\n7. 对冲：阿里云慢 → Cloudflare 提前起跑');
   let t0 = Date.now();
   let rh = await run('?model=turbo&prompt=' + encodeURIComponent(EN), { aliDelayMs: 2500, text: 'hi there' });
   const hedgedMs = Date.now() - t0;
   ok('阿里云卡住时照样出分', rh.status === 200 && rh.body.text === 'hi there', JSON.stringify(rh.body));
   ok('这一分是 Cloudflare 给的', rh.body.model === '@cf/openai/whisper-large-v3-turbo', rh.body.model);
-  ok('对冲点 1.5s 起跑 → 总耗时没被 2.5s 的阿里云拖住', hedgedMs < 2300, hedgedMs + 'ms');
+  ok('对冲点起跑后总耗时没被 2.5s 的阿里云拖住', hedgedMs < 2300, hedgedMs + 'ms');
+
+  // 对冲点必须真的收紧了，而且只在英文这条路上收紧（中文是阿里云的强项）。
+  ok('英文对冲点 = 450ms', /(?:^|, )hedge;dur=450(?:,|$)/.test(rh.rec.hedge || ''),
+    'Server-Timing: ' + rh.rec.hedge);
+  const rzh = await run('?model=turbo&mode=zh', { aliText: EN_ALI });
+  ok('中文对冲点 = 1200ms（不给 Whisper 抢中文分）', /(?:^|, )hedge;dur=1200(?:,|$)/.test(rzh.rec.hedge || ''),
+    'Server-Timing: ' + rzh.rec.hedge);
+  ok('慢请求总耗时 ≤ 对冲点 + CF 一趟（1s 出头，不再是 2.5s 起）', hedgedMs < 1400, hedgedMs + 'ms');
 
   t0 = Date.now();
   rh = await run('?model=turbo&prompt=' + encodeURIComponent(EN), { aliDelayMs: 0, text: 'hi there' });
-  ok('阿里云正常时一次 CF 都不打（neuron 留给兜底）', rh.rec.aiCalls === 0, 'aiCalls=' + rh.rec.aiCalls);
+  ok('阿里云正常（0ms 就回）时一次 CF 都不打（neuron 留给兜底）', rh.rec.aiCalls === 0, 'aiCalls=' + rh.rec.aiCalls);
   ok('阿里云正常时总耗时不受影响', Date.now() - t0 < 800, (Date.now() - t0) + 'ms');
 
   console.log('\n' + pass + ' 项通过, ' + fail + ' 项失败');

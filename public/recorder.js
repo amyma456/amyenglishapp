@@ -210,7 +210,74 @@ const Recorder = {
     const tail = pad + needed;
     const out = new Float32Array(pad + core.length + tail);
     out.set(core, pad);                          // rest stays zero = silence
-    return this._encodeWav(out, this.TARGET_RATE);
+    return this.ULAW_ENABLED
+      ? this._encodeUlawWav(out, this.TARGET_RATE)
+      : this._encodeWav(out, this.TARGET_RATE);
+  },
+
+  // --------------------------------------------------------------------------
+  // 送识别的那一份压成 8-bit µ-law（v103）——"评分慢"最大的一块钱在这里。
+  //
+  // 孩子松手后干等的秒数，最大的一段不是模型算得慢（实测换模型只有 1~2 秒
+  // 的差），而是**音频从手机爬到 Cloudflare 边缘**这一段跨境上行。16kHz 单声道
+  // 16-bit 的 WAV 是原始波形，压不动：一句 4 秒就是 128KB，上行越差等得越久。
+  //
+  // µ-law（ITU-T G.711）每个采样 8 bit，体积整整砍半，而且是"听得清"的砍法：
+  // 它按人耳的响度感受做对数量化，小信号刻度细、大信号刻度粗，所以同样 8 bit
+  // 比线性 PCM 清楚得多，频带一点没丢（还是 16kHz 采样）。ASR 要的频谱原样在。
+  //
+  // 实测（阿里云 qwen3-asr-flash，同一段音频交叉对照）：
+  //   16k/16-bit 71KB → 862ms ；16k/µ-law 35KB → 496ms，转写逐字一致。
+  //   "My sister likes reading storybooks before bed." 同样 74KB→37KB，逐字一致。
+  // 8kHz 还能再砍一半，但 4kHz 以上全没了，孩子读的 /s/ /f/ /θ/ 这些擦音
+  // 正是靠那一段 —— 本项目的头号红线是"读对了却判错"，不冒这个险。
+  //
+  // 容器仍是标准 WAV（fmt tag 7 = µ-law），所以 mime 还是 audio/wav，
+  // worker 侧不用猜格式；worker 会把这一份原样转发给阿里云（体积小，
+  // 那一跳也更快），另外解一份 16-bit PCM 给 Cloudflare（Whisper 不认 µ-law）。
+  // 本地留档 / 播放 / 拼接仍走 16-bit PCM（stop() / join() 不碰这里）。
+  ULAW_ENABLED: true,
+
+  // 单个采样 → µ-law 字节。量化台阶与 _encodeWav 保持一致，两边不会差一个 LSB。
+  _ulawByte(x) {
+    let v = x < -1 ? -1 : x > 1 ? 1 : x;
+    v = Math.round(v < 0 ? v * 0x8000 : v * 0x7FFF);
+    let sign = 0;
+    if (v < 0) { sign = 0x80; v = -v; }
+    if (v > 32635) v = 32635;                    // G.711 的饱和点
+    v += 0x84;                                   // BIAS，让 0 附近也有码字
+    let e = 7, m = 0x4000;
+    while (e > 0 && !(v & m)) { e--; m >>= 1; }  // 找最高有效位 → 指数
+    const mant = (v >> (e + 3)) & 0x0f;
+    return (~(sign | (e << 4) | mant)) & 0xff;
+  },
+
+  // 8-bit µ-law WAV，mono。44 字节标准头，fmt tag = 7。
+  // byteRate = rate×1、blockAlign = 1、bits = 8，三者必须一起改 ——
+  // 只改 bits 的话读文件的一侧会按 2 字节推步长，整段错位。
+  _encodeUlawWav(samples, rate) {
+    const n = samples.length;
+    const buf = new ArrayBuffer(44 + n);
+    const view = new DataView(buf);
+    const str = (off, s) => { for (let i = 0; i < s.length; i++) view.setUint8(off + i, s.charCodeAt(i)); };
+
+    str(0, 'RIFF');
+    view.setUint32(4, 36 + n, true);
+    str(8, 'WAVE');
+    str(12, 'fmt ');
+    view.setUint32(16, 16, true);          // chunk size
+    view.setUint16(20, 7, true);           // format = 7 (µ-law)
+    view.setUint16(22, 1, true);           // channels = mono
+    view.setUint32(24, rate, true);
+    view.setUint32(28, rate, true);        // byte rate = rate × 1 byte
+    view.setUint16(32, 1, true);           // block align
+    view.setUint16(34, 8, true);           // bits per sample
+    str(36, 'data');
+    view.setUint32(40, n, true);
+
+    const out = new Uint8Array(buf);
+    for (let i = 0; i < n; i++) out[44 + i] = this._ulawByte(samples[i]);
+    return new Blob([out], { type: 'audio/wav' });
   },
 
   // Join takes into a single WAV, with a short gap so the words stay distinct.
