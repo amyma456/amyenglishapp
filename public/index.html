@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="112">
+<meta name="app-version" content="113">
 <link rel="manifest" href="manifest.json">
 <!-- iOS 的"添加到主屏幕"不认 SVG（装出来是白板/网页截图），必须给 PNG。
      图标与启动图由 tools/gen-pwa-icons.js 生成，别手改。 -->
@@ -930,6 +930,16 @@ button.gate-locked::before{content:'🔒 '}
 .settings-card .sc-desc{font-size:12px;color:var(--text-sub);margin-bottom:12px}
 .settings-steps{background:var(--bg);border-radius:var(--radius-sm);padding:12px;font-size:12px;color:var(--text);line-height:2}
 .settings-steps code{background:var(--primary-light);padding:2px 6px;border-radius:4px;font-size:11px;color:var(--primary-dark)}
+
+/* 老师端批量管理（多选 / 全选 / 批量删除） */
+.pick-tools{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.pick-label{display:inline-flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;user-select:none}
+.pick-box{width:20px;height:20px;min-width:20px;flex:0 0 auto;margin:0;accent-color:var(--primary);cursor:pointer}
+.pick-card{background:var(--card);border:1.5px dashed var(--primary);border-radius:var(--radius);padding:10px 12px;margin-bottom:12px;box-shadow:var(--shadow)}
+.pick-count{font-size:12px;color:var(--text-sub);margin-top:6px}
+.assign-card .ac-pick{display:flex;align-items:center;gap:10px}
+.assign-card .ac-pick .ac-grow{flex:1;min-width:0}
+div[data-gated] .ac-info{gap:10px}
 </style>
 </head>
 <body>
