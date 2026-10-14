@@ -3,6 +3,9 @@
 //   「只要老师删除，再次登进的话，都需要老师确认这个功能永远保留」
 //   「只有 13259532909 这个老师的号可以无限制地登入登出，作为老师端用」
 //   「任何人登录的时候都会收到一个…提醒，看是否要分配班级」
+// 后来家长看到询问后更正：**909 是孩子的**（陈皓正-Yunus，在少儿英语A班做作业），
+// 老师号只留 13259532991。所以这里钉的是"一个且只有一个老师号"，并且专门断言
+// 909 不会被误当成老师（否则孩子会看到老师端，而且再也不会被拦截保护）。
 //
 // 这条规则以前只活在代码的默契里：移出名单在 D1（removed_students），
 // 而老师能在别处把孩子加回名单、云端同步又可能把孩子并回来 —— 名单里有名字
@@ -12,7 +15,7 @@
 // 钉住的行为：
 //   A. 被老师删除/移出的人 → 登录被拦，且**拒绝之后仍然拦着**（不会因为拒绝就放行）
 //   B. 只有老师同意（学生申请→同意，或老师显式解除）才出得来
-//   C. 老师号（13259532991 / 13259532909）永远不受拦截，两个文件里的名单一致
+//   C. 老师号名单（当前只有 13259532991）两个文件一模一样；孩子号 909 不在名单里
 //   D. 老师号即使被误删，也不会进拦截名单；后台 status 也永远说"没被拦"
 //   E. 客户端登录流程真的按这套语义走（不是只有接口对）
 //   F. 老师端看得见"谁被拦着"，并且能给一个显式放行的按钮
@@ -37,8 +40,9 @@ const dataSrc = fs.readFileSync(BASE + 'data.js', 'utf8');
 const workerSrc = fs.readFileSync(workerPath, 'utf8');
 const HOMEWORK_DATA = new Function(dataSrc + '; return HOMEWORK_DATA;')();
 
-const TEACHER_A = '13259532991';
-const TEACHER_B = '13259532909';
+const TEACHER = '13259532991';
+// 家长确认过的孩子号：号码和老师号只差两位，最容易被误加进白名单的那一个。
+const KID_909 = '13259532909';
 const STUDENT = '15109549632';
 
 // ===========================================================================
@@ -263,9 +267,9 @@ const asTeacher = async (dev, phone) => {
   await dev.ready;
   // 走真的登录：老师端的后台写操作（删人/审批/解除）都靠 Api.session.phone
   // 带老师身份，只手写 App.state 会让这些接口全部 403 —— 那测的就不是真流程了。
-  const s = await dev.Api.login(phone || TEACHER_A, 'AMy');
+  const s = await dev.Api.login(phone || TEACHER, 'AMy');
   dev.App.state.role = s.role;
-  dev.App.state.phone = phone || TEACHER_A;
+  dev.App.state.phone = phone || TEACHER;
   dev.App.state.name = 'AMy';
   dev.App.state.userName = 'AMy';
   dev.App.state.currentTab = 'students';
@@ -307,8 +311,10 @@ console.log('=== 0. 老师号名单：两个文件必须一模一样 ===');
   ok(!!inApi && !!inWorker, '两个文件都定义了老师号名单');
   ok(JSON.stringify(inApi) === JSON.stringify(inWorker),
      '两边的老师号名单一致（api=' + JSON.stringify(inApi) + ' worker=' + JSON.stringify(inWorker) + '）');
-  ok(inApi.indexOf(TEACHER_A) >= 0, '名单含 ' + TEACHER_A);
-  ok(inApi.indexOf(TEACHER_B) >= 0, '名单含 ' + TEACHER_B);
+  ok(inApi.indexOf(TEACHER) >= 0, '名单含 ' + TEACHER);
+  ok(inApi.indexOf(KID_909) < 0,
+     '孩子号 ' + KID_909 + '（陈皓正-Yunus）不在名单里 —— 家长确认过他是孩子，进了名单就会直接看到老师端');
+  ok(inApi.length === 1, '名单就只有老师本人一个号（多一个都等于让那个人免拦截）');
   ok(!/const TEACHER_PHONE\s*=/.test(apiSrc) && !/const TEACHER_PHONE\s*=/.test(workerSrc),
      '旧的单号常量 TEACHER_PHONE 已经不存在（不会再出现"只认一个号"的暗坑）');
 }
@@ -334,7 +340,7 @@ let db1 = makeD1();
   let r = await call(db1, 'GET', '/api/class/status?phone=' + STUDENT);
   ok(r.data && r.data.removed === false, '删之前：' + STUDENT + ' 没被拦');
 
-  r = await call(db1, 'POST', '/api/class/remove', { phone: '17763891729', name: '马帅-ms', teacher: TEACHER_A });
+  r = await call(db1, 'POST', '/api/class/remove', { phone: '17763891729', name: '马帅-ms', teacher: TEACHER });
   ok(r.status === 200 && r.data.ok === true, '老师删除学生 → ok');
 
   r = await call(db1, 'GET', '/api/class/status?phone=17763891729');
@@ -348,22 +354,44 @@ let db1 = makeD1();
 
 console.log('=== 2. 老师号：可以无限登入登出，谁也别想拦 ===');
 {
-  let r = await call(db1, 'POST', '/api/class/remove', { phone: TEACHER_B, name: 'AMy', teacher: TEACHER_A });
-  ok(r.status === 200 && r.data.skipped === 'teacher_phone', '老师删到老师号 → 直接跳过，不记拦截');
+  let r = await call(db1, 'POST', '/api/class/remove', { phone: TEACHER, name: 'AMy', teacher: TEACHER });
+  ok(r.status === 200 && r.data.skipped === 'teacher_phone', '老师删到老师自己的号 → 直接跳过，不记拦截');
 
-  r = await call(db1, 'GET', '/api/class/status?phone=' + TEACHER_B);
-  ok(r.data.removed === false && r.data.teacher === true, TEACHER_B + ' 后台明确回答"没被拦"');
+  r = await call(db1, 'GET', '/api/class/status?phone=' + TEACHER);
+  ok(r.data.removed === false && r.data.teacher === true, TEACHER + ' 后台明确回答"没被拦"');
 
   // 就算有人绕过接口、直接往表里塞一行，也必须拦不住老师
-  db1.tables.removed_students.push({ phone: TEACHER_B, name: 'x', removed_at: new Date().toISOString() });
-  r = await call(db1, 'GET', '/api/class/status?phone=' + TEACHER_B);
+  db1.tables.removed_students.push({ phone: TEACHER, name: 'x', removed_at: new Date().toISOString() });
+  r = await call(db1, 'GET', '/api/class/status?phone=' + TEACHER);
   ok(r.data.removed === false, '表里被塞了脏数据，老师号照样不被拦（防御性判断）');
+  db1.tables.removed_students = db1.tables.removed_students.filter(x => x.phone !== TEACHER);
 
-  r = await call(db1, 'GET', '/api/class/removed-list?teacher=' + TEACHER_B);
-  ok(r.status === 200 && Array.isArray(r.data.removed), '老师号 ' + TEACHER_B + ' 有老师权限（能查拦截名单）');
+  r = await call(db1, 'GET', '/api/class/removed-list?teacher=' + TEACHER);
+  ok(r.status === 200 && Array.isArray(r.data.removed), '老师号有老师权限（能查拦截名单）');
 
   r = await call(db1, 'GET', '/api/class/removed-list?teacher=13900139000');
   ok(r.status === 403, '普通号码查拦截名单 → 403');
+}
+
+console.log('=== 2b. 孩子号 13259532909：按普通学生处理，没有半点老师特权 ===');
+{
+  let r = await call(db1, 'GET', '/api/class/status?phone=' + KID_909);
+  ok(r.data.removed === false, KID_909 + ' 现在没被拦（孩子照常做作业）');
+  ok(!r.data.teacher, KID_909 + ' 后台不认他是老师（家长确认：909 是孩子的）');
+
+  r = await call(db1, 'GET', '/api/class/removed-list?teacher=' + KID_909);
+  ok(r.status === 403, KID_909 + ' 查不到拦截名单（孩子碰不到老师那一套）');
+
+  r = await call(db1, 'POST', '/api/class/remove', { phone: KID_909, name: '陈皓正-Yunus', teacher: TEACHER });
+  ok(r.status === 200 && r.data.skipped === undefined,
+     '老师能删/移出 ' + KID_909 + '（他是学生，不该有豁免）');
+  r = await call(db1, 'GET', '/api/class/status?phone=' + KID_909);
+  ok(r.data.removed === true, '被删除后 ' + KID_909 + ' 也要老师同意才能进 —— 和每个孩子同一条规则');
+
+  // 收尾：解开，别影响后面几节
+  await call(db1, 'POST', '/api/class/unblock', { phone: KID_909, teacher: TEACHER });
+  r = await call(db1, 'GET', '/api/class/status?phone=' + KID_909);
+  ok(r.data.removed === false, '解除后 ' + KID_909 + ' 恢复登录');
 }
 
 console.log('=== 3. 学生申请 → 老师拒绝 → 仍然是拦着的；同意才放行 ===');
@@ -372,17 +400,17 @@ console.log('=== 3. 学生申请 → 老师拒绝 → 仍然是拦着的；同�
   ok(r.data.notRemoved === true, '没被拦的人申请 → 不产生申请（不刷老师的屏）');
 
   db1.tables.removed_students = [];
-  await call(db1, 'POST', '/api/class/remove', { phone: STUDENT, name: '小明-Ming', teacher: TEACHER_A });
+  await call(db1, 'POST', '/api/class/remove', { phone: STUDENT, name: '小明-Ming', teacher: TEACHER });
   r = await call(db1, 'POST', '/api/class/join-request', { phone: STUDENT, name: '小明-Ming' });
   ok(r.data.ok === true, '被拦的学生申请重新加入 → ok');
   r = await call(db1, 'POST', '/api/class/join-request', { phone: STUDENT, name: '小明-Ming' });
   ok(r.data.duplicate === true, '重复点申请 → 不会堆出多条');
 
-  r = await call(db1, 'GET', '/api/class/join-requests?teacher=' + TEACHER_A);
+  r = await call(db1, 'GET', '/api/class/join-requests?teacher=' + TEACHER);
   ok(r.data.requests.length === 1 && r.data.requests[0].phone === STUDENT, '老师端收到这条申请（孩子一登不进来就能被提醒）');
   const reqId = r.data.requests[0].id;
 
-  r = await call(db1, 'POST', '/api/class/join-request/resolve', { id: reqId, action: 'deny', teacher: TEACHER_A });
+  r = await call(db1, 'POST', '/api/class/join-request/resolve', { id: reqId, action: 'deny', teacher: TEACHER });
   ok(r.data.ok === true && r.data.action === 'deny', '老师拒绝');
   r = await call(db1, 'GET', '/api/class/status?phone=' + STUDENT);
   ok(r.data.removed === true, '拒绝之后：再次登录**仍然**要老师同意（这条规则永远不变）');
@@ -390,9 +418,9 @@ console.log('=== 3. 学生申请 → 老师拒绝 → 仍然是拦着的；同�
 
   r = await call(db1, 'POST', '/api/class/join-request', { phone: STUDENT, name: '小明-Ming' });
   ok(r.data.ok === true, '被拒绝后可以再申请一次');
-  r = await call(db1, 'GET', '/api/class/join-requests?teacher=' + TEACHER_A);
+  r = await call(db1, 'GET', '/api/class/join-requests?teacher=' + TEACHER);
   const reqId2 = r.data.requests[0].id;
-  r = await call(db1, 'POST', '/api/class/join-request/resolve', { id: reqId2, action: 'approve', teacher: TEACHER_A });
+  r = await call(db1, 'POST', '/api/class/join-request/resolve', { id: reqId2, action: 'approve', teacher: TEACHER });
   ok(r.data.ok === true, '老师同意');
   r = await call(db1, 'GET', '/api/class/status?phone=' + STUDENT);
   ok(r.data.removed === false, '同意之后：门开了，能进去了');
@@ -401,7 +429,7 @@ console.log('=== 3. 学生申请 → 老师拒绝 → 仍然是拦着的；同�
   ok(r.data.notRemoved === true, '已经放行的人再点申请 → 后端回答"你不需要申请"');
 
   // 老师再删一次：门重新关上，上一次的"同意"不能当通行证
-  await call(db1, 'POST', '/api/class/remove', { phone: STUDENT, name: '小明-Ming', teacher: TEACHER_A });
+  await call(db1, 'POST', '/api/class/remove', { phone: STUDENT, name: '小明-Ming', teacher: TEACHER });
   r = await call(db1, 'GET', '/api/class/status?phone=' + STUDENT);
   ok(r.data.removed === true, '再被删除一次：立刻又进不去');
   await tick(5);                          // 两次申请别落在同一毫秒（真人做不到）
@@ -414,7 +442,7 @@ console.log('=== 3. 学生申请 → 老师拒绝 → 仍然是拦着的；同�
 
 console.log('=== 4. 老师端看得见被拦的人，并能显式放行 ===');
 {
-  let r = await call(db1, 'GET', '/api/class/removed-list?teacher=' + TEACHER_A);
+  let r = await call(db1, 'GET', '/api/class/removed-list?teacher=' + TEACHER);
   ok(r.data.removed.some(x => x.phone === STUDENT), '拦截名单里能看到 ' + STUDENT);
 
   r = await call(db1, 'POST', '/api/class/unblock', { phone: STUDENT, teacher: '13900139000' });
@@ -422,12 +450,12 @@ console.log('=== 4. 老师端看得见被拦的人，并能显式放行 ===');
   r = await call(db1, 'GET', '/api/class/status?phone=' + STUDENT);
   ok(r.data.removed === true, '403 那次没有解开拦截');
 
-  r = await call(db1, 'POST', '/api/class/unblock', { phone: STUDENT, teacher: TEACHER_A });
+  r = await call(db1, 'POST', '/api/class/unblock', { phone: STUDENT, teacher: TEACHER });
   ok(r.data.ok === true, '老师点了"解除拦截" → ok');
   r = await call(db1, 'GET', '/api/class/status?phone=' + STUDENT);
   ok(r.data.removed === false, '解除后立刻能登录');
 
-  const lst = await call(db1, 'GET', '/api/class/removed-list?teacher=' + TEACHER_A);
+  const lst = await call(db1, 'GET', '/api/class/removed-list?teacher=' + TEACHER);
   ok(!lst.data.removed.some(x => x.phone === STUDENT), '解除后名单里不再有他');
 }
 
@@ -437,17 +465,25 @@ console.log('=== 5. 客户端：登录流程真的按这套语义走 ===');
   const net = makeNet(seedCloud());
   net.worker = worker;
 
-  // ---- 老师两个号都是老师端 ----
-  const TB = await asStudent(makeDevice(net, '老师B'), TEACHER_B, 'AMy');
-  ok(TB.App.state.role === 'teacher', TEACHER_B + ' 登录 → 老师端（role=teacher）');
-  ok(TB.isTeacherPhone(TEACHER_B) === true, 'isTeacherPhone(' + TEACHER_B + ') === true');
-  const st = await TB.Api.classStatus(TEACHER_B);
+  // ---- 老师自己的号 → 老师端 ----
+  const TT = await asStudent(makeDevice(net, '老师'), TEACHER, 'AMy');
+  ok(TT.App.state.role === 'teacher', TEACHER + ' 登录 → 老师端（role=teacher）');
+  ok(TT.isTeacherPhone(TEACHER) === true, 'isTeacherPhone(' + TEACHER + ') === true');
+  const st = await TT.Api.classStatus(TEACHER);
   ok(st && st.removed === false, '老师号的 classStatus 永远不是"被拦"');
+
+  // ---- 909（陈皓正-Yunus）→ 学生端。家长确认他是孩子；role 每次登录实时算，
+  // 所以从旧版本升上来也不用清缓存，重新登录就是学生端 ----
+  const K = await asStudent(makeDevice(net, '孩子909'), KID_909, '陈皓正-Yunus');
+  ok(K.App.state.role === 'student', KID_909 + ' 登录 → 学生端（不是老师端）');
+  ok(K.isTeacherPhone(KID_909) === false, 'isTeacherPhone(' + KID_909 + ') === false');
+  await K.App.registerStudent(KID_909, '陈皓正-Yunus');
+  ok(K.hidden('main-app') === false, KID_909 + ' 能正常进学生端做作业（没被拦）');
 
   // ---- 被拦的学生：进不去 ----
   const S = await asStudent(makeDevice(net, '学生'), STUDENT, '张子皓-Harvey');
   ok(S.App.state.role === 'student', '学生号登录 → role=student');
-  await call(net.d1, 'POST', '/api/class/remove', { phone: STUDENT, name: '张子皓-Harvey', teacher: TEACHER_A });
+  await call(net.d1, 'POST', '/api/class/remove', { phone: STUDENT, name: '张子皓-Harvey', teacher: TEACHER });
   await S.App.registerStudent(STUDENT, '张子皓-Harvey');
   ok(S.hidden('main-app') === true, '被拦的学生：进不去主界面');
   ok(S.hidden('removed-page') === false, '被拦的学生：看到"你已被移出班级"页');
@@ -455,7 +491,7 @@ console.log('=== 5. 客户端：登录流程真的按这套语义走 ===');
 
   // ---- 申请 → 老师端出现 ----
   await S.App.applyRejoin();
-  const T = await asTeacher(makeDevice(net, '老师A'), TEACHER_A);
+  const T = await asTeacher(makeDevice(net, '老师A'), TEACHER);
   await T.App.fetchJoinRequests();
   ok((T.App.state.joinRequests || []).length === 1, '老师端收到 1 条入班申请');
   const id = T.App.state.joinRequests[0].id;
@@ -496,7 +532,7 @@ console.log('=== 5. 客户端：登录流程真的按这套语义走 ===');
   ok(S.hidden('removed-page') === true, '被拦页收起来了');
 
   // ---- 同意申请这条正路也通 ----
-  await call(net.d1, 'POST', '/api/class/remove', { phone: STUDENT, name: '张子皓-Harvey', teacher: TEACHER_A });
+  await call(net.d1, 'POST', '/api/class/remove', { phone: STUDENT, name: '张子皓-Harvey', teacher: TEACHER });
   await S.App.registerStudent(STUDENT, '张子皓-Harvey');
   ok(S.hidden('main-app') === true, '又被删掉：立刻再次进不去');
   await S.App.applyRejoin();
@@ -517,7 +553,7 @@ console.log('=== 6. 新学生注册：老师会收到"是否要分配班级"的�
 {
   const net = makeNet(seedCloud());
   net.worker = worker;
-  const T = await asTeacher(makeDevice(net, '老师A'), TEACHER_A);
+  const T = await asTeacher(makeDevice(net, '老师A'), TEACHER);
   await T.App.syncFromCloud();          // 第一次：只记基线
   const S = await asStudent(makeDevice(net, '新学生'), '13500135000', '新同学-New');
   await S.App.registerStudent('13500135000', '新同学-New');

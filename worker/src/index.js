@@ -22,7 +22,9 @@ const MODEL = '@cf/openai/whisper';
 //
 // Being on this list also means "this phone can never be gated": the teacher's
 // own account must be able to log in and out forever, whatever the roster says.
-const TEACHER_PHONES = ['13259532991', '13259532909'];
+// ⚠️ 只放老师自己的号。家长明确过：**13259532909 是孩子（陈皓正-Yunus）**，
+// 别再"顺手"加进来 —— 一进白名单，那个号就直接是老师端，且永不受拦截保护。
+const TEACHER_PHONES = ['13259532991'];
 function isTeacherPhone(phone) {
   return TEACHER_PHONES.indexOf(String(phone == null ? '' : phone).trim()) >= 0;
 }

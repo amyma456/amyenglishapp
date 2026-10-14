@@ -29,7 +29,10 @@
 //   2) 永远不受「移出/删除拦截」限制，可以无限登入登出。
 // worker/src/index.js 里有一份同名常量，**两边必须保持一致**，
 // 否则老师用第二个号登录时，后台接口会 403（删除/审批全部静默失败）。
-const TEACHER_PHONES = ['13259532991', '13259532909'];
+// ⚠️ 只放老师自己的号。家长明确过：**13259532909 是孩子（陈皓正-Yunus）**，
+// 是拿来在少儿英语A班做作业的学生号，绝不能因为"号码看起来像"就加进来 ——
+// 一进白名单，孩子会直接看到老师端，而且永远不再受拦截保护。
+const TEACHER_PHONES = ['13259532991'];
 function isTeacherPhone(phone) {
   return TEACHER_PHONES.indexOf(String(phone == null ? '' : phone).trim()) >= 0;
 }
