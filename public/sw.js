@@ -3,7 +3,7 @@
 // Cache is only a fallback for offline use. This guarantees bug fixes
 // reach every device immediately (previous cache-first strategy kept
 // serving old app.js forever, which is why fixes "never worked").
-var CACHE_NAME = 'amy-english-v107';
+var CACHE_NAME = 'amy-english-v108';
 
 self.addEventListener('install', function(event) {
   event.waitUntil(
@@ -19,7 +19,13 @@ self.addEventListener('install', function(event) {
         './icon.svg',
         './photo.jpeg',
         './students.jpeg',
-        './manifest.json'
+        './manifest.json',
+        // PNG 图标：iOS 装到主屏幕后从这里取；不预存 512 那两张大图，
+        // 首次安装的等待时间比"图标离线可用"重要。
+        './icons/favicon-32.png',
+        './icons/apple-touch-icon-180.png',
+        './icons/icon-192.png',
+        './icons/icon-maskable-192.png'
       ]);
     }).then(function() {
       return self.skipWaiting();
