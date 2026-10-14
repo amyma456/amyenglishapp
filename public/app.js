@@ -5180,6 +5180,28 @@ const App = {
     if (el) el.innerHTML = this.renderVocabStage(m, mi, dayIdx);
   },
 
+  // 中文提示的"内嵌槽位"（v118）：选图片 / 选释义两屏都把它埋在题目（图片）
+  // 正下方。原来答错时提示是 append 到整张词汇卡片的最末尾，手机上要往下滑
+  // 一屏才看得见 —— 家长原话"中文提示需要滑动屏幕才能看见"。
+  _vocabHintSlot(mi) {
+    return '<div class="vocab-hint-slot" id="vocab-hint-' + mi + '" style="display:none"></div>';
+  },
+
+  // 提示往哪儿落：优先内嵌槽位（题目正下方），没有再退回老位置
+  //（拼写填空的 spell-result / 动态创建的卡片尾部）。
+  _vocabHintEl(mi) {
+    return document.getElementById('vocab-hint-' + mi)
+        || document.getElementById('spell-result-' + mi)
+        || document.getElementById('vocab-retry-area-' + mi);
+  },
+
+  // 提示一出现，就把上面那张大图收小一圈 —— 给提示腾出地方，让"图片 + 提示 +
+  // 选项"在手机上同屏放得下（不然多出来的这几行还是会把选项挤出屏幕）。
+  _vocabTightenForHint(mi) {
+    var box = document.querySelector('#vocab-game-' + mi + ' .vocab-stage');
+    if (box) box.classList.add('hint-open');
+  },
+
   renderVocabStage(m, mi, dayIdx) {
     // 拼读进度是「本阶段」的状态：切阶段/切单词必须清掉，否则上一个单词
     // 的 _spell 残留会把底部按钮错误地锁住（或放行）。
@@ -5231,6 +5253,9 @@ const App = {
       html += '<div class="auto-read-badge"><svg class="icon icon-sm speaking-anim"><use href="#i-sound"/></svg> 正在朗读…</div>';
       html += '<div class="vocab-meaning">' + stage.prompt + '</div>';
       html += this._wordImage(word, true);
+      // v118：中文提示的内嵌槽位就埋在**图片正下方**。答错时它原地长出来，
+      // 孩子一眼就能看到，不用往下滑一屏（家长反馈"提示要滑动才看得见"）。
+      html += this._vocabHintSlot(mi);
       html += '<div class="vocab-options" id="vo-' + mi + '" style="opacity:0.4;pointer-events:none">';
       stage.options.forEach((opt, oi) => {
         html += '<div class="vocab-option-card" onclick="App.checkVocabAnswer(' + mi + ',' + oi + ',' + stage.answer + ',' + dayIdx + ',' + m.words.length + ',' + word.stages.length + ')">' + opt + '</div>';
@@ -5250,6 +5275,9 @@ const App = {
       html += '<div class="vocab-word">' + word.word + '</div>';
       html += '<div class="vocab-phonetic">' + word.phonetic + '</div>';
       html += '<div class="vocab-meaning">' + stage.prompt + '</div>';
+      // v118：和"选图片"一样，提示槽位埋在题目正下方（图片 → 题目 → 提示 → 选项），
+      // 答错时不用滑动就能看见。
+      html += this._vocabHintSlot(mi);
       html += '<div class="vocab-options" id="vo-' + mi + '" style="opacity:0.4;pointer-events:none">';
       stage.options.forEach((opt, oi) => {
         html += '<div class="vocab-option-card" style="font-size:16px;padding:14px 8px" onclick="App.checkVocabAnswer(' + mi + ',' + oi + ',' + stage.answer + ',' + dayIdx + ',' + m.words.length + ',' + word.stages.length + ')">' + opt + '</div>';
@@ -5337,8 +5365,12 @@ const App = {
       this._playCorrectSound();
       var correctEl = opts[correct];
       if (correctEl) this._showCelebration(correctEl);
-      var resultDiv = document.getElementById('spell-result-' + mi) || document.getElementById('vocab-retry-area-' + mi);
-      if (resultDiv) { this._clearWrongHint(resultDiv); resultDiv.innerHTML = '<div style="color:var(--success);font-size:14px;font-weight:600;margin-top:8px">✅ 正确！</div>'; }
+      var resultDiv = this._vocabHintEl(mi);
+      if (resultDiv) {
+        this._clearWrongHint(resultDiv);
+        resultDiv.style.display = 'block';   // 内嵌槽位默认藏着，这里要显出来
+        resultDiv.innerHTML = '<div style="color:var(--success);font-size:14px;font-weight:600;margin-top:8px">✅ 正确！</div>';
+      }
       // v106：答对之后停 800ms 就走（原来 1200ms）。孩子一天要在词汇模块里
       // 点几十次，每次多等 0.4 秒就是"点久了不耐烦"（家长原话）。庆祝动画
       // 本身不到 700ms，800 足够看见，不会被切得突兀。
@@ -5359,13 +5391,15 @@ const App = {
         }
       });
       this._playWrongSound();
-      var resultDiv = document.getElementById('spell-result-' + mi) || document.getElementById('vocab-retry-area-' + mi);
+      var resultDiv = this._vocabHintEl(mi);
       if (!resultDiv) {
         resultDiv = document.createElement('div');
         resultDiv.id = 'vocab-retry-area-' + mi;
         var stageEl = document.getElementById('vocab-game-' + mi);
         if (stageEl) stageEl.appendChild(resultDiv);
       }
+      // 提示就在图片下方：顺手把大图收小，保证"图片 + 提示 + 选项"同屏放得下
+      this._vocabTightenForHint(mi);
       // 中文提示（v107）：第 1 次错就把这个词的"场景化中文提示"（hint_cn，
       // 见 data.js 的 VOCAB_HINTS）端出来 —— 围绕词义、搭配、用途去说，
       // 但**不含释义原文**（选意思那两题的选项就是释义，写进去等于给答案）。

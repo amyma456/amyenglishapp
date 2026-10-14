@@ -387,7 +387,9 @@ console.log('\n=== 4. 高频词汇：卡片不亮绿、不代点，只有第一�
     const realQSA = document.querySelectorAll;
     document.querySelectorAll = sel => (/\.vocab-option-card$/.test(sel) ? optEls : realQSA(sel));
 
-    const resultDiv = getEl('spell-result-' + mi);
+    // v118 起提示落在"题目正下方的内嵌槽位"（vocab-hint-<mi>）里，
+    // 不再是卡片末尾那个容器 —— 用 App._vocabHintEl(mi) 跟代码保持一致。
+    const resultDiv = App._vocabHintEl(mi);
     resultDiv.innerHTML = '';
     const wrongIdx = (stage.answer + 1) % stage.options.length;
     const scoreBefore = App.state.vocabScore;
@@ -476,7 +478,7 @@ console.log('\n=== 4b. 选意思那题：连错三次也不许出现释义原文
     for (let i = 0; i < stage.options.length; i++) optEls.push(mkEl('div', {}, ['vocab-option-card']));
     const realQSA = document.querySelectorAll;
     document.querySelectorAll = sel => (/\.vocab-option-card$/.test(sel) ? optEls : realQSA(sel));
-    const resultDiv = getEl('spell-result-' + mi);
+    const resultDiv = App._vocabHintEl(mi);
     resultDiv.innerHTML = '';
 
     // 三个错项各错一次，再重复错一次（共 4 次），全程都不许出现释义原文
