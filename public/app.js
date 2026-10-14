@@ -15,6 +15,8 @@ const App = {
     vocabStage: 0,
     vocabWordIdx: 0,
     vocabScore: 0,
+    // 这一套词汇坐标属于哪个模块（断点记录要用；-1 = 还没进过词汇闯关）
+    vocabMi: -1,
     selectedVoice: 'female',
     answers: {},
     checkins: {},
@@ -229,16 +231,107 @@ const App = {
     return n;
   },
 
-  // 学生断点续做：登录 / 刷新 / 更新后不从第一题重来，直接停在第一个
-  // 没做完的题上。依据是本地记录的答题（answers）+ 单词闯关完成标记
-  // （learnedWords），它们都存在手机本地，重新登录也不会丢。
+  // ===== 断点位置（连续记录）=====
+  // 「上次退出去时停在哪儿」不能只靠答题记录反推：一道题答到一半、正在跟读
+  // 的那一屏、词汇闯关里的第几个词第几个阶段，都还没有任何"答过了"的痕迹。
+  // 所以在每次位置变化时把当前坐标写进本机，重登录（以及更新后自动刷新）
+  // 直接回到这个坐标。
+  _POS_KEY: 'amy-pos-v1',
+
+  _posStore() {
+    if (!this._posStoreCache) {
+      try { this._posStoreCache = JSON.parse(localStorage.getItem(this._POS_KEY) || '{}') || {}; }
+      catch (e) { this._posStoreCache = {}; }
+    }
+    return this._posStoreCache;
+  },
+
+  // 按「学生 + 第几周 + 第几天」分段：换周、换天都是另一份进度。
+  _posKey(dayIdx) {
+    return this._myStudentId() + this._weekTag() + '_d' + dayIdx;
+  },
+
+  _getPos(dayIdx) {
+    if (this.isTeacher() || !this.state.phone) return null;
+    if (dayIdx === undefined || dayIdx === null) return null;
+    const rec = this._posStore()[this._posKey(dayIdx)];
+    if (!rec || typeof rec !== 'object') return null;
+    if (typeof rec.stepIdx !== 'number' || !isFinite(rec.stepIdx) || rec.stepIdx < 0) return null;
+    return rec;
+  },
+
+  // 写当前坐标。步骤下标 + 词汇闯关的内部坐标（词序/阶段/分数/昨日复习）。
+  _savePos(dayIdx) {
+    if (this.isTeacher() || !this.state.phone) return;
+    if (dayIdx === undefined || dayIdx === null) return;
+    const store = this._posStore();
+    const k = this._posKey(dayIdx);
+    const rec = (store[k] && typeof store[k] === 'object') ? store[k] : {};
+    rec.stepIdx = this.state.stepIdx;
+    rec.vocab = {
+      mi: this.state.vocabMi,
+      wordIdx: this.state.vocabWordIdx,
+      stage: this.state.vocabStage,
+      score: this.state.vocabScore,
+      reviewDone: !!this.state.vocabReviewDone,
+    };
+    rec.at = Date.now();
+    store[k] = rec;
+    try { localStorage.setItem(this._POS_KEY, JSON.stringify(store)); } catch (e) {}
+  },
+
+  // 学生断点续做：登录 / 刷新 / 更新后不从第一题重来，直接停在"上次退出
+  // 去时停的那一屏"。
+  //
+  // 位置有两个来源，取更靠后的那个：
+  //  1) 本机连续记录（_savePos）：每次位置变化都写，所以"答到一半"的地方
+  //     也在里面 —— 正在跟读的那句、词汇闯关里的第 N 个词第 M 个阶段。
+  //  2) 答题记录反推（_resumeStepIdxFromAnswers）：兜底，只认"这题答过没有"，
+  //     清了缓存 / 换了设备时用它。
+  // 最后再从停下的那一步往前走一格：这一步其实已经做完（题答过、词汇学完、
+  // 作文填全、朗读读完）就自动落位到下一屏 —— 位置跟着完成度走，不需要孩子
+  // 额外点一次「下一题」。
+  // 老师端始终 0（老师是预览，不做题）。
+  _resumeStepIdx(dayIdx) {
+    const steps = this._buildSteps(dayIdx);
+    if (!steps.length) return 0;
+    const fromAnswers = this._resumeStepIdxFromAnswers(dayIdx, steps);
+    const saved = this._getPos(dayIdx);
+    if (!saved) return fromAnswers;
+    let s = Math.floor(saved.stepIdx);
+    if (!isFinite(s) || s < 0) s = 0;
+    if (s > steps.length) s = steps.length;
+    if (s < fromAnswers) s = fromAnswers;
+    while (s < steps.length && this._stepIsDone(steps[s], dayIdx)) s++;
+    return s;
+  },
+
+  // 这一步是不是已经做完了（只认有持久化记录的那几种题型）。
+  _stepIsDone(step, dayIdx) {
+    const day = HOMEWORK_DATA[dayIdx];
+    if (!step || !day || !day.modules) return false;
+    const sid = this._myStudentId();
+    if (step.kind === 'question' || step.kind === 'speaking') {
+      return !!this.state.answers[Api.answerKey(sid, dayIdx, step.mi, step.qi)];
+    }
+    if (step.kind === 'vocab') return !!this._getLearnedWords(dayIdx);
+    const m = day.modules[step.mi];
+    if (!m) return false;
+    if (step.kind === 'writing') return this._writingAllBlanksRight(m, step.mi, dayIdx);
+    if (step.kind === 'writingread') return this._writingAllRead(m, step.mi);
+    // sentence / translate / passage 没有独立记录，一律算没做完
+    return false;
+  },
+
+  // 只靠答题记录反推的版本（见上面 _resumeStepIdx 的说明）。依据是本地记录
+  // 的答题（answers）+ 单词闯关完成标记（learnedWords），都在手机本地，
+  // 重新登录不会丢。
   //  - 做完的模块：整块跳过（含它前面的听读句子步骤）
   //  - 做到一半的模块：停在第一个没做的题
   //  - 完全没碰过的模块：从该模块第一屏开始（保留听读/翻译引导）
   //  - 全部做完：停在"今天的作业做完了"完成页
-  // 老师端始终 0（老师是预览，不做题）。
-  _resumeStepIdx(dayIdx) {
-    const steps = this._buildSteps(dayIdx);
+  _resumeStepIdxFromAnswers(dayIdx, steps) {
+    steps = steps || this._buildSteps(dayIdx);
     if (!steps.length) return 0;
     const day = HOMEWORK_DATA[dayIdx];
     if (!day || !day.modules) return 0;
@@ -2540,7 +2633,12 @@ const App = {
     // 舞台渲染完就把该锁的「下一题」锁上。以前只有 nextStep/prevStep 里会
     // 调 _applyStepLock，首次进入（刚登录、刚刷新、第一次落到这一题）时是
     // 漏的 —— 那一屏的门禁等于没上。
-    if (!isTeacher && tab === 'today') this._applyStepLock();
+    if (!isTeacher && tab === 'today') {
+      this._applyStepLock();
+      // 位置一变化就落盘：这样"答到一半就退出"也能被记住，下次登录直接
+      // 回到这一屏（而不只是回到"最后一道答过的题"）。
+      this._savePos(this.state.currentDay);
+    }
   },
 
   // ===== Teacher: Weekly Plan =====
@@ -4413,13 +4511,36 @@ const App = {
 
   // Vocab game (Baicizhan style)
   renderVocabGame(m, mi, dayIdx) {
-    this.state.vocabStage = 0;
-    this.state.vocabWordIdx = 0;
-    this.state.vocabScore = 0;
-    this.state.vocabReviewDone = false;
-    // Check if previous day has learned words for review
+    // 断点续做：词汇闯关是"一天 5 个词、词内 8 个阶段"的连续闯关，它的内部
+    // 坐标（第几个词 / 第几个阶段 / 分数）不在题号体系里，只放内存的话重登录
+    // 一定回到第 1 个词（家长报的"明明读到 dinosaur 了，重进去又是 museum"）。
+    // 这里先从本机记录里恢复，恢复不了才是全新开始。
+    this.state.vocabMi = mi;
+    const pos = this._getPos(dayIdx);
+    const v = pos && pos.vocab;
+    const usable = v && v.mi === mi && typeof v.wordIdx === 'number'
+                && isFinite(v.wordIdx) && v.wordIdx >= 0 && v.wordIdx <= m.words.length;
+    if (usable) {
+      this.state.vocabWordIdx = Math.floor(v.wordIdx);
+      this.state.vocabScore = Math.max(0, Math.floor(v.score) || 0);
+      this.state.vocabReviewDone = !!v.reviewDone;
+      // 阶段号要按当前这个词的阶段数夹一下，否则数据一变就会渲染到
+      // 不存在的阶段（stage 为 undefined，取 .type 直接炸）
+      const stCount = (((m.words[this.state.vocabWordIdx] || m.words[0] || {}).stages) || []).length || 1;
+      let st = Math.floor(v.stage);
+      if (!isFinite(st) || st < 0) st = 0;
+      if (st > stCount - 1) st = stCount - 1;
+      this.state.vocabStage = st;
+    } else {
+      this.state.vocabStage = 0;
+      this.state.vocabWordIdx = 0;
+      this.state.vocabScore = 0;
+      this.state.vocabReviewDone = false;
+    }
+    // Check if previous day has learned words for review —— 已经点过
+    // "复习完成"就不再回放这一屏，否则断点续做会先被按回复习页。
     var reviewWords = this._getLearnedWords(dayIdx - 1);
-    if (reviewWords && reviewWords.length > 0) {
+    if (reviewWords && reviewWords.length > 0 && !this.state.vocabReviewDone) {
       return '<div class="vocab-game" id="vocab-game-' + mi + '">' + this._renderVocabReview(mi, dayIdx, reviewWords, m) + '</div>';
     }
     return '<div class="vocab-game" id="vocab-game-' + mi + '">' + this.renderVocabStage(m, mi, dayIdx) + '</div>';
@@ -4463,6 +4584,8 @@ const App = {
   // Finish review, start actual vocab game
   _finishReview(mi, dayIdx) {
     this.state.vocabReviewDone = true;
+    this.state.vocabMi = mi;
+    this._savePos(dayIdx);          // 复习这一屏也过了，断点不再回到它
     var m = HOMEWORK_DATA[dayIdx].modules[mi];
     var el = document.getElementById('vocab-game-' + mi);
     if (el) el.innerHTML = this.renderVocabStage(m, mi, dayIdx);
@@ -4742,6 +4865,8 @@ const App = {
       this.state.vocabStage = 0;
       this.state.vocabWordIdx++;
     }
+    this.state.vocabMi = mi;
+    this._savePos(dayIdx);          // 阶段/词一往前走就落盘，重登录接着这一屏
     const el = document.getElementById('vocab-game-' + mi);
     if (el) el.innerHTML = this.renderVocabStage(m, mi, dayIdx);
     // Auto-focus spell input if present
@@ -4776,6 +4901,8 @@ const App = {
     }
     this.state.vocabWordIdx++;
     this.state.vocabStage = 0;
+    this.state.vocabMi = mi;
+    this._savePos(dayIdx);          // 点「下一个单词」立刻记位置（不用等做完）
     var el = document.getElementById('vocab-game-' + mi);
     if (el) el.innerHTML = this.renderVocabStage(m, mi, dayIdx);
     this._syncVocabFootLabel(mi, dayIdx);
