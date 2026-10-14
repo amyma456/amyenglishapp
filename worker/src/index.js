@@ -15,10 +15,17 @@ import TTS_STATIC from './tts-manifest.js';
 
 const MODEL = '@cf/openai/whisper';
 
-// Same constant as public/api.js. Teacher-only endpoints check this; it is
-// the app's whole auth model today (the roster blob is equally public), so
-// this adds server-side state, not server-side secrets.
-const TEACHER_PHONE = '13259532991';
+// Same constant as public/api.js — **keep the two lists identical**. Teacher-
+// only endpoints check this; it is the app's whole auth model today (the
+// roster blob is equally public), so this adds server-side state, not
+// server-side secrets.
+//
+// Being on this list also means "this phone can never be gated": the teacher's
+// own account must be able to log in and out forever, whatever the roster says.
+const TEACHER_PHONES = ['13259532991', '13259532909'];
+function isTeacherPhone(phone) {
+  return TEACHER_PHONES.indexOf(String(phone == null ? '' : phone).trim()) >= 0;
+}
 
 // A read-along is a few seconds of 16kHz mono 16-bit PCM: ~32KB/second.
 // 2MB is a minute of audio, far past anything legitimate.
@@ -1140,6 +1147,11 @@ async function classApi(request, url, env) {
   if (path === '/api/class/status' && request.method === 'GET') {
     const phone = (url.searchParams.get('phone') || '').trim();
     if (!phone) return json({ error: 'missing_phone' }, 400);
+    // The teacher's own number is never gated, full stop. Checked before the
+    // table so even a bad row (an accidental self-delete) cannot lock her out.
+    if (isTeacherPhone(phone)) {
+      return json({ removed: false, removedAt: null, request: null, teacher: true });
+    }
     const removed = await db
       .prepare('SELECT phone, name, removed_at FROM removed_students WHERE phone = ?')
       .bind(phone).first();
@@ -1164,6 +1176,8 @@ async function classApi(request, url, env) {
     if (!isTeacher(body)) return json({ error: 'forbidden' }, 403);
     const phone = String(body.phone || '').trim();
     if (!phone) return json({ error: 'missing_phone' }, 400);
+    // Never gate a teacher number: the app would then have no way back in.
+    if (isTeacherPhone(phone)) return json({ ok: true, skipped: 'teacher_phone' });
     const name = String(body.name || '').slice(0, 60);
     await db
       .prepare(`INSERT INTO removed_students (phone, name, removed_at) VALUES (?, ?, ?)
@@ -1231,6 +1245,37 @@ async function classApi(request, url, env) {
         .bind(req.phone).run();
     }
     return json({ ok: true, action: action });
+  }
+
+  // -- teacher: who is gated right now ---------------------------------------
+  if (path === '/api/class/removed-list' && request.method === 'GET') {
+    if (!isTeacher({ teacher: url.searchParams.get('teacher') })) {
+      return json({ error: 'forbidden' }, 403);
+    }
+    const rows = await db
+      .prepare('SELECT phone, name, removed_at FROM removed_students ORDER BY removed_at DESC')
+      .all();
+    return json({ removed: (rows && rows.results) || [] });
+  }
+
+  // -- teacher: lift the gate by hand ----------------------------------------
+  // The student normally applies and the teacher approves. This is the short
+  // cut for "I already know, let them in" — and it must stay an explicit
+  // teacher click: nothing in the sync path is allowed to clear this table.
+  if (path === '/api/class/unblock' && request.method === 'POST') {
+    const body = await readJsonBody(request);
+    if (!body) return json({ error: 'bad_json' }, 400);
+    if (!isTeacher(body)) return json({ error: 'forbidden' }, 403);
+    const phone = String(body.phone || '').trim();
+    if (!phone) return json({ error: 'missing_phone' }, 400);
+    await db
+      .prepare('DELETE FROM removed_students WHERE phone = ?')
+      .bind(phone).run();
+    // Any application they had open is moot the moment the teacher lets them in.
+    await db
+      .prepare("UPDATE join_requests SET status = 'approved', resolved_at = ? WHERE phone = ? AND status = 'pending'")
+      .bind(new Date().toISOString(), phone).run();
+    return json({ ok: true });
   }
 
   return json({ error: 'not_found' }, 404);
@@ -1351,7 +1396,7 @@ async function wrongQuestionsApi(request, url, env) {
 }
 
 function isTeacher(body) {
-  return !!(body && String(body.teacher || '') === TEACHER_PHONE);
+  return !!(body && isTeacherPhone(body.teacher));
 }
 
 async function readJsonBody(request) {

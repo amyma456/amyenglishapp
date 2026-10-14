@@ -29,6 +29,10 @@ const App = {
     learnedWords: {},
     speakingRecords: [],
     stepIdx: 0,
+    // 老师端：后台「移出名单」（D1 removed_students）。进了这个名单的手机号
+    // 登录一律被拦，只有老师同意（学生申请→同意，或老师直接点解除）才出得来。
+    // 这里只用来显示，判断真伪永远以后台为准。
+    removedPhones: [],
   },
 
   async init() {
@@ -2277,6 +2281,9 @@ const App = {
       // Teacher: pick up re-join applications (polled with the same cycle)
       if (this.isTeacher()) {
         this.fetchJoinRequests();
+        // 移出名单也要每轮拉一次：它是「谁还能登录」的真相，
+        // 名单会在老师自己的操作之后立刻变。
+        this.loadRemovedList();
       }
 
       // Teacher: detect students that just became pending (new registration
@@ -3290,6 +3297,31 @@ const App = {
     html += '<div class="fs-12" style="color:var(--success)">✅ 云端同步：' + this._syncStatusText() + '（每15秒自动刷新，学生申请加入会立刻弹出提醒）</div>';
     html += '</div>';
 
+    // 🚫 被拦在门外的人：后台移出名单。规则是永久的 —— 老师删过谁，谁再次
+    // 登录就必须老师同意。名单在这里显示，老师才不会以为「加了名字就能进」。
+    const gated = this.state.removedPhones || [];
+    if (gated.length > 0) {
+      html += '<h3 style="color:var(--warning);margin:16px 0 8px">🚫 已被拦截登录（' + gated.length + '人）</h3>';
+      html += '<p class="text-sub fs-12 mb-8">这些号码被删除/移出过，登录会被拦住，必须先申请并经你同意；'
+           + '想直接放行就点「解除拦截」</p>';
+      gated.forEach(g => {
+        const inRoster = this.state.students.find(s => s.phone === g.phone);
+        html += '<div class="assign-card" style="border-color:var(--warning)">';
+        html += '<div class="ac-info">';
+        html += '<div><span class="ac-name">' + ((inRoster && inRoster.name) || g.name || '-') + '</span> '
+             + '<span class="ac-phone">' + (g.phone || '-') + '</span></div>';
+        html += '<span class="badge badge-pending">🚫 需你同意才能登录</span>';
+        html += '</div>';
+        html += '<div class="ac-actions">';
+        html += '<button class="btn btn-primary btn-sm" onclick="App.unblockStudent(\'' + String(g.phone).replace(/'/g, "\\'") + '\', \''
+             + String((inRoster && inRoster.name) || g.name || '').replace(/'/g, "\\'") + '\')">🔓 解除拦截</button>';
+        html += '</div>';
+        html += '<div class="fs-12 text-sub mt-4">移出时间：'
+             + (g.removed_at ? new Date(g.removed_at).toLocaleString('zh-CN') : '-') + '</div>';
+        html += '</div>';
+      });
+    }
+
     // Re-join applications from removed students
     const joinReqs = this.state.joinRequests || [];
     if (joinReqs.length > 0) {
@@ -3319,6 +3351,10 @@ const App = {
         html += '<div class="ac-info">';
         html += '<div><span class="ac-name">' + s.name + '</span> <span class="ac-phone">' + (s.phone||'-') + '</span></div>';
         html += '<span class="badge badge-pending">待分配</span>';
+        // 名字在名单上 ≠ 能登录。被后台拦着的，这里必须说清楚。
+        if ((this.state.removedPhones || []).some(g => g.phone === s.phone)) {
+          html += '<span class="badge badge-pending">🚫 登录被拦</span>';
+        }
         html += '</div>';
         html += '<div class="ac-actions">';
         // Class assignment dropdown
@@ -3341,9 +3377,12 @@ const App = {
       html += '<h3 style="color:var(--success);margin:16px 0 8px">✅ 已分配学生（' + approved.length + '人）</h3>';
       html += '<div class="card"><table class="data-table"><thead><tr><th>备注名</th><th>班级</th><th>手机号</th><th>注册时间</th><th>操作</th></tr></thead><tbody>';
       approved.forEach(s => {
-        html += '<tr><td>' + s.name + '</td><td>' + (s.class||'-') + '</td><td>' + (s.phone||'-') + '</td>';
+        const barred = (this.state.removedPhones || []).some(g => g.phone === s.phone);
+        html += '<tr><td>' + s.name + (barred ? ' 🚫' : '') + '</td><td>' + (s.class||'-') + '</td><td>' + (s.phone||'-') + '</td>';
         html += '<td class="fs-12">' + (s.registeredAt ? new Date(s.registeredAt).toLocaleDateString('zh-CN') : '-') + '</td>';
-        html += '<td><button class="btn btn-outline btn-sm" onclick="App.removeStudent(\'' + s.id + '\')">移除</button></td></tr>';
+        html += '<td><button class="btn btn-outline btn-sm" onclick="App.removeStudent(\'' + s.id + '\')">移除</button>'
+             + (barred ? ' <button class="btn btn-primary btn-sm" onclick="App.unblockStudent(\'' + String(s.phone).replace(/'/g, "\\'") + '\', \'' + String(s.name).replace(/'/g, "\\'") + '\')">🔓 放行</button>' : '')
+             + '</td></tr>';
       });
       html += '</tbody></table></div>';
     }
@@ -3379,6 +3418,31 @@ const App = {
     if (reqs.length > prevCount) {
       this.showToast('📮 有新的入班申请，请到「学生管理」处理');
     }
+  },
+
+  // ===== Teacher: who is gated right now =====
+  // 后台「移出名单」是本机看不到的真相：名单里的人，登录一定被拦住 —— 哪怕
+  // 他已经重新出现在学生名单上（老师手动添加过、或云端同步又把他并回来了）。
+  // 所以老师端必须把它拉出来显示，否则老师只会看到「这孩子怎么进不来」。
+  async loadRemovedList() {
+    if (!this.isTeacher() || !this.state.phone) return;
+    const list = await Api.classRemovedList();
+    if (list === null) return;              // 拉取失败：保持上一次的结果
+    this.state.removedPhones = list;
+  },
+
+  // 老师显式放行。这是唯一一条「不经过学生申请」也能开门的路径，必须是点出来的。
+  async unblockStudent(phone, name) {
+    if (!this.isTeacher()) return;
+    if (!confirm('解除对「' + (name || phone) + '」的登录拦截？\n\n解除后 TA 可以直接登录，不需要再申请。')) return;
+    const ok = await Api.classUnblock(phone);
+    if (!ok) { this.showToast('⚠️ 解除失败，请检查网络后重试', 'warn'); return; }
+    // 后台放行了，本机也把墓碑清掉，否则下次合并又会把他藏起来。
+    await Api.untombstonePhone(phone);
+    const me = this.state.students.find(s => s.phone === phone);
+    await this.loadRemovedList();
+    this.showToast('✅ 已解除拦截，' + ((me && me.name) || name || phone) + ' 可以登录了');
+    this.renderContent();
   },
 
   async approveJoin(id) {
@@ -3435,6 +3499,7 @@ const App = {
     // Server-side gate: without this write the student can just re-login.
     const gated = await Api.classRemove(student.phone, student.name);
     if (!gated) this.showToast('⚠️ 删除已保存，但写入后台失败，该学生仍可能重新进入', 'warn');
+    await this.loadRemovedList();
     this.renderContent();
   },
 
@@ -3475,6 +3540,11 @@ const App = {
     await Api.saveParentStudent(phone, this.state.parentStudents[phone]);
     this.syncToCloud();
     this.closeModal();
+    // 加进名单 ≠ 放进门：这个号如果还在后台拦截名单里，孩子照样进不来。
+    // 与其让老师等孩子打电话来问，不如现在就说明白。
+    if ((this.state.removedPhones || []).some(g => g.phone === phone)) {
+      this.showToast('⚠️ ' + name + ' 曾被移出，还在拦截名单里：TA 登录会被拦住，点「🔓 放行」才能进', 'warn');
+    }
     this.renderContent();
   },
 
@@ -3489,6 +3559,7 @@ const App = {
     // Same gate as removeFromClass — a full removal must not be a loophole.
     const gated = await Api.classRemove(student.phone, student.name);
     if (!gated) this.showToast('⚠️ 移除已保存，但写入后台失败，该学生仍可能重新进入', 'warn');
+    await this.loadRemovedList();
     this.renderContent();
   },
 
@@ -3619,6 +3690,7 @@ const App = {
         if (s.phone) gates.push(Api.classRemove(s.phone, s.name));
       }
       await Promise.all(gates);
+      await this.loadRemovedList();
       this.showToast('✅ 已删除班级和 ' + members.length + ' 名学生');
     } else {
       // Unassign students
@@ -3650,6 +3722,7 @@ const App = {
     // login and lands back in 待分配.
     const gated = await Api.classRemove(student.phone, student.name);
     if (!gated) this.showToast('⚠️ 移出已保存，但写入后台失败，该学生仍可能重新进入', 'warn');
+    await this.loadRemovedList();
     this.renderContent();
   },
 

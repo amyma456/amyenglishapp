@@ -24,7 +24,15 @@
 // of truth for rendering; Api writes are fire-and-forget behind it.
 // ============================================================================
 
-const TEACHER_PHONE = '13259532991';
+// 老师号白名单（可以多个）。两个作用，缺一不可：
+//   1) 用这个号登录 → 直接进老师端；
+//   2) 永远不受「移出/删除拦截」限制，可以无限登入登出。
+// worker/src/index.js 里有一份同名常量，**两边必须保持一致**，
+// 否则老师用第二个号登录时，后台接口会 403（删除/审批全部静默失败）。
+const TEACHER_PHONES = ['13259532991', '13259532909'];
+function isTeacherPhone(phone) {
+  return TEACHER_PHONES.indexOf(String(phone == null ? '' : phone).trim()) >= 0;
+}
 
 // ---------------------------------------------------------------------------
 // uid — client-generated ids so the Worker can dedupe retries later.
@@ -478,7 +486,7 @@ const Api = {
     this.session = {
       phone: phone,
       name: name,
-      role: phone === TEACHER_PHONE ? 'teacher' : 'student',
+      role: isTeacherPhone(phone) ? 'teacher' : 'student',
       token: null,       // Worker-issued later
       className: '',
     };
@@ -766,7 +774,10 @@ const Api = {
   // Student login gate. Returns null on ANY failure (network, non-200,
   // malformed) — callers must treat null as "no restriction" so a missing
   // backend can never lock every child out of the app.
+  //
+  // 老师号在这里直接放行：白名单在客户端先挡一次，worker 再挡一次。
   async classStatus(phone) {
+    if (isTeacherPhone(phone)) return { removed: false, removedAt: null, request: null, teacher: true };
     try {
       const res = await fetch(this._classUrl('/api/class/status?phone=' + encodeURIComponent(phone)));
       if (!res.ok) return null;
@@ -825,6 +836,32 @@ const Api = {
       if (!res.ok) return null;
       return await res.json();
     } catch (e) { console.warn('classResolveJoinRequest failed:', e); return null; }
+  },
+
+  // Teacher: everyone the teacher has removed/deleted. This is the D1 移出名单
+  // — the thing that decides whether a phone may log in at all. [] on failure.
+  async classRemovedList() {
+    try {
+      const res = await fetch(this._classUrl('/api/class/removed-list?teacher=' + encodeURIComponent(this.session && this.session.phone)));
+      if (!res.ok) return null;
+      const data = await res.json();
+      return (data && Array.isArray(data.removed)) ? data.removed : [];
+    } catch (e) { console.warn('classRemovedList failed:', e); return null; }
+  },
+
+  // Teacher: let one phone back in WITHOUT it having to apply first.
+  // This is the only door that opens the gate from the teacher side, and it
+  // is deliberately an explicit click — never a side effect of a sync.
+  async classUnblock(phone) {
+    if (!phone) return false;
+    try {
+      const res = await fetch(this._classUrl('/api/class/unblock'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: phone, teacher: this.session && this.session.phone }),
+      });
+      return res.ok;
+    } catch (e) { console.warn('classUnblock failed:', e); return false; }
   },
 
   // -- wrong-question archive (D1) -----------------------------------------
