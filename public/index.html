@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="108">
+<meta name="app-version" content="109">
 <link rel="manifest" href="manifest.json">
 <!-- iOS 的"添加到主屏幕"不认 SVG（装出来是白板/网页截图），必须给 PNG。
      图标与启动图由 tools/gen-pwa-icons.js 生成，别手改。 -->
@@ -193,6 +193,21 @@ input,textarea,select{font-family:inherit;font-size:14px;outline:none}
 .sent-text{font-size:21px;line-height:1.6;color:var(--ink);margin:6px 0 10px;
   padding:14px;border-radius:var(--radius-sm);background:var(--canvas)}
 .sent-hint{font-size:12px;color:var(--ink-2);margin-bottom:6px}
+/* ===== 句子里的每个词都能点（v109）=================================
+   家长："只要是有单词句子的地方，点单词就能够出现单词的意思"，"这个界面里
+   点单词是不行的，因为一点就是整个句子的发音"。以前整句本身就是"听示范"的
+   入口（data-listen），点哪个位置都只播整句、查不到词；现在词各自是一个盒子
+   （点它 → 音标 + 中文 + 读音），听整句改由下面那颗 🔊 按钮承担。 */
+.sent-words .lk-word{display:inline-block;padding:0 2px;margin:0 1px;border-radius:5px;
+  border-bottom:1px dashed rgba(0,0,0,.16);cursor:pointer;
+  -webkit-tap-highlight-color:transparent;transition:background .12s var(--ease)}
+.sent-words .lk-word:active,.sent-words .lk-word.lk-hit{background:var(--orange-wash);color:var(--orange-press)}
+/* 读错/漏读的那两个词本来就是"点一下看意思"的地方，给个明确的可点感 */
+.align-sentence .lk-word{cursor:pointer;border-bottom:0;padding:0 3px}
+.align-sentence .lk-word:active{background:var(--orange-wash)}
+.sent-tip{font-size:12px;color:var(--ink-3);margin:-2px 0 10px}
+.sent-listen{display:flex;justify-content:center;margin:0 0 2px}
+.sent-listen .gate-listen{font-size:14px;padding:9px 18px}
 .passage-full{text-align:left}
 .pf-title{font-size:13px;color:var(--ink-2);margin-bottom:8px;text-align:center}
 .pf-text{font-size:17px;line-height:1.9;color:var(--ink);padding:16px;
@@ -253,15 +268,25 @@ input,textarea,select{font-family:inherit;font-size:14px;outline:none}
 .align-sentence{font-size:19px;line-height:1.9;margin:4px 0 8px;word-spacing:2px}
 .w-ok{color:var(--ink)}
 .w-bad{color:#D6321F;text-decoration:underline wavy #D6321F;text-underline-offset:4px;cursor:help}
-/* 读错单词修复（v87）：先读对单词，才能再读整句 */
-.repair-box{margin-top:10px;padding:12px;background:var(--bg);border:1px dashed var(--primary);border-radius:14px}
-.repair-title{font-size:14px;color:var(--ink-2,#444);margin-bottom:8px}
-.repair-words{display:flex;flex-wrap:wrap;gap:8px}
-.repair-word{border:2px solid #D6321F;background:#fff;color:var(--ink-1,#222);border-radius:999px;padding:10px 16px;font-size:16px;touch-action:none;user-select:none;-webkit-user-select:none}
-.repair-word.repair-locked{opacity:.55}
+/* 读错单词修复（v87，v109 重做外观）：先读对单词，才能再读整句。
+   芯片做大、做清楚：虚框 = 还没听过（点一下听读音），实框 = 可以按住读了，
+   绿框 = 这个读对了。以前只有"变淡"和"变绿"两态，孩子不知道自己该干嘛。 */
+.repair-box{margin-top:12px;padding:14px;background:#FFF8F7;border:1px solid #F5C9C4;
+  border-radius:14px;text-align:left}
+.repair-title{font-size:14px;font-weight:600;color:#B3261E;margin-bottom:10px;line-height:1.5}
+.repair-words{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.repair-word{display:inline-flex;align-items:center;gap:4px;border:2px solid #D6321F;
+  background:#fff;color:var(--ink);border-radius:999px;padding:11px 18px;
+  font-size:17px;font-weight:600;line-height:1.2;min-height:46px;
+  touch-action:none;user-select:none;-webkit-user-select:none;
+  transition:border-color .15s var(--ease),box-shadow .15s var(--ease)}
+.repair-word.repair-locked{border-style:dashed;border-color:#E79C93}
 .repair-word.repair-done{border-color:#1F9D55;color:#1F9D55;background:#EDFFF4}
+/* 点了判分结果里那个红词 → 对应的芯片亮一圈，孩子一眼知道该按哪一颗 */
+.repair-word.repair-focus{border-color:var(--orange);box-shadow:0 0 0 5px rgba(240,112,0,.18)}
 .repair-word.repair-shake{animation:gateShake .42s cubic-bezier(.36,.07,.19,.97)}
-.repair-hint{margin-top:8px;font-size:12px;color:var(--text-sub,#888);min-height:16px}
+.repair-hint{margin-top:10px;font-size:13px;color:var(--ink-2);min-height:18px;
+  text-align:center;line-height:1.5}
 /* v89 错词巩固：错过的词在作业末尾逐个过，连对 2 次出队 */
 .review-step{text-align:center;padding:4px 2px}
 .review-badge{display:inline-block;background:var(--canvas,#F7F3EC);color:#B26A00;
@@ -300,11 +325,22 @@ body.stage-mode .content-area{padding-block:0}
 .stage-body{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:10px;
   background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
   padding:20px;overflow:hidden}
+/* 舞台里"会长出来"的几块，各自必须能滚 —— stage-body 是 overflow:hidden，
+   子元素又不收缩的话，内容一多就被整块裁掉：孩子既看不见也滑不动
+   （家长反馈"界面不能滑动"就是这么来的：句子上面的分数、单词修复框、
+   录音播放条全在视野外面）。 */
+.stage-body > .sent-step,
+.stage-body > .passage-full{flex:1 1 auto;min-height:0;overflow-y:auto;
+  overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding-right:2px}
 /* 阅读材料：可压缩，内部滚动，页面本身不动 */
 .stage-passage{flex:0 1 auto;min-height:0;overflow-y:auto;
   background:var(--canvas);border-radius:var(--radius-sm);padding:14px;font-size:14px}
 .stage-passage p+p{margin-top:8px}
-.stage-q{flex:1 1 auto;min-height:0;overflow-y:auto}
+.stage-passage .lk-word{cursor:pointer;border-bottom:1px dashed rgba(0,0,0,.16);
+  -webkit-tap-highlight-color:transparent}
+.stage-passage .lk-word:active,.pf-text .lk-word:active{background:var(--orange-wash)}
+.pf-text .lk-word{cursor:pointer;border-bottom:1px dashed rgba(0,0,0,.16)}
+.stage-q{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .stage-q .q-item{padding:0;border:none}
 
 .stage-foot{flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px}
@@ -516,6 +552,12 @@ body.stage-mode .content-area{padding-block:0}
   padding:10px 12px;margin-bottom:10px;background:var(--canvas);text-align:center}
 .wr-item.done{border-color:var(--success);background:var(--success-light)}
 .wr-sent{font-size:16px;line-height:1.6;color:var(--ink)}
+.wr-sent .wr-words .lk-word{display:inline-block;padding:0 2px;margin:0 1px;border-radius:5px;
+  border-bottom:1px dashed rgba(0,0,0,.16);cursor:pointer;
+  -webkit-tap-highlight-color:transparent}
+.wr-sent .wr-words .lk-word:active{background:var(--orange-wash);color:var(--orange-press)}
+.wr-sent .gate-listen{margin-left:8px;vertical-align:middle;padding:5px 12px;
+  font-size:12px;font-weight:600}
 .wr-no{display:inline-block;min-width:18px;height:18px;line-height:18px;border-radius:50%;
   background:var(--line);color:var(--ink-2);font-size:11px;margin-right:6px;
   vertical-align:middle;text-align:center}

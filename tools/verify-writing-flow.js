@@ -280,9 +280,14 @@ const rHtml = App.renderWritingRead(m, MI, DAY);
 const sents = App._writingSentences(m);
 ok((rHtml.match(/class="wr-item/g) || []).length === sents.length, sents.length + ' 句都渲染成一张卡');
 ok((rHtml.match(/id="wr-btn-/g) || []).length === sents.length, '每句都有一个「按住跟读」按钮');
-// v81：听入口从 onclick="App.speak(...)" 换成 data-listen —— 点句子听示范，
-// 播完由门禁统一解锁跟读按钮（见 App._bindGateGuard）。
-ok((rHtml.match(/data-listen="1"/g) || []).length === sents.length, '每句都能点开听一遍（句子即听入口）');
+// v81 听入口从 onclick="App.speak(...)" 换成 data-listen；v109 再进一步：
+// 句子不再是听入口 —— 句子里每个词都是可点的词（点它查中文/读音），整句示范
+// 由每句自带的那颗 🔊 按钮承担。家长原话："点单词就能够出现单词的意思，
+// 这个界面里点单词是不行的，因为一点就是整个句子的发音"。
+ok((rHtml.match(/class="gate-listen"/g) || []).length === sents.length, '每句都有一颗 🔊 听示范按钮（整句示范不再是点句子）');
+ok((rHtml.match(/class="lk-word"/g) || []).length >= sents.length, '句子里的词是可点的（每句至少一个词盒）');
+ok(!/data-nolookup/.test(rHtml), '朗读屏不再屏蔽点词查义（data-nolookup 已移除）');
+ok(!/data-listen="1"/.test(rHtml), '句子本身不再兼任听入口（data-listen 已移除）');
 ok((rHtml.match(/gate-locked/g) || []).length === sents.length, '没听之前，每句的跟读按钮都锁着（先听再读）');
 ok(rHtml.includes(sents[0]), '第一句是「' + sents[0] + '」');
 ok(rHtml.includes('读对全部 ' + sents.length + ' 句才能进入下一题'), '写明要读对全部句子');

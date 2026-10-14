@@ -1838,8 +1838,11 @@ const App = {
       document.addEventListener(tn, guard, true);
     });
 
-    // ② 句子本身就是听入口（阅读逐句、写作朗读）：用 click。
+    // ② 句子形态的听入口（data-listen）：用 click。
     //    "点一下听一遍"是轻点，滑动翻页必须照常，所以不能用 touchstart。
+    //    v109 起阅读逐句 / 写作朗读都改成「词可点 + 独立 🔊 按钮」，句子上
+    //    不再挂 data-listen；这条留着是给以后可能出现的"整块文字就是听入口"
+    //    的情形兜底，动它之前先确认还有没有别的界面在用。
     document.addEventListener('click', function(ev) {
       const el = closestGate(ev);
       if (!el || el.getAttribute('data-listen') !== '1') return;
@@ -5070,8 +5073,11 @@ const App = {
 
     let html = '<div class="sent-step">';
     html += '<div class="sent-progress">翻译 ' + (si + 1) + ' / ' + pairs.length + ' 句</div>';
-    html += '<div class="sent-text tap-speak-sm" onclick="App.speak(\''
-         + pair.en.replace(/'/g, "\\'") + '\')" title="点一下听英文">' + pair.en + '</div>';
+    // 同阅读逐句：词可点（查意思），整句听英文改由下面的按钮承担。
+    html += '<div class="sent-text sent-words">' + this._wordSpans(pair.en) + '</div>';
+    html += '<div class="sent-tip">👆 点单词看中文意思 · 点下面听整句英文</div>';
+    html += '<div class="sent-listen">'
+         + this._gateListenHtml(this._gid('trsg', mi, si), pair.en, '🔊 听整句英文') + '</div>';
     html += '<div class="sent-hint">用中文说出这句话的意思</div>';
     html += '<button class="word-read-btn hold-target" id="trs-btn-' + mi + '-' + si + '"'
          + ' onpointerdown="App._translateSentence(event,' + mi + ',' + si + ')"'
@@ -5160,24 +5166,27 @@ const App = {
   },
 
   // ===== Reading: one sentence at a time =====
-  // Tap the sentence to hear it, hold it to read it back. Deliberately no
-  // Chinese here — the child is listening and imitating, not translating.
+  // 一屏一句：上面是这句话（每个词都能点开看意思），中间一颗「听整句」，
+  // 下面按住跟读。Deliberately no Chinese here — the child is listening and
+  // imitating, not translating.
   renderSentenceStep(m, mi, si, dayIdx) {
     const sents = this._splitSentences(m.passage);
     const sent = sents[si] || '';
-    const esc = sent.replace(/'/g, "\\'");
     Recorder.warmUp(); Api.warmup();
 
-    // 先听再读：句子本身就是那颗"听"的按钮 —— 点它播一遍完整示范，
-    // 播完才解锁下面的跟读。孩子不用先找一个喇叭图标，直觉就是点句子。
+    // 听与读拆成两件事（v109，家长反馈："点单词就能够出现单词的意思，
+    // 这个界面里点单词是不行的，因为一点就是整个句子的发音"）：
+    //   · 句子本体 = 一串可点的词 → 点哪个词查哪个词（音标 + 中文 + 读音）；
+    //   · 整句示范 = 下面那颗「🔊 先听一遍整句」按钮，它也是"先听后读"的门禁。
+    // 落地这一屏仍会自动播一遍整句并把门禁放行（见 _speakOnRender），
+    // 按钮是给孩子"再听一遍"用的。
     const gid = this._gid('sentg', mi, si);
     let html = '<div class="sent-step">';
     html += '<div class="sent-progress">第 ' + (si + 1) + ' / ' + sents.length + ' 句</div>';
-    html += '<div class="sent-text tap-speak-sm" id="sent-' + mi + '-' + si + '"'
-         + ' data-gate="' + gid + '" data-listen="1" data-nolookup="1"'
-         + ' data-say="' + this._escHtml(sent) + '"'
-         + ' title="点一下，先听一遍示范">' + sent + '</div>';
-    html += '<div class="sent-hint">先点句子完整听一遍，再点下面的按钮跟读</div>';
+    html += '<div class="sent-text sent-words" id="sent-' + mi + '-' + si + '">'
+         + this._wordSpans(sent) + '</div>';
+    html += '<div class="sent-tip">👆 点单词看中文意思 · 点下面听整句</div>';
+    html += '<div class="sent-listen">' + this._gateListenHtml(gid, sent, '🔊 先听一遍整句') + '</div>';
     html += '<button class="word-read-btn hold-target gate-locked" data-gate="' + gid + '"'
          + ' id="sent-btn-' + mi + '-' + si + '"'
          + ' onpointerdown="App._readSentence(event,' + mi + ',' + si + ')"'
@@ -5222,7 +5231,12 @@ const App = {
         a.items.forEach(function(x) {
           if (x.status === 'extra') return;
           const cls = x.status === 'ok' ? 'w-ok' : x.status === 'wrong' ? 'w-bad' : 'w-miss';
-          html += '<span class="' + cls + '">' + x.target + '</span> ';
+          // v109：逐词标记里每个词也是一个可点的盒子 —— 红色那个（读错的）
+          // 点一下就能看中文、听读音，并顺手点亮下面修复框里对应那颗芯片。
+          const bad = (x.status === 'wrong' || x.status === 'missing');
+          html += '<span class="lk-word ' + cls + '"'
+               + (bad ? ' data-repair-word="' + self._escHtml(x.target) + '"' : '')
+               + '>' + x.target + '</span> ';
         });
         html += '</div>';
       }
@@ -5280,22 +5294,34 @@ const App = {
   // 再按住跟读；识别比对 ≥60 分算过。全部读对后解锁「再读整句」。
   // 阅读理解逐句（prefix='sent'）和写作朗读全文（prefix='wr'）共用。
   // 词卡读错只是练习，不上传录音、不记分 —— 和"拼词是练习不是测试"同一条理。
+  //
+  // v109 三处调整：
+  //   · 芯片两态分明：虚框 = 还没听过（点一下听读音），实框 = 可以按住读了；
+  //   · 修复框出现后自动滚到看得见的地方（家长："界面上要能看见单词"）；
+  //   · 同一个词连错 3 次就放行 —— 识别有时候就是听不准（家长："识别的不准"），
+  //     不能因为机器的判断把孩子永远锁在这一屏。放行时说明是"先算过"。
   _renderSentenceRepair(prefix, mi, si, words) {
     const self = this;
     const key = prefix + '-' + mi + '-' + si;
     // 读错/漏读的单词全部进复习队列（v89）：今天作业末尾逐个巩固，
     // 连对 2 次才出队 —— "读错的单词要重新读"不只在这一次朗读里。
     (words || []).forEach(w => this._reviewAdd(w));
-    this._repair = { key: key, prefix: prefix, words: words.slice(), listened: {}, done: {}, total: words.length };
+    this._repair = { key: key, prefix: prefix, words: words.slice(),
+                     listened: {}, done: {}, tries: {}, chipIds: [], total: words.length };
     const btn = document.getElementById(prefix + '-btn-' + mi + '-' + si);
     if (btn) { btn.disabled = true; btn.textContent = '先读对红色单词'; }
     const slot = document.getElementById(prefix + '-result-' + mi + '-' + si);
     if (!slot) return;
-    let html = '<div class="repair-box">';
-    html += '<div class="repair-title">📖 这些单词没读对，先把它们读会：</div>';
+    // 已经有修复框就不再叠一个（同一屏重读会再进这里）
+    const old = document.getElementById('repair-box-' + key);
+    if (old && old.remove) { try { old.remove(); } catch (e) {} }
+    let html = '<div class="repair-box" id="repair-box-' + key + '">';
+    html += '<div class="repair-title">📖 有 ' + words.length + ' 个单词没读对，先把它们读会：</div>';
     html += '<div class="repair-words">';
     words.forEach(function(w, i) {
-      html += '<button class="repair-word repair-locked" id="repair-w-' + prefix + '-' + mi + '-' + si + '-' + i + '"'
+      const cid = 'repair-w-' + prefix + '-' + mi + '-' + si + '-' + i;
+      self._repair.chipIds.push(cid);
+      html += '<button class="repair-word repair-locked" id="' + cid + '"'
            + ' onpointerdown="App._repairWordStart(event,\'' + prefix + '\',' + mi + ',' + si + ',' + i + ')"'
            + ' onpointerup="App._holdEnd(event)" onpointercancel="App._holdEnd(event)"'
            + ' oncontextmenu="return false">🔊 ' + self._escHtml(w) + '</button>';
@@ -5304,6 +5330,33 @@ const App = {
     html += '<div class="repair-hint" id="repair-hint-' + prefix + '-' + mi + '-' + si + '">先点一下单词听读音，再按住它跟读</div>';
     html += '</div>';
     slot.insertAdjacentHTML('beforeend', html);
+    // 滚进视野：句子上面还有分数、标记、录音条，修复框常常落在框外，
+    // 孩子只看到"按钮变灰了"却不知道下面要他做什么。
+    const box = document.getElementById('repair-box-' + key);
+    if (box && box.scrollIntoView) {
+      try { box.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) {}
+    }
+  },
+
+  // 一个词连错几次就放行（v109）。识别不是百分百准，三次都没认出来的话，
+  // 多半是它的问题而不是孩子的 —— 继续较真只会把孩子卡死在这一屏。
+  REPAIR_GIVE_UP: 3,
+
+  // 点逐词判分结果里那个红词，除了弹出意思，顺手把下面修复框里对应的那颗
+  // 芯片点亮 + 滚进来 —— 家长："读错的单词点出错的单词来读"。两个地方原来
+  // 只有"颜色一样"这一层联系，孩子得自己去找下面哪一颗是它。
+  _focusRepairChip(word) {
+    const r = this._repair;
+    if (!r || !r.chipIds || !r.chipIds.length) return;
+    const w = String(word || '').toLowerCase();
+    let idx = -1;
+    (r.words || []).forEach(function(x, i) { if (String(x).toLowerCase() === w && idx < 0) idx = i; });
+    if (idx < 0) return;
+    const chip = document.getElementById(r.chipIds[idx]);
+    if (!chip) return;
+    chip.classList.add('repair-focus');
+    if (chip.scrollIntoView) { try { chip.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) {} }
+    setTimeout(function() { if (chip.classList) chip.classList.remove('repair-focus'); }, 1800);
   },
 
   _repairWordStart(ev, prefix, mi, si, idx) {
@@ -5322,32 +5375,48 @@ const App = {
       // 句子里的词不在静态朗读表里（表里只有整句和固定单词），走 CF 的母语
       // 音色（v98）—— 跟词汇模块、查词的单词示范音保持一致，同一个人。
       this.speak(word, { prefer: 'cf' });
+      if (status) status.textContent = '现在按住「' + word + '」读一遍';
       return;                                    // 这一按只听不录
     }
     if (r.done[idx]) return;                     // 已经读对的词不用再读
     const self = this;
+    // v109：孤立单词和字母/音节属于同一类（短、没有上下文），走 CF 才对得上；
+    // 自动收尾用 900ms 静音窗口（比字母的 600ms 宽一点，别把词尾的辅音切掉）。
     this._holdStart(ev, 'repair-' + prefix + '-' + mi + '-' + si + '-' + idx, word, status, function(out, text) {
       if (!text) {
         if (status) status.textContent = '没听清，点一下单词听读音，再按住读一次';
         return;
       }
       const a = self.alignSpeech(word, text);
-      if (a.ok >= 1 && a.score >= 60) {
+      // 判"读对了"：位置上对得上，或者这一串识别结果里任意位置出现过这个词。
+      // 后者挡住对齐偶尔把词吃进"多余的词"里的情况。
+      const hit = (a.ok >= 1 && a.score >= 60) || self._heardAny(word, text);
+      const tries = (r.tries[idx] || 0) + 1;
+      r.tries[idx] = tries;
+      if (hit || tries >= self.REPAIR_GIVE_UP) {
         r.done[idx] = true;
-        if (chip) { chip.classList.add('repair-done'); chip.textContent = '✓ ' + word; chip.disabled = true; }
+        if (chip) {
+          chip.classList.remove('repair-shake');
+          chip.classList.add('repair-done');
+          chip.textContent = '✓ ' + word;
+          chip.disabled = true;
+        }
         const n = Object.keys(r.done).length;
+        // 连错 3 次放过的那一个：告诉孩子"这次先算过"，别让他以为读对是假的。
+        const lenient = !hit;
         if (n >= r.total) {
           if (status) status.innerHTML = '🎉 单词全对了！点上面「再读整句」';
           const btn = document.getElementById(r.prefix + '-btn-' + mi + '-' + si);
           if (btn) { btn.disabled = false; btn.textContent = '再读整句'; }
         } else if (status) {
-          status.textContent = '✓ 读对了！还剩 ' + (r.total - n) + ' 个单词';
+          status.textContent = (lenient ? '这次先算过～' : '✓ 读对了！')
+                             + '还剩 ' + (r.total - n) + ' 个单词';
         }
       } else {
         if (chip) { chip.classList.add('repair-shake'); setTimeout(function() { chip.classList.remove('repair-shake'); }, 500); }
         if (status) status.innerHTML = '❌ 还没读对，再听一遍、再读一次（识别到：' + self._escHtml(text) + '）';
       }
-    }, true, 'en', word);
+    }, true, 'en', word, 'cf', 900);
   },
 
   // The whole passage, English only, once every sentence has been read.
@@ -5356,7 +5425,8 @@ const App = {
     Recorder.warmUp(); Api.warmup();
     let html = '<div class="passage-full">';
     html += '<div class="pf-title">全文</div>';
-    html += '<div class="pf-text">' + m.passage + '</div>';
+    html += '<div class="pf-text sent-words">' + this._wordSpans(m.passage) + '</div>';
+    html += '<div class="sent-tip">👆 点单词看中文意思</div>';
     html += '<div class="pf-actions">';
     html += '<button class="btn-ghost" onclick="App.speak(\'' + esc + '\')">听全文</button>';
     if (m.passage_cn) {
@@ -6834,19 +6904,21 @@ const App = {
 
     let html = '<div class="writing-read">';
     html += '<div class="wr-head">🎤 朗读全文</div>';
-    html += '<div class="wr-sub">点句子先听一遍，再按住按钮跟读。读对全部 '
+    html += '<div class="wr-sub">点单词看中文意思，点 🔊 先听一遍，再按住按钮跟读。读对全部 '
          + sents.length + ' 句才能进入下一题。</div>';
     html += '<div class="wr-progress" id="wr-progress-' + mi + '"></div>';
     sents.forEach((s, si) => {
       const ok = !!st.passed[si];
-      // 先听再读：句子本身是"听"入口，点它播一遍示范，播完才解锁跟读。
+      // v109 同阅读逐句：句子分成"可点的词"和"独立的听示范按钮"两块 ——
+      // 以前整句就是听入口，孩子点单词只会听整句，查不到意思。
       const gid = this._gid('wrg', mi, si);
       html += '<div class="wr-item' + (ok ? ' done' : '') + '" id="wr-item-' + mi + '-' + si + '">';
-      html += '<div class="wr-sent tap-speak-sm" data-gate="' + gid + '" data-listen="1"'
-           + ' data-nolookup="1"'
-           + ' data-say="' + this._escHtml(s) + '" title="点一下，先听一遍示范">'
-           + '<span class="wr-no">' + (si + 1) + '</span>' + s
-           + '<span class="wr-flag">' + (ok ? '✅' : '') + '</span></div>';
+      html += '<div class="wr-sent">'
+           + '<span class="wr-no">' + (si + 1) + '</span>'
+           + '<span class="wr-words">' + this._wordSpans(s) + '</span>'
+           + '<span class="wr-flag">' + (ok ? '✅' : '') + '</span>'
+           + this._gateListenHtml(gid, s, '🔊 听这句')
+           + '</div>';
       html += '<button class="word-read-btn hold-target gate-locked" data-gate="' + gid + '"'
            + ' id="wr-btn-' + mi + '-' + si + '"'
            + ' onpointerdown="App._readWritingSentence(event,' + mi + ',' + si + ')"'
@@ -6888,7 +6960,10 @@ const App = {
         a.items.forEach(function(x) {
           if (x.status === 'extra') return;
           const cls = x.status === 'ok' ? 'w-ok' : x.status === 'wrong' ? 'w-bad' : 'w-miss';
-          html += '<span class="' + cls + '">' + x.target + '</span> ';
+          const bad = (x.status === 'wrong' || x.status === 'missing');
+          html += '<span class="lk-word ' + cls + '"'
+               + (bad ? ' data-repair-word="' + self._escHtml(x.target) + '"' : '')
+               + '>' + x.target + '</span> ';
         });
         html += '</div>';
       }
@@ -7353,8 +7428,8 @@ const App = {
     } else if (step.kind === 'question') {
       // English only — the child has already read this passage aloud.
       if (m.passage) {
-        html += '<div class="stage-passage"><div class="fs-12 text-sub mb-4">阅读材料</div>'
-             + '<p>' + m.passage + '</p></div>';
+        html += '<div class="stage-passage"><div class="fs-12 text-sub mb-4">阅读材料 · 点单词看中文</div>'
+             + '<p class="sent-words">' + this._wordSpans(m.passage) + '</p></div>';
       }
       if (m.audio_text) {
         html += '<div class="mb-8"><button class="btn btn-outline btn-sm" onclick="App.speak(\'' + m.audio_text.replace(/'/g,"\\'") + '\')">听录音</button></div>';
@@ -8892,14 +8967,39 @@ const App = {
     document.getElementById('modal-overlay').classList.remove('show');
   },
 
+  // 把一句英文的每个单词包成 <span class="lk-word">，标点留在外面。
+  //
+  // 家长的原话：「只要是有单词句子的地方，点单词就能够出现单词的意思」。
+  // 全局的 caretRangeFromPoint 取词（见下面 _wordAtPoint）本身是能用的，
+  // 但在句子这种**又长又会换行**的排版里，手指落点常常落进行间空隙，取不到
+  // 文本节点，孩子点了没反应。包一层之后点击目标是一个实实在在的盒子，
+  // 命中稳定、可以给视觉反馈（下划虚线 + 按下变橘），也不会误伤整句那个
+  // 「听示范」的动作 —— 两者现在各自是独立的元素了。
+  //
+  // 标点必须留在 span 外面：句末的 "park." 如果连着包进去，查词会拿
+  // "park." 去查，查不到。
+  _wordSpans(text) {
+    const self = this;
+    return String(text == null ? '' : text).split(/(\s+)/).map(function(tok) {
+      if (!tok) return '';
+      if (/^\s+$/.test(tok)) return ' ';
+      const mm = /^([^A-Za-z]*)([A-Za-z][A-Za-z'\-]*)([^A-Za-z]*)$/.exec(tok);
+      if (!mm) return self._escHtml(tok);
+      return self._escHtml(mm[1])
+           + '<span class="lk-word">' + self._escHtml(mm[2]) + '</span>'
+           + self._escHtml(mm[3]);
+    }).join('');
+  },
+
   // ===== Tap-a-word lookup =====
   //
   // 孩子读到不认识的词（cinema 这种），点一下就要有音标、中文意思和读音。
   //
-  // 没有去每个渲染函数里给单词包 <span>，那样要改十几处渲染代码，而且以后
-  // 新加的界面又会漏。改成全局代理：用 caretRangeFromPoint 拿到手指下面那个
-  // 文字的字符偏移，再往两边扩到词边界。页面上任何位置的英文单词都自动可点，
-  // 新界面不用做任何事。
+  // 两条路一起用（v109）：
+  //   ① 明确的词盒 .lk-word（_wordSpans 包出来的句子 / 范文 / 逐词判分结果）
+  //      —— 直接命中，稳，还带视觉反馈；
+  //   ② 其余任何位置：全局代理，用 caretRangeFromPoint 拿到手指下面那个文字
+  //      的字符偏移，再往两边扩到词边界。新加的界面不用做任何事就自动可点。
   //
   // 三道闸门，防止误触：
   //   1. 点到的元素在 button/input/label/a 里 → 不查词（那是功能操作）；
@@ -8918,6 +9018,25 @@ const App = {
         const sel = window.getSelection && window.getSelection();
         if (sel && sel.toString && sel.toString().trim()) return;
       } catch (e) {}
+
+      // ① 明确标好的词盒（.lk-word）—— 句子、范文、逐词判分结果里的词都走这条。
+      //    不依赖 caretRangeFromPoint：那个 API 在 iOS / 微信里取不到落点时
+      //    会静默失败，孩子点了没反应；词盒是实实在在的点击目标，稳定得多。
+      const t = ev.target;
+      const span = (t && t.closest) ? t.closest('.lk-word') : null;
+      if (span) {
+        const w = String(span.textContent || '').trim();
+        if (/^[A-Za-z][A-Za-z'\-]*$/.test(w)) {
+          ev.preventDefault();
+          ev.stopPropagation();
+          self._openWordSheet(w);
+          // 这是逐词判分里"读错/漏读"的那个词 → 顺手点亮下面修复框里的芯片
+          if (span.getAttribute && span.getAttribute('data-repair-word')) self._focusRepairChip(w);
+          return;
+        }
+      }
+
+      // ② 其余位置的英文单词：按落点取词（tab、表格、卡片里到处都能点）
       const pt = self._eventPoint(ev);
       if (!pt) return;
       const word = self._wordAtPoint(pt.x, pt.y);
