@@ -288,13 +288,39 @@ const App = {
   //   ・done 只增不减（一台设备本地被清过，不该把已打卡抹回未打卡）
   //   ・answered 多的那一份正确率更可信
   // 这样孩子刚答完、上报还在路上时，本机那份照样显示得对。
+  // 把后台行的 student_id 对齐到名单里的编号（v123）。
+  //
+  // 为什么要这一步：上报用的是"孩子设备当时认到的自己"。而 `registerStudent`
+  // 在**名单同步下来之前**登录过的话，会给同一个手机号现造一个 `s<时间戳>` 的
+  // 新编号（见 registerStudent 里的 `id: 's' + Date.now()`），之后就一直是它。
+  // 老师端渲染是**按名单里的编号**取 key 的（`state.checkins[s.id + tag + '_dN']`），
+  // 于是这类设备报上来的行老师一条也看不到 —— 明明传了，还是"未打卡"。
+  //
+  // 2026-10-14 实测踩到：后台出现 `s1791934007056`（名单里没有）与
+  // `s1791931729388`（名单里的）两行同名同班的 张子皓-Harvey。
+  //
+  // 规则：名单里有这个编号 → 原样；没有 → 按「姓名 + 班级」认领到名单里的那个
+  // 学生；认不出来（没名字 / 命中不唯一）→ 原样返回（**宁可不显示，也不张冠李戴**）。
+  _rosterIdFor(sid, name, klass) {
+    const list = this.state.students || [];
+    if (!sid || list.some(s => s.id === sid)) return sid;
+    const nm = String(name || '').trim();
+    if (!nm) return sid;
+    const hit = list.filter(s => String(s.name || '').trim() === nm
+      && (!klass || s.class === klass));
+    if (hit.length !== 1) return sid;
+    console.warn('checkin id ' + sid + ' not in roster; aliased to ' + hit[0].id + ' (' + nm + ')');
+    return hit[0].id;
+  },
+
   _mergeCloudCheckins(rows) {
     if (!Array.isArray(rows)) return 0;
     const tag = this._weekTag();
     let n = 0;
     rows.forEach(r => {
       if (!r || !r.student_id || r.day_idx === undefined || r.day_idx === null) return;
-      const k = r.student_id + tag + '_d' + r.day_idx;
+      const sid = this._rosterIdFor(r.student_id, r.student_name, r.student_class);
+      const k = sid + tag + '_d' + r.day_idx;
       const mine = this.state.checkins[k];
       const done = !!r.done;
       const better = !mine
@@ -303,7 +329,7 @@ const App = {
       if (!better) return;
       this.state.checkins[k] = {
         id: 'cloud_' + k,
-        studentId: r.student_id,
+        studentId: sid,
         dayIdx: r.day_idx,
         done: done,
         completed: r.completed || (done ? 'full' : 'partial'),

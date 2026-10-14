@@ -401,5 +401,42 @@ ok(/catch \(e\) \{[\s\S]{0,200}btn\.disabled = false/.test(appSrc),
   '拉失败要把按钮恢复（断网不能把界面卡死）');
 ok(appSrc.indexOf('for (const c in App)') < 0, '（无副作用检查）');
 
+console.log('== 17) 上报的 student_id 跟名单对不上时，按姓名认领（v123）==');
+// 现实来源：registerStudent 在名单同步下来之前登录，会给同一个手机号现造一个
+// `s<时间戳>` 编号并一直用它上报；老师端是按名单编号取 key 的，那些行就白报了。
+// 2026-10-14 实测：后台同时出现 s1791934007056（名单里没有）与 s1791931729388
+// （名单里的）两行同名同班的 张子皓-Harvey。
+ok(/registerStudent\(phone, name\) \{/.test(appSrc) && /id: 's' \+ Date\.now\(\)/.test(appSrc),
+  '确认存在这个源头：名单同步前登录会现造 s<时间戳> 编号');
+ok(typeof App._rosterIdFor === 'function', '_rosterIdFor 存在');
+ok(App._rosterIdFor(SID, '陈皓铭-Yusuf', '少儿英语A班') === SID,
+  '编号本来就在名单里 → 原样不动');
+ok(App._rosterIdFor('s1791934007056', '陈皓铭-Yusuf', '少儿英语A班') === SID,
+  '编号不在名单里 → 按姓名+班级认领到名单里的学生');
+ok(App._rosterIdFor('s1791934007056', '查无此人', '少儿英语A班') === 's1791934007056',
+  '姓名也认不出来 → 原样返回（宁可不显示，也不张冠李戴）');
+ok(App._rosterIdFor('s1791934007056', '', '少儿英语A班') === 's1791934007056',
+  '没有姓名 → 不动');
+ok(App._rosterIdFor('s1791934007056', '陈皓铭-Yusuf', '别的班') === 's1791934007056',
+  '班级对不上 → 不动（同名不同班不许串）');
+// 同名不唯一：不许猜
+App.state.students.push({ id: 'stu-dup', phone: '13900000009', name: '陈皓铭-Yusuf', class: '少儿英语A班' });
+ok(App._rosterIdFor('s1791934007056', '陈皓铭-Yusuf', '少儿英语A班') === 's1791934007056',
+  '同名命中不唯一 → 不猜，原样返回');
+App.state.students.pop();
+// 端到端：孤儿编号的行也要能出现在老师/家长看的那一格里
+App.state.checkins = {};
+const nm = App._mergeCloudCheckins([{ student_id: 's1791934007056', student_name: '陈皓铭-Yusuf',
+  student_class: '少儿英语A班', day_idx: 3, done: true, answered: 8, total: 8,
+  correct_rate: 100, wrong_count: 0, finish_time: '21:10' }]);
+ok(nm === 1, '合并 1 行');
+ok(!!App.state.checkins[kOf(SID, 3)] && App.state.checkins[kOf(SID, 3)].done === true,
+  '落在了名单编号那一格（老师端按名单编号取 key，这样才看得见）');
+ok(!App.state.checkins[kOf('s1791934007056', 3)],
+  '不会同时占用孤儿编号那一格（避免同一份数据出现两次）');
+ok(App.state.checkins[kOf(SID, 3)].studentId === SID, '合并后的 studentId 是名单里的编号');
+ok(App.renderMyProgress().indexOf('21:10') >= 0, '孩子端打卡页能显示出来');
+ok(App.renderCompare().indexOf('陈皓铭-Yusuf') >= 0, '完成率对比里也有这一行');
+
 console.log(fail === 0 ? '\n全部通过 ✅' : '\n有 ' + fail + ' 项失败 ❌');
 process.exit(fail === 0 ? 0 : 1);
