@@ -6400,3 +6400,115 @@ const HOMEWORK_WEEK_IDX = (function () {
 
 // 对外暴露的仍是 7 天数组，app.js / api.js 现有逻辑全部不用改。
 const HOMEWORK_DATA = HOMEWORK_WEEKS[HOMEWORK_WEEK_IDX];
+
+// ===== 词卡的中文提示（答错引导用，v107）=====
+//
+// 家长原话：「词的相关意思，或者相关搭配，就是最浅显的意思去提醒他」，
+// 而且**不要一上来就把释义端出来**。所以每个词给一句"围绕意思"的话：
+// 说场景、说用途、说搭配、说它像什么 —— 但**不出现 meaning 里的那几个字**
+// （"选意思"那两题的选项就是释义原文，提示里带上就等于直给答案）。
+//
+// app.js 的 _wrongHintHtml 会按阶梯把它端出来：第 1 次错就给这句，第 2 次错
+// 配上"长相"或我们学过的例句，第 3 次起给最强的提示 —— 词汇题**永远不点名
+// 是哪一张卡**，最后那一下永远要孩子自己点。
+const VOCAB_HINTS = {
+  // 第 1 周
+  beautiful: '看到花、看到晚霞，心里觉得“真好看”的那种感觉',
+  library: '一个很安静的地方，书很多，可以把书借回家看',
+  honest: '说真话、不骗人，答应过的事一定做到',
+  celebrate: '生日那天、过节那天，大家一起热闹一下',
+  discover: '原来不知道的东西，忽然被找到了',
+  adventure: '去陌生的地方走一走，路上又惊又好玩',
+  imagine: '闭上眼睛，在脑子里“看见”从来没去过的地方',
+  protect: '挡在前面，不让它受伤害',
+  success: '努力以后，事情办成了',
+  explore: '走进没去过的地方，看看里面到底有什么',
+  curious: '什么都想问“为什么”，总想弄个明白',
+  ancient: '很久很久以前留下来的，老得不得了',
+  neighbor: '住在你家隔壁的那个人',
+  dangerous: '碰了会受伤，要离得远一点',
+  volunteer: '不要钱也愿意去帮忙的人',
+  knowledge: '书本和老师给你的那些“懂的东西”',
+  healthy: '不生病、身体棒棒的',
+  machine: '通上电就能帮你干活的东西',
+  weather: '今天晴还是下雨，出门前要看一看',
+  surprise: '事先一点都不知道，突然发生的开心事',
+  // 第 2 周
+  breakfast: '早上刚起来吃的那一顿',
+  delicious: '吃一口就忍不住想再吃一口',
+  vegetable: '青菜、胡萝卜那一类，吃了对身体好',
+  umbrella: '下雨天撑着它，就不会被淋湿',
+  exercise: '跑步、跳绳，让身体变棒',
+  panda: '黑白两色、胖胖的，最爱吃竹子',
+  bamboo: '一节一节的，长得很高，熊猫最爱吃',
+  forest: '树很多很多的地方，动物住在里面',
+  clever: '脑子转得快，一点就通',
+  friendly: '见谁都笑眯眯，愿意和你一起玩',
+  guitar: '有六根弦，抱着弹会叮咚响',
+  painting: '用画笔和颜料做出来的作品',
+  chess: '黑白格子的棋盘，两个人你一步我一步',
+  camera: '咔嚓一下，把风景留下来',
+  prize: '比赛赢了以后，发给你的那样东西',
+  // 第 3 周
+  spring: '一年开头的那一季，花会开、草会绿',
+  kite: '有线牵着，能飞到天上去',
+  autumn: '树叶变黄往下落的那一季',
+  snowman: '下雪天用雪堆出来的“人”',
+  picnic: '带着好吃的，去草地上坐着吃',
+  journey: '从这儿到那儿，路上一整段',
+  island: '四面都是水，中间一块陆地',
+  treasure: '海盗箱子里那些金银宝贝',
+  brave: '心里不害怕，敢往前冲',
+  rescue: '把遇到危险的人或小动物救出来',
+  museum: '一个地方，里面摆着很多老东西给人看',
+  dinosaur: '很久很久以前的大动物，现在早就没有了',
+  planet: '天上绕着太阳转的大球，地球就是其中一个',
+  telescope: '用它看，很远的星星会变得很大',
+  rocket: '点着火，一下就冲到天上去',
+  beach: '海边的沙子地，可以光着脚踩',
+  wave: '海里一层一层涌过来的水',
+  sandcastle: '用湿沙子堆出来的小城堡',
+  sunshine: '太阳照下来的、暖暖的光',
+  dolphin: '海里的动物，会跳出水面，特别聪明',
+  // 第 4 周
+  competition: '大家比一比，看谁做得更好',
+  nervous: '心里怦怦跳，手心都出汗了',
+  medal: '挂在脖子上的那块小圆牌',
+  bronze: '颜色像旧铜，得第三名拿到的那种牌',
+  practise: '一遍一遍地做，做到很熟',
+  invent: '想出一个新东西，以前从来没有过',
+  experiment: '动手试一试，看看会发生什么',
+  recycle: '用过的瓶子纸箱送回去，重新做成新东西',
+  pollution: '水变黑了、天变灰了，就是因为这个',
+  energy: '让灯亮起来、让车跑起来的“力气”',
+  soldier: '穿军装、保卫国家的人',
+  palace: '古代国王住的那种大房子',
+  silk: '摸起来滑滑的、亮亮的布',
+  trade: '你有我需要的，我有你需要的，换一换',
+  wonder: '看到会“哇”一声的东西，比如长城',
+  pyramid: '埃及那种尖尖的、三角形的大石头建筑',
+  desert: '全是沙子、很少下雨的地方',
+  camel: '背上有鼓包，能在沙子里走很久',
+  mystery: '想不明白、还等着人去解开的事',
+  guide: '带你逛、给你讲的那个人',
+  sight: '用眼睛看东西的能力',
+  silent: '一点点声音都没有',
+  courage: '心里有点怕，但还是敢去做',
+  university: '读完中学以后去读书的地方',
+  disease: '让人生病、身体不舒服的东西'
+};
+
+// 挂到词卡上：第 1 周手写的条目和第 2-4 周 vocabWord() 生成的条目一起走，
+// app.js 只认 w.hint_cn。改提示词只动上面那张表就行。
+(function attachVocabHints() {
+  HOMEWORK_WEEKS.forEach(function (wk) {
+    wk.forEach(function (d) {
+      (d.modules || []).forEach(function (m) {
+        if (m.type !== 'vocabulary_game') return;
+        (m.words || []).forEach(function (w) {
+          if (VOCAB_HINTS[w.word]) w.hint_cn = VOCAB_HINTS[w.word];
+        });
+      });
+    });
+  });
+})();

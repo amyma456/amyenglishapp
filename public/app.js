@@ -1997,9 +1997,11 @@ const App = {
   //
   // 所以现在答错只做三件事：把他点错的那一项就地划掉（范围越选越小）、给一句
   // 中文提示、**始终不点亮正确项**。提示一次比一次具体：
-  //   第 1 次错 → 只说"不是这个"，告诉他答案还在剩下的哪几个里面；
-  //   第 2 次错 → 描述正确答案的"长相"（首字母 / 字母数 / 词数）+ 中文讲解；
-  //   第 3 次起 → 直接点名，但最后那一下仍然要他自己点下去。
+  //   第 1 次错 → 直接给"围绕这个词的意思"的提示（v107 改版，见 _wrongHintHtml）；
+  //   第 2 次错 → 同一句提示 + 正确答案的"长相"（首字母 / 字母数 / 词数）或例句；
+  //   第 3 次起 → 非词汇题点名 + 讲解；**词汇题永远不点名**，只给最强的
+  //                "围绕意思"的提示（v107，家长原话"没有提示正确答案，
+  //                让学生自己思考"），最后那一下仍然要他自己点下去。
   // 全程没有自动选中、没有"替我点亮"，答对的那一刻才亮绿。
   _wrongTry: {},
   _wrongTries(key) { return (this._wrongTry && this._wrongTry[key]) || 0; },
@@ -2029,18 +2031,60 @@ const App = {
     return out;
   },
 
+  // 把手写下来的中文例句里"就是答案的那几个字"挖掉，换成 ○○（v107）。
+  //
+  // "选意思"那两题的四个选项就是中文释义。所以中文例句不能原样端出来 ——
+  // 「我在图书馆看书。」等于把选项「图书馆」念了一遍。挖成「我在○○看书。」
+  // 之后，端出去的是一句有语境的话，孩子得自己把"这儿该是什么"和四张卡片
+  // 对起来 —— 家长原话"没有提示正确答案，让学生自己思考"。
+  //
+  // 例句本身不含释义时（比如 delicious 的"这面条很好吃。"），原样返回、不挖，
+  // 它本来就没泄露答案，反而是一句好用的语境提示。
+  _maskMeanings(sentence, meaning) {
+    let out = String(sentence == null ? '' : sentence);
+    if (!out) return { text: '', masked: false };
+    const parts = String(meaning == null ? '' : meaning)
+      .split(/[，,；;、\/]/).map(function (s) { return s.trim(); }).filter(Boolean);
+    const goals = [];
+    parts.forEach(function (p) {
+      goals.push(p);
+      // "美丽的" → "美丽"（例句里常写成"很美丽"）；"图书馆" 这种直接命中。
+      const stem = p.replace(/[的地得了儿]$/, '');
+      if (stem.length >= 2) goals.push(stem);
+      if (p.length >= 3) goals.push(p.slice(0, 2));   // 长词再退一步："博物馆" → "博物"
+    });
+    // 长的先挖，免得先挖掉短的把长的切碎
+    goals.sort(function (a, b) { return b.length - a.length; });
+    let masked = false;
+    goals.forEach(function (g) {
+      if (g.length < 2) return;
+      if (out.indexOf(g) >= 0) { out = out.split(g).join('○○'); masked = true; }
+    });
+    return { text: out, masked: masked };
+  },
+
   // 答错后要显示的那段中文提示。
   //   o.attempt     连错第几次（从 1 起）
   //   o.opts        选项文案数组（填空题不给）
   //   o.answer      正确项下标（选择题）/ 填空题不用
   //   o.correctText 正确选项的文案（选择题）/ 正确答案（填空题）
   //   o.picked      刚点错的下标（可空）
-  //   o.clue2       只给第 2 级用的一句中文线索（词汇题用来给"这个词什么意思"）
+  //   o.clue1       第 1 级就端出来的提示（词汇题＝这个词的场景化中文提示 hint_cn）
+  //   o.clue2       第 2 级追加的一句更具体的提示
   //   o.clue3       第 3 级点名时附上的中文讲解（题库里的 explanation_cn）
   //   o.retryTip    第 1 次错时附加的一句"怎么办"
   //   o.finalTail   第 3 次起收尾那句（填空题要"打进去"而不是"点一下"）
+  //   o.neverReveal 词汇题（v107）：连错几次都不点名是哪张卡
+  //   o.revealStrong 词汇题第 3 级起端出的"最强但仍围绕意思"的提示
   //
-  // 讲解（explanation_cn）只放在第 3 级：题库里不少解析本身就是答案（"……用 is"、
+  // v107 改版（家长原话：「不要提示说'不是这个，已经划掉第一个了，答案就在
+  // 剩下 3 个里面再选一次'。这句话没有用。词的相关意思、或者相关搭配，就是最
+  // 浅显的意思去提醒他」）：
+  //   原来第 1 级只会说"划掉了哪个、还剩几个"—— 划掉这件事屏幕上看得见，
+  //   念给孩子听纯属废话，孩子还是不知道往哪儿想。现在第 1 级直接把
+  //   **围绕词义**的提示（clue1）端出来，第一次错就说在点子上。
+  //
+  // 讲解（explanation_cn）仍然只放在第 3 级：题库里不少解析本身就是答案（"……用 is"、
   // "……two hundred and thirty (230)"），提前端出来跟直接报答案没区别。
   _wrongHintHtml(o) {
     o = o || {};
@@ -2053,31 +2097,40 @@ const App = {
     const nameOf = function (i) {
       return byIndex ? '第 ' + (i + 1) + ' 个' : String.fromCharCode(65 + i);
     };
-    let pickedLetter = '';
     const left = [];
     let correctLetter = '';
     if (opts && opts.length) {
-      if (picked != null) pickedLetter = nameOf(picked);
       opts.forEach(function (_, i) { if (i !== picked) left.push(nameOf(i)); });
       if (o.answer != null && o.answer >= 0) correctLetter = nameOf(o.answer);
     }
     const shape = this._choiceShape(correctText);
 
     if (attempt <= 1) {
-      let t = '🤔 不是这个。';
-      if (pickedLetter) t += '已经划掉 ' + pickedLetter + ' 了，';
-      t += left.length
-        ? '答案' + (byIndex ? '就在剩下 ' + left.length + ' 个里面' : '在 ' + left.join('、') + ' 里面') + '，再选一次。'
-        : '再选一次。';
+      let t = '🤔 不是这个，再想想。';
+      if (o.clue1) t += '<br>💡 ' + o.clue1;
       if (o.retryTip) t += '<br><span class="fs-12">' + o.retryTip + '</span>';
       return t;
     }
 
     if (attempt === 2) {
-      let t = '🔎 再仔细看看。';
-      if (shape) t += '正确答案' + shape + '。';
-      if (left.length && !byIndex) t += '<br>在 ' + left.join('、') + ' 里面挑一个。';
-      if (o.clue2) t += (shape || left.length ? '<br>' : '') + '💡 ' + o.clue2;
+      const bits = [];
+      if (o.clue1) bits.push('💡 ' + o.clue1);
+      if (shape) bits.push('正确答案' + shape + '。');
+      // 词汇卡片上没有字母，且词汇题一律不提"在哪几个里挑"（见 neverReveal）
+      if (left.length && !byIndex && !o.neverReveal) bits.push('在 ' + left.join('、') + ' 里面挑一个。');
+      let t = '🔎 快对了。' + (bits.length ? '<br>' + bits.join('<br>') : '');
+      if (o.clue2) t += '<br>💡 ' + o.clue2;
+      return t;
+    }
+
+    // 第 3 级起：词汇题**永不点名**，只把最强的"围绕意思"的提示端出来 ——
+    // 家长原话「没有提示正确答案，让学生自己思考」。别的题型仍然点名 + 讲解，
+    // 但最后那一下永远要孩子自己点（脚本从不代点）。
+    if (o.neverReveal) {
+      let t = '👉 再给你一个提示。';
+      if (o.clue1) t += '<br>💡 ' + o.clue1;
+      if (o.revealStrong) t += '<br>' + o.revealStrong;
+      t += '<br><span class="fs-12">' + (o.finalTail || '别急，自己把它找出来。') + '</span>';
       return t;
     }
 
@@ -4777,18 +4830,43 @@ const App = {
         var stageEl = document.getElementById('vocab-game-' + mi);
         if (stageEl) stageEl.appendChild(resultDiv);
       }
-      // 中文提示：第 2 次错给一条线索，第 3 次起才报是哪一张。
-      //   "选图片"那题（选项是表情）→ 线索是这个单词的中文意思（要懂意思才
-      //     选得对图），但**不给表情本身**，表情就是答案；
-      //   "选意思"那题（选项就是中文释义）→ 不给释义原文（那等于报答案），
-      //     让 _choiceShape 去说"这几个字的长度"，够他排除掉别的了。
+      // 中文提示（v107）：第 1 次错就把这个词的"场景化中文提示"（hint_cn，
+      // 见 data.js 的 VOCAB_HINTS）端出来 —— 围绕词义、搭配、用途去说，
+      // 但**不含释义原文**（选意思那两题的选项就是释义，写进去等于给答案）。
+      //   "选图片"那题（选项是表情）→ 第 2 次错给中文例句，第 3 次起才给
+      //     释义（要懂意思才选得对图，但**不给表情本身**，表情才是答案）；
+      //   "选意思"那题（选项就是中文释义）→ 释义**永远不给**，第 2 次错让
+      //     _choiceShape 去说"这几个字有多长"，第 3 次起给中文例句，让他自己
+      //     把"句子说的是什么"和四张卡片对起来。
+      // 词汇题全程不点名是哪一张，也不代孩子点（neverReveal）—— 家长原话
+      // "没有提示正确答案，让学生自己思考"。
       var isImagePick = !!(stage && stage.type === 'image_choice');
+      var clue1 = '';
       var clue2 = '';
-      var clue3 = '';
+      var revealStrong = '';
+      var finalTail = '';
       if (vw) {
-        var meaningNote = '复习一下：' + vw.word + ' 的意思是「' + vw.meaning + '」。';
-        clue2 = isImagePick ? meaningNote + '挑和它对得上的那张图。' : '';
-        clue3 = meaningNote;
+        clue1 = String(vw.hint_cn || '');
+        var exampleLine = vw.example_cn ? '我们学过的一句话：「' + vw.example_cn + '」' : '';
+        if (attempt >= 3) {
+          if (isImagePick) {
+            revealStrong = '💡 ' + vw.word + ' 的意思是「' + vw.meaning + '」。'
+                         + '对着这个意思，挑出配得上的那张图。';
+            finalTail = '把对上意思的那张，自己点下去。';
+          } else {
+            // 选意思那题：选项就是释义，所以例句里"就是答案的那几个字"要挖成
+            // ○○ 再端出来（见 _maskMeanings）—— 给语境，不给答案。
+            var mk = this._maskMeanings(vw.example_cn, vw.meaning);
+            revealStrong = mk.text
+              ? '我们学过的一句话：「' + mk.text + '」<br>'
+                + (mk.masked ? '想想 ○○ 那儿说的是什么，再对着四张卡片挑一个。'
+                             : '哪张卡片的意思，跟这句话说的是同一件事？')
+              : '';
+            finalTail = '对得上意思的那一张，自己点下去。';
+          }
+        } else if (attempt === 2 && isImagePick) {
+          clue2 = exampleLine;
+        }
       }
       this._showWrongHint(resultDiv, this._wrongHintHtml({
         attempt: attempt,
@@ -4797,8 +4875,11 @@ const App = {
         answer: correct,
         correctText: optTexts ? String(optTexts[correct]) : '',
         picked: selected,
+        clue1: clue1,
         clue2: clue2,
-        clue3: clue3,
+        revealStrong: revealStrong,
+        neverReveal: true,
+        finalTail: finalTail,
         retryTip: '先点一下 🔊 再听一遍发音，想想它是什么意思。',
       }));
     }
@@ -4826,7 +4907,10 @@ const App = {
     }
 
     const resultDiv = document.getElementById('spell-result-' + mi);
+    const spellKey = 'sf-' + mi + '-' + this.state.vocabWordIdx + '-' + this.state.vocabStage;
+    const spellWord = ((HOMEWORK_DATA[dayIdx].modules[mi] || {}).words || [])[this.state.vocabWordIdx] || null;
     if (collected === answer.toLowerCase()) {
+      this._wrongTryClear(spellKey);
       inputEls.forEach(function(el) {
         el.classList.add('correct');
         el.classList.remove('wrong');
@@ -4850,8 +4934,19 @@ const App = {
       // 拼写错了，单词进复习队列（v89）
       if (fullWord) this._reviewAdd(fullWord);
       if (resultDiv) {
-        var hintText = answer.length === 1 ? '缺少一个字母，请再试一次' : '缺少 ' + answer.length + ' 个字母，请再试一次';
-        resultDiv.innerHTML = '<div style="color:var(--danger);font-size:13px;margin-top:8px">❌ ' + hintText + '</div>';
+        var hintText = answer.length === 1 ? '还差一个字母，再试一次' : '还差 ' + answer.length + ' 个字母，再试一次';
+        var attemptS = this._wrongTryBump(spellKey);
+        var lines = ['<div style="color:var(--danger);font-size:13px;margin-top:8px">❌ ' + hintText + '</div>'];
+        // v107：拼写题同样是"记词"，答错就给围绕词义的提示，而不是干说一句
+        // "还差几个字母" —— 孩子缺的往往不是字母个数，是"这是哪个词"。
+        // 答错两次起再补上我们学过的中文例句，但**始终不给整词**（要他打出来）。
+        if (spellWord && spellWord.hint_cn) {
+          lines.push('<div class="fs-12" style="margin-top:4px">💡 ' + spellWord.hint_cn + '</div>');
+        }
+        if (attemptS >= 2 && spellWord && spellWord.example_cn) {
+          lines.push('<div class="fs-12" style="margin-top:2px">📖 我们学过的一句话：「' + spellWord.example_cn + '」</div>');
+        }
+        resultDiv.innerHTML = lines.join('');
       }
       setTimeout(function() {
         inputEls.forEach(function(el) {

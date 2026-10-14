@@ -110,7 +110,10 @@ const Recorder = {
 const src = fs.readFileSync(BASE + 'app.js', 'utf8');
 const dataSrc = fs.readFileSync(BASE + 'data.js', 'utf8');
 const htmlSrc = fs.readFileSync(BASE + 'index.html', 'utf8');
-const HOMEWORK_DATA = new Function(dataSrc + '; return HOMEWORK_DATA;')();
+// 第 7 节要跨周查全部 80 张词卡，所以两样都取出来
+const dataScope = new Function(dataSrc + '; return { weeks: HOMEWORK_WEEKS, today: HOMEWORK_DATA };')();
+const HOMEWORK_WEEKS = dataScope.weeks;
+const HOMEWORK_DATA = dataScope.today;
 process.on('unhandledRejection', () => {});
 
 let App;
@@ -152,19 +155,25 @@ App.selectAnswer = App.selectAnswer.bind(App);
 
 // ===========================================================================
 console.log('\n=== 1. 提示阶梯：一次比一次具体，但前两次都不报答案 ===');
-console.log('（第 3 次才点名，而且最后那一下仍要孩子自己点）');
+console.log('（v107：第 1 次错就给"围绕意思"的提示，不再念"划掉了哪个、还剩几个"）');
 
 {
   const opts = ['I eat apples.', 'I go to school by bus.', 'She is my sister.', 'They are teachers.'];
   const answer = 2;
   const correctText = opts[answer];
+  const clue1 = '想一想：这句话是在说自己怎么去上学。';
 
-  const h1 = App._wrongHintHtml({ attempt: 1, opts: opts, answer: answer, correctText: correctText, picked: 0 });
+  const h1 = App._wrongHintHtml({
+    attempt: 1, opts: opts, answer: answer, correctText: correctText, picked: 0,
+    clue1: clue1, retryTip: '先听完问题再选。',
+  });
   ok(/不是这个/.test(h1), '第 1 次错：先明确"不是这个"');
-  ok(/划掉 ?A/.test(h1), '第 1 次错：告诉他 A 已经划掉了（不是干说一句"错了"）');
-  ok(/B、C、D/.test(h1), '第 1 次错：把范围缩小到剩下的 B、C、D');
+  ok(h1.indexOf(clue1) >= 0, '第 1 次错：直接端出"围绕意思"的中文提示（v107）');
+  ok(!/已经划掉|剩下 ?[0-9]|再选一次/.test(h1),
+     '第 1 次错：不再说"已经划掉 X 了，答案就在剩下 N 个里面，再选一次"（家长原话：这句话没有用）');
   ok(h1.indexOf(correctText) < 0, '第 1 次错：**一个字都不提正确答案**（"一下提示答案"就是这里）');
-  ok(h1.indexOf('C：') < 0 && !/答案是/.test(h1), '第 1 次错：不点字母、不说"答案是"');
+  ok(!/答案是/.test(h1), '第 1 次错：不说"答案是"');
+  ok(!/A、B、C、D|在 ?[ABCD]、/.test(h1), '第 1 次错：不再列"在哪几个字母里挑"');
 
   const h2 = App._wrongHintHtml({
     attempt: 2, opts: opts, answer: answer, correctText: correctText, picked: 0,
@@ -179,7 +188,7 @@ console.log('（第 3 次才点名，而且最后那一下仍要孩子自己点�
     attempt: 3, opts: opts, answer: answer, correctText: correctText, picked: 0,
     clue3: '这是主谓一致：第三人称单数要用 is。',
   });
-  ok(/答案是 ?C/.test(h3) && h3.indexOf(correctText) >= 0, '第 3 次错：点名（字母 + 内容），孩子已经错了两次，再让他瞎猜没有意义');
+  ok(/答案是 ?C/.test(h3) && h3.indexOf(correctText) >= 0, '第 3 次错：非词汇题点名（字母 + 内容），孩子已经错了两次，再让他瞎猜没有意义');
   ok(/点它一下|点一下/.test(h3), '第 3 次错：仍然要求他自己点下去，脚本不代劳');
   ok(h3.indexOf('主谓一致') >= 0, '第 3 次错：点名之后把解析补上（讲明白为什么，收个尾）');
   const h4 = App._wrongHintHtml({ attempt: 9, opts: opts, answer: answer, correctText: correctText, picked: 1 });
@@ -189,21 +198,41 @@ console.log('（第 3 次才点名，而且最后那一下仍要孩子自己点�
 {
   // 词汇游戏的卡片没有 A/B/C/D，只能说"第几个"
   const opts = ['🪨', '⚽', '🏃', '🌸'];
-  const h1 = App._wrongHintHtml({ attempt: 1, naming: 'index', opts: opts, answer: 3, correctText: '🌸', picked: 0 });
-  ok(/划掉 ?第 ?1 ?个/.test(h1), '卡片题第 1 次错：按"第几个"说，不说 A/B/C/D（卡片上根本没有字母）');
-  ok(/剩下 ?3 ?个/.test(h1), '卡片题第 1 次错：只说还剩几个');
+  const clue1 = '看到花、看到晚霞，心里觉得“真好看”的那种感觉';
+  const h1 = App._wrongHintHtml({
+    attempt: 1, naming: 'index', opts: opts, answer: 3, correctText: '🌸', picked: 0,
+    clue1: clue1, neverReveal: true,
+  });
+  ok(h1.indexOf(clue1) >= 0, '卡片题第 1 次错：给的是围绕词义的中文提示');
+  ok(!/已经划掉|剩下 ?[0-9]|再选一次/.test(h1),
+     '卡片题第 1 次错：不再说"已经划掉第 1 个了 / 答案就在剩下 3 个里面"（家长点名要删的那句）');
   ok(h1.indexOf('A') < 0, '卡片题第 1 次错：不出现字母 A（孩子在屏幕上找不到它）');
+  ok(h1.indexOf('🌸') < 0, '卡片题第 1 次错：绝不出现答案那张表情');
 
   const h2 = App._wrongHintHtml({
     attempt: 2, naming: 'index', opts: opts, answer: 3, correctText: '🌸', picked: 0,
-    clue2: '复习一下：beautiful 的意思是「美丽的，漂亮的」，挑和它对得上的那张图。',
+    neverReveal: true, clue1: clue1,
+    clue2: '我们学过的一句话：「日落很美丽。」',
   });
   ok(h2.indexOf('第一个字母是') < 0, '图片选项没有字可描述，不硬说"第一个字母是 🌸"');
-  ok(h2.indexOf('美丽的，漂亮的') >= 0, '第 2 次错：给中文意思当线索');
+  ok(h2.indexOf('日落很美丽') >= 0, '第 2 次错：给"我们学过的一句话"当线索');
   ok(h2.indexOf('🌸') < 0, '第 2 次错：不把表情本身（答案是哪张图）端出来');
+  ok(!/第 ?[0-9] ?个|剩下/.test(h2), '第 2 次错：不提"第几个 / 还剩几个"');
 
-  const h3 = App._wrongHintHtml({ attempt: 3, naming: 'index', opts: opts, answer: 3, correctText: '🌸', picked: 0 });
-  ok(/第 ?4 ?个/.test(h3) && h3.indexOf('🌸') >= 0, '第 3 次错：点名第 4 个 🌸');
+  // 第 3 次起：词汇题永不点名（v107）
+  const h3 = App._wrongHintHtml({
+    attempt: 3, naming: 'index', opts: opts, answer: 3, correctText: '🌸', picked: 0,
+    neverReveal: true, clue1: clue1,
+    revealStrong: '💡 beautiful 的意思是「美丽的，漂亮的」。对着这个意思，挑出配得上的那张图。',
+    finalTail: '把对上意思的那张，自己点下去。',
+  });
+  ok(h3.indexOf('🌸') < 0, '第 3 次错：**仍然不点名是哪一张**（家长原话：没有提示正确答案，让学生自己思考）');
+  ok(!/第 ?4 ?个/.test(h3) && !/答案是/.test(h3), '第 3 次错：不说"答案就是第 4 个"、也不出现"答案是"');
+  ok(/自己/.test(h3), '第 3 次错：明确要求他自己找、自己点');
+  const h9 = App._wrongHintHtml({
+    attempt: 9, naming: 'index', opts: opts, answer: 3, correctText: '🌸', picked: 1, neverReveal: true,
+  });
+  ok(h9.indexOf('🌸') < 0 && !/第 ?4 ?个/.test(h9), '再往下错也不会绕回点名 —— 词汇题全程不报答案');
 }
 
 {
@@ -372,22 +401,36 @@ console.log('\n=== 4. 高频词汇：卡片不亮绿、不代点，只有第一�
     ok(optEls[stage.answer].style.pointerEvents === 'auto', '词汇答错：正确卡片仍然等着孩子自己点');
     ok(String(resultDiv.innerHTML).indexOf('点亮绿色正确答案') < 0, '不再出现"点亮绿色正确答案，继续学习"');
     ok(resultDiv._cls.has('q-hint') && /不是这个/.test(resultDiv.innerHTML), '词汇答错：给出中文提示词');
+    ok(String(resultDiv.innerHTML).indexOf(String(word.hint_cn)) >= 0,
+       '词汇第 1 次错：立刻给出这个单词"围绕意思"的中文提示（"' + word.hint_cn + '"）');
+    ok(!/已经划掉|剩下 ?[0-9]|再选一次/.test(resultDiv.innerHTML),
+       '词汇第 1 次错：不再说"已经划掉第 N 个了，答案就在剩下 3 个里面，再选一次"（家长点名要删）');
+    ok(String(resultDiv.innerHTML).indexOf(String(stage.options[stage.answer])) < 0,
+       '词汇第 1 次错：不提答案是哪一张');
     ok(App.state.vocabScore === scoreBefore, '答错不加分');
 
-    // 再错一次 → 提示升级到"复习一下：xxx 的意思是..."
+    // 再错一次 → 提示升级：选图给"我们学过的一句话"，选意思给"这几个字有多长"
     const wrongIdx2 = (stage.answer + 2) % stage.options.length;
     App.checkVocabAnswer(mi, wrongIdx2, stage.answer, dayIdx, words.length, word.stages.length);
-    ok(String(resultDiv.innerHTML).indexOf(word.meaning) >= 0,
-       '词汇第 2 次错：把中文意思端出来当线索（"' + word.meaning + '"）');
-    ok(String(resultDiv.innerHTML).indexOf(String(stage.options[stage.answer])) < 0,
-       '词汇第 2 次错：仍然没说答案是哪一张');
+    const h2 = String(resultDiv.innerHTML);
+    ok(h2.indexOf(word.hint_cn) >= 0, '词汇第 2 次错：原来的"围绕意思"提示还挂着（不擦掉重来）');
+    ok(h2.indexOf(String(word.example_cn)) >= 0, '词汇第 2 次错：再给"我们学过的一句话"当线索');
+    ok(h2.indexOf(String(stage.options[stage.answer])) < 0, '词汇第 2 次错：仍然没说答案是哪一张');
+    if (stage.type === 'meaning_choice') {
+      ok(h2.indexOf(String(word.meaning)) < 0,
+         '选意思那题第 2 次错：**绝不把释义原文端出来**（选项就是释义，写上等于答案）');
+    }
 
-    // 第 3 次 → 点名
+    // 第 3 次：词汇题也不点名（v107 家长原话"没有提示正确答案，让学生自己思考"）
     const wrongIdx3 = (stage.answer + 3) % stage.options.length;
     App.checkVocabAnswer(mi, wrongIdx3, stage.answer, dayIdx, words.length, word.stages.length);
-    ok(String(resultDiv.innerHTML).indexOf(String(stage.options[stage.answer])) >= 0,
-       '词汇第 3 次错：点名是哪一张（' + stage.options[stage.answer] + '）');
-    ok(!optEls[stage.answer]._cls.has('correct'), '点名了也没自动点亮，孩子还得自己点');
+    const h3 = String(resultDiv.innerHTML);
+    ok(h3.indexOf(String(stage.options[stage.answer])) < 0,
+       '词汇第 3 次错：仍然不点名是哪一张（' + stage.options[stage.answer] + '）');
+    ok(!/第 ?[0-9] ?个[，。]|答案是/.test(h3), '词汇第 3 次错：不出现"答案是第 N 个"这种直给');
+    ok(h3.indexOf(String(word.example_cn)) >= 0 || h3.indexOf(String(word.hint_cn)) >= 0,
+       '词汇第 3 次错：给的是最强的"围绕意思"的提示，让他自己推');
+    ok(!optEls[stage.answer]._cls.has('correct'), '不点名、不自动点亮，孩子还得自己点');
 
     // 自己点对 → 亮绿；但试错后点对不计分（星级不被刷高）
     const score2 = App.state.vocabScore;
@@ -402,6 +445,57 @@ console.log('\n=== 4. 高频词汇：卡片不亮绿、不代点，只有第一�
     const score3 = App.state.vocabScore;
     App.checkVocabAnswer(mi, 0, 0, dayIdx, words.length, word.stages.length);
     ok(App.state.vocabScore === score3 + 1, '第一次就点对仍然正常计分');
+  }
+}
+
+// ===========================================================================
+console.log('\n=== 4b. 选意思那题：连错三次也不许出现释义原文（选项就是释义） ===');
+{
+  let dayIdx = -1, mi = -1, word = null, sIdx = -1;
+  for (let d = 0; d < HOMEWORK_DATA.length && dayIdx < 0; d++) {
+    const mods = HOMEWORK_DATA[d].modules || [];
+    for (let i = 0; i < mods.length && dayIdx < 0; i++) {
+      const ws = mods[i].words || [];
+      for (let w = 0; w < ws.length && dayIdx < 0; w++) {
+        const ss = ws[w].stages || [];
+        for (let s = 0; s < ss.length; s++) {
+          if (ss[s].type === 'meaning_choice' && ss[s].options && ss[s].options.length) {
+            dayIdx = d; mi = i; word = ws[w]; sIdx = s; break;
+          }
+        }
+      }
+    }
+  }
+  if (dayIdx < 0) { console.log('  跳过：题库里找不到"选意思"阶段'); }
+  else {
+    const words = HOMEWORK_DATA[dayIdx].modules[mi].words;
+    App.state.vocabWordIdx = words.indexOf(word);
+    App.state.vocabStage = sIdx;
+    const stage = word.stages[sIdx];
+    const optEls = [];
+    for (let i = 0; i < stage.options.length; i++) optEls.push(mkEl('div', {}, ['vocab-option-card']));
+    const realQSA = document.querySelectorAll;
+    document.querySelectorAll = sel => (/\.vocab-option-card$/.test(sel) ? optEls : realQSA(sel));
+    const resultDiv = getEl('spell-result-' + mi);
+    resultDiv.innerHTML = '';
+
+    // 三个错项各错一次，再重复错一次（共 4 次），全程都不许出现释义原文
+    const wrongIdxs = [];
+    for (let k = 1; k < stage.options.length; k++) wrongIdxs.push((stage.answer + k) % stage.options.length);
+    wrongIdxs.push(wrongIdxs[0]);
+    for (let i = 0; i < wrongIdxs.length; i++) {
+      App.checkVocabAnswer(mi, wrongIdxs[i], stage.answer, dayIdx, words.length, word.stages.length);
+      const h = String(resultDiv.innerHTML);
+      ok(h.indexOf(String(word.meaning)) < 0,
+         '第 ' + (i + 1) + ' 次错：提示里没有释义原文（"' + word.meaning + '"）');
+      ok(h.indexOf(String(stage.options[stage.answer])) < 0,
+         '第 ' + (i + 1) + ' 次错：提示里没有那张卡片的文字');
+      ok(h.indexOf(String(word.hint_cn)) >= 0, '第 ' + (i + 1) + ' 次错：给的是"围绕意思"的提示，不是空话');
+    }
+    // 他照着提示自己找出来 → 亮绿
+    App.checkVocabAnswer(mi, stage.answer, stage.answer, dayIdx, words.length, word.stages.length);
+    document.querySelectorAll = realQSA;
+    ok(optEls[stage.answer]._cls.has('correct'), '自己点对了才亮绿');
   }
 }
 
@@ -518,6 +612,71 @@ console.log('\n=== 6. 静态检查：那套"点绿框过关"的代码真的删�
   // 三级阶梯在源码里是齐的（别被后人删掉中间那一级）
   ok(/_choiceShape/.test(src) && /attempt <= 1/.test(src) && /attempt === 2/.test(src),
      '_wrongHintHtml 的三个分级都在');
+}
+
+// ===========================================================================
+console.log('\n=== 7. 80 张词卡：每张都有一条"围绕意思"的提示，且没有一条泄露答案 ===');
+console.log('（含跨周检查 —— 第 2-4 周的词卡是 vocabWord() 生成的，别只查当周）');
+
+{
+  const words = [];
+  HOMEWORK_WEEKS.forEach(wk => wk.forEach(d => (d.modules || []).forEach(m => {
+    if (m.type === 'vocabulary_game') (m.words || []).forEach(w => words.push(w));
+  })));
+  ok(words.length >= 80, '跨周找到 ' + words.length + ' 张词卡');
+
+  const noHint = words.filter(w => !w.hint_cn);
+  ok(noHint.length === 0, '每张词卡都挂了 hint_cn（缺的：' + (noHint.map(w => w.word).join('、') || '无') + '）');
+
+  const segs = w => String(w.meaning).split(/[，,；;、\/]/).filter(Boolean);
+  const leak = words.filter(w => segs(w).some(p => String(w.hint_cn || '').indexOf(p) >= 0));
+  ok(leak.length === 0,
+     '没有一条提示直接写出释义原文（写出来＝"选意思"那题直给答案）：' + (leak.map(w => w.word).join('、') || '无'));
+
+  const tooLong = words.filter(w => String(w.hint_cn || '').length > 30);
+  ok(tooLong.length === 0, '提示都不超过 30 字（太长孩子不看）：' + (tooLong.map(w => w.word).join('、') || '无'));
+
+  // "选意思"用的中文例句：挖掉释义之后不能再出现释义原文
+  const badMask = words.filter(w => {
+    const r = App._maskMeanings(w.example_cn, w.meaning);
+    return !r.text || segs(w).some(p => r.text.indexOf(p) >= 0);
+  });
+  ok(badMask.length === 0,
+     '例句挖空后不泄露释义（' + (badMask.map(w => w.word).join('、') || '无') + '）');
+
+  // 跨周逐张走一遍完整链路：错 4 次都不能出现任何一张卡片的文字里的答案
+  let leaks = [];
+  words.forEach(w => {
+    w.stages.forEach((st, si) => {
+      if (st.type !== 'image_choice' && st.type !== 'meaning_choice') return;
+      const keep = [];
+      for (let a = 1; a <= 4; a++) {
+        keep.push(App._wrongHintHtml({
+          attempt: a, naming: 'index', opts: st.options, answer: st.answer,
+          correctText: String(st.options[st.answer]), picked: (st.answer + 1) % st.options.length,
+          clue1: w.hint_cn,
+          clue2: (a === 2 && st.type === 'image_choice' && w.example_cn)
+            ? '我们学过的一句话：「' + w.example_cn + '」' : '',
+          revealStrong: a >= 3
+            ? (st.type === 'image_choice'
+                ? '💡 ' + w.word + ' 的意思是「' + w.meaning + '」。对着这个意思，挑出配得上的那张图。'
+                : '我们学过的一句话：「' + App._maskMeanings(w.example_cn, w.meaning).text + '」')
+            : '',
+          neverReveal: true, finalTail: '自己点下去。',
+        }));
+      }
+      const all = keep.join('\n');
+      // 去掉每行行首的界面图标（🤔/🔎/👉/💡/📖）再查 —— 有几张卡片的答案就是
+      // 💡（clever / invent），跟提示行首的图标撞脸，那是误报，不是真泄露。
+      const body = all.split('<br>').map(l => l.replace(/^(🤔|🔎|👉|💡|📖|❌)\s*/, '')).join('<br>');
+      if (body.indexOf(String(st.options[st.answer])) >= 0) leaks.push(w.word + '(' + st.type + ' 报出了答案)');
+      if (st.type === 'meaning_choice' && body.indexOf(String(w.meaning)) >= 0) {
+        leaks.push(w.word + '(选意思报出了释义)');
+      }
+    });
+  });
+  ok(leaks.length === 0, '跨周 80 张 × 选图/选意思 × 连错 4 次，提示里都没有出现答案'
+     + (leaks.length ? '：' + leaks.slice(0, 5).join('、') : ''));
 }
 
 console.log('\n' + (fail ? '❌ ' + fail + ' 项未通过' : '✅ 全部通过'));
