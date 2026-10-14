@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="114">
+<meta name="app-version" content="115">
 <link rel="manifest" href="manifest.json">
 <!-- iOS 的"添加到主屏幕"不认 SVG（装出来是白板/网页截图），必须给 PNG。
      图标与启动图由 tools/gen-pwa-icons.js 生成，别手改。 -->
@@ -578,6 +578,9 @@ body.stage-mode .content-area{padding-block:0}
 .a4-sheet .a4-ans{background:#f5f5f5;padding:4px 8px;border-radius:4px;font-size:10pt;margin-top:4px;display:none}
 .a4-sheet .a4-ans.show{display:block}
 .a4-sheet .a4-write-area{border-bottom:1px dashed #ccc;min-height:30px;margin:4px 0 8px}
+/* 题目里的填空横线：宽度由答案字数决定（见 app.js 的 _a4QuestionHtml），
+   所以这里不写死宽度，只管"长什么样"。横线压在文字基线上，像下划线。 */
+.a4-sheet .a4-blank{display:inline-block;height:1.05em;vertical-align:baseline;border-bottom:1px solid #222;margin:0 3px;max-width:100%}
 .a4-sheet .a4-similar{background:#FFF8E1;border:1px dashed var(--warning);border-radius:4px;padding:8px;margin-top:8px;font-size:11pt}
 @media print{
   body * {visibility:hidden}

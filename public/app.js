@@ -3108,6 +3108,63 @@ const App = {
     return html;
   },
 
+  // ===== Teacher: Error sheet — blank lines sized to the answer =====
+  // 错题卷上这道题的标准答案（打印横线要用它的长度）。
+  // 选择题的 answer 是选项下标，填空题的 answer 才是文本本身。
+  _a4AnswerText(q) {
+    if (q == null) return '';
+    if (Array.isArray(q.options)) {
+      // 极少数题虽然有 options，answer 却直接写了答案文本
+      if (typeof q.answer === 'string' && !/^\d+$/.test(q.answer.trim())) return q.answer;
+      const i = parseInt(q.answer, 10);
+      if (isFinite(i) && i >= 0 && q.options[i] != null) return String(q.options[i]);
+      return '';
+    }
+    if (Array.isArray(q.answer)) return q.answer.join('; ');
+    return q.answer == null ? '' : String(q.answer);
+  },
+
+  // 把题目里的填空横线（___）换成"跟答案一样长"的书写线。
+  // 家长反馈：原来不管答案多长，题目里永远只有三个下划线 —— 写 goes 勉强，
+  // 写 was reading / talking 根本写不下。这里按标准答案的字数把横线拉长：
+  // 一个字母留 1.6em，太短的答案（are、goes）也保证有 4 个字母的位置，太长
+  // 的答案最多占满一行，免得把 A4 版心撑破。
+  // 一道题可能有多个空（"___ of the students ... ___ girls."），标准答案里
+  // 用 ";" 分隔（Two-thirds; are），按出现顺序一一对应；答案不够分时后面的
+  // 空沿用最后一个。还有一种题是答案本身被空格分成两截
+  // （"How long ___ you ___ (learn) English?" → have learned），空位和空格
+  // 数对得上就按空格拆。
+  _a4BlankLetters(q, blanks) {
+    const n = Math.max(1, blanks || 1);
+    const ans = typeof q === 'string' ? '' : this._a4AnswerText(q);
+    let parts = String(ans).split(/[;；]/).map(function(s) { return s.trim(); }).filter(Boolean);
+    if (n > 1 && parts.length === 1) {
+      const bySpace = parts[0].split(/\s+/).filter(Boolean);
+      if (bySpace.length === n) parts = bySpace;
+    }
+    return parts;
+  },
+
+  _a4QuestionHtml(q) {
+    const text = (typeof q === 'string' ? q : (q && (q.question || q.sentence))) || '';
+    const blanks = (String(text).match(/_{2,}/g) || []).length;
+    const parts = this._a4BlankLetters(q, blanks);
+    const PER = 1.6;        // 每个字母留多宽（em）——手写比印刷体宽
+    const MIN = 4;          // 再短的答案也留 4 个字母的位置
+    const MAX = 20;         // 再长的答案最多占满一行
+    let n = 0;
+    return String(text)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/_{2,}/g, function() {
+        const p = parts.length ? parts[Math.min(n, parts.length - 1)] : '';
+        n++;
+        let letters = p ? p.length : MIN;
+        if (letters < MIN) letters = MIN;
+        if (letters > MAX) letters = MAX;
+        return '<span class="a4-blank" style="width:' + (letters * PER).toFixed(1) + 'em"></span>';
+      });
+  },
+
   // ===== Teacher: Print Error Sheet =====
   renderPrint() {
     let html = '<h2 style="color:var(--primary-dark);margin-bottom:12px">🖨️ 错题卷打印</h2>';
@@ -3166,7 +3223,7 @@ const App = {
       html += '<h3 style="margin:12px 0 8px">一、错题重做（共' + errors.length + '题）</h3>';
       errors.forEach((e, i) => {
         html += '<div class="a4-q">';
-        html += '<div class="a4-q-num">' + (i+1) + '. [' + e.day + '·' + e.module + '] ' + (e.q.question || e.q.sentence) + '</div>';
+        html += '<div class="a4-q-num">' + (i+1) + '. [' + e.day + '·' + e.module + '] ' + this._a4QuestionHtml(e.q) + '</div>';
         if (e.q.options) {
           e.q.options.forEach((o, oi) => {
             html += '<div style="margin-left:20px">' + String.fromCharCode(65+oi) + '. ' + o + '</div>';
@@ -3183,7 +3240,7 @@ const App = {
       html += '<h3 style="margin:16px 0 8px">二、相似题型巩固练习（共' + similarQuestions.length + '题）</h3>';
       similarQuestions.forEach((sq, i) => {
         html += '<div class="a4-q a4-similar">';
-        html += '<div class="a4-q-num">' + (errors.length+i+1) + '. ' + sq.question + '</div>';
+        html += '<div class="a4-q-num">' + (errors.length+i+1) + '. ' + this._a4QuestionHtml(sq) + '</div>';
         html += '<div class="a4-write-area"></div>';
         html += '<div class="a4-ans" id="sim-ans-' + sid + '-' + i + '">正确答案：' + sq.answer + '<br>解析：' + sq.explanation_cn + '<br>Explanation: ' + sq.explanation_en + '</div>';
         html += '</div>';
