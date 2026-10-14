@@ -2174,7 +2174,11 @@ const App = {
   async syncToCloud() {
     if (!Api.cloudAvailable()) return;
     try {
-      const res = await Api.syncUp(this.state.students, this.state.classes);
+      // The teacher's device is authoritative: their un-assign / removal must
+      // not be overwritten by the cloud copy it is in the middle of pushing.
+      const res = await Api.syncUp(this.state.students, this.state.classes, {
+        authoritative: this.isTeacher(),
+      });
       this._reportSyncResult(res.ok);
       this.state.students = res.students;
       this.state.classes = res.classes;
@@ -3382,6 +3386,9 @@ const App = {
     const res = await Api.classResolveJoinRequest(id, 'approve');
     if (!res || !res.ok) { this.showToast('⚠️ 操作失败，请重试', 'warn'); return; }
     this.showToast('✅ 已同意，学生端将自动进入待分配');
+    // Approving means letting them back in, so clear the delete tombstone —
+    // otherwise the merge keeps hiding the student we are about to restore.
+    if (req && req.phone) await Api.untombstonePhone(req.phone);
     // Put the student back on the roster right away so the teacher can
     // assign a class without waiting for the student's device to re-register.
     if (req && req.phone) {
@@ -3419,7 +3426,9 @@ const App = {
     if (!confirm('确认删除该学生？删除后该手机号需申请并经你同意才能重新登录。')) return;
     const student = this.state.students.find(s => s.id === sid || s.phone === sid);
     if (!student) return;
-    // Delete locally
+    // Delete locally. Api.deleteStudent also records the phone as deleted —
+    // without that tombstone the cloud merge put the student straight back,
+    // which is why 删除 used to look like a no-op.
     this.state.students = await Api.deleteStudent(student);
     delete this.state.parentStudents[student.phone];
     this.syncToCloud();
@@ -3448,6 +3457,9 @@ const App = {
     const phone = document.getElementById('add-phone').value.trim();
     if (!name || !name.includes('-')) { alert('请按"中文名-英文名"格式填写'); return; }
     if (!phone || phone.length < 11) { alert('请输入正确的11位手机号'); return; }
+    // Added back by hand — clear any "deleted" tombstone for this phone, or
+    // the next cloud merge would filter the new record right out again.
+    await Api.untombstonePhone(phone);
     const student = {
       id: 's' + Date.now(),
       name: name,
@@ -3537,6 +3549,9 @@ const App = {
     const name = document.getElementById('add-class-name').value.trim();
     if (!name) { alert('请输入班级名称'); return; }
     if (this.state.classes.includes(name)) { alert('该班级已存在'); return; }
+    // Created (again) on purpose — a stale "deleted" tombstone for this name
+    // would make it disappear on the next cloud merge.
+    await Api.untombstoneClass(name);
     this.state.classes.push(name);
     await Api.saveClasses(this.state.classes);
     this.syncToCloud();
@@ -3560,6 +3575,7 @@ const App = {
     if (!newName) { alert('请输入新班级名称'); return; }
     if (oldName === newName) { this.closeModal(); return; }
     if (this.state.classes.includes(newName)) { alert('该名称已存在'); return; }
+    await Api.untombstoneClass(newName);
     // Update classes list
     const idx = this.state.classes.indexOf(oldName);
     if (idx >= 0) this.state.classes[idx] = newName;
@@ -3577,9 +3593,34 @@ const App = {
   },
 
   async deleteClass(cls) {
-    const count = this.state.students.filter(s => s.class === cls && s.approved).length;
+    const members = this.state.students.filter(s => s.class === cls);
+    const count = members.filter(s => s.approved).length;
     if (count > 0) {
       if (!confirm('班级"' + cls + '"下还有' + count + '名学生。删除班级后学生将变为未分配状态。确认删除？')) return;
+    } else if (members.length > 0) {
+      if (!confirm('班级"' + cls + '"下有' + members.length + '名学生。确认删除该班级？')) return;
+    } else {
+      if (!confirm('确认删除班级"' + cls + '"？')) return;
+    }
+    // Second question only when there is somebody to clean up: teachers who
+    // just want the testing班级 gone can drop the whole class in one go.
+    let alsoDelete = false;
+    if (members.length > 0) {
+      alsoDelete = confirm('是否同时删除这 ' + members.length + ' 名学生？\n\n【确定】连学生一起从名单删除（他们需重新申请才能进班）\n【取消】只删班级，学生保留为「待分配」');
+    }
+
+    if (alsoDelete) {
+      // Api.deleteStudent writes a tombstone per phone, so the cloud merge
+      // cannot resurrect them on the next poll.
+      const gates = [];
+      for (const s of members) {
+        this.state.students = await Api.deleteStudent(s);
+        delete this.state.parentStudents[s.phone];
+        if (s.phone) gates.push(Api.classRemove(s.phone, s.name));
+      }
+      await Promise.all(gates);
+      this.showToast('✅ 已删除班级和 ' + members.length + ' 名学生');
+    } else {
       // Unassign students
       this.state.students.forEach(s => {
         if (s.class === cls) {
@@ -3587,12 +3628,12 @@ const App = {
           s.approved = false;
         }
       });
-    } else {
-      if (!confirm('确认删除班级"' + cls + '"？')) return;
+      await Api.saveStudents(this.state.students);
     }
+
     this.state.classes = this.state.classes.filter(c => c !== cls);
+    await Api.tombstoneClass(cls);          // before the sync, or it comes back
     await Api.saveClasses(this.state.classes);
-    await Api.saveStudents(this.state.students);
     this.syncToCloud();
     this.renderContent();
   },

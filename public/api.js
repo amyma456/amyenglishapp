@@ -54,6 +54,12 @@ const Store = {
     return {
       answers: {}, checkins: {}, errorBook: [],
       students: [], parentStudents: {}, classes: [],
+      // 删除墓碑（tombstone）—— 见 CloudSync 顶部注释。
+      // 记着"这个手机号/班级被老师删过"，否则下一次合并又会从云端把它捞回来。
+      // revived* 是反过来的名单：老师改主意（同意重新加入 / 重建同名班级）
+      // 时要能盖过一台设备或云端上还留着的墓碑。
+      deletedPhones: [], deletedClasses: [],
+      revivedPhones: [], revivedClasses: [],
     };
   },
 
@@ -92,6 +98,10 @@ const Store = {
         doc.students = d.students || [];
         doc.parentStudents = d.parentStudents || {};
         doc.classes = d.classes || [];
+        doc.deletedPhones = d.deletedPhones || [];
+        doc.deletedClasses = d.deletedClasses || [];
+        doc.revivedPhones = d.revivedPhones || [];
+        doc.revivedClasses = d.revivedClasses || [];
       }
       // Migrate from an older version only when v6 produced no students.
       // Same order and same fields as the original loadData().
@@ -153,6 +163,10 @@ const Store = {
         students: d.students,
         parentStudents: d.parentStudents,
         classes: d.classes,
+        deletedPhones: d.deletedPhones || [],
+        deletedClasses: d.deletedClasses || [],
+        revivedPhones: d.revivedPhones || [],
+        revivedClasses: d.revivedClasses || [],
       }));
       return true;
     } catch (e) { console.warn('Store.flush error:', e); return false; }
@@ -240,23 +254,89 @@ const RecStore = {
 // backing store is one opaque JSON blob with no server-side logic: with no
 // rows and no timestamps, the client has to reconcile field by field.
 //
+// DELETION TOMBSTONES
+// A plain union merge can never delete anything: the record is gone locally,
+// but the cloud copy — or another device still holding a stale copy — pushes
+// it straight back on the very next sync. That is the bug the teacher hit:
+// removed students and deleted classes kept reappearing. So the blob carries
+// two extra lists:
+//     deletedPhones  — phone numbers the teacher deleted / removed
+//     deletedClasses — class names the teacher deleted
+// They are unioned like everything else, which makes them travel to every
+// device, and every merge path skips whatever is listed. A phone comes off
+// the list only when the teacher approves that student again (approveJoin)
+// or adds them back by hand (saveStudent).
+//
+// AUTHORITATIVE PUSH
+// The teacher's device is the only writer allowed to win a conflict. The old
+// rule ("cloud is the source of truth for class/approved") protected a
+// student device from wiping a class the teacher had just assigned, but it
+// also meant the teacher's own un-assign got overwritten by the cloud copy
+// on the next push — so 「移出班级」 silently undid itself. Students keep
+// pushing cloud-authoritative; the teacher pushes local-authoritative.
+//
 // When D1 lands this whole section is DELETED, not ported. A single UPDATE
-// replaces it, and app.js does not change because it only ever called
-// Api.syncUp() / Api.syncDown().
+// (and a real DELETE) replaces it, and app.js does not change because it only
+// ever called Api.syncUp() / Api.syncDown().
 // ===========================================================================
 const CloudSync = {
   available() { return typeof Cloud !== 'undefined'; },
 
+  // Union of two string lists, de-duplicated, order preserved (first wins).
+  _union(a, b) {
+    const out = [], seen = new Set();
+    [].concat(a || [], b || []).forEach(v => {
+      if (!v || typeof v !== 'string' || seen.has(v)) return;
+      seen.add(v); out.push(v);
+    });
+    return out;
+  },
+
+  // Local tombstones ∪ cloud tombstones, minus anything the teacher has since
+  // revived (approved back in / re-created the class). The cloud side is what
+  // carries a deletion to the other devices, so it must always be merged in —
+  // and undoing a deletion has to travel the same way.
+  _tombstones(cloudData, local) {
+    const c = cloudData || {};
+    const l = local || {};
+    const revivedPhones = new Set(this._union(l.revivedPhones, c.revivedPhones));
+    const revivedClasses = new Set(this._union(l.revivedClasses, c.revivedClasses));
+    const phones = this._union(l.phones, c.deletedPhones).filter(p => !revivedPhones.has(p));
+    const classes = this._union(l.classes, c.deletedClasses).filter(x => !revivedClasses.has(x));
+    return {
+      phones: new Set(phones),
+      classes: new Set(classes),
+      list: {
+        phones: phones,
+        classes: classes,
+        revivedPhones: Array.from(revivedPhones),
+        revivedClasses: Array.from(revivedClasses),
+      },
+    };
+  },
+
   // Push local state up, merging with whatever is already in the cloud.
-  async up(localStudents, localClasses) {
+  // opts.authoritative: the teacher's device — local wins any conflict.
+  async up(localStudents, localClasses, opts) {
+    opts = opts || {};
     if (!this.available()) return { ok: false, students: localStudents, classes: localClasses };
 
     const cloudData = await Cloud.loadAll();
+    const tomb = this._tombstones(cloudData, opts.tombstones);
+    const localWins = !!opts.authoritative;
 
-    const mergedStudents = localStudents.slice();
+    // Drop whatever is tombstoned — this is the delete that used to come
+    // straight back on the next merge.
+    const mergedStudents = [];
+    (localStudents || []).forEach(s => {
+      if (!s || !s.phone || tomb.phones.has(s.phone)) return;
+      mergedStudents.push(s);
+    });
+
     if (cloudData && cloudData.students) {
       cloudData.students.forEach(cs => {
         if (!cs || !cs.phone) return;
+        if (tomb.phones.has(cs.phone)) return;
         const local = mergedStudents.find(s => s.phone === cs.phone);
         if (!local) {
           mergedStudents.push({
@@ -268,7 +348,7 @@ const CloudSync = {
             approved: cs.approved || false,
             registeredAt: cs.registeredAt || new Date().toISOString(),
           });
-        } else {
+        } else if (!localWins) {
           // Cloud is the source of truth for class/approved. Without this a
           // student device holding a stale record could wipe a class the
           // teacher just assigned.
@@ -279,9 +359,12 @@ const CloudSync = {
       });
     }
 
-    const mergedClasses = localClasses.slice();
+    const mergedClasses = [];
+    (localClasses || []).forEach(c => { if (c && !tomb.classes.has(c)) mergedClasses.push(c); });
     if (cloudData && cloudData.classes) {
-      cloudData.classes.forEach(c => { if (c && !mergedClasses.includes(c)) mergedClasses.push(c); });
+      cloudData.classes.forEach(c => {
+        if (c && !tomb.classes.has(c) && !mergedClasses.includes(c)) mergedClasses.push(c);
+      });
     }
 
     const payload = {
@@ -294,16 +377,21 @@ const CloudSync = {
         registeredAt: s.registeredAt || new Date().toISOString(),
       })),
       classes: mergedClasses,
+      deletedPhones: tomb.list.phones,
+      deletedClasses: tomb.list.classes,
+      revivedPhones: tomb.list.revivedPhones,
+      revivedClasses: tomb.list.revivedClasses,
       lastUpdated: new Date().toISOString(),
     };
 
     const ok = await Cloud.saveAll(payload);
-    return { ok: ok, students: mergedStudents, classes: mergedClasses };
+    return { ok: ok, students: mergedStudents, classes: mergedClasses, tombstones: tomb.list };
   },
 
   // Pull the cloud down, merging into the local collections IN PLACE so that
   // callers holding the same array reference see the update.
-  async down(localStudents, localClasses) {
+  async down(localStudents, localClasses, opts) {
+    opts = opts || {};
     if (!this.available()) return { ok: false, empty: true, unreachable: false };
 
     const cloudData = await Cloud.loadAll();
@@ -314,9 +402,26 @@ const CloudSync = {
       return { ok: false, empty: true, unreachable: unreachable };
     }
 
+    const tomb = this._tombstones(cloudData, opts.tombstones);
+
+    // A deletion made on another device arrives as a tombstone. Apply it
+    // here too, otherwise this device keeps showing the deleted record.
+    if (tomb.phones.size) {
+      for (let i = localStudents.length - 1; i >= 0; i--) {
+        const s = localStudents[i];
+        if (s && s.phone && tomb.phones.has(s.phone)) localStudents.splice(i, 1);
+      }
+    }
+    if (tomb.classes.size) {
+      for (let i = localClasses.length - 1; i >= 0; i--) {
+        if (localClasses[i] && tomb.classes.has(localClasses[i])) localClasses.splice(i, 1);
+      }
+    }
+
     if (cloudData.students && Array.isArray(cloudData.students)) {
       cloudData.students.forEach(cs => {
         if (!cs || !cs.phone) return;
+        if (tomb.phones.has(cs.phone)) return;
         const local = localStudents.find(s => s.phone === cs.phone);
         if (local) {
           local.name = cs.name || local.name;
@@ -338,10 +443,12 @@ const CloudSync = {
     }
 
     if (cloudData.classes && Array.isArray(cloudData.classes)) {
-      cloudData.classes.forEach(c => { if (c && !localClasses.includes(c)) localClasses.push(c); });
+      cloudData.classes.forEach(c => {
+        if (c && !tomb.classes.has(c) && !localClasses.includes(c)) localClasses.push(c);
+      });
     }
 
-    return { ok: true, empty: false, unreachable: false };
+    return { ok: true, empty: false, unreachable: false, tombstones: tomb.list };
   },
 
   lastError() { return this.available() ? Cloud.lastError : null; },
@@ -417,12 +524,66 @@ const Api = {
 
   // Returns the surviving list. Callers assign it back into App.state rather
   // than filtering separately, so the two never drift apart.
+  // Also records the phone as deleted: without the tombstone the next cloud
+  // merge pulls the student straight back in from the blob.
   async deleteStudent(student) {                     // -> DELETE FROM students
     const d = Store.doc();
     d.students = d.students.filter(s => s.id !== student.id && s.phone !== student.phone);
     delete d.parentStudents[student.phone];
+    d.deletedPhones = d.deletedPhones || [];
+    if (student.phone && !d.deletedPhones.includes(student.phone)) {
+      d.deletedPhones.push(student.phone);
+    }
     Store.flush();
     return d.students;
+  },
+
+  // -- deletion tombstones -------------------------------------------------
+  // A phone/class the teacher deleted. Kept in sync with the cloud blob by
+  // CloudSync so the deletion sticks on every device (see CloudSync notes).
+  // revived* is the opposite list: undoing a deletion has to override the
+  // tombstone still sitting on another device (or on the cloud blob).
+  async tombstonePhone(phone) {
+    if (!phone) return;
+    const d = Store.doc();
+    d.deletedPhones = d.deletedPhones || [];
+    if (!d.deletedPhones.includes(phone)) d.deletedPhones.push(phone);
+    d.revivedPhones = (d.revivedPhones || []).filter(p => p !== phone);
+    return Store.flush();
+  },
+
+  // Cleared when the teacher lets that student back in (approveJoin) or adds
+  // them by hand (saveStudent) — otherwise the merge would keep hiding them.
+  async untombstonePhone(phone) {
+    if (!phone) return;
+    const d = Store.doc();
+    d.deletedPhones = (d.deletedPhones || []).filter(p => p !== phone);
+    d.revivedPhones = d.revivedPhones || [];
+    if (!d.revivedPhones.includes(phone)) d.revivedPhones.push(phone);
+    return Store.flush();
+  },
+
+  async tombstoneClass(cls) {
+    if (!cls) return;
+    const d = Store.doc();
+    d.deletedClasses = d.deletedClasses || [];
+    if (!d.deletedClasses.includes(cls)) d.deletedClasses.push(cls);
+    d.revivedClasses = (d.revivedClasses || []).filter(c => c !== cls);
+    return Store.flush();
+  },
+
+  // Cleared when a class with that name is created (or renamed to) again.
+  async untombstoneClass(cls) {
+    if (!cls) return;
+    const d = Store.doc();
+    d.deletedClasses = (d.deletedClasses || []).filter(c => c !== cls);
+    d.revivedClasses = d.revivedClasses || [];
+    if (!d.revivedClasses.includes(cls)) d.revivedClasses.push(cls);
+    return Store.flush();
+  },
+
+  hasTombstonePhone(phone) {
+    return (Store.doc().deletedPhones || []).indexOf(phone) >= 0;
   },
 
   async saveClasses(classes) {                       // -> REPLACE classes
@@ -911,18 +1072,47 @@ const Api = {
   },
 
   // -- cloud sync ---------------------------------------------------------
-  async syncUp(students, classes) {
-    const res = await CloudSync.up(students, classes);
+  // opts.authoritative: teacher device (local wins conflicts — see CloudSync).
+  // The tombstone lists ride along on both directions: up() writes them to
+  // the blob, down() picks up deletions made on another device.
+  async syncUp(students, classes, opts) {
+    opts = opts || {};
     const d = Store.doc();
+    const res = await CloudSync.up(students, classes, {
+      authoritative: !!opts.authoritative,
+      tombstones: {
+        phones: d.deletedPhones || [], classes: d.deletedClasses || [],
+        revivedPhones: d.revivedPhones || [], revivedClasses: d.revivedClasses || [],
+      },
+    });
     d.students = res.students;
     d.classes = res.classes;
+    if (res.tombstones) {
+      d.deletedPhones = res.tombstones.phones;
+      d.deletedClasses = res.tombstones.classes;
+      d.revivedPhones = res.tombstones.revivedPhones;
+      d.revivedClasses = res.tombstones.revivedClasses;
+    }
     Store.flush();
     return res;
   },
 
-  async syncDown(students, classes) {
-    const res = await CloudSync.down(students, classes);
-    if (res.ok) Store.flush();
+  async syncDown(students, classes, opts) {
+    opts = opts || {};
+    const d = Store.doc();
+    const res = await CloudSync.down(students, classes, {
+      tombstones: {
+        phones: d.deletedPhones || [], classes: d.deletedClasses || [],
+        revivedPhones: d.revivedPhones || [], revivedClasses: d.revivedClasses || [],
+      },
+    });
+    if (res.tombstones) {
+      d.deletedPhones = res.tombstones.phones;
+      d.deletedClasses = res.tombstones.classes;
+      d.revivedPhones = res.tombstones.revivedPhones;
+      d.revivedClasses = res.tombstones.revivedClasses;
+    }
+    if (res.ok || res.tombstones) Store.flush();
     return res;
   },
 
