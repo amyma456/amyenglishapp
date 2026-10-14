@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="119">
+<meta name="app-version" content="120">
 <link rel="manifest" href="manifest.json">
 <!-- iOS 的"添加到主屏幕"不认 SVG（装出来是白板/网页截图），必须给 PNG。
      图标与启动图由 tools/gen-pwa-icons.js 生成，别手改。 -->
@@ -311,11 +311,39 @@ input,textarea,select{font-family:inherit;font-size:14px;outline:none}
 .review-word{font-size:36px;font-weight:700;color:var(--ink-1,#222);
   letter-spacing:.5px;cursor:pointer;word-break:break-word}
 .review-sub{font-size:12px;color:var(--ink-3,#999);margin-top:8px}
+.review-phonetic{font-size:14px;color:var(--ink-2,#444);margin-top:6px;font-family:Georgia,serif}
 .review-goal{font-size:13px;color:var(--info);margin:12px 0 16px;font-weight:600}
 .review-hint{font-size:13px;color:var(--ink-2,#444);margin-top:10px;min-height:20px}
-.review-skip{font-size:12px;color:var(--ink-3,#999);margin-top:16px;
-  text-decoration:underline;cursor:pointer}
 .word-read-btn.review-done{background:#1F9D55;border-color:#1F9D55;color:#fff}
+/* v120 纠音：读错时当场说清楚差在哪儿 + 已放一遍正确读音。
+   原来只有一句「还没读对」，孩子不知道自己错在哪个音，只能一遍遍瞎试。 */
+.review-fix{text-align:left;margin-top:10px;padding:10px 12px;border-radius:12px;
+  background:var(--warning-light,#FFF7E6);border:1px solid #F0D9A8}
+.review-fix .rf-head{font-size:13px;font-weight:700;color:#B26A00}
+.review-fix .rf-heard{font-size:12px;color:var(--ink-2,#444);margin-top:4px;word-break:break-word}
+.review-fix .rf-tip{font-size:12px;color:var(--ink-2,#444);margin-top:6px;font-weight:600}
+
+/* v120 错题重练：当天答错的题，换一种题型（三选一）快速再过一遍。
+   家长原话：「把错题再给返回练一下……可以相对快一点……加中文翻译……
+   变一个题型……让孩子们觉得做错题也是一种快乐，不要太死板。」 */
+.retry-step{padding:2px}
+.retry-badge{display:inline-block;background:#FDECEC;color:#C0392B;
+  font-size:12px;font-weight:600;padding:6px 14px;border-radius:999px}
+.retry-note{font-size:12px;color:var(--ink-3,#999);margin:10px 0 12px}
+.retry-stem{font-size:16px;line-height:1.7;color:var(--ink-1,#222);font-weight:600}
+.retry-zh{margin-top:8px;padding:8px 11px;border-radius:10px;
+  background:var(--primary-light,#EEF3FF);font-size:12.5px;line-height:1.6;
+  color:var(--ink-2,#444);text-align:left}
+.retry-options{margin-top:14px;display:flex;flex-direction:column;gap:10px}
+.retry-option{padding:13px 14px;border:1.5px solid var(--line);border-radius:12px;
+  font-size:15px;color:var(--ink-1,#222);background:#fff;cursor:pointer;
+  transition:background .15s,border-color .15s;word-break:break-word}
+.retry-option.correct{background:#E8F7EF;border-color:#1F9D55;color:#1F9D55;font-weight:700}
+.retry-option.wrong{background:#FDECEC;border-color:#C0392B;color:#C0392B;
+  text-decoration:line-through}
+.retry-hint{margin-top:12px;font-size:13px;min-height:18px}
+.retry-hint.good{color:#1F9D55;font-weight:600}
+.retry-hint.bad{color:#B26A00}
 .w-miss{color:var(--ink-3);text-decoration:line-through}
 .align-key{display:flex;gap:14px;justify-content:center;margin-bottom:4px}
 .align-key span{font-size:11px}

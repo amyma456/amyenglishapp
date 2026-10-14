@@ -69,6 +69,10 @@ export default {
       return cors(await wrongQuestionsApi(request, url, env), env);
     }
 
+    if (url.pathname.startsWith('/api/checkins')) {
+      return cors(await checkinsApi(request, url, env), env);
+    }
+
     return cors(json({ error: 'not_found' }, 404), env);
   },
 };
@@ -1288,6 +1292,178 @@ async function classApi(request, url, env) {
         .bind(now, phone).run();
     }
     return json({ ok: true, count: list.length });
+  }
+
+  return json({ error: 'not_found' }, 404);
+}
+
+// ---------------------------------------------------------------------------
+// /api/checkins/* — 打卡记录（D1）。
+//
+//   POST /api/checkins/report         student: 上报/更新一条当日打卡
+//   GET  /api/checkins?class=...&week=...   读一个班某周的全部打卡
+//   GET  /api/checkins?student_id=...&week=...  读一个学生某周的全部打卡
+//
+// 为什么要这张表：answers / checkins 以前只写在**各自手机的 localStorage**
+// 里（CloudSync.up 的 payload 从来不带它们），所以孩子在自己手机上做完的
+// 作业，家长在另一台设备上看到的是"未打卡 / 完成天数 0 / 全是叉"。
+// 写进 D1 之后一台设备上报、所有设备可见。
+//
+// 上报路径不设鉴权（和 wrong-questions 同理）：它携带的是孩子自己那份
+// 作业状态，没有任何密钥；加门禁只会把 bug 藏起来。读取路径要求**必须
+// 指定 class 或 student_id**，不支持无条件全表扫，且**不返回手机号** ——
+// 页面上本来就只展示"姓名 + 完成天数 + 正确率"，接口不该多给。
+// ---------------------------------------------------------------------------
+let checkinsTableReady = false;
+async function ensureCheckinsTable(db) {
+  if (checkinsTableReady) return;
+  await db.prepare(
+    `CREATE TABLE IF NOT EXISTS checkins (
+       student_id    TEXT NOT NULL,
+       student_name  TEXT,
+       student_phone TEXT,
+       student_class TEXT,
+       week_idx      INTEGER NOT NULL DEFAULT 0,
+       day_idx       INTEGER NOT NULL,
+       done          INTEGER NOT NULL DEFAULT 0,
+       completed     TEXT,
+       answered      INTEGER NOT NULL DEFAULT 0,
+       total         INTEGER NOT NULL DEFAULT 0,
+       correct_rate  INTEGER NOT NULL DEFAULT 0,
+       wrong_count   INTEGER NOT NULL DEFAULT 0,
+       finish_time   TEXT,
+       updated_at    TEXT NOT NULL,
+       PRIMARY KEY (student_id, week_idx, day_idx)
+     )`
+  ).run();
+  checkinsTableReady = true;
+}
+
+// 写入用：14 列（含 student_phone —— 要存下来，只是读的时候不返回）。
+const CHECKIN_WRITE_COLS =
+  'student_id, student_name, student_phone, student_class, week_idx, day_idx, done, ' +
+  'completed, answered, total, correct_rate, wrong_count, finish_time, updated_at';
+const CHECKIN_WRITE_VALUES =
+  '?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14';
+
+// 读取用：13 列，**刻意不含 student_phone**。页面上本来就只展示"姓名 + 完成
+// 情况"，接口不该多给。写用和读用必须分开 —— 早先共用一份"不含 phone"的列
+// 列表，INSERT 直接报了 "14 values for 13 columns"。
+const CHECKIN_COLS =
+  'student_id, student_name, student_class, week_idx, day_idx, done, completed, ' +
+  'answered, total, correct_rate, wrong_count, finish_time, updated_at';
+
+function intOr(v, dflt) {
+  const n = parseInt(v, 10);
+  return Number.isFinite(n) && n >= 0 ? n : dflt;
+}
+
+async function checkinsApi(request, url, env) {
+  const db = env.DB;
+  if (!db) return json({ error: 'no_db' }, 500);
+  const path = url.pathname;
+
+  // -- student: report / update today's check-in -----------------------------
+  if (path === '/api/checkins/report' && request.method === 'POST') {
+    const body = await readJsonBody(request);
+    if (!body) return json({ error: 'bad_json' }, 400);
+    const studentId = String(body.student_id || '').trim().slice(0, 80);
+    if (!studentId) return json({ error: 'missing_student_id' }, 400);
+    const dayIdx = intOr(body.day_idx, -1);
+    const weekIdx = intOr(body.week_idx, 0);
+    if (dayIdx < 0) return json({ error: 'bad_day_idx' }, 400);
+
+    const done = body.done ? 1 : 0;
+    const answered = intOr(body.answered, 0);
+    const total = intOr(body.total, 0);
+    const correctRate = Math.min(100, intOr(body.correct_rate, 0));
+    const wrongCount = intOr(body.wrong_count, 0);
+    const finishTime = body.finish_time ? String(body.finish_time).slice(0, 8) : null;
+    const now = new Date().toISOString();
+
+    try {
+      await ensureCheckinsTable(db);
+      // 打卡是"做到哪算哪"的累积状态，重复上报要覆盖而不是追加。
+      // 但**只增不减**：一台设备本地被清过、或家长手机上的旧快照上报，
+      // 都不能把已经攒出来的"已打卡"抹回"未打卡"。
+      //   ・done / answered / total 取两者较大值
+      //   ・正确率与错题数取"答题数更多"的那一份（更完整的那次）
+      await db.prepare(
+        `INSERT INTO checkins (${CHECKIN_WRITE_COLS})
+         VALUES (${CHECKIN_WRITE_VALUES})
+         ON CONFLICT(student_id, week_idx, day_idx) DO UPDATE SET
+           student_name  = COALESCE(excluded.student_name, checkins.student_name),
+           student_phone = COALESCE(excluded.student_phone, checkins.student_phone),
+           student_class = COALESCE(excluded.student_class, checkins.student_class),
+           done          = MAX(checkins.done, excluded.done),
+           completed     = CASE WHEN MAX(checkins.done, excluded.done) = 1
+                                THEN 'full' ELSE excluded.completed END,
+           answered      = MAX(checkins.answered, excluded.answered),
+           total         = MAX(checkins.total, excluded.total),
+           correct_rate  = CASE WHEN excluded.answered >= checkins.answered
+                                THEN excluded.correct_rate ELSE checkins.correct_rate END,
+           wrong_count   = CASE WHEN excluded.answered >= checkins.answered
+                                THEN excluded.wrong_count ELSE checkins.wrong_count END,
+           finish_time   = CASE WHEN excluded.answered >= checkins.answered
+                                THEN COALESCE(excluded.finish_time, checkins.finish_time)
+                                ELSE checkins.finish_time END,
+           updated_at    = excluded.updated_at`
+      ).bind(
+        studentId,
+        String(body.student_name || '').slice(0, 60) || null,
+        String(body.student_phone || '').trim().slice(0, 20) || null,
+        String(body.student_class || '').slice(0, 60) || null,
+        weekIdx, dayIdx, done,
+        done ? 'full' : 'partial',
+        answered, total, correctRate, wrongCount, finishTime, now,
+      ).run();
+      return json({ ok: true, count: 1 });
+    } catch (e) {
+      return json({ error: 'db_error', detail: String(e && e.message || e) }, 500);
+    }
+  }
+
+  // -- read: one class (or one student) for one week -------------------------
+  if (path === '/api/checkins' && request.method === 'GET') {
+    const cls = url.searchParams.get('class');
+    const sid = url.searchParams.get('student_id');
+    if (!cls && !sid) return json({ error: 'missing_filter' }, 400);
+    const weekIdx = parseInt(url.searchParams.get('week'), 10);
+    const week = Number.isFinite(weekIdx) ? weekIdx : 0;
+    try {
+      await ensureCheckinsTable(db);
+      const r = sid
+        ? await db.prepare(
+            `SELECT ${CHECKIN_COLS} FROM checkins
+             WHERE student_id = ?1 AND week_idx = ?2
+             ORDER BY day_idx`
+          ).bind(sid, week).all()
+        : await db.prepare(
+            `SELECT ${CHECKIN_COLS} FROM checkins
+             WHERE student_class = ?1 AND week_idx = ?2
+             ORDER BY student_name, day_idx`
+          ).bind(cls, week).all();
+      const rows = ((r && r.results) || []).map(function (row) {
+        return {
+          student_id: row.student_id,
+          student_name: row.student_name,
+          student_class: row.student_class,
+          week_idx: row.week_idx,
+          day_idx: row.day_idx,
+          done: !!row.done,
+          completed: row.completed,
+          answered: row.answered,
+          total: row.total,
+          correct_rate: row.correct_rate,
+          wrong_count: row.wrong_count,
+          finish_time: row.finish_time,
+          updated_at: row.updated_at,
+        };
+      });
+      return json({ rows: rows, count: rows.length, week: week });
+    } catch (e) {
+      return json({ error: 'db_error', detail: String(e && e.message || e) }, 500);
+    }
   }
 
   return json({ error: 'not_found' }, 404);

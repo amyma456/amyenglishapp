@@ -9,7 +9,8 @@
 //   3. _buildSteps：学生路径末尾插入错词巩固步骤（每天最多 5 个），老师路径不插
 //   4. renderStage：巩固屏渲染出单词与"错词巩固"标题，且把 stage-next-btn 锁住
 //   5. _reviewWordStart：第一按只听不录；第二按跟读 —— ≥60 分连对计数、
-//      不达标清零排尾；跳过不毕业、本场不再出现
+//      不达标清零排尾并**当场纠音**（v120：再放一遍正确读音 + 说清差在哪儿）
+//   6. v120：没有"先跳过"出口，必须读完才能走
 //
 // 用法：node tools/verify-review-queue.js
 const fs = require('fs');
@@ -198,9 +199,12 @@ App.state.role = 'student';
 const html = App.renderReviewStep({ kind: 'review', word: 'museum', tries: 1 });
 ok(html.indexOf('museum') >= 0 && html.indexOf('错词巩固') >= 0, '渲染出单词与标题');
 ok(html.indexOf('已连对 1 / 2') >= 0, '显示连对进度');
-ok(html.indexOf('review-skip') >= 0, '有"先跳过"出口（识别不了的孩子不会被卡死）');
+ok(html.indexOf('review-skip') < 0 && html.indexOf('先跳过') < 0,
+  'v120：没有"先跳过"出口 —— 家长要求必须读完才能走');
+const ph = App._wordPhonetic('museum');
+ok(ph === '' || html.indexOf(ph) >= 0,
+  '词库里有音标就显示出来（纠音用）：museum → ' + (ph || '未收录'));
 // 门禁：renderStage 落在 review 步时锁 next
-App._reviewSkipped = {};
 if (lsData[App._reviewKey()]) delete lsData[App._reviewKey()];
 App._reviewAdd('tiger');
 const steps = App._buildSteps(0);
@@ -215,42 +219,53 @@ App._lockNextOnRender = true;
 App._applyStepLock();
 ok(byId['stage-next-btn'] && byId['stage-next-btn'].disabled === true, '跟读通过前 stage-next-btn 锁住');
 
-console.log('== 6) 第一按只听、第二按判分 ==');
+console.log('== 6) 第一按只听、第二按判分、读歪要纠音 ==');
 if (lsData[App._reviewKey()]) delete lsData[App._reviewKey()];
 App._reviewAdd('pencil');
 App.state.stepIdx = App._buildSteps(0).findIndex(s => s.kind === 'review' && s.word === 'pencil');
 App.renderStage(0);
 let spoke = 0, held = null;
 App.speak = () => { spoke++; };
-App._holdStart = (ev, key, promptLabel, statusEl, onDone) => { held = { key: key, cb: onDone }; };
+App._holdStart = (ev, key, promptLabel, statusEl, onDone, needs, lang, hint, prefer, autoStop) => {
+  held = { key: key, cb: onDone, autoStop: autoStop, hints: [hint, prefer] };
+};
 const ev = { preventDefault: () => {}, pointerId: 1, currentTarget: { setPointerCapture: () => {} } };
 App._reviewWordStart(ev);
 ok(spoke === 1 && !held, '第一按：只放示范读音，不进录音');
 App._reviewWordStart(ev);
 ok(!!held && held.key === 'review-pencil', '第二按：发起跟读识别');
+ok(held.autoStop === true,
+  'v120：说完静一下自动收尾，不必一直按着（家长："提交之后反应太慢"）');
+ok(held.hints[0] === 'pencil', '识别偏置带上目标词，减少误判漏读');
 held.cb({}, 'pencil');                 // 识别命中、满分
-ok(App._reviewPass === App._reviewPass, '回调进入判分');
 ok(App._reviewLoad().some(e => e.w === 'pencil' && e.ok === 1), '≥60 分 → 连对 1/2');
 ok(byId['stage-next-btn'] && byId['stage-next-btn'].disabled === false, '通过 → next 解锁');
 App._reviewWordStart(ev);              // 再按一次（按钮应已 disabled，但直接调函数验证判分）
 held.cb({}, 'banana');                 // 读歪了
 ok(App._reviewLoad().some(e => e.w === 'pencil' && e.ok === 0),
    '读歪 → 连对清零（不清空队列）');
+ok(spoke === 2, 'v120 纠音：读歪当场再放一遍正确读音');
+ok(byId['review-hint'].innerHTML.indexOf('review-fix') >= 0
+   && byId['review-hint'].innerHTML.indexOf('rf-tip') >= 0,
+   '纠音提示说清楚差在哪儿 + 下一步怎么做（不再只有一句"还没读对"）');
 held.cb({}, 'pencil');                 // 重新读对第 1 次
 ok(App._reviewLoad().some(e => e.w === 'pencil' && e.ok === 1), '重新连对 1/2');
 held.cb({}, 'pencil');                 // 第 2 次 → 毕业
 ok(!App._reviewLoad().some(e => e.w === 'pencil'), '连对 2 次 → 出队毕业');
 
-console.log('== 7) 跳过不死循环 ==');
+console.log('== 7) 必须读完才能走 ==');
 if (lsData[App._reviewKey()]) delete lsData[App._reviewKey()];
-App._reviewSkipped = {};
 App._reviewAdd('orange');
 const s1 = App._buildSteps(0);
-ok(s1.some(s => s.kind === 'review' && s.word === 'orange'), '未跳过 → 在步骤里');
-App._reviewSkip('orange');
-const s2 = App._buildSteps(0);
-ok(!s2.some(s => s.kind === 'review' && s.word === 'orange'), '跳过 → 本场不再出现');
-ok(App._reviewLoad().some(e => e.w === 'orange'), '跳过 ≠ 放弃：词还在队列里');
+ok(s1.some(s => s.kind === 'review' && s.word === 'orange'), '错词在巩固步骤里');
+ok(typeof App._reviewSkip === 'undefined' && typeof App._reviewSkipClick === 'undefined',
+  'v120：跳过的那两个方法已经删掉');
+const appSrc = fs.readFileSync(BASE + 'app.js', 'utf8');
+const cssSrc = fs.readFileSync(BASE + 'index.html', 'utf8');
+ok(appSrc.indexOf('review-skip') < 0 && cssSrc.indexOf('review-skip') < 0,
+  '源码与样式里再没有 review-skip 这个出口（旧缓存的页面同样刷不出来）');
+ok(App._reviewDue(60).some(e => e.w === 'orange'),
+  '没读对之前词一直留在队列里（不会因为"跳过"消失）');
 
 console.log(fail === 0 ? '\n全部通过 ✅' : '\n有 ' + fail + ' 项失败 ❌');
 process.exit(fail === 0 ? 0 : 1);

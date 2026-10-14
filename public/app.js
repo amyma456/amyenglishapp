@@ -261,6 +261,110 @@ const App = {
     return this._myStudentId() + this._weekTag() + '_d' + dayIdx;
   },
 
+  // ===== 打卡记录同步（v120）===============================================
+  //
+  // 家长 2026-10-14 报的：「孩子端显示的打卡记录都是未打卡，完成时间、正确率、
+  // 错题数都没同步过来。」根因是打卡记录**从来没上过后端** —— CloudSync.up()
+  // 的 payload 只带 students / classes / 墓碑，answers 和 checkins 只写在各自
+  // 手机的 localStorage 里。孩子用自己的手机做完，家长在另一台设备上看到的
+  // 自然是一片空白。
+  //
+  // 现在打卡会报到 D1（Api.reportCheckin），这里负责把后台那份拉回来合并。
+
+  // 上报打卡时带上"我是谁"。孩子端常常没有同步到自己的档案（state.students
+  // 里找不到自己），所以从登录时记下的 state 上再兜一层。
+  _myWho() {
+    const me = this.state.students.find(s => s.phone === this.state.phone);
+    return {
+      name: (me && me.name) || this.state.userName || '',
+      phone: this.state.phone || '',
+      klass: (me && me.class) || this.state.className || '',
+    };
+  },
+
+  // 把后台的打卡行合并进 state.checkins。
+  //
+  // 冲突时取"更完整"的一份，而不是无脑用云端覆盖：
+  //   ・done 只增不减（一台设备本地被清过，不该把已打卡抹回未打卡）
+  //   ・answered 多的那一份正确率更可信
+  // 这样孩子刚答完、上报还在路上时，本机那份照样显示得对。
+  _mergeCloudCheckins(rows) {
+    if (!Array.isArray(rows)) return 0;
+    const tag = this._weekTag();
+    let n = 0;
+    rows.forEach(r => {
+      if (!r || !r.student_id || r.day_idx === undefined || r.day_idx === null) return;
+      const k = r.student_id + tag + '_d' + r.day_idx;
+      const mine = this.state.checkins[k];
+      const done = !!r.done;
+      const better = !mine
+        || (done && !mine.done)
+        || ((r.answered || 0) > (mine.answered || 0));
+      if (!better) return;
+      this.state.checkins[k] = {
+        id: 'cloud_' + k,
+        studentId: r.student_id,
+        dayIdx: r.day_idx,
+        done: done,
+        completed: r.completed || (done ? 'full' : 'partial'),
+        answered: r.answered || 0,
+        total: r.total || 0,
+        correctRate: r.correct_rate || 0,
+        wrongCount: r.wrong_count || 0,
+        time: r.finish_time || '',
+        at: r.updated_at || '',
+        fromCloud: true,
+      };
+      n++;
+    });
+    return n;
+  },
+
+  // 历史补录（v120）：在这版之前，打卡记录只写在本机。孩子下次打开 App
+  // 时把本机这份推一次到后台，几天的记录就补齐了 —— 不然"优素福今天全做完
+  // 了却还是未打卡"要等他下次再答一道题才肯更新。一次会话推一次就够，
+  // 之后新产生的打卡由 saveCheckin 实时上报。
+  _backfillCheckins() {
+    if (this.isTeacher() || !this.state.phone) return 0;
+    if (this._backfilled) return 0;
+    this._backfilled = true;
+    const sid = this._myStudentId();
+    const prefix = sid + this._weekTag() + '_d';
+    const who = this._myWho();
+    let n = 0;
+    Object.keys(this.state.checkins || {}).forEach(k => {
+      if (k.indexOf(prefix) !== 0) return;
+      const di = parseInt(k.slice(prefix.length), 10);
+      const rec = this.state.checkins[k];
+      if (!isFinite(di) || !rec) return;
+      Api.reportCheckin(Object.assign({}, rec, { studentId: sid, dayIdx: di }), who);
+      n++;
+    });
+    if (n) console.log('backfilled ' + n + ' check-ins');
+    return n;
+  },
+
+  // 进「孩子打卡 / 完成率对比」之前拉一次后台。失败保持本机数据不动 ——
+  // 一断网就把全班显示成"未打卡"是最坏的降级方式。
+  //
+  // 老师端要跨班看，所以逐个班拉一遍再合并（班级数量个位数，够用）。
+  async _pullCloudCheckins(scope) {
+    const who = this._myWho();
+    if (this.isTeacher()) {
+      let n = 0;
+      const classes = (this.state.classes || []).filter(Boolean);
+      for (let i = 0; i < classes.length; i++) {
+        const rows = await Api.fetchCheckins({ klass: classes[i] });
+        n += this._mergeCloudCheckins(rows);
+      }
+      return n;
+    }
+    const rows = scope === 'class'
+      ? await Api.fetchCheckins({ klass: who.klass || this.state.className })
+      : await Api.fetchCheckins({ studentId: this._myStudentId() });
+    return this._mergeCloudCheckins(rows);
+  },
+
   _getPos(dayIdx) {
     if (this.isTeacher() || !this.state.phone) return null;
     if (dayIdx === undefined || dayIdx === null) return null;
@@ -385,7 +489,15 @@ const App = {
       // sentence / translate / passage 步骤没有独立答题记录：它们排在
       // 所属模块的题目之前，跟随后面的题目状态一起被跳过或重做。
     }
-    if (firstUn < 0) return steps.length;   // 全做完了 → 完成页
+    if (firstUn < 0) {
+      // 正课全做完了 → 停在**错题巩固的第一屏**（错题重练 / 错词跟读）。
+      // v120 之前这里直接返回完成页，于是孩子一退出再进来，答错的题和读错的
+      // 词就再也见不到了 —— 家长要的"把错题再返回练一下"必须能回得来。
+      for (let i = 0; i < steps.length; i++) {
+        if (steps[i].kind === 'retry' || steps[i].kind === 'review') return i;
+      }
+      return steps.length;
+    }
 
     const target = steps[firstUn];
     if (!touched[target.mi]) {
@@ -403,9 +515,10 @@ const App = {
   _recordAnswer(dayIdx, moduleIdx, qIdx, value, correct) {
     if (this.isTeacher() || !this.state.phone) return;
     const sid = this._myStudentId();
+    const who = this._myWho();
     Api.saveAnswer(sid, dayIdx, moduleIdx, qIdx, value, correct)
       .then(res => res.recorded
-        ? Api.saveCheckin(sid, dayIdx, this._countDayQuestions(dayIdx))
+        ? Api.saveCheckin(sid, dayIdx, this._countDayQuestions(dayIdx), who)
         : null)
       .catch(e => console.warn('Record answer failed:', e));
 
@@ -808,6 +921,8 @@ const App = {
         : '📍 接着上次做到的地方继续');
     }
     clearTimeout(this._advanceTimer);
+    // v120：把本机的历史打卡补报一次到后台（见 _backfillCheckins）。
+    this._backfillCheckins();
     // Update header name - show student name or teacher label
     const headerName = document.getElementById('header-name');
     if (headerName) {
@@ -2675,6 +2790,14 @@ const App = {
         clips.forEach(c => { byId[c.id] = c.url; });
         this.state.speakingRecords.forEach(r => { r.audioUrl = byId[r.clipId] || null; });
       } catch(e) { this.state.speakingRecords = []; }
+    }
+    // v120：打卡记录烧进了 D1，渲染前先把后台那份拉回来。渲染函数是同步的，
+    // 不先拉就只能读到本机那份 —— 那正是"全是未打卡"的老毛病。
+    // 老师端三个页都建在 checkins 上，一起拉。
+    const needsCheckins = ['myprogress', 'compare', 'daily', 'checkin', 'scores'];
+    if (needsCheckins.indexOf(tab) >= 0) {
+      try { await this._pullCloudCheckins(tab === 'myprogress' ? 'me' : 'class'); }
+      catch (e) { console.warn('pull checkins failed:', e); }
     }
     this.renderContent();
   },
@@ -7796,16 +7919,18 @@ const App = {
   _reviewDue(n) {
     return this._reviewLoad().slice(0, n || this.REVIEW_PER_DAY);
   },
-  // 本场会话里孩子点了"先跳过"的词：跳过不是放弃 —— 词留在队列里，
-  // 只是今天这轮不再出现（防"跳过→重建步骤→又是它"的死循环）。
-  _reviewSkip(rawWord) {
-    const word = String(rawWord || '').trim().toLowerCase();
-    if (!this._reviewSkipped) this._reviewSkipped = {};
-    this._reviewSkipped[word] = true;
-  },
+  // v120 删掉了 _reviewSkip / _reviewSkipClick 和它们的「这个先跳过，下次
+  // 再练 →」出口。家长原话：「不要出现这次不读了，下次再读这个选项，必须
+  // 读完才能走」。错词本来就是孩子读错过的，给一个出口等于告诉他"读不出来
+  // 可以溜"，而溜掉的那些词明天仍然在队列里，只是白等一天。
 
   // 错词巩固这一屏：先点单词听示范，再按住跟读。跟修复词卡同一套交互
   // （孩子已经熟悉），过线 = alignSpeech ≥60 分。
+  //
+  // v120：去掉「这个先跳过，下次再练 →」。家长原话：「不要出现这次不读了，
+  // 下次再读这个选项，必须读完才能走」。错词本来就是孩子读错过的，给一个
+  // 出口等于告诉他"读不出来可以溜" —— 溜掉的那些词明天仍然在队列里，只是
+  // 白等一天。
   renderReviewStep(step) {
     const word = String(step.word || '');
     const esc = word.replace(/'/g, "\\'");
@@ -7813,10 +7938,12 @@ const App = {
     this._reviewCtx = { word: word, tries: step.tries || 0 };
     this._reviewListened = false;   // 每个新词都要先听一遍示范才能跟读
     const n = this._reviewDue(60).length;
+    const ph = this._wordPhonetic(word);
     let html = '<div class="review-step">';
     html += '<div class="review-badge">🎯 错词巩固 · 还剩 ' + n + ' 个待巩固</div>';
     html += '<div class="review-card">';
     html += '<div class="review-word tap-speak-sm" onclick="App.speak(\'' + esc + '\')" title="点一下听发音">' + this._escHtml(word) + '</div>';
+    if (ph) html += '<div class="review-phonetic">' + this._escHtml(ph) + '</div>';
     html += '<div class="review-sub">这是你之前读错/答错的单词</div>';
     html += '</div>';
     html += '<div class="review-goal">' + (step.tries > 0
@@ -7827,7 +7954,45 @@ const App = {
       + ' onpointerup="App._holdEnd(event)" onpointercancel="App._holdEnd(event)"'
       + ' oncontextmenu="return false">🔊 ' + this._escHtml(word) + '</button>';
     html += '<div class="review-hint" id="review-hint">第一按听示范读音，第二按住跟读</div>';
-    html += '<div class="review-skip" onclick="App._reviewSkipClick(\'' + esc + '\')">这个先跳过，下次再练 →</div>';
+    html += '</div>';
+    return html;
+  },
+
+  // 从词库里查音标（纠音要用）。错词队列是跨周的，所以四周都翻一遍。
+  // 真的查不到就返回空串 —— 页面里不显示这一行，而不是显示个空括号。
+  _wordPhonetic(rawWord) {
+    const want = String(rawWord || '').trim().toLowerCase();
+    if (!want) return '';
+    const weeks = (typeof HOMEWORK_WEEKS !== 'undefined' && HOMEWORK_WEEKS) ? HOMEWORK_WEEKS : [HOMEWORK_DATA];
+    for (let w = 0; w < weeks.length; w++) {
+      const days = weeks[w] || [];
+      for (let d = 0; d < days.length; d++) {
+        const mods = (days[d] && days[d].modules) || [];
+        for (let i = 0; i < mods.length; i++) {
+          const ws = mods[i].words || [];
+          for (let k = 0; k < ws.length; k++) {
+            if (String(ws[k].word || '').toLowerCase() === want) return ws[k].phonetic || '';
+          }
+        }
+      }
+    }
+    return '';
+  },
+
+  // 纠音（v120）。家长原话：「纠音这里没有，而且提交之后还是反应太慢了」。
+  // 原来是干巴巴一句「还没读对」，孩子不知道自己错在哪个音，只能一遍遍瞎试，
+  // 越试越慢。现在说清楚差在哪儿（漏了哪个、哪个没读准），并且**当场把正确
+  // 读音放一遍** —— 跟读的本质就是"听—模仿"，不给听的机会就没有纠音。
+  _reviewFixHtml(word, heard, a) {
+    const miss = ((a && a.missing) || []).map(x => x.target).filter(Boolean);
+    const wrong = ((a && a.wrong) || []).map(x => x.target).filter(Boolean);
+    const bits = [];
+    if (miss.length) bits.push('漏了「' + miss.join('、') + '」');
+    if (wrong.length) bits.push('「' + wrong.join('、') + '」没读准');
+    let html = '<div class="review-fix">';
+    html += '<div class="rf-head">❌ ' + (bits.length ? bits.join('，') : '这一遍差一点') + '</div>';
+    if (heard) html += '<div class="rf-heard">听到的是：' + this._escHtml(heard) + '</div>';
+    html += '<div class="rf-tip">🔊 正确读音已经放了一遍，跟着它再按住读一次</div>';
     html += '</div>';
     return html;
   },
@@ -7848,9 +8013,16 @@ const App = {
     }
     const word = ctx.word;
     const self = this;
+    // v120：最后一个参数 autoStop=true —— 说完静 0.6 秒自动收尾，不必一直
+    // 按着。家长说「提交之后还是反应太慢了」，一半的等待其实来自"按着不放
+    // 才敢松"；识别只有一次往返，收尾越早开始就越快。
     this._holdStart(ev, 'review-' + word, word, status, function(out, text) {
       if (!text) {
-        if (status) status.textContent = '没听清，点一下单词听读音，再按住读一次';
+        // 没听清 ≠ 读错。孤立单词本来就难识别，算成孩子的错会把人永久卡在
+        // 这一屏（v99 起字母跟读就是这么处理的，这里补齐）。
+        if (status) status.innerHTML = '<div class="review-fix">'
+          + '<div class="rf-head">⚠️ 这次没听清（不算读错）</div>'
+          + '<div class="rf-tip">点一下上面的单词听读音，再按住大声读一次</div></div>';
         return;
       }
       const a = self.alignSpeech(word, text);
@@ -7865,16 +8037,12 @@ const App = {
         if (next) { next.disabled = false; next.classList.add('nudge'); }
       } else {
         self._reviewFail(word);
-        if (status) status.innerHTML = '❌ 还没读对，再听一遍、再按住读一次（识别到：' + self._escHtml(text) + '）';
+        // 纠音（v120）：当场把正确读音放一遍，再说清楚差在哪儿。没有这一步，
+        // 孩子看到的只是"还没读对"，只能一遍遍瞎试 —— 又慢又挫败。
+        self.speak(word);
+        if (status) status.innerHTML = self._reviewFixHtml(word, text, a);
       }
-    }, true, 'en', word);
-  },
-
-  _reviewSkipClick(word) {
-    this._reviewSkip(word);
-    const btn = document.getElementById('stage-next-btn');
-    if (btn) { btn.disabled = false; }
-    this.nextStep();
+    }, true, 'en', word, '', true);
   },
 
   _buildSteps(dayIdx) {
@@ -7912,15 +8080,169 @@ const App = {
       }
       if (m.questions) m.questions.forEach((q, qi) => steps.push({ mi, qi, kind: 'question' }));
     });
-    // 错词巩固排在当天全部模块之后：先把正课做完，最后把之前错的词
-    // 一个个过掉。老师预览路径不掺这个 —— 复习是学生自己的账。
+    // 错题巩固排在当天全部模块之后：先把正课做完，最后把错的过一遍。
+    // 老师预览路径不掺这个 —— 复习是学生自己的账。
+    //
+    // v120 起分两段：
+    //   ① 错题重练（retry）：当天**答错的题**，换成三选一快速过一遍
+    //   ② 错词跟读（review）：**读错的词**，连对 2 次才算毕业
+    // 先做题、后读词 —— 题目是"想"的、单词是"说"的，把要张嘴的放最后，
+    // 孩子读完就收工，不用再切回思考状态。
     if (!this.isTeacher()) {
-      if (!this._reviewSkipped) this._reviewSkipped = {};
+      this._retryWrongQuestions(dayIdx).forEach(s => steps.push(s));
       this._reviewDue(this.REVIEW_PER_DAY)
-        .filter(e => e && e.w && !this._reviewSkipped[e.w])
+        .filter(e => e && e.w)
         .forEach(e => steps.push({ kind: 'review', word: e.w, tries: e.ok || 0 }));
     }
     return steps;
+  },
+
+  // ===== 错题重练（v120）=================================================
+  //
+  // 家长原话：「错题巩固的话，在最后面进行一个巩固，把错题再给返回练一下。
+  // 这个部分可以相对快一点，例如多加一些中文翻译，比如说之前没有中文翻译
+  // 的，这下加上中文翻译，或者变一个题型……让孩子们觉得做错题也是一种快乐，
+  // 不要太死板，而且还要快速一些。」
+  //
+  // 做法：把当天**答错的题**收进来，统一改成**三选一** —— 比原来的填空、
+  // 长选项快得多，而且干扰项取自同一模块的其他答案，考的仍然是同一个知识点。
+  // 每题配一句中文（题目自带的中文优先，否则用解析），这就是家长要的
+  // "之前没有中文翻译的，这下加上中文翻译"。
+  //
+  // 重练**不碰**原始答题记录与打卡统计：这是"补考"，回填会让正确率虚高。
+  RETRY_MAX: 6,
+
+  // 当天已经"练对过"的题。存本机（和错词队列一样，复习是练习行为，不必
+  // 跨设备同步）。key 带 dayIdx —— 换一天重新出现，这才是"巩固"。
+  // 答错、看了答案就走的不记：那说明还没记住，下次还得再练。
+  _retryKey(dayIdx) {
+    return 'amyRetryV1_' + (this._myStudentId() || 'guest')
+         + this._weekTag() + '_d' + dayIdx;
+  },
+  _retryDone(dayIdx) {
+    try {
+      const raw = JSON.parse(localStorage.getItem(this._retryKey(dayIdx)) || '[]');
+      return Array.isArray(raw) ? raw : [];
+    } catch (e) { return []; }
+  },
+  _retryMarkDone(dayIdx, mi, qi) {
+    const list = this._retryDone(dayIdx);
+    const k = mi + '_' + qi;
+    if (list.indexOf(k) < 0) list.push(k);
+    try { localStorage.setItem(this._retryKey(dayIdx), JSON.stringify(list.slice(0, 80))); } catch (e) {}
+  },
+
+  _retryWrongQuestions(dayIdx) {
+    const day = HOMEWORK_DATA[dayIdx];
+    if (!day || !day.modules) return [];
+    const sid = this._myStudentId();
+    const done = this._retryDone(dayIdx);
+    const out = [];
+    (day.modules || []).forEach((m, mi) => {
+      if (!m.questions) return;
+      m.questions.forEach((q, qi) => {
+        if (done.indexOf(mi + '_' + qi) >= 0) return;    // 今天已经练对了
+        const rec = this.state.answers[Api.answerKey(sid, dayIdx, mi, qi)];
+        if (rec && !rec.correct) out.push({ mi: mi, qi: qi, kind: 'retry', dayIdx: dayIdx });
+      });
+    });
+    return out.slice(0, this.RETRY_MAX);
+  },
+
+  // 这道错题的中文说明：题目自带的中文优先，没有就用解析。
+  // 两者都是题库里现成的，不新造内容 —— 新造的翻译没有教研把关，宁可不用。
+  _retryZh(q) {
+    if (!q) return '';
+    return String(q.sentence_cn || q.question_cn || q.explanation_cn || '').trim();
+  },
+
+  // 三选一的选项：正确答案 + 同模块里另外两个答案。
+  // 用题目 id 做定序种子 —— 同一道题每次渲染顺序一致（老师端预览、
+  // 孩子重进这一屏都不会突然换位置）。
+  _retryOptions(m, q, dayIdx, qi) {
+    const right = this._a4AnswerText(q);
+    if (!right) return null;
+    const pool = [];
+    (m.questions || []).forEach(qq => {
+      if (qq === q) return;
+      const t = this._a4AnswerText(qq);
+      if (t && t !== right && pool.indexOf(t) < 0) pool.push(t);
+    });
+    // 同模块不够（比如一整个模块只有一个错项）就从当天其它模块拿。
+    const day = HOMEWORK_DATA[dayIdx];
+    if (pool.length < 2 && day) {
+      (day.modules || []).forEach(mm => (mm.questions || []).forEach(qq => {
+        const t = this._a4AnswerText(qq);
+        if (t && t !== right && pool.indexOf(t) < 0) pool.push(t);
+      }));
+    }
+    if (pool.length < 2) return null;          // 凑不出干扰项就别做三选一
+
+    // 用题目 id 的字符和做种子，稳定地挑两个干扰项与插入位置。
+    const seed = String(q.id || '').split('').reduce((a, c) => a + c.charCodeAt(0), 0) + (qi || 0);
+    const d1 = pool[seed % pool.length];
+    let d2 = pool[(seed * 7 + 3) % pool.length];
+    if (d2 === d1) d2 = pool[(pool.indexOf(d1) + 1) % pool.length];
+    // 先把干扰项排好，再把正确答案**插进** at 位置 —— 不能先 splice 再 splice，
+    // 那样删掉的不一定是 right，right 会被插两次（三个选项里两个一模一样）。
+    const shuffled = [d1, d2];
+    const at = seed % 3;                        // 正确答案落在哪个位置
+    shuffled.splice(at, 0, right);
+    return { options: shuffled, answerIdx: at };
+  },
+
+  renderRetryStep(step, dayIdx, left) {
+    const day = HOMEWORK_DATA[dayIdx];
+    const m = day && day.modules[step.mi];
+    const q = m && m.questions && m.questions[step.qi];
+    if (!m || !q) return '<div class="card text-sub">这一题找不到了</div>';
+    const pack = this._retryOptions(m, q, dayIdx, step.qi);
+    if (!pack) return '<div class="card text-sub">这一题暂时不能重练</div>';
+
+    const zh = this._retryZh(q);
+    let html = '<div class="retry-step">';
+    html += '<div class="retry-badge">📕 错题重练 · 还剩 ' + left + ' 题</div>';
+    html += '<div class="retry-note">这题你之前做错过，再选一次就记住啦</div>';
+    html += '<div class="retry-stem">' + this._a4QuestionHtml(q) + '</div>';
+    if (zh) html += '<div class="retry-zh">💡 ' + this._escHtml(zh) + '</div>';
+    html += '<div class="retry-options" id="retry-opts-' + step.mi + '-' + step.qi + '">';
+    pack.options.forEach((opt, oi) => {
+      html += '<div class="retry-option" onclick="App.retryPick(this,' + oi + ',' + pack.answerIdx
+            + ',' + step.mi + ',' + step.qi + ',' + dayIdx + ')">'
+            + String.fromCharCode(65 + oi) + '. ' + this._escHtml(opt) + '</div>';
+    });
+    html += '</div>';
+    html += '<div class="retry-hint" id="retry-hint-' + step.mi + '-' + step.qi + '"></div>';
+    html += '</div>';
+    return html;
+  },
+
+  // 答对/答错都不卡人：这是补考，目的是"再来一次就记住"，不是筛人。
+  // 答对 → 记下"今天练过了"，底部「下一题」亮起；答错 → 直接标出正确项并
+  // 放行，孩子看着答案走到下一题，比逼他再猜一遍快得多，也不会因为一道题
+  // 反复受挫（家长："让孩子们觉得做错题也是一种快乐，不要太死板"）。
+  retryPick(el, picked, right, mi, qi, dayIdx) {
+    if (!el || el.parentElement.dataset.done === '1') return;
+    const box = el.parentElement;
+    box.dataset.done = '1';
+    box.querySelectorAll('.retry-option').forEach((o, i) => {
+      if (i === right) o.classList.add('correct');
+      else if (i === picked) o.classList.add('wrong');
+    });
+    const hint = document.getElementById(box.id.replace('retry-opts-', 'retry-hint-'));
+    const hit = picked === right;
+    if (hint) {
+      hint.className = 'retry-hint ' + (hit ? 'good' : 'bad');
+      hint.innerHTML = hit
+        ? '✅ 对了！这题以后不会再错啦'
+        : '🙂 正确答案是 ' + String.fromCharCode(65 + right) + '，记住它就好';
+    }
+    if (hit && dayIdx !== undefined && mi !== undefined && qi !== undefined) {
+      this._retryMarkDone(dayIdx, mi, qi);
+    }
+    this._playCorrectSound();
+    const next = document.getElementById('stage-next-btn');
+    if (next) { next.disabled = false; next.classList.add('nudge'); }
   },
 
   // 自动翻页已废弃：现在所有题型都靠 stage-next-btn 自己解锁，孩子在屏幕
@@ -8080,9 +8402,19 @@ const App = {
       html += '<div class="stage-q">' + this.renderWritingRead(m, step.mi, dayIdx) + '</div>';
       // 全部句子读对（≥60 分）之前不放行
       if (!this.isTeacher() && !this._writingAllRead(m, step.mi)) this._lockNextOnRender = true;
+    } else if (step.kind === 'retry') {
+      // 「还剩 N 题」按当前这一步往后数，孩子知道还有多远到头。
+      let left = 0;
+      for (let i = this.state.stepIdx; i < steps.length; i++) {
+        if (steps[i].kind === 'retry') left++;
+      }
+      html += '<div class="stage-q">' + this.renderRetryStep(step, dayIdx, left) + '</div>';
+      // 选之前锁着；选完（对或错都算）由 retryPick 就地解锁。
+      if (!this.isTeacher()) this._lockNextOnRender = true;
     } else if (step.kind === 'review') {
       html += '<div class="stage-q">' + this.renderReviewStep(step) + '</div>';
-      // 跟读通过（或点了"先跳过"）才放行下一题
+      // 跟读读对才放行下一题。v120 起没有"先跳过"这个出口 —— 家长明确要求
+      // "不要出现这次不读了，下次再读这个选项，必须读完才能走"。
       if (!this.isTeacher()) this._lockNextOnRender = true;
     }
     html += '</div>';
@@ -8114,6 +8446,9 @@ const App = {
       else if (step.kind === 'translate') label = nextStep && nextStep.kind === 'translate' ? '下一句' : '开始做题';
       else if (step.kind === 'passage') label = '开始做题';
       else if (step.kind === 'writing') label = '开始朗读';
+      else if (step.kind === 'retry')
+        label = nextStep && nextStep.kind === 'retry' ? '下一题'
+              : nextStep && nextStep.kind === 'review' ? '开始错词巩固' : '完成巩固';
       else if (step.kind === 'review') label = nextStep && nextStep.kind === 'review' ? '下一个错词' : '完成复习';
       else label = '下一题';
       html += '<button class="btn-ghost" id="stage-next-btn" onclick="App.nextStep()">' + label + '</button>';

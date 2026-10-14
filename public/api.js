@@ -655,7 +655,7 @@ const Api = {
   // Written from the first answer of the day onward, recomputed after each.
   // done=true only once every question in the day has a record; before that
   // completed='partial', which the existing renderers already style.
-  async saveCheckin(studentId, dayIdx, totalQuestions) {
+  async saveCheckin(studentId, dayIdx, totalQuestions, who) {
     const d = Store.doc();
     const answered = await this.getAnswers(studentId, dayIdx);
     if (answered.length === 0) return null;
@@ -680,7 +680,61 @@ const Api = {
     };
     d.checkins[key] = rec;
     Store.flush();
+
+    // 同步烧进 D1（v120）。以前打卡只写本机 localStorage，所以孩子在自己
+    // 手机上做完的作业，家长在另一台设备上看到的是"未打卡 / 完成天数 0 /
+    // 每日状态全是叉"。fire-and-forget：上报失败绝不能影响孩子答题。
+    this.reportCheckin(rec, who);
     return rec;
+  },
+
+  // who（可选）：{name, phone, klass}。调用方已经知道这些，比在这里翻
+  // Store.doc().students 更可靠 —— 孩子端可能压根没同步到自己的档案。
+  reportCheckin(rec, who) {
+    if (!rec || !rec.studentId) return Promise.resolve(null);
+    const w = who || {};
+    const stu = (Store.doc().students || []).find(s => s.id === rec.studentId) || {};
+    const body = {
+      student_id: rec.studentId,
+      student_name: w.name || stu.name || '',
+      student_phone: w.phone || stu.phone || '',
+      student_class: w.klass || stu.class || '',
+      week_idx: (typeof HOMEWORK_WEEK_IDX === 'number') ? HOMEWORK_WEEK_IDX : 0,
+      day_idx: rec.dayIdx,
+      done: !!rec.done,
+      completed: rec.completed,
+      answered: rec.answered,
+      total: rec.total,
+      correct_rate: rec.correctRate,
+      wrong_count: rec.wrongCount,
+      finish_time: rec.time,
+    };
+    return fetch(this._classUrl('/api/checkins/report'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    }).then(res => (res.ok ? res.json() : null))
+      .catch(e => { console.warn('reportCheckin failed:', e); return null; });
+  },
+
+  // 读后台打卡。一台设备上报、所有设备可见。
+  //   opts.studentId —— 一个学生；opts.klass —— 整个班
+  //
+  // 失败返回 **null**（不是 []）：调用方要能分清"后台说这个孩子没打卡"
+  // 和"这次没读到"。后者绝不能拿来当结论，否则一断网全班又变回一天未打卡。
+  async fetchCheckins(opts) {
+    opts = opts || {};
+    const q = [];
+    if (opts.studentId) q.push('student_id=' + encodeURIComponent(opts.studentId));
+    else if (opts.klass) q.push('class=' + encodeURIComponent(opts.klass));
+    else return null;
+    q.push('week=' + ((typeof HOMEWORK_WEEK_IDX === 'number') ? HOMEWORK_WEEK_IDX : 0));
+    try {
+      const res = await fetch(this._classUrl('/api/checkins?' + q.join('&')), { cache: 'no-store' });
+      if (!res.ok) return null;
+      const data = await res.json();
+      return (data && Array.isArray(data.rows)) ? data.rows : null;
+    } catch (e) { console.warn('fetchCheckins failed:', e); return null; }
   },
 
   async getCheckin(studentId, dayIdx) {

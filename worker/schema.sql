@@ -57,3 +57,38 @@ CREATE TABLE IF NOT EXISTS tts_usage (
   day    TEXT PRIMARY KEY,
   chars  INTEGER NOT NULL DEFAULT 0
 );
+
+-- v120: 打卡记录（家长 2026-10-14 报的"孩子端全是未打卡"）。
+--
+-- 背景：answers / checkins 从来没上过后端。CloudSync.up() 的 payload 只带
+-- students / classes / 墓碑，打卡记录只写在**各自手机的 localStorage** 里。
+-- 于是孩子用自己的手机做完作业，家长在另一台设备上看到的就是一片"未打卡"，
+-- 完成率对比里全班完成天数全是 0、每日打卡状态全是叉。
+--
+-- 这张表把打卡烧进 D1：一台设备上报，所有设备都能读到。
+-- 一个学生一周一天一行（student_id + week_idx + day_idx），因为打卡是
+-- "做到哪算哪"的累积状态，重复上报要覆盖而不是追加。
+--   done/completed：done=1 表示当天所有题都有答题记录；否则 partial
+--   correct_rate：当天已答题目的正确率（整数百分比）
+--   wrong_count：当天答错的题数
+--   finish_time：最后一条答题落库时的本地时间 HH:MM
+CREATE TABLE IF NOT EXISTS checkins (
+  student_id    TEXT NOT NULL,
+  student_name  TEXT,
+  student_phone TEXT,
+  student_class TEXT,
+  week_idx      INTEGER NOT NULL DEFAULT 0,
+  day_idx       INTEGER NOT NULL,
+  done          INTEGER NOT NULL DEFAULT 0,
+  completed     TEXT,
+  answered      INTEGER NOT NULL DEFAULT 0,
+  total         INTEGER NOT NULL DEFAULT 0,
+  correct_rate  INTEGER NOT NULL DEFAULT 0,
+  wrong_count   INTEGER NOT NULL DEFAULT 0,
+  finish_time   TEXT,
+  updated_at    TEXT NOT NULL,
+  PRIMARY KEY (student_id, week_idx, day_idx)
+);
+
+CREATE INDEX IF NOT EXISTS idx_checkins_class_week ON checkins(student_class, week_idx);
+CREATE INDEX IF NOT EXISTS idx_checkins_week       ON checkins(week_idx);
