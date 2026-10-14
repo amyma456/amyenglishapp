@@ -320,28 +320,79 @@ const App = {
     return n;
   },
 
-  // 历史补录（v120）：在这版之前，打卡记录只写在本机。孩子下次打开 App
-  // 时把本机这份推一次到后台，几天的记录就补齐了 —— 不然"优素福今天全做完
-  // 了却还是未打卡"要等他下次再答一道题才肯更新。一次会话推一次就够，
-  // 之后新产生的打卡由 saveCheckin 实时上报。
+  // 历史补录（v120 建；v121 扩到"本机所有周"+ 切回前台也补）。
+  //
+  // 在这版之前，打卡记录只写在本机，后台一条都没有。孩子的手机只要**打开一次
+  // App**，这里就把本机这份全推上去 —— 不要求孩子做任何操作，也不需要家长
+  // 去挨个"下拉刷新"。
+  //
+  // v121 两点加强（家长 2026-10-14 报"我还是看不到"之后）：
+  //   1. 不再只推**本周**，而是推本机**所有周**的记录。孩子上一次作业可能是
+  //      上一周做的，只推本周等于历史永远补不上（key 里的 _wN 就是周序号，
+  //      由 _checkinKeySlot 拆出来，配 rec.weekIdx 一起报）。
+  //   2. 除了进 App 时，**每次回到前台**（visibilitychange / focus / pageshow）
+  //      再补一次（60 秒节流）—— 孩子做完作业切出去又切回来的场景很常见，
+  //      那一次上报可能正好断网丢了。
   _backfillCheckins() {
     if (this.isTeacher() || !this.state.phone) return 0;
     if (this._backfilled) return 0;
     this._backfilled = true;
     const sid = this._myStudentId();
-    const prefix = sid + this._weekTag() + '_d';
     const who = this._myWho();
     let n = 0;
     Object.keys(this.state.checkins || {}).forEach(k => {
-      if (k.indexOf(prefix) !== 0) return;
-      const di = parseInt(k.slice(prefix.length), 10);
+      const slot = this._checkinKeySlot(k, sid);
       const rec = this.state.checkins[k];
-      if (!isFinite(di) || !rec) return;
-      Api.reportCheckin(Object.assign({}, rec, { studentId: sid, dayIdx: di }), who);
+      if (!slot || !rec) return;
+      Api.reportCheckin(Object.assign({}, rec, {
+        studentId: sid, dayIdx: slot.dayIdx, weekIdx: slot.weekIdx,
+      }), who);
       n++;
     });
     if (n) console.log('backfilled ' + n + ' check-ins');
     return n;
+  },
+
+  // 从本机打卡 key 里拆出（第几周, 第几天）。key 的形状由 Api.checkinKey /
+  // App._weekTag 决定，只有两种：
+  //   <sid>_d<day>           第 1 周（_weekTag() 对 0 不写 _w）
+  //   <sid>_w<week>_d<day>   第 2 周起
+  // 不是自己的 key、或者形状不认识 → null（**宁可不报，也不报一条错数据**）。
+  _checkinKeySlot(key, sid) {
+    const k = String(key || '');
+    const pre = String(sid || '');
+    if (!pre || k.indexOf(pre) !== 0) return null;
+    const rest = k.slice(pre.length);
+    let m = /^_w(\d+)_d(\d+)$/.exec(rest);
+    let weekIdx = 0, dayIdx = -1;
+    if (m) { weekIdx = parseInt(m[1], 10); dayIdx = parseInt(m[2], 10); }
+    else {
+      m = /^_d(\d+)$/.exec(rest);
+      if (!m) return null;
+      dayIdx = parseInt(m[1], 10);
+    }
+    if (!isFinite(weekIdx) || !isFinite(dayIdx) || dayIdx < 0) return null;
+    return { weekIdx: weekIdx, dayIdx: dayIdx };
+  },
+
+  // 回到前台就再补一次上报（只绑一次）。60 秒节流，避免孩子在 App 里切来
+  // 切去时反复打后台 —— 服务端那边是 UPSERT，重复报也不会写坏数据。
+  _bindCheckinUpload() {
+    if (this._checkinKeeperBound) return;
+    this._checkinKeeperBound = true;
+    let last = 0;
+    const again = () => {
+      try {
+        if (document.visibilityState === 'hidden') return;
+        if (Date.now() - last < 60000) return;
+        last = Date.now();
+        this._backfilled = false;
+        this._backfillCheckins();
+      } catch (e) { /* 补报失败绝不能影响孩子用 App */ }
+    };
+    document.addEventListener('visibilitychange', again);
+    window.addEventListener('focus', again);
+    window.addEventListener('pageshow', again);
   },
 
   // 进「孩子打卡 / 完成率对比」之前拉一次后台。失败保持本机数据不动 ——
@@ -922,7 +973,9 @@ const App = {
     }
     clearTimeout(this._advanceTimer);
     // v120：把本机的历史打卡补报一次到后台（见 _backfillCheckins）。
+    // v121：再绑一层"回到前台就补一次"，孩子不用做任何操作。
     this._backfillCheckins();
+    this._bindCheckinUpload();
     // Update header name - show student name or teacher label
     const headerName = document.getElementById('header-name');
     if (headerName) {
@@ -3123,8 +3176,82 @@ const App = {
   },
 
   // ===== Teacher: Check-in Monitor =====
+
+  // 打卡数据来自后台，不是老师这台手机上"攒"出来的。这一条把两件事直说：
+  //   1. 后台到底收到了多少条（收了 0 条就等于"全是未打卡"，家长一眼能判断
+  //      是"孩子没传"还是"系统没显示"）；
+  //   2. **还没上传的孩子是谁** —— 家长知道该让哪几个孩子去开一次 App。
+  // 家长 2026-10-14：「他们打卡的东西从我这一个账号就能看见，而不是非要他们
+  // 下拉我才能收到」。这条就是那个"一个账号看全班"的入口。
+  _checkinSyncStrip() {
+    const tag = this._weekTag();
+    const students = this.state.students || [];
+    let cloudRows = 0, latest = '';
+    const reported = {};
+    students.forEach(s => {
+      let n = 0;
+      HOMEWORK_DATA.forEach((d, di) => {
+        const ck = this.state.checkins[s.id + tag + '_d' + di];
+        // fromCloud 由 _mergeCloudCheckins 打上 —— 只有"后台回来的"才算上传过，
+        // 老师本机自己点出来的记录不算（否则会假报"已上传"）。
+        if (!ck || !ck.fromCloud) return;
+        n++; cloudRows++;
+        if (ck.at && String(ck.at) > latest) latest = String(ck.at);
+      });
+      if (n) reported[s.id] = n;
+    });
+    const missing = students.filter(s => !reported[s.id]);
+
+    let when = '';
+    if (latest) {
+      const d = new Date(latest);
+      if (!isNaN(d.getTime())) {
+        const mins = Math.round((Date.now() - d.getTime()) / 60000);
+        const hhmm = String(d.getHours()).padStart(2, '0') + ':'
+                   + String(d.getMinutes()).padStart(2, '0');
+        when = hhmm + (mins >= 0 && mins < 720
+          ? '（' + (mins < 1 ? '刚刚' : mins + ' 分钟前') + '）' : '');
+      }
+    }
+
+    let html = '<div class="card mb-16 sync-strip">';
+    html += '<div class="sync-head"><span class="sync-title">📡 数据来自后台（孩子手机自动上传）</span>';
+    html += '<button class="btn btn-outline btn-sm" onclick="App.refreshCheckins(this)">🔄 重新拉取</button></div>';
+    html += '<div class="sync-line">本周从后台收到 <b>' + cloudRows + '</b> 条打卡记录';
+    html += when ? '，最近一次 <b>' + this._escHtml(when) + '</b>' : '（还没有收到任何记录）';
+    html += '</div>';
+    if (!students.length) {
+      html += '<div class="sync-line text-sub">名单里还没有学生。</div>';
+    } else if (missing.length) {
+      html += '<div class="sync-line sync-warn">还没上传的 <b>' + missing.length + '</b> 位：'
+            + missing.map(s => this._escHtml(s.name)).join('、')
+            + '<br><span class="sync-tip">让这几位同学各自打开一次 App，就会自动上传'
+            + '（不用做题、不用下拉刷新）。</span></div>';
+    } else {
+      html += '<div class="sync-line sync-ok">全班 ' + students.length + ' 位本周都已有记录 ✅</div>';
+    }
+    html += '</div>';
+    return html;
+  },
+
+  // 老师版"刷新"：不用下拉，点一下就把后台再拉一遍。
+  async refreshCheckins(btn) {
+    const label = btn ? btn.textContent : '';
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ 正在拉取…'; }
+    try {
+      await this._pullCloudCheckins('class');
+      this.renderContent();
+      this.showToast('✅ 已从后台拉取最新打卡记录');
+    } catch (e) {
+      // 拉失败保持原样显示（本机那份不动）—— 断网不该把界面清空。
+      if (btn) { btn.disabled = false; btn.textContent = label; }
+      this.showToast('⚠️ 拉取失败，请检查网络后重试');
+    }
+  },
+
   renderCheckin() {
     let html = '<h2 style="color:var(--primary-dark);margin-bottom:12px">📊 打卡监控</h2>';
+    html += this._checkinSyncStrip();
     // Note: no auto-generated demo data - show real data only
     // Summary
     html += '<div class="stat-row mb-16">';

@@ -690,16 +690,20 @@ const Api = {
 
   // who（可选）：{name, phone, klass}。调用方已经知道这些，比在这里翻
   // Store.doc().students 更可靠 —— 孩子端可能压根没同步到自己的档案。
+  //
+  // rec.weekIdx（可选）：**补报历史时必须给**。不给就盖当前周 —— 那会把
+  // 上一条第 2 周的记录写到第 3 周去（v121 修）。
   reportCheckin(rec, who) {
     if (!rec || !rec.studentId) return Promise.resolve(null);
     const w = who || {};
     const stu = (Store.doc().students || []).find(s => s.id === rec.studentId) || {};
+    const curWeek = (typeof HOMEWORK_WEEK_IDX === 'number') ? HOMEWORK_WEEK_IDX : 0;
     const body = {
       student_id: rec.studentId,
       student_name: w.name || stu.name || '',
       student_phone: w.phone || stu.phone || '',
       student_class: w.klass || stu.class || '',
-      week_idx: (typeof HOMEWORK_WEEK_IDX === 'number') ? HOMEWORK_WEEK_IDX : 0,
+      week_idx: (typeof rec.weekIdx === 'number') ? rec.weekIdx : curWeek,
       day_idx: rec.dayIdx,
       done: !!rec.done,
       completed: rec.completed,

@@ -164,11 +164,14 @@ const Recorder = {
 
 const dataSrc = fs.readFileSync(BASE + 'data.js', 'utf8');
 const HOMEWORK_DATA = new Function(dataSrc + '; return HOMEWORK_DATA;')();
+// 周序号也一起注入 —— 不注入的话沙箱里 _weekTag() 恒为空串，本机 key 永远长
+// 成 <sid>_dM 的"第 1 周"形状，_wN 那条路（第 2 周起）就一次都没被跑过。
+const HOMEWORK_WEEK_IDX = new Function(dataSrc + '; return HOMEWORK_WEEK_IDX;')();
 process.on('unhandledRejection', () => {});
 
 const factory = new Function('stubs', `
   const { document, window, location, navigator, localStorage, Api, Recorder,
-          HOMEWORK_DATA, URL, fetch, Cloud, SpeechRecognition, Audio, alert,
+          HOMEWORK_DATA, HOMEWORK_WEEK_IDX, URL, fetch, Cloud, SpeechRecognition, Audio, alert,
           confirm, prompt, requestAnimationFrame } = stubs;
   ${appSrc}
   return { App };
@@ -177,7 +180,7 @@ let App;
 try {
   App = factory({
     document, window, location: window.location, navigator, localStorage, Api, Recorder,
-    HOMEWORK_DATA,
+    HOMEWORK_DATA, HOMEWORK_WEEK_IDX,
     URL: { createObjectURL: () => 'blob:x', revokeObjectURL: () => {} },
     fetch: () => new Promise(() => {}),
     Cloud: undefined, SpeechRecognition: undefined, Audio: undefined,
@@ -290,6 +293,113 @@ console.log('== 10) 回到"孩子打卡"页能从后台拿回数据 ==');
 App._mergeCloudCheckins([{ student_id: SID, day_idx: 3, done: true, answered: 8,
   total: 8, correct_rate: 100, wrong_count: 0, finish_time: '21:10' }]);
 ok(App.state.checkins[kOf(SID, 3)].done === true, '新拉到的第 4 天也是已打卡');
+
+// =========================================================================
+// v121：家长 2026-10-14 又说「我看没有改善……我也下拉刷新了」。
+// 真正的原因不是代码没生效，而是**后台一条打卡都没有**：孩子的手机还没
+// 打开过新版。所以这一节钉两件事：
+//   A. 孩子只要打开一次 App，本机**所有周**的打卡都得推上去（不能只推本周）
+//   B. 老师端要能一眼看出"后台收到几条 / 还有谁没上传"，并且有刷新按钮
+// =========================================================================
+console.log('== 11) key 解析：<sid>_wN_dM 与 <sid>_dM 两种形状 ==');
+App.state.checkins = {};
+const slot1 = App._checkinKeySlot(SID + '_w2_d3', SID);
+ok(slot1 && slot1.weekIdx === 2 && slot1.dayIdx === 3, '第 2 周第 3 天 → {week:2, day:3}');
+const slot0 = App._checkinKeySlot(SID + '_d0', SID);
+ok(slot0 && slot0.weekIdx === 0 && slot0.dayIdx === 0,
+  '第 1 周不写 _w（_weekTag 对 0 返回空串）→ {week:0, day:0}');
+ok(App._checkinKeySlot('someone-else_w2_d1', SID) === null, '别人的 key → null（不报别人的卡）');
+ok(App._checkinKeySlot(SID + '_w2_d', SID) === null, '形状不认识 → null（宁可不报也不报错数据）');
+ok(App._checkinKeySlot('', SID) === null && App._checkinKeySlot(SID + '_w2_d1', '') === null,
+  '空 key / 空 sid → null');
+
+console.log('== 12) 补报历史：本机所有周都推上去，周序号跟着 key 走 ==');
+App.state.role = 'student';
+App.state.checkins = {};
+App.state.checkins[SID + '_d0'] = { studentId: SID, dayIdx: 0, done: true, answered: 5,
+  total: 5, correctRate: 100, wrongCount: 0, time: '18:00' };
+App.state.checkins[SID + '_w1_d2'] = { studentId: SID, dayIdx: 2, done: true, answered: 7,
+  total: 7, correctRate: 86, wrongCount: 1, time: '19:30' };
+App.state.checkins[kOf(SID, 1)] = { studentId: SID, dayIdx: 1, done: true, answered: 9,
+  total: 9, correctRate: 88, wrongCount: 1, time: '20:10' };
+// 别人的卡混进来 —— 一条都不许报
+App.state.checkins['stu2' + TAG + '_d0'] = { studentId: 'stu2', dayIdx: 0, done: true,
+  answered: 4, total: 4, correctRate: 75, wrongCount: 1, time: '21:00' };
+App._backfilled = false;
+posted.length = 0;
+const bn2 = App._backfillCheckins();
+ok(bn2 === 3 && posted.length === 3,
+  '本机 3 条（跨两个历史周 + 本周）全部补报，别人的那条被跳过');
+// 直接把"报上去的 (周,天) 集合"和本机那三条对齐 —— 一条不多、一条不少、
+// 一条不错位。别人那条要是漏进来就会多出第 4 个元素。
+const got = posted.map(p => p.rec.weekIdx + ':' + p.rec.dayIdx).sort();
+const want = ['0:0', '1:2', App._weekIdx() + ':1'].sort();
+ok(got.join(' ') === want.join(' '),
+  '报上去的 (周,天) 正好是本机那 3 条：' + got.join(' ') + '（应 ' + want.join(' ') + '）');
+ok(posted.every(p => p.rec.studentId === SID), '三条都用孩子自己的 student_id');
+ok(!posted.some(p => p.rec.studentId === 'stu2'), '没把别人的卡记到自己名下');
+
+console.log('== 13) reportCheckin 必须认 rec.weekIdx（这一条是 v121 的真 bug） ==');
+const bodyWeek = apiSrc.match(/week_idx:\s*\(typeof rec\.weekIdx === 'number'\)[\s\S]{0,80}/);
+ok(!!bodyWeek, '上报体的 week_idx 优先取 rec.weekIdx');
+ok(/const curWeek = \(typeof HOMEWORK_WEEK_IDX === 'number'\)/.test(apiSrc),
+  '没有 rec.weekIdx 时退回当前周（saveCheckin 的实时上报还走这条）');
+
+console.log('== 14) 回到前台会再补一次（孩子不用做任何操作） ==');
+ok(/_bindCheckinUpload\(\)/.test(appSrc), '_bindCheckinUpload 存在');
+ok(/this\._bindCheckinUpload\(\);/.test(appSrc), 'showApp 里绑上');
+['visibilitychange', 'focus', 'pageshow'].forEach(ev => {
+  ok(new RegExp("addEventListener\\('" + ev + "'").test(appSrc),
+    '监听 ' + ev + '（切出去又切回来，上一次没发成的补一次）');
+});
+ok(/_checkinKeeperBound/.test(appSrc), '只绑一次，不重复挂监听');
+ok(/Date\.now\(\) - last < 60000/.test(appSrc), '60 秒节流，不在 App 里切来切去就狂发请求');
+ok(/this\._backfilled = false;[\s\S]{0,60}this\._backfillCheckins\(\);/.test(appSrc),
+  '重进前台先把"补过一次"的闸门打开再补');
+
+console.log('== 15) 老师端：一个账号看全班 + 看得见谁还没上传 ==');
+App.state.role = 'teacher';
+App.state.checkins = {};
+// 只有优素福上传了（fromCloud 由 _mergeCloudCheckins 打）
+App._mergeCloudCheckins([
+  { student_id: SID, day_idx: 0, done: true, answered: 10, total: 10, correct_rate: 90,
+    wrong_count: 1, finish_time: '19:20', updated_at: '2026-10-14T11:20:00.000Z' },
+  { student_id: SID, day_idx: 1, done: true, answered: 10, total: 10, correct_rate: 80,
+    wrong_count: 2, finish_time: '20:05', updated_at: '2026-10-14T12:05:00.000Z' },
+]);
+const strip = App._checkinSyncStrip();
+ok(strip.indexOf('数据来自后台') >= 0, '说明数据来自后台（不是老师本机攒的）');
+ok(/收到 <b>2<\/b> 条/.test(strip), '报出后台本周实际收到 2 条');
+ok(strip.indexOf('还没上传的 <b>1</b> 位') >= 0, '点名"还没上传的 1 位"');
+ok(strip.indexOf('田墨翰-Matt') >= 0, '把没上传的孩子名字列出来（家长知道该找谁）');
+ok(strip.indexOf('打开一次 App') >= 0, '说清补救动作：打开一次 App 就自动上传');
+ok(strip.indexOf('重新拉取') >= 0, '有「🔄 重新拉取」按钮（不用下拉刷新）');
+// 老师本机自己点出来的记录不算"已上传"
+App.state.checkins['stu2' + TAG + '_d0'] = { studentId: 'stu2', dayIdx: 0, done: true,
+  answered: 3, correctRate: 100, wrongCount: 0, time: '10:00' };
+ok(App._checkinSyncStrip().indexOf('田墨翰-Matt') >= 0,
+  '本机非云端记录不算"已上传"（否则会假报全班都传了）');
+// 全班都上传了就直说
+App._mergeCloudCheckins([
+  { student_id: 'stu2', day_idx: 0, done: true, answered: 6, total: 6, correct_rate: 100,
+    wrong_count: 0, finish_time: '18:30', updated_at: '2026-10-14T13:00:00.000Z' },
+]);
+const strip2 = App._checkinSyncStrip();
+ok(strip2.indexOf('都已有记录') >= 0 && strip2.indexOf('还没上传') < 0,
+  '全班都有记录时显示"都已有记录"，不再吓人');
+// 渲染整页要带上这条
+const checkinPage = App.renderCheckin();
+ok(checkinPage.indexOf('数据来自后台') >= 0, '「打卡监控」整页里带上了这条');
+ok(checkinPage.indexOf('重新拉取') >= 0, '整页里也有刷新按钮');
+
+console.log('== 16) 刷新按钮 ==');
+ok(/async refreshCheckins\(btn\)/.test(appSrc), 'refreshCheckins 存在');
+ok(/await this\._pullCloudCheckins\('class'\)/.test(appSrc),
+  '点刷新会重新拉后台（老师端按班级拉，遍历所有班）');
+ok(/btn\.disabled = true[\s\S]{0,120}正在拉取/.test(appSrc), '拉的过程中按钮禁用 + 提示，防连点');
+ok(/catch \(e\) \{[\s\S]{0,200}btn\.disabled = false/.test(appSrc),
+  '拉失败要把按钮恢复（断网不能把界面卡死）');
+ok(appSrc.indexOf('for (const c in App)') < 0, '（无副作用检查）');
 
 console.log(fail === 0 ? '\n全部通过 ✅' : '\n有 ' + fail + ' 项失败 ❌');
 process.exit(fail === 0 ? 0 : 1);

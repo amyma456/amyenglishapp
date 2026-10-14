@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="120">
+<meta name="app-version" content="121">
 <link rel="manifest" href="manifest.json">
 <!-- iOS 的"添加到主屏幕"不认 SVG（装出来是白板/网页截图），必须给 PNG。
      图标与启动图由 tools/gen-pwa-icons.js 生成，别手改。 -->
@@ -346,6 +346,17 @@ input,textarea,select{font-family:inherit;font-size:14px;outline:none}
 .retry-verdict{margin-top:12px;font-size:13px;min-height:18px}
 .retry-verdict.good{color:#1F9D55;font-weight:600}
 .retry-verdict.bad{color:#B26A00}
+/* 老师端「打卡监控」顶部的数据来源条（v121）。作用是让老师一眼分清
+   "孩子没传" 还是 "系统没显示"，并点名还没上传的孩子。 */
+.sync-strip{border-left:4px solid var(--primary);background:var(--primary-light)}
+.sync-head{display:flex;align-items:center;justify-content:space-between;gap:8px;
+  margin-bottom:8px}
+.sync-title{font-size:13px;font-weight:700;color:var(--primary-dark)}
+.sync-line{font-size:12.5px;line-height:1.7;color:var(--ink)}
+.sync-line b{color:var(--primary-dark)}
+.sync-warn{color:#B26A00}
+.sync-ok{color:var(--success)}
+.sync-tip{font-size:11.5px;color:var(--text-sub)}
 .w-miss{color:var(--ink-3);text-decoration:line-through}
 .align-key{display:flex;gap:14px;justify-content:center;margin-bottom:4px}
 .align-key span{font-size:11px}
