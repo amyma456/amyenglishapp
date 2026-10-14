@@ -5561,12 +5561,17 @@ const App = {
     if (this.state.vocabWordIdx >= m.words.length - 1) { this.nextStep(); return; }
     // 拼读阶段（逐字母/音节）没读完、或还有字母没读对，都不放行 —— 双保险：
     // 按钮本身 disabled，这里再挡一道（防止旧缓存页面里的按钮、或程序化
-    // 调用绕过去）。v93 起加了 allOk / contMiss 两个条件。
+    // 调用绕过去）。v93 起加了 allOk；v119 起再加 contDone（连起来读过一遍）。
     var sp0 = this._spell;
-    if (!this.isTeacher() && sp0 && sp0.mi === mi
-        && (!sp0.finished || sp0.allOk === false || sp0.contMiss === true)) {
-      this._gateNudge(this._gid('spellg', mi));
-      return;
+    if (!this.isTeacher() && sp0 && sp0.mi === mi) {
+      if (!sp0.finished || sp0.allOk === false) {
+        this.showToast('还有字母没读对，按住红色的格子再读一次', 'warn');
+        return;
+      }
+      if (sp0.contDone !== true) {
+        this.showToast('先把字母和单词连着读一遍，才能到下一个单词', 'warn');
+        return;
+      }
     }
     this.state.vocabWordIdx++;
     this.state.vocabStage = 0;
@@ -5587,11 +5592,13 @@ const App = {
     // 逐字母/音节阶段：每个格子 + 整词都读完（_spell.finished）之前锁死。
     // v93 起还要「全部读对」：_finishSpell 算出 allOk=false 时按钮继续锁着，
     // 孩子重读那个字母会把 finished 打回 false，走完汇总才可能解锁。
-    // 连续读（phase B）同理，读漏了靠 contMiss 把按钮重新按下去。
+    // v119 起还要「连起来读通过」（_spell.contDone）—— 家长实测："读完全部字母
+    // 它就显示下一个单词能点了，但下一个单词这里应该还是虚的，连读完一遍才能
+    // 到下一个单词"。contDone 在 startContinuous 里清零、连读读全了才置 true。
     // 老师预览不锁。_finishSpell 完成后会再调到这里，按钮就地解锁。
     var sp = this._spell;
     var locked = !this.isTeacher() && sp && sp.mi === mi
-              && (!sp.finished || sp.allOk === false || sp.contMiss === true);
+              && (!sp.finished || sp.allOk === false || sp.contDone !== true);
     btn.disabled = !!locked;
   },
 
@@ -6414,6 +6421,19 @@ const App = {
     return false;
   },
 
+  // v119：音节格子的"没听清"判定。一个音节（beau / ti / ful）是 0.3~0.5 秒的
+  // 短音，识别端经常把它写成一整串别的东西（读 "beau" 回来 "bow and arrow"）。
+  // 这种结果里没有"孩子读了另一个音节"的证据，不该判红挡路（家长：
+  // "只要不是明显的错，都让过"）。只有**单** token、而且长度和目标差不多时，
+  // 才算真的读出了另一个音 —— 那种仍然判错、要他重读。
+  _syllableUnclear(target, heard) {
+    var t = String(target || '').toLowerCase().replace(/[^a-z]/g, '');
+    var toks = String(heard || '').toLowerCase().replace(/[^a-z\s]/g, ' ').split(/\s+/).filter(Boolean);
+    if (!toks.length) return true;
+    if (toks.length > 1) return true;
+    return toks[0].length >= t.length + 3;
+  },
+
   // ===== Spell-then-say =====
   // One implementation for every spelling exercise (letters, syllables, and
   // anything added later): hold each piece to read it, hold the whole word,
@@ -6430,25 +6450,25 @@ const App = {
     setTimeout(function(){ selfSync._syncVocabFootLabel(mi, dayIdx); }, 0);
     this._spell = { mi: mi, kind: kind, word: word.word, total: units.length,
                     takes: {}, unitScores: {}, wordTake: null, score: null,
-                    units: units.slice(), phase: 'pieces' };
+                    units: units.slice(), phase: 'pieces',
+                    // v119：连读读完之前不许去下一个单词。finished/allOk 只说明
+                    // "逐格读完了"，contDone 才说明"整串连起来读通过了"。
+                    contDone: false };
 
     var html = '<div class="vocab-step-label">' + (kind === 'letter' ? '字母跟读' : '音节拼合') + '</div>';
     html += this._wordImage(word, true);
     html += '<div class="vocab-word">' + word.word + '</div>';
     html += '<div class="vocab-phonetic">' + word.phonetic + '</div>';
-    html += '<div class="read-instruction">先听完示范，再按住每个格子读，松开结束</div>';
+    html += '<div class="read-instruction">按住每个格子读一遍，再按住整词读一遍</div>';
 
-    // 先听再读：这一排格子由一个门禁统管。示范不再是一段一段拼（v91 前串播
-    // 6 段字母 + 1 段整词，段间停顿把 B-K-F-A-S-T 拆得七零八落，家长实测
-    // "整个音太分散"）—— 拼成一句话交给阿里云一次合成，音色与整词一致。
-    // 具体怎么写见 _spellDemo（v94 起统一在那一处，两个阶段共用）。
-    var gid = this._gid('spellg', mi);
-    var demo = this._spellDemo(kind, units, word.word);
-    html += '<div class="gate-bar"><button type="button" class="gate-listen" data-gate="' + gid
-         + '" data-say="' + this._escHtml(demo) + '">🔊 先听一遍（'
-         + (kind === 'letter' ? '逐字母连读 + 整词' : '按音节 + 整词') + '）</button></div>';
+    // v119：这一屏**不再放示范**，也不再挂"先听一遍"的门禁 —— 家长要求
+    // "点住单个字母就能读，不要为了听示范先等一段合成、也不要每格都等评分"。
+    // 于是整个词卡流程里只留**一处**听：读完所有格子的最后一屏「连起来读」
+    // （见 startContinuous），那一段示范与这里的 _spellDemo 逐字相同。
+    // 示范这一屏就先预取好，孩子走到连读那屏时点下去是零等待。
+    this.prefetchTts(this._spellDemo(kind, units, word.word));
 
-    html += '<div class="spell-row gate-locked" id="spell-row-' + mi + '" data-gate="' + gid + '">';
+    html += '<div class="spell-row" id="spell-row-' + mi + '">';
     units.forEach(function(u, i) {
       html += '<div class="spell-box hold-target" id="spell-' + mi + '-' + i + '"'
            + ' onpointerdown="App._readUnit(event,' + mi + ',' + i + ')"'
@@ -6530,8 +6550,9 @@ const App = {
 
   _readUnit(ev, mi, idx) {
     var self = this;
-    var gid = this._gid('spellg', mi);
-    if (!this._gateOpen(gid)) { this._gateNudge(gid); return; }   // 先听再读
+    // v119：不再有"先听完示范才能读"的门禁 —— 家长要的是"点住就能读、
+    // 一格一格往下走，别为了一段示范在原地等合成"。这一屏的示范已取消，
+    // 唯一那一段留在连读屏（startContinuous）。
     var el = document.getElementById('spell-' + mi + '-' + idx);
     if (!el) return;
     var label = el.textContent.trim();
@@ -6556,12 +6577,11 @@ const App = {
 
       // v93：这里原来有一句 self.speak(label) —— 松开手后机器念一遍这个字母。
       // 家长明确不要（"读 B 就不要读出来 B，直接让学生点一下 B，学生自己说 B"），
-      // 所以字母跟读全程静音，示范统一交给上面那颗「先听一遍」。音节保留回放。
+      // 所以字母跟读全程静音。音节保留回放。
       if (!isLetter) self.speak(label);
 
-      // v93：字母从现在起也判对错 —— 家长的规则是「哪个字母读错了要显出来，
-      // 全部读对才能走到下一个单词」。以前字母是 needsTranscript=false
-      // （不识别、不判分），读错照样放行。判定用专门的 _letterOk，不能拿
+      // v93：字母也判对错 —— 家长的规则是「哪个字母读错了要显出来，
+      // 全部读对才能走到下一个单词」。判定用专门的 _letterOk，不能拿
       // _soundAlike 判单字母：它容忍一个编辑距离，而 26 个字母两两距离
       // 几乎都是 1（b/p、b/d、m/n 全判"对"），等于没判。
       var ok = isLetter ? self._letterOk(label, text) : self._soundAlike(label, text);
@@ -6572,36 +6592,42 @@ const App = {
       var near = !ok && isLetter && self._letterNear(label, text);
       if (near) ok = true;
       // v99：识别端一个字都没回来 ≠ 孩子读错了。孤立字母/短音节本来就难识别
-      // （见 _readUnit 顶部 prefer=cf 的说明），把"没听清"也算成错，孩子就会
+      // （prefer=cf 的说明见 _holdStart），把"没听清"也算成错，孩子就会
       // 卡在"全部读对才能走"上永远过不去 —— 家长反馈的"跑不通"就是这个。
       // v101 再补两种"定不了性"的情形：识别端自己猜的孤立单字母（实测读 D 回来
       // "N"）、以及根本不像任何字母音的幻觉词（读 E 回来 "Capitoli"）——
       // 两者都没有"孩子读了别的字母"的证据，不该判红。
-      var unclear = !text || (!ok && isLetter
-        && (self._singleLetterGuess(text) || !self._letterish(text)));
+      // v119：家长再次强调「只要不是明显的错，都让过」—— 判定再放一档：
+      //   ① 音节这一格也不再要求"认出音节本身"才算过，凡是**没有**听到
+      //      "另一个音节"的证据（识别回来是一串词、或者音节被拆成好几个
+      //      token）一律按"没听清"放行；
+      //   ② 只有 `_letterNear` / `_soundAlike` 明确落到另一个字母/另一个
+      //      音节的读法上，才判错、才要求重读。
+      var unclear = !text;
+      if (!unclear && !ok) {
+        unclear = isLetter
+          ? (self._singleLetterGuess(text) || !self._letterish(text))
+          : self._syllableUnclear(label, text);
+      }
       self._spell.unitScores[idx] = { label: label, ok: unclear ? undefined : ok,
                                      unclear: unclear, near: near, heard: text };
       el.classList.toggle('read-miss', !unclear && !ok);
       el.classList.toggle('read-unclear', unclear);
       el.classList.toggle('read-near', near);
       if (status) {
-        // v96：一个字都没识别出来 ≠ 读错了。原来两种情况共用一句"再读一次
-        // 「B」"，孩子（和家长）看到的是"我明明读对了"的指控。现在分开说。
-        status.innerHTML = '<div class="tap-result ' + (ok ? 'good' : 'bad') + '">'
-          + (ok ? (near ? '发音有点不准，这次算你过：' + label : '读对了：' + label)
-                : (unclear ? '⚠️ 没听清，再读一次「' + label + '」（这次不算读错）'
-                           : '再读一次「' + label + '」'))
-          + (text ? '<span class="tap-heard">识别：' + text + '</span>'
-                  : '<span class="tap-heard">' + (ok ? '' : '这次没有识别到内容') + '</span>') + '</div>';
+        // v119：这里不再报分数、也不再报"识别成什么" —— 家长要的是「哪一格
+        // 是错的、重读那一格」，不是每一格都停下来等一个分数。所以只有两种
+        // 反馈：过了（打勾）、要重读（点名那一格）。
+        status.innerHTML = '<div class="tap-result ' + ((ok || unclear) ? 'good' : 'bad') + '">'
+          + (ok ? (near ? '✅ 有点不准，算你过' : '✅ 读对了')
+                : (unclear ? '✅ 过（没听清，不算错）'
+                           : '🔁 这一格再读一次「' + label + '」'))
+          + '</div>';
       }
-      Api.submitSpeakingScore({
-        studentId: self._myStudentId(), dayIdx: self.state.currentDay,
-        moduleIdx: mi, itemIdx: idx, round: 1, type: isLetter ? 'letter' : 'syllable',
-        // v101：发音不准但算过给 70 分（家长的"过 60 分以上"），读准了才是 100。
-        // v106：家长又说"判分高一点" —— 这一档抬到 75，仍然明显低于读准的
-        // 100 分，但先过掉（60 分及格线以上 15 分），孩子不会卡在重读上。
-        label: label, score: ok ? (near ? 75 : 100) : 0, spoken: text, source: 'asr',
-      });
+      // v119：删掉了这里的 Api.submitSpeakingScore（原来每个字母/音节都提交
+      // 一次分数）。家长："不用每个都判分，只要标出哪个字母是错的、重读那一格，
+      // 这样不用等分能快一些"。老师端看到的是整词与连读的分（_readFullWord /
+      // _readContinuous 仍在提交），字母级的细粒度分数不再上报。
       self._spellProgress(mi);
     }, true, 'en', hint, 'cf', true);  // v99：v96 的注释说字母/音节要 CF 先认，代码却
                                   // 一直没把 'cf' 传下来 —— 结果是先白等阿里云
@@ -6612,8 +6638,7 @@ const App = {
 
   async _readFullWord(ev, mi) {
     var self = this;
-    var gid = this._gid('spellg', mi);
-    if (!this._gateOpen(gid)) { this._gateNudge(gid); return; }   // 先听再读
+    // v119：同 _readUnit —— 这一屏没有门禁了，按住就读。
     var el = document.getElementById('spell-word-' + mi);
     var status = document.getElementById('spell-status-' + mi);
     var wordText = this._spell.word;
@@ -6716,7 +6741,16 @@ const App = {
          + '<span class="ss-label">' + (noSpeech ? '整词没听清' : '整词得分') + '</span></div>';
     html += '<div class="sc-grid">' + cells + '</div>';
     if (sp.allOk) {
-      html += '<button class="word-read-btn" onclick="App.startContinuous(' + mi + ')">连续读一遍 →</button>';
+      // v119：全部读对 → **弹一个卡片**出来（原来只是汇总末尾一颗普通按钮，
+      // 孩子常常看不到、直接去点底部那个灰着的「下一个单词」）。卡片里只有
+      // 一件事可做：连起来读一遍。读完它底部按钮才会亮。
+      html += '<div class="spell-pop" id="spell-pop-' + mi + '">'
+           +  '<div class="spell-pop-card">'
+           +  '<div class="spc-emoji">🎉</div>'
+           +  '<div class="spc-title">全部读对啦！</div>'
+           +  '<div class="spc-sub">最后一步：先听一遍，再连起来读</div>'
+           +  '<button class="word-read-btn" onclick="App.startContinuous(' + mi + ')">连续读一遍 →</button>'
+           +  '</div></div>';
     } else {
       html += '<div class="spell-retry-hint">还有 ' + missed.length + ' 个要重读：'
            + missed.join('、') + '<span>按住红色格子再读一次</span></div>';
@@ -6740,6 +6774,9 @@ const App = {
     if (!sp) return;
     sp.phase = 'continuous';
     sp.contMiss = false;     // v93：重进连读阶段时清掉上一次的判定
+    // v119：还没读出结果之前，这一遍不算数 —— 底部「下一个单词」重新锁上。
+    sp.contDone = false;
+    this._syncVocabFootLabel(mi, this.state.currentDay);
     var seq = (sp.units || []).map(function(u) {
       return sp.kind === 'letter' ? String(u).toUpperCase() : u;
     }).concat([sp.word]);
@@ -6750,10 +6787,11 @@ const App = {
     if (instr) instr.textContent = '按住不放，把下面的字母和单词连着读一遍';
 
     // 先听再读：连读也要先听一遍完整串法，孩子才知道"连着读"是什么节奏。
-    // 示范同样合成一段，与上面"逐字母"那屏用同一句（_spellDemo）——
-    // 两屏示范必须一模一样，否则孩子听到两种串法，不知道跟哪个。
+    // v119：这是整个词卡流程里**唯一**的一段示范（逐字母那一屏的示范去掉了，
+    // 家长只留这一处）。它在逐字母那一屏就已经预取过，这里点下去即出声音。
     var cgid = this._gid('contg', mi);
     var contDemo = this._spellDemo(sp.kind, sp.units, sp.word);
+    this.prefetchTts(contDemo);
     var html = '<div class="gate-bar"><button type="button" class="gate-listen" data-gate="' + cgid
          + '" data-say="' + this._escHtml(contDemo) + '">🔊 先听一遍（连起来读）</button></div>';
     html += '<div class="cont-seq gate-locked" data-gate="' + cgid + '">' + seq.map(function(x, i) {
@@ -6795,6 +6833,10 @@ const App = {
       // v100：整词被听到（res.wordHit）就算连读成立 —— 孤立字母识别不到不是
       // 孩子的错，不能因为这个把人锁在门外（家长：读得很好却十几分、过不去）。
       sp.contMiss = !text || (!res.wordHit && res.ok < seq.length);
+      // v119：这一遍读全了，才算"这个单词读完了" —— 底部「下一个单词」这才
+      // 亮起来。没读全就一直是灰的（家长："这个单词没有读完，下一个单词这个
+      // 地方永远是虚的"）。
+      sp.contDone = !sp.contMiss;
 
       // Mark which pieces were actually heard.
       seq.forEach(function(x, i) {
@@ -8054,7 +8096,9 @@ const App = {
     if (step.kind === 'vocab') {
       // 拼读阶段没读完先禁用（_renderSpellRead 刚设置过 _spell），0ms 后
       // _syncVocabFootLabel 会再校准一次 —— 这里先按当前状态渲染，避免闪一下。
-      var vLocked = !this.isTeacher() && this._spell && this._spell.mi === step.mi && !this._spell.finished;
+      // v119：连读（contDone）没通过也先禁用，和 _syncVocabFootLabel 同一套条件。
+      var vLocked = !this.isTeacher() && this._spell && this._spell.mi === step.mi
+                    && (!this._spell.finished || this._spell.contDone !== true);
       html += '<button class="btn-ghost" id="stage-next-' + step.mi + '"' + (vLocked ? ' disabled' : '')
            + ' onclick="App.nextVocabWord(' + step.mi + ',' + dayIdx + ')">下一个单词</button>';
     } else {

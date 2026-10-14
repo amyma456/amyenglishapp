@@ -1,13 +1,17 @@
 /* eslint-disable */
-// 回归红线（v90）：高频词汇「逐字母跟读」阶段必须读完才能进下一个单词，
+// 回归红线：高频词汇「逐字母跟读」阶段必须读完 + 连读通过才能进下一个单词，
 // 且按住格子时要有大字悬浮层（手指会挡住格子里的小字）。
 //
 //   1. 渲染 letter_read 阶段 → 底部「下一个单词」按钮锁死
 //   2. 没读完点「下一个单词」→ 不跳（vocabWordIdx 不变）
-//   3. 所有格子 + 整词读完（_spellProgress）→ 按钮就地解锁
-//   4. 解锁后点「下一个单词」→ 正常跳到下一个词
+//   3. 所有格子 + 整词读完 → 仍然锁着（v119：还要连起来读一遍）
+//   4. 连读通过（contDone）后点「下一个单词」→ 正常跳到下一个词
 //   5. 切到非拼读阶段（learn 等）→ _spell 清空、按钮不锁
 //   6. 按住格子 → spell-peek 大字层出现，松手（回调触发）→ 消失
+//   7. 逐字母屏不再挂示范/门禁，唯一一段示范在连读屏（v119）
+//
+// v119 语义变更（家长）：逐字母屏去掉「先听一遍」与门禁；单个字母不再逐个
+// 提交分数；「下一个单词」要等「连起来读一遍」通过才亮。
 //
 // 用法：node tools/verify-spell-stage.js
 const fs = require('fs');
@@ -163,12 +167,17 @@ console.log('\n== 2) 没读完点「下一个单词」：不跳 ==');
 App.nextVocabWord(MI, DAY);
 ok(App.state.vocabWordIdx === wordIdx, 'vocabWordIdx 不变（' + App.state.vocabWordIdx + '）');
 
-console.log('\n== 3) 全部格子 + 整词读完 → 按钮就地解锁 ==');
+console.log('\n== 3) 全部格子 + 整词读完：还锁着 —— 还要连起来读一遍（v119） ==');
 for (let i = 0; i < App._spell.total; i++) App._spell.takes[i] = {};
 App._spell.wordTake = {};
 App._spellProgress(MI);
 ok(App._spell.finished === true, '读完判定 finished=true');
-ok(btn.disabled === false, '按钮解锁');
+ok(App._spell.allOk === true, '全读对 → allOk=true');
+ok(btn.disabled === true,
+   'v119：逐格读完还不够 ——「连起来读」没通过之前「下一个单词」仍然锁着');
+App._spell.contDone = true;
+App._syncVocabFootLabel(MI, DAY);
+ok(btn.disabled === false, '连起来读过一遍 → 解锁');
 
 console.log('\n== 4) 解锁后点「下一个单词」：正常跳 ==');
 App.nextVocabWord(MI, DAY);
@@ -222,22 +231,32 @@ const mod0 = HOMEWORK_DATA[0].modules.find(m => m.words && m.words[0] &&
 ok(!!mod0, '第 1 天有 letter_read 词卡模块');
 const wi0 = mod0.words.findIndex(w => w.stages.some(s => s.type === 'letter_read'));
 const stageHtml = App._renderSpellRead(mod0, 0, 0, mod0.words[wi0], mod0.words[wi0].word.split(''), 'letter');
-ok(stageHtml.indexOf('data-seq=') < 0, '示范按钮不再用 data-seq 逐段串播');
-const sayM = stageHtml.match(/data-say="([^"]*)"/);
-ok(!!sayM, '示范按钮带 data-say');
-let say = '';
-if (sayM) {
-  say = sayM[1].replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
-  ok(/^Letters: /.test(say), '前置 Letters 声明，挡住阿里的"智能拼读"（' + say.slice(0, 32) + '…）');
-  ok(/[A-Z], [A-Z]/.test(say), '字母之间用逗号分隔（v102：连字符会让 A-N-D 被读成 and）');
-  ok(!/[A-Z]-[A-Z]/.test(say), '字母之间不能再出现连字符（局部真词会被读掉）');
-  ok(/, [A-Za-z]+$/.test(say), '整词用逗号接在字母串后面（' + say.slice(-14) + '）');
-  ok(/\. [A-Za-z]+$/.test(say) === false,
-     '不用句号分隔字母串和整词（句号会让阿里云把字母读成单词）');
-  ok(/ - \S+$/.test(say) === false, '不再用破折号接整词（camera 会被读成 CAMERA CAMERA）');
-  ok(say.toUpperCase().indexOf(mod0.words[wi0].word.toUpperCase()) >= 0, '整词在示范里');
-} else {
-  ok(false, '示范按钮带 data-say');
+ok(stageHtml.indexOf('data-seq=') < 0, '示范不用 data-seq 逐段串播（历史上串播会被拆得七零八落）');
+// v119：逐字母这一屏**不再有任何听入口、也不再挂门禁** —— 家长原话
+// 「上面那个『先听一遍，逐字母练读加整词』这句就不要了，里面的朗读也不要了，
+//   只留这一个『先听一遍，连起来读』」。整个词卡流程只剩连读那一处听。
+ok(stageHtml.indexOf('data-say=') < 0, 'v119：逐字母屏不再挂任何示范');
+ok(stageHtml.indexOf('gate-listen') < 0, 'v119：逐字母屏没有「先听一遍」按钮');
+ok(stageHtml.indexOf('gate-locked') < 0, 'v119：格子不再要求"先听完示范才让读"');
+ok(/按住每个格子读一遍/.test(stageHtml), 'v119：指令改成「按住每个格子读一遍，再按住整词读一遍」');
+const say = App._spellDemo('letter', mod0.words[wi0].word.split(''), mod0.words[wi0].word);
+ok(/^Letters: /.test(say), '示范串仍前置 Letters 声明，挡住阿里的"智能拼读"（' + say.slice(0, 32) + '…）');
+ok(/[A-Z], [A-Z]/.test(say), '字母之间用逗号分隔（v102：连字符会让 A-N-D 被读成 and）');
+ok(!/[A-Z]-[A-Z]/.test(say), '字母之间不能再出现连字符（局部真词会被读掉）');
+ok(/, [A-Za-z]+$/.test(say), '整词用逗号接在字母串后面（' + say.slice(-14) + '）');
+ok(/\. [A-Za-z]+$/.test(say) === false,
+   '不用句号分隔字母串和整词（句号会让阿里云把字母读成单词）');
+ok(/ - \S+$/.test(say) === false, '不再用破折号接整词（camera 会被读成 CAMERA CAMERA）');
+ok(say.toUpperCase().indexOf(mod0.words[wi0].word.toUpperCase()) >= 0, '整词在示范里');
+// v119：这一段就是全流程唯一一段听，逐字母那屏渲染时就要预取好，孩子走到
+// 连读屏点下去即出声音（家长："就是一点就出来声音"）。
+{
+  const pre = [];
+  const origPref = App.prefetchTts;
+  App.prefetchTts = function (t) { pre.push(String(t)); };
+  App._renderSpellRead(mod0, 0, 0, mod0.words[wi0], mod0.words[wi0].word.split(''), 'letter');
+  App.prefetchTts = origPref;
+  ok(pre.indexOf(say) >= 0, '逐字母屏渲染时就把连读示范预取好了（点下去零等待）');
 }
 // _spellDemo 直接单测：camera 是实测最坑的词（C-A-M-E-R-A 正好拼出 camera）
 ok(App._spellDemo('letter', ['c', 'a', 'm', 'e', 'r', 'a'], 'camera')
@@ -264,7 +283,7 @@ App.startContinuous(MI);
     const csay = cm[1].replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
     ok(/^Letters: /.test(csay) && /, [A-Za-z]+$/.test(csay),
        '连读示范同样是 Letters + 逗号字母串 + 逗号整词（' + csay.slice(0, 42) + '…）');
-    ok(csay === say, '连读示范与逐字母示范完全一致（避免两种串法）');
+    ok(csay === say, '连读屏的示范与 _spellDemo 逐字相同（全流程唯一一处听）');
   }
 }
 // 音节拼读同理
@@ -338,7 +357,10 @@ App._spell.unitScores[0] = { label: 'B', ok: true, heard: 'b' };
 App._spellProgress(MI);
 App._syncVocabFootLabel(MI, DAY);
 ok(App._spell.allOk === true, '重读读对 → allOk=true');
-ok(btn.disabled === false, '全读对 → 解锁');
+ok(btn.disabled === true, 'v119：全读对但仍要连起来读一遍 —— 按钮还锁着');
+App._spell.contDone = true;
+App._syncVocabFootLabel(MI, DAY);
+ok(btn.disabled === false, '连读通过 → 解锁');
 
 // 12. 字母跟读全程静音（家长："读 B 就不要读出来 B，学生自己说"）
 console.log('\n== 12) 字母跟读不放机器音 ==');
@@ -364,10 +386,11 @@ ok(App._scoreSequence(seq2, 'b k f a s t').ok === 6, '整词没读到 → 只中
 ok(App._scoreSequence(seq2, 'b k f a s t breakfast').ok === 7, '整串读全 → 7/7');
 ok(App._scoreSequence(seq2, 'b k f a s breakfast').ok === 6, '中间漏一个字母 → 不放水');
 enterStage();
-App._spell.finished = true; App._spell.allOk = true; App._spell.contMiss = true;
+App._spell.finished = true; App._spell.allOk = true;
+App._spell.contMiss = true; App._spell.contDone = false;
 App._syncVocabFootLabel(MI, DAY);
 ok(btn.disabled === true, '连读没读全 → 按钮重新锁住');
-App._spell.contMiss = false;
+App._spell.contMiss = false; App._spell.contDone = true;
 App._syncVocabFootLabel(MI, DAY);
 ok(btn.disabled === false, '读全了 → 解锁');
 
@@ -414,8 +437,9 @@ for (let i = 0; i < App._spell.total; i++) {
 App._spell.wordTake = {}; App._spell.score = 80; App._spell.heard = 'beautiful';
 App._spellProgress(MI);
 ok(App._spell.allOk === true, '全是「没听清」→ allOk=true（不把识别失败算成孩子的错）');
+App._spell.contDone = true;
 App._syncVocabFootLabel(MI, DAY);
-ok(btn.disabled === false, '不挡路：按钮解锁');
+ok(btn.disabled === false, '不挡路：读完 + 连读通过后按钮解锁');
 
 // 16. 字母/音节跟读必须让 Cloudflare 先认（v96 的注释写了，v99 才真正落到代码）
 console.log('\n== 16) 孤立音先给 Cloudflare 认 ==');
