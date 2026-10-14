@@ -60,6 +60,8 @@ function fakeEnv(opts) {
       run: async function (model, input) {
         rec.aiCalls++;
         rec.aiModels.push(model);
+        // v106：模拟"CF 这条就是慢"（字母测试里出现过 8.4 秒才回包）。
+        if (opts.aiDelayMs) await new Promise(function (r) { setTimeout(r, opts.aiDelayMs); });
         if (opts.aiThrows) throw new Error('4006: Neurons exhausted for the day');
         if (opts.allEmpty) return { text: '' };
         if (opts.turboEmpty && model.indexOf('turbo') >= 0) {
@@ -208,6 +210,30 @@ async function run(qs, opts) {
 
   r = await run('?model=turbo&prompt=A,+B,+C&prefer=cf', { allEmpty: true, aliText: '' });
   ok('都没有内容 → 200 空文本（不是 502）', r.status === 200 && r.body.text === '', 'status=' + r.status);
+
+  // ---- 4c. prefer=cf 的提速（v106）----------------------------------------
+  // 家长 2026-10-14：「发音识别的还是太慢了一点」。字母这条路 CF 是主角，
+  // 但它对孤立字母本来就三成空手而归 —— 旧写法要等它空手归来，才从头叫
+  // 一趟阿里云，孩子多等一整趟。现在 CF 跑过 1200ms grace 就把阿里云发出去
+  // （并行），并且给字母这条配了 3200ms 的短上限（原来 7000ms 是留给整句的）。
+  // 结果选择不变：CF 有内容仍然用 CF（字母的准确度只有它靠得住）。
+  console.log('\n4c. prefer=cf：CF 慢/空手时不再白等一趟阿里云（v106）');
+  let lt0 = Date.now();
+  r = await run('?model=turbo&prompt=A,+B,+C&prefer=cf',
+    { aiDelayMs: 3000, allEmpty: true, aliDelayMs: 900, aliText: 'A B C' });
+  let letterMs = Date.now() - lt0;
+  ok('CF 拖住且空手 → 阿里云的文本照样拿得到', r.body.model === 'qwen3-asr-flash', JSON.stringify(r.body));
+  ok('字母这条的 CF 上限是 3.2s（不再是 7s），总耗时不随 CF 一起涨',
+    letterMs < 4300, letterMs + 'ms');
+  ok('超时算得出来（Server-Timing 里 total 也被这 3.2s 封顶）',
+    /, total;dur=\d+(?:,|$)/.test(r.rec.hedge || ''), r.rec.hedge);
+
+  lt0 = Date.now();
+  r = await run('?model=turbo&prompt=A,+B,+C&prefer=cf', { aiDelayMs: 2000, text: 'A B C' });
+  letterMs = Date.now() - lt0;
+  ok('CF 慢但在上限内答上了 → 仍然用 CF（字母只有它认得准）',
+    r.body.model === '@cf/openai/whisper-large-v3-turbo' && r.body.text === 'A B C', JSON.stringify(r.body));
+  ok('这条没有超过 CF 自己的时间', letterMs < 2600, letterMs + 'ms');
 
   // ---- 5. 没有 Key 时的退路 ----------------------------------------------
   console.log('\n5. 未配置 ALIYUN_KEY（部署漏了 secret 的情况）');

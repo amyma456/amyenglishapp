@@ -771,6 +771,19 @@ const ALIYUN_ASR_TIMEOUT_MS = 2600;
 // 之前它没有上限：字母测试里出现过 8.4 秒才回包，孩子那边就是干等。
 const CF_ASR_TIMEOUT_MS = 7000;
 
+// 字母/音节专用（prefer=cf）的两个新上限（v106）。
+//
+// 字母跟读这条路 CF 是主角（孤立音只有它认得出来），但原来的写法有个尾巴：
+// CF 一旦空手而归，才从头叫一趟阿里云 —— 总耗时变成 CF + 阿里云。孩子的
+// 感知就是"单个字母识别很久"（家长原话："还是太慢了一点"）。
+//   上限 7000ms → 3200ms：字母就 0.5 秒音频，等 7 秒毫无意义，那条路是留给
+//   整句的。超时就当它没答上来，让已经在路上的阿里云说话。
+//   grace 1200ms：CF 跑过这个点还没回，就顺手把阿里云发出去。结果仍然是
+//   "CF 有内容就用 CF"（字母的准确度只有它靠得住），阿里云只是热好了在等，
+//   所以总耗时是 max(两条) 而不是两条相加。CF 答得快时一次阿里云都不打。
+const CF_LETTER_TIMEOUT_MS = 3200;
+const CF_LETTER_GRACE_MS = 1200;
+
 // 对冲点（v98 引入，v103 收紧）。
 //
 // 取值依据是实测延迟分布（tools/scoring-latency-probe.js，线上交叉对照）：
@@ -1004,11 +1017,21 @@ async function transcribe(request, env) {
   // 两条通道的先后顺序：默认阿里云优先（更快，见函数上方注释），
   // prefer=cf 时反过来（字母这种极短音频只有 Cloudflare 认得出来）。
   if (preferCf) {
-    const cf = await withTimeout(runCloudflare(), CF_ASR_TIMEOUT_MS);
+    // 字母跟读（v106）：CF 先上，但不再"等它空手而归才从头叫阿里云"。
+    // 字母是一段 0.5 秒的孤立音，CF 对它本来就只有七成把握，剩下那些空手
+    // 而归的，旧写法要再串行等一整趟阿里云 —— 家长："单个字母识别很久"。
+    // 现在 CF 跑过 grace 还没回，就把阿里云提前发出去；谁先回来都行，
+    // 但结果仍然是"CF 有内容就用 CF"（字母的准确度只有它靠得住），
+    // 阿里云只是热好了在旁边等着 —— 总耗时 max(两条) 而不是相加。
+    let aliStarted = null;
+    const fireAli = function () { if (!aliStarted) aliStarted = runAliyun(); return aliStarted; };
+    const graceTimer = setTimeout(fireAli, CF_LETTER_GRACE_MS);
+    const cf = await withTimeout(runCloudflare(), CF_LETTER_TIMEOUT_MS);
+    clearTimeout(graceTimer);
     if (cf.text) { text = cf.text; model = cf.model; raw = cf.raw; answered = true; }
     if (cf.dead) deadAny = true;
     if (!text) {
-      const ali = await runAliyun();
+      const ali = await fireAli();          // 过了 grace 的话它早就在路上了
       if (ali.text) { text = ali.text; model = ali.model; answered = true; }
       if (ali.answered) answered = true;
       if (ali.dead) deadAny = true;

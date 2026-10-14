@@ -4750,7 +4750,10 @@ const App = {
       if (correctEl) this._showCelebration(correctEl);
       var resultDiv = document.getElementById('spell-result-' + mi) || document.getElementById('vocab-retry-area-' + mi);
       if (resultDiv) { this._clearWrongHint(resultDiv); resultDiv.innerHTML = '<div style="color:var(--success);font-size:14px;font-weight:600;margin-top:8px">✅ 正确！</div>'; }
-      setTimeout(() => this.nextVocabStage(mi, dayIdx, wordCount, stageCount), 1200);
+      // v106：答对之后停 800ms 就走（原来 1200ms）。孩子一天要在词汇模块里
+      // 点几十次，每次多等 0.4 秒就是"点久了不耐烦"（家长原话）。庆祝动画
+      // 本身不到 700ms，800 足够看见，不会被切得突兀。
+      setTimeout(() => this.nextVocabStage(mi, dayIdx, wordCount, stageCount), 800);
     } else {
       // 答错不点答案（v104）：卡片上没有 A/B/C/D，提示词只能说"第几个"；
       // 正确卡片一律不亮绿、也不代替孩子点。他自己点对了才进下一阶段。
@@ -4835,7 +4838,8 @@ const App = {
         resultDiv.innerHTML = '<div class="spell-result-word">' + fullWord + '</div><div class="spell-result-phonetic">🔊 ' + fullWord + '</div>';
       }
       this.speak(fullWord);
-      setTimeout(() => this.nextVocabStage(mi, dayIdx, wordCount, stageCount), 1500);
+      // v106：拼对之后停 900ms 就走（原来 1500ms），同 _checkVocabAnswer 的理由。
+      setTimeout(() => this.nextVocabStage(mi, dayIdx, wordCount, stageCount), 900);
     } else {
       inputEls.forEach(function(el) {
         el.classList.add('wrong');
@@ -5631,7 +5635,10 @@ const App = {
         if (dist <= 1 && !this._mixOnly(tok, f)) return true;
         // 长字母名（W 的 "double"、H 的 "aitch"）容易被听走形一位两位；
         // 短形式（"ah" ↑ "are"）只认长度差不超过 1 的吞音。
-        if (dist === 2 && close && Math.min(tok.length, f.length) >= 2) return true;
+        // v106：差两位的那一档再松一格 —— 只要有一边 ≥3 个字母就认（"aye" ≈ "ay"、
+        // "deed" ≈ "de"）。这是"听走形"不是"读成别的字母"：落到另一个字母的读音上
+        // 的那一步，已经在上面 `other` 那道闸里被拦掉了，这一格放宽碰不到 b/p、m/n。
+        if (dist === 2 && close && Math.max(tok.length, f.length) >= 3) return true;
       }
     }
     return false;
@@ -5859,13 +5866,16 @@ const App = {
         studentId: self._myStudentId(), dayIdx: self.state.currentDay,
         moduleIdx: mi, itemIdx: idx, round: 1, type: isLetter ? 'letter' : 'syllable',
         // v101：发音不准但算过给 70 分（家长的"过 60 分以上"），读准了才是 100。
-        label: label, score: ok ? (near ? 70 : 100) : 0, spoken: text, source: 'asr',
+        // v106：家长又说"判分高一点" —— 这一档抬到 75，仍然明显低于读准的
+        // 100 分，但先过掉（60 分及格线以上 15 分），孩子不会卡在重读上。
+        label: label, score: ok ? (near ? 75 : 100) : 0, spoken: text, source: 'asr',
       });
       self._spellProgress(mi);
-    }, true, 'en', hint, 'cf');   // v99：v96 的注释说字母/音节要 CF 先认，代码却
+    }, true, 'en', hint, 'cf', true);  // v99：v96 的注释说字母/音节要 CF 先认，代码却
                                   // 一直没把 'cf' 传下来 —— 结果是先白等阿里云
                                   // （它对孤立音基本吐空）再排 CF。补上，
                                   // 单个字母的识别时长直接砍掉一段。
+                                  // v106 第 10 参 true：说完了自动收，不用一直按着。
   },
 
   async _readFullWord(ev, mi) {
@@ -5901,7 +5911,7 @@ const App = {
         label: wordText, score: score, spoken: text, source: 'asr',
       });
       self._spellProgress(mi);
-    }, null, 'en', wordText);
+    }, null, 'en', wordText, '', true);   // v106：整词也说完了自动收（第 10 参）
   },
 
   // 整词打分（v92）：逐词对齐对"目标只有一个词"的目标太狠了 —— 识别把
@@ -6095,7 +6105,10 @@ const App = {
         label: sp.word, score: res.score, spoken: text, source: 'asr',
       });
       self._syncVocabFootLabel(mi, self.state.currentDay);
-    }, true, 'en', contHint, 'cf');    // v96：连读是一串字母，同 _readUnit 走 Cloudflare
+    }, true, 'en', contHint, 'cf', 1200);    // v96：连读是一串字母，同 _readUnit 走 Cloudflare
+                                             // v106：连读串本身 2~4 秒，安静窗口放宽到
+                                             // 1200ms —— 字母之间、字母与整词之间不会停这么久，
+                                             // 但孩子读完了就不用一直按着（家长："点久了不耐烦"）。
   },
 
   // How much of the expected sequence turned up, in order. Each expected item
@@ -6173,7 +6186,11 @@ const App = {
   // Whisper 会朝这个内容解码，读对的词被误判漏读的比例明显下降。
   // asrPrefer（v96）：'cf' = 这次朗读先要 Cloudflare 认（字母/音节这种极短
   // 孤立音只有它认得出来，见 Api.transcribe 的注释），不传就走更快的阿里云。
-  _holdStart(ev, key, promptLabel, statusEl, onDone, needsTranscript, lang, asrHint, asrPrefer) {
+  // autoStop（v106）：true = 说完了就自动收；数字 = 自定义"安静多久算说完"
+  // 的毫秒数。字母跟读是一段 0.5 秒的孤立音，孩子按着不知道什么时候该松手，
+  // 一直按着又"不耐烦"（家长原话）。开了它，孩子读完松手就行、甚至不松手
+  // 也行 —— 系统听见声音之后再安静够久，自己收尾进评分。
+  _holdStart(ev, key, promptLabel, statusEl, onDone, needsTranscript, lang, asrHint, asrPrefer, autoStop) {
     if (ev) {
       ev.preventDefault();
       if (ev.pointerId !== undefined && ev.currentTarget.setPointerCapture) {
@@ -6192,6 +6209,15 @@ const App = {
     this._holdStatusEl = statusEl;
     this._holdStartedAt = Date.now();
 
+    // 自动收尾的看门狗（v106）。只看音量，不看时长：孩子说完了就收，
+    // 不逼他一直按着。松手那条路（_holdEnd）不受影响 —— 它先到就先算，
+    // 两个入口都走 _holdEnd，第二个人会被 `if (!key) return` 挡掉。
+    var stopOn = !!autoStop;
+    var silMs = typeof autoStop === 'number' ? autoStop : this.AUTO_STOP_SILENCE_MS;
+    var capMs = stopOn ? this.AUTO_STOP_CAP_MS : 15000;
+    var spoke = false, lastLoudAt = 0;
+    var t0 = Date.now();
+
     var setStatus = function(html) { if (statusEl) statusEl.innerHTML = html; };
     setStatus('<div class="tap-rec"><span class="tap-dot"></span>正在录「' + promptLabel + '」'
             + '<span class="tap-hint">松开结束</span>'
@@ -6207,6 +6233,13 @@ const App = {
       onLevel: function(v) {
         var bar = document.getElementById('tap-wave');
         if (bar) bar.style.width = Math.min(100, Math.round(v * 140)) + '%';
+        if (!stopOn) return;
+        var now = Date.now();
+        if (v >= self.AUTO_STOP_LEVEL) { spoke = true; lastLoudAt = now; return; }
+        if (spoke && now - lastLoudAt >= silMs && now - t0 >= self.AUTO_STOP_MIN_MS) {
+          stopOn = false;                      // 只收一次
+          self._holdEnd();
+        }
       }
     }).catch(function() {
       setStatus('<div class="tap-result bad">无法访问麦克风，请允许权限</div>');
@@ -6214,8 +6247,16 @@ const App = {
     });
 
     clearTimeout(this._holdCap);
-    this._holdCap = setTimeout(function() { self._holdEnd(); }, 15000);
+    this._holdCap = setTimeout(function() { self._holdEnd(); }, capMs);
   },
+
+  // 自动收尾的量（v106）。阈值取的是"有人声"的量级：麦克风已开 AGC，
+  // 正常说话每帧峰值 0.1~0.5，安静房间底噪在 0.01 上下 —— 0.05 正好落在
+  // 两者中间，既不会被底噪骗成"说完了"，也不会漏掉轻声的字母。
+  AUTO_STOP_LEVEL: 0.05,
+  AUTO_STOP_SILENCE_MS: 600,     // 字母/整词：说完安静 0.6 秒就收
+  AUTO_STOP_MIN_MS: 350,         // 按下到能自动收，至少留 350ms（别把起手的音切掉）
+  AUTO_STOP_CAP_MS: 8000,        // 自动收的那几屏，最长也就等 8 秒（原来 15 秒）
 
   async _holdEnd(ev) {
     if (ev) ev.preventDefault();
@@ -6228,9 +6269,13 @@ const App = {
     if (!key) return;
 
     // A stray tap is not an attempt — drop it rather than scoring silence.
-    if (heldMs < 220) {
+    // v106：门槛从 220ms 收到 140ms。字母本来就只有半秒长，孩子快按快松是
+    // 正常的读法（家长："不要让学生点那么久"），220 会把认真的快读判成
+    // "没按住"，逼他按得更久 —— 正好是要治的那个毛病。防误触仍然靠
+    // "录到的音频"这一关：真误触的录音里没有人声，识别为空 → 走"没听清"。
+    if (heldMs < 140) {
       try { await Recorder.stop(); } catch (e) {}
-      if (statusEl) statusEl.innerHTML = '<div class="tap-result bad">按住不放才能录音</div>';
+      if (statusEl) statusEl.innerHTML = '<div class="tap-result bad">太快了，按住读一下再松手</div>';
       return;
     }
 
