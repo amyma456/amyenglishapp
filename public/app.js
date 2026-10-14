@@ -333,12 +333,22 @@ const App = {
   //   2. 除了进 App 时，**每次回到前台**（visibilitychange / focus / pageshow）
   //      再补一次（60 秒节流）—— 孩子做完作业切出去又切回来的场景很常见，
   //      那一次上报可能正好断网丢了。
+  // v122 补第三点，也是**真正的病根**（前两点都只是通道）：
+  //   家长 2026-10-14 晚又说"重新登录了还是没反应"。查下来是 Api._answerPrefix
+  //   漏了周标记 —— 第 2 周（10-05 周一）起 saveCheckin 一次都没写成功过，
+  //   本机 checkins 是空的，**没有东西可报**。所以打开 App 时先让 Api 拿本机
+  //   答案重算一遍打卡（纯本地、幂等），再往下统一上报。
   _backfillCheckins() {
     if (this.isTeacher() || !this.state.phone) return 0;
-    if (this._backfilled) return 0;
-    this._backfilled = true;
     const sid = this._myStudentId();
     const who = this._myWho();
+    // 先把答案汇总成打卡（补回第 2 周起一直没写下来的那几天）。
+    if (typeof Api.repairCheckins === 'function') {
+      try { Api.repairCheckins(sid, this._dayTotals(), who); }
+      catch (e) { console.warn('repairCheckins failed:', e); }
+    }
+    if (this._backfilled) return 0;
+    this._backfilled = true;
     let n = 0;
     Object.keys(this.state.checkins || {}).forEach(k => {
       const slot = this._checkinKeySlot(k, sid);
@@ -351,6 +361,13 @@ const App = {
     });
     if (n) console.log('backfilled ' + n + ' check-ins');
     return n;
+  },
+
+  // 本周每天的题数，下标 = 第几天。给 Api.repairCheckins 算 total 用。
+  _dayTotals() {
+    const out = [];
+    for (let i = 0; i < HOMEWORK_DATA.length; i++) out.push(this._countDayQuestions(i));
+    return out;
   },
 
   // 从本机打卡 key 里拆出（第几周, 第几天）。key 的形状由 Api.checkinKey /
@@ -974,6 +991,8 @@ const App = {
     clearTimeout(this._advanceTimer);
     // v120：把本机的历史打卡补报一次到后台（见 _backfillCheckins）。
     // v121：再绑一层"回到前台就补一次"，孩子不用做任何操作。
+    // v122：之前是本机打卡压根没写下来（Api._answerPrefix 漏周标记），
+    //       所以先重算再上报 —— 打开一次 App 就把这几天的补回来。
     this._backfillCheckins();
     this._bindCheckinUpload();
     // Update header name - show student name or teacher label

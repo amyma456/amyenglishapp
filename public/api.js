@@ -644,29 +644,51 @@ const Api = {
     return { recorded: true, record: rec };
   },
 
-  async getAnswers(studentId, dayIdx) {
+  // 属于「某周某天」的答案记录。**给答案挑记录时，前缀只有这一个来源。**
+  //
+  // ⚠️ v122 修的真 bug：这里原来是 studentId + '_d' + dayIdx + '_'，漏了
+  // _weekTag()，而写入侧的 answerKey() 是**带**周标记的。于是第 2 周起
+  // （2026-10-05 周一之后）这个函数恒返回空数组，saveCheckin 撞上"一条答案
+  // 都没有"就直接 return null —— **打卡记录再也没被写下来过**。
+  //
+  // 症状和"没上后台"完全不同，是本地就断了：
+  //   孩子端「孩子打卡」清一色未打卡 / 完成率对比全员 0/7 / 每日状态全是叉，
+  //   后台的 checkins 表一条也没有（因为压根没人写过，v120/v121 的上报
+  //   通道是好的，只是没东西可报）。
+  // 改 answerKey() 或这里，必须两边一起改。
+  _answerPrefix(studentId, dayIdx) {
+    return studentId + this._weekTag() + '_d' + dayIdx + '_';
+  },
+
+  _dayAnswers(studentId, dayIdx) {
     const d = Store.doc();
-    const prefix = studentId + '_d' + dayIdx + '_';
+    const prefix = this._answerPrefix(studentId, dayIdx);
     return Object.keys(d.answers)
       .filter(k => k.indexOf(prefix) === 0)
       .map(k => d.answers[k]);
   },
 
-  // Written from the first answer of the day onward, recomputed after each.
-  // done=true only once every question in the day has a record; before that
-  // completed='partial', which the existing renderers already style.
-  async saveCheckin(studentId, dayIdx, totalQuestions, who) {
-    const d = Store.doc();
-    const answered = await this.getAnswers(studentId, dayIdx);
-    if (answered.length === 0) return null;
+  // 保持 async：外部（及旧测试）按 Promise 用。
+  async getAnswers(studentId, dayIdx) {
+    return this._dayAnswers(studentId, dayIdx);
+  },
 
+  // 由本机答案算出某一天的打卡记录。同步、幂等 —— 正常答题路径和"补历史"
+  // 路径共用一份算法，两条路算出来的数字必须一模一样。
+  //
+  // 完成时间取**这天最后一次答题的时刻**（本地时区 HH:MM），不是"现在"：
+  // 补 10-12、10-13 的历史时用 now 会把三天前的作业记成今晚才做完。
+  // done=true 只有在这天的每一道题都有记录时才成立；之前是 partial。
+  buildCheckin(studentId, dayIdx, totalQuestions, prev) {
+    const answered = this._dayAnswers(studentId, dayIdx);
+    if (answered.length === 0) return null;
     const correct = answered.filter(a => a.correct).length;
     const full = totalQuestions > 0 && answered.length >= totalQuestions;
-    const now = new Date();
-    const key = this.checkinKey(studentId, dayIdx);
-    const prev = d.checkins[key];
-
-    const rec = {
+    const stamps = answered.map(a => a.at).filter(Boolean).sort();
+    const lastISO = stamps.length ? stamps[stamps.length - 1] : new Date().toISOString();
+    let t = new Date(lastISO);
+    if (isNaN(t.getTime())) t = new Date();
+    return {
       id: prev ? prev.id : uid(),
       studentId: studentId, dayIdx: dayIdx,
       done: full,
@@ -675,9 +697,17 @@ const Api = {
       total: totalQuestions,
       correctRate: Math.round(correct / answered.length * 100),
       wrongCount: answered.length - correct,
-      time: String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0'),
-      at: now.toISOString(),
+      time: String(t.getHours()).padStart(2, '0') + ':' + String(t.getMinutes()).padStart(2, '0'),
+      at: lastISO,
     };
+  },
+
+  // Written from the first answer of the day onward, recomputed after each.
+  async saveCheckin(studentId, dayIdx, totalQuestions, who) {
+    const d = Store.doc();
+    const key = this.checkinKey(studentId, dayIdx);
+    const rec = this.buildCheckin(studentId, dayIdx, totalQuestions, d.checkins[key]);
+    if (!rec) return null;
     d.checkins[key] = rec;
     Store.flush();
 
@@ -686,6 +716,56 @@ const Api = {
     // 每日状态全是叉"。fire-and-forget：上报失败绝不能影响孩子答题。
     this.reportCheckin(rec, who);
     return rec;
+  },
+
+  // 补回历史打卡（v122）。
+  //
+  // 答案一直都在本机 answers 里，只是第 2 周起没人把它们汇总成打卡（见
+  // _answerPrefix）。这个函数按天重算一遍，逐条报到后台 —— 孩子**打开一次
+  // App**，这几天的完成时间 / 正确率 / 错题数就全回来了。
+  //
+  //   dayTotals —— 每天的总题数（App._countDayQuestions），下标 = 第几天
+  //
+  // 只增不减：已经打过的卡不会因为"本机答案比云端少"而退回未打卡（一台没
+  // 做过作业的手机不该把孩子的记录抹掉）。返回补出来的天数。
+  repairCheckins(studentId, dayTotals, who) {
+    if (!studentId || !Array.isArray(dayTotals)) return 0;
+    const d = Store.doc();
+    let fixed = 0;
+    dayTotals.forEach((total, dayIdx) => {
+      const key = this.checkinKey(studentId, dayIdx);
+      const prev = d.checkins[key];
+      let rec = this.buildCheckin(studentId, dayIdx, total, prev);
+      if (!rec) return;
+      if (prev) {
+        // 与 worker 端 UPSERT 同一套判据：答题数更多的那份更可信，
+        // 但 done 只增不减。
+        const useNew = rec.answered >= (prev.answered || 0);
+        const anyDone = !!prev.done || rec.done;
+        rec = {
+          id: prev.id || rec.id,
+          studentId: studentId, dayIdx: dayIdx,
+          done: anyDone,
+          completed: anyDone ? 'full' : 'partial',
+          answered: Math.max(prev.answered || 0, rec.answered),
+          total: useNew ? rec.total : (prev.total || rec.total),
+          correctRate: useNew ? rec.correctRate : (prev.correctRate || rec.correctRate),
+          wrongCount: useNew ? rec.wrongCount : (prev.wrongCount || rec.wrongCount),
+          time: useNew ? rec.time : (prev.time || rec.time),
+          at: rec.at,
+        };
+        const same = !!(prev.done === rec.done
+          && (prev.answered || 0) === rec.answered
+          && prev.correctRate === rec.correctRate
+          && prev.time === rec.time);
+        if (same) return;          // 已经对的天不动，重复打开也不会反复报
+      }
+      d.checkins[key] = rec;
+      fixed++;
+      this.reportCheckin(rec, who);
+    });
+    if (fixed) Store.flush();
+    return fixed;
   },
 
   // who（可选）：{name, phone, klass}。调用方已经知道这些，比在这里翻
