@@ -8212,7 +8212,7 @@ const App = {
             + String.fromCharCode(65 + oi) + '. ' + this._escHtml(opt) + '</div>';
     });
     html += '</div>';
-    html += '<div class="retry-hint" id="retry-hint-' + step.mi + '-' + step.qi + '"></div>';
+    html += '<div class="retry-verdict" id="retry-verdict-' + step.mi + '-' + step.qi + '"></div>';
     html += '</div>';
     return html;
   },
@@ -8229,10 +8229,10 @@ const App = {
       if (i === right) o.classList.add('correct');
       else if (i === picked) o.classList.add('wrong');
     });
-    const hint = document.getElementById(box.id.replace('retry-opts-', 'retry-hint-'));
+    const hint = document.getElementById(box.id.replace('retry-opts-', 'retry-verdict-'));
     const hit = picked === right;
     if (hint) {
-      hint.className = 'retry-hint ' + (hit ? 'good' : 'bad');
+      hint.className = 'retry-verdict ' + (hit ? 'good' : 'bad');
       hint.innerHTML = hit
         ? '✅ 对了！这题以后不会再错啦'
         : '🙂 正确答案是 ' + String.fromCharCode(65 + right) + '，记住它就好';

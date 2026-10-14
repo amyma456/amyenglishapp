@@ -341,9 +341,11 @@ input,textarea,select{font-family:inherit;font-size:14px;outline:none}
 .retry-option.correct{background:#E8F7EF;border-color:#1F9D55;color:#1F9D55;font-weight:700}
 .retry-option.wrong{background:#FDECEC;border-color:#C0392B;color:#C0392B;
   text-decoration:line-through}
-.retry-hint{margin-top:12px;font-size:13px;min-height:18px}
-.retry-hint.good{color:#1F9D55;font-weight:600}
-.retry-hint.bad{color:#B26A00}
+/* 判定文案用 retry-verdict 而不是 retry-hint —— 后者是「跟读没过」那条
+   红字提示（第 252 行）已经在用的类名，复用会把两处样式搅在一起。 */
+.retry-verdict{margin-top:12px;font-size:13px;min-height:18px}
+.retry-verdict.good{color:#1F9D55;font-weight:600}
+.retry-verdict.bad{color:#B26A00}
 .w-miss{color:var(--ink-3);text-decoration:line-through}
 .align-key{display:flex;gap:14px;justify-content:center;margin-bottom:4px}
 .align-key span{font-size:11px}

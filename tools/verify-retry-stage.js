@@ -198,6 +198,8 @@ const zh = App._retryZh(q1);
 ok(zh.length > 0, '配了中文说明：' + zh.slice(0, 30) + '…');
 ok(html.indexOf('retry-zh') >= 0, '中文说明渲染出来了（家长："多加一些中文翻译"）');
 ok(html.indexOf('你之前做错过') >= 0, '说清楚这是"做错过"的题');
+ok(html.indexOf('retry-hint') < 0 && html.indexOf('retry-verdict') >= 0,
+  '判定文案用 retry-verdict，不占用既有的 retry-hint（那个类名第 252 行已有别处在用，复用会串样式）');
 
 console.log('== 5) 选完放行（对错都走） ==');
 function optBox(mi, qi, n) {
@@ -220,7 +222,7 @@ ok(box1.box.dataset.done === '1', '选完就锁定，不会重复点');
 ok(box1.opts[pk.answerIdx].classList.contains('correct'), '正确项标绿');
 ok(nextBtn.disabled === false, '答对 → 底部「下一题」亮起来');
 ok(App._retryDone(DAY).indexOf(MI + '_1') >= 0, '答对 → 记进"今天练过了"');
-ok(getEl('retry-hint-' + MI + '-1').innerHTML.indexOf('对了') >= 0, '给了肯定反馈');
+ok(getEl('retry-verdict-' + MI + '-1').innerHTML.indexOf('对了') >= 0, '给了肯定反馈');
 // 5b 答错
 const wrongIdx = (pk.answerIdx + 1) % 3;
 let box2 = optBox(MI, 2, 3);
