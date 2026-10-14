@@ -299,8 +299,8 @@ console.log('\n=== 5. 整张卷子跑一遍：卷面上再没有三个下划线�
       const css = /.a4-sheet \.a4-blank\{[^}]*\}/.exec(htmlSrc);
       ok(css && /border-bottom:/.test(css[0]), '横线是画出来的下划线（border-bottom）');
       ok(css && /display:inline-block/.test(css[0]), '横线是行内元素，能跟在句子中间');
-      ok(/name="app-version" content="116"/.test(htmlSrc), '版本号升到 116');
-      ok(/amy-english-v116/.test(swSrc), 'Service Worker 缓存名同步到 v116（不然手机上还是旧版）');
+      ok(/name="app-version" content="117"/.test(htmlSrc), '版本号升到 117');
+      ok(/amy-english-v117/.test(swSrc), 'Service Worker 缓存名同步到 v117（不然手机上还是旧版）');
     }
 
     console.log('\n' + (fail ? '❌ ' + fail + ' 项未通过' : '✅ 全部通过'));

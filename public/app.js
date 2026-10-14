@@ -333,6 +333,14 @@ const App = {
     return false;
   },
 
+  // 这道题是不是已经**做对**了（只认 correct === true，答错不算）。
+  // 填空题（没有选项、没有跟读入口）从下一题退回来时靠它判断还要不要锁住
+  // 底部"下一题"——已经写对了就不该再锁，否则按钮永远是灰的，孩子点不动。
+  _questionSolved(mi, qi, dayIdx) {
+    const rec = this.state.answers[Api.answerKey(this._myStudentId(), dayIdx, mi, qi)];
+    return !!(rec && rec.correct);
+  },
+
   // 只靠答题记录反推的版本（见上面 _resumeStepIdx 的说明）。依据是本地记录
   // 的答题（answers）+ 单词闯关完成标记（learnedWords），都在手机本地，
   // 重新登录不会丢。
@@ -7906,6 +7914,9 @@ const App = {
     const day = HOMEWORK_DATA[dayIdx];
     const steps = this._buildSteps(dayIdx);
     if (steps.length === 0) return '<div class="card text-center text-sub">今天没有作业</div>';
+    // 每渲染一屏都重新判定门槛：这个标记是"渲染时要不要锁住下一题"的一次性
+    // 信号，上一屏若因故没被 _applyStepLock 消费掉，会连累下一屏莫名其妙锁死。
+    this._lockNextOnRender = false;
 
     if (this.state.stepIdx >= steps.length) {
       const sid = this._myStudentId();
@@ -7962,8 +7973,19 @@ const App = {
       html += '<div class="stage-q">' + this._renderOneQuestion(m, step.mi, step.qi, dayIdx) + '</div>';
       // 学生路径：题目可跟读时先把 stage-next-btn 锁住，必须跟读 ≥60 分
       // 才能进下一题——避免孩子在没读完/读得太糊的情况下被自动跳走。
-      const qHasRead = !!this._buildReadSentence(m, m.questions[step.qi]);
-      if (qHasRead && !this.isTeacher()) this._lockNextOnRender = true;
+      //
+      // 但**填空题（没有 options）根本没有跟读入口**（跟读区只跟着 q.options
+      // 渲染），所以它的门槛只能是"写对"：写对了立刻放行（submitFill 里
+      // _unlockStep），已经写对过（从下一题退回来 / 昨天做过）也直接放行。
+      // 以前这里不看题型一律锁，填空写对了底部按钮还是灰的、点不动，孩子
+      // 只能把同一句答案再写一遍 —— 家长 2026-10-14 报的就是这个：
+      // 「写对了没有任何错误，就弹出来下一题这个可选的项，而不是虚的显示，
+      //   让学生点不了」。
+      const q = m.questions[step.qi];
+      const blanked = !q.options;
+      const qHasRead = !!this._buildReadSentence(m, q);
+      const solved = blanked && this._questionSolved(step.mi, step.qi, dayIdx);
+      if (!this.isTeacher() && (blanked ? !solved : qHasRead)) this._lockNextOnRender = true;
       const self = this;
       setTimeout(function(){ self._autoSpeakQuestion(m, step.mi, step.qi, dayIdx); }, 250);
     } else if (step.kind === 'speaking') {
@@ -9249,10 +9271,21 @@ const App = {
     if (isCorrect) {
       this._wrongTryClear('f-' + mi + '-' + qi);
       this._clearWrongHint(ansEl);
-      ansEl.innerHTML = '✅ 正确！';
       input.style.borderColor = 'var(--success)';
       input.style.color = 'var(--success)';
       this._playCorrectSound();
+      // 填空题的门槛到此为止：写对了就把底部「下一题」点亮（橙色轻推）。
+      // 以前只显示"✅ 正确！"、按钮还是灰的，孩子以为卡住了，只能把同一句
+      // 答案再写一遍 —— 家长 2026-10-14：「写对了没有任何错误，就弹出来
+      // 下一题这个可选的项，而不是虚的显示，让学生点不了」。
+      if (this.isTeacher()) {
+        ansEl.innerHTML = '✅ 正确！';
+      } else {
+        this._unlockStep();
+        const nb = document.getElementById('stage-next-btn');
+        const nbName = (nb && nb.textContent) ? nb.textContent.trim() : '下一题';
+        ansEl.innerHTML = '✅ 正确！点下面的「' + nbName + '」继续';
+      }
     } else {
       // 答错不报答案（v104）：先用中文提示一步步收窄（词性/时态 → 首字母
       // 和字数 → 整词），最后一次才把答案给全 —— 但永远是他自己打进去。
