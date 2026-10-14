@@ -167,6 +167,7 @@ function makeFetch(net) {
 function makeDevice(net, label) {
   const lsData = {};
   const confirmQueue = [];
+  const confirms = [];                     // 每条弹窗的原文，用来验「点了是否」和警告文案
   const byId = {};
 
   const mkEl = (tag) => {
@@ -239,7 +240,11 @@ function makeDevice(net, label) {
     fetch: makeFetch(net),
     SpeechRecognition: undefined, Audio: undefined,
     alert: () => {}, prompt: () => '',
-    confirm: () => (confirmQueue.length ? confirmQueue.shift() : true),
+    confirm: msg => {
+      const a = confirmQueue.length ? confirmQueue.shift() : true;
+      confirms.push({ msg: String(msg == null ? '' : msg), answer: a });
+      return a;
+    },
     requestAnimationFrame: cb => setTimeout(cb, 0),
   });
 
@@ -249,6 +254,8 @@ function makeDevice(net, label) {
     isTeacherPhone: built.isTeacherPhone,
     ask: (...answers) => { answers.forEach(a => confirmQueue.push(a)); },
     toasts, ls: lsData,
+    confirms,
+    lastConfirm: () => confirms[confirms.length - 1] || { msg: '', answer: null },
     el: getEl,
     hidden: id => getEl(id).classList.contains('hidden'),
   };
@@ -508,7 +515,8 @@ console.log('=== 5. 客户端：登录流程真的按这套语义走 ===');
   ok((T.App.state.removedPhones || []).some(g => g.phone === STUDENT), '老师端拉到了拦截名单');
   const html = T.App.renderStudents();
   ok(html.indexOf('已被拦截登录') >= 0, '学生管理页显示「已被拦截登录」区块');
-  ok(html.indexOf('解除拦截') >= 0, '区块里有「解除拦截」按钮');
+  ok(html.indexOf('🔓 放行') >= 0 && html.indexOf('🗑️ 删除') >= 0,
+     '区块里每行都有「🔓 放行」和「🗑️ 删除」两个按钮');
   ok(html.indexOf('需你同意才能登录') >= 0, '写清了规则：需老师同意才能登录');
 
   // 早年被清掉的测试号（不在老师当前名单里）不该铺满页面，但要翻得到
@@ -568,7 +576,7 @@ console.log('=== 6. 新学生注册：老师会收到"是否要分配班级"的�
 }
 
 // ===========================================================================
-console.log('=== 7. 老师端批量管理：全选 / 多选删除 / 收起旧号码（拦截一条都不许松） ===');
+console.log('=== 7. 老师端批量管理：全选 / 反选 / 一键删除（学生删除仍=拦截；「收起」仍=只是不显示） ===');
 {
   const net = makeNet(seedCloud());
   net.worker = worker;
@@ -580,12 +588,12 @@ console.log('=== 7. 老师端批量管理：全选 / 多选删除 / 收起旧号
     { id: 's10', name: '张子皓-Harvey', phone: STUDENT,       class: '少儿英语A班', approved: true,  registeredAt: '2026-10-13T23:26:47.056Z' },
     { id: 's11', name: '马帅-ms',       phone: '17763891729', class: '', approved: false, registeredAt: '2026-08-21T08:01:57.331Z' },
   ].forEach(s => T.App.state.students.push(s));
-  // 后台塞三个"早年的测试号"（老师已经不记得他们是谁了）
-  ['13900141001', '13900141002', '13900141003'].forEach((p, i) => {
+  // 后台塞五个"早年的测试号"（老师已经不记得他们是谁了）
+  ['13900141001', '13900141002', '13900141003', '13900141004', '13900141005'].forEach((p, i) => {
     net.d1.tables.removed_students.push({ phone: p, name: '测试-' + i, removed_at: '2026-08-23T05:13:36.599Z' });
   });
   await T.App.loadRemovedList();
-  ok(T.App.state.removedPhones.length === 3, '后台拉到 3 个被拦号码');
+  ok(T.App.state.removedPhones.length === 5, '后台拉到 5 个被拦号码');
 
   // ---- 全选 / 取消全选 ----
   T.App.pickAll(true);
@@ -616,74 +624,112 @@ console.log('=== 7. 老师端批量管理：全选 / 多选删除 / 收起旧号
     const s2 = await call(net.d1, 'GET', '/api/class/status?phone=' + p);
     ok(s2.data.removed === true, p + ' 再次登录被拦，必须经老师同意');
   }
-  ok(T.toasts.some(t => t.indexOf('已删除 2 项') >= 0), '弹出了删除结果提示');
+  ok(T.toasts.some(t => t.indexOf('已删除 2 名学生') >= 0), '弹出了删除结果提示');
 
-  // ---- 勾选"早年的号码" → 删除 = 从页面收起，拦截照旧 ----
-  T.App.togglePick('g', '13900141001');
-  T.App.togglePick('g', '13900141002');
+  // ---- 拦截区的批量条：全选 / 反选 / 一键删除（老师要的就是这三样）----
+  T.App.toggleGatedRest();                 // 先展开，让那批旧号码真的渲染出来
+  // 这时拦截名单里除了 5 个旧测试号，还有刚被删掉的 2 个学生（删除 = 进拦截名单）
+  const N = (T.App.state.removedPhones || []).length;
+  ok(N === 7, '拦截名单此刻 7 条（5 个旧测试号 + 刚删掉的 2 个学生）');
+  const gatedPicked = () => (T.App.state.picked || []).filter(k => k.indexOf('g:') === 0);
+  html = T.App.renderStudents();
+  ok(html.indexOf('全选（' + N + '）') >= 0, '拦截区有「全选」，并写明这一区一共几个号码');
+  ok(html.indexOf('🔄 反选') >= 0, '拦截区有「反选」按钮');
+  ok(html.indexOf('一键删除（0）') >= 0, '还没勾的时候「一键删除（0）」就摆在那里');
+  ok((html.match(/App\.deleteGatedOne\(/g) || []).length === N,
+     '★ 这 ' + N + ' 个号码每个都自带一个「🗑️ 删除」按钮');
+
+  // 全选 = 整区（含默认折叠的、以及老师收起的），不是"当前看得见的那些"
+  T.App.pickAllGated(true);
+  ok(gatedPicked().length === N, '全选 → 这一区 ' + N + ' 个号码全勾上');
+  html = T.App.renderStudents();
+  ok(html.indexOf('一键删除（' + N + '）') >= 0, '全选之后按钮变成「一键删除（' + N + '）」');
+  ok((html.match(/pick-box[^>]*checked/g) || []).length >= N, '勾选框真的进到选中态（全选生效）');
+
+  // 「全选之后把不用的给反选」
+  T.App.togglePick('g', '13900141005');
+  ok(gatedPicked().length === N - 1, '把不想删的那一个点掉 → 剩 ' + (N - 1) + ' 个');
+  T.App.invertGated();
+  ok(gatedPicked().length === 1 && gatedPicked()[0] === 'g:13900141005',
+     '反选 → 只剩刚被点掉的那一个（勾上的取消、没勾的勾上）');
+  T.App.invertGated();
+  ok(gatedPicked().length === N - 1, '再反选一次 → 回到 ' + (N - 1) + ' 个');
+
+  // ---- 一键删除：弹窗点「否」= 什么都不做 ----
+  T.ask(false);
+  await T.App.deletePicked();
+  ok((T.App.state.removedPhones || []).length === N, '★ 弹窗选了「否」→ 一个都没删（确认真的是二选一）');
+  ok(T.lastConfirm().msg.indexOf('确认删除选中的 ' + (N - 1) + ' 项') >= 0, '弹窗先说清楚这次要删几项');
+
+  // ---- 点「是」→ 真的删掉，不再存在 ----
   T.ask(true);
   await T.App.deletePicked();
-  html = T.App.renderStudents();
-  ok(html.indexOf('13900141001') < 0 && html.indexOf('13900141002') < 0, '这两个号码从页面上消失了');
-  ok(T.App._hiddenGated().indexOf('13900141003') < 0, '没勾的那个没被误收');
-  ok(html.indexOf('展开已收起的号码（2）') >= 0, '收起来的号码有入口能找回来');
   const lr2 = await call(net.d1, 'GET', '/api/class/removed-list?teacher=' + TEACHER);
-  ok(lr2.data.removed.some(x => x.phone === '13900141001'), '★★ 收起 ≠ 放行：后台拦截名单里他还在');
-  const s3 = await call(net.d1, 'GET', '/api/class/status?phone=13900141001');
-  ok(s3.data.removed === true, '★★ 被收起的号码登录照样被拦（规则一点没松）');
+  ok(!lr2.data.removed.some(x => ['13900141001', '13900141002', '13900141003', '13900141004'].indexOf(x.phone) >= 0),
+     '★★ 一键删除：勾中的 4 个真的从后台拦截名单里没了');
+  ok(lr2.data.removed.some(x => x.phone === '13900141005'), '没勾的那一个原样留着（反选时点掉的就是它）');
+  let s3 = await call(net.d1, 'GET', '/api/class/status?phone=13900141001');
+  ok(s3.data.removed === false, '★★ 删掉的号码不再被拦 ——「删除了之后就不要再存在了」');
+  html = T.App.renderStudents();
+  ok(html.indexOf('13900141001') < 0 && html.indexOf('全选（1）') >= 0,
+     '删掉的号码从页面上消失，这一区只剩没勾的那 1 个');
+  ok((T.App.state.picked || []).length === 0, '删完自动清空勾选');
 
-  // ---- 拦截区自己的全选（配合「显示其它」能一次勾到全部旧号码去放行）----
-  T.App.toggleGatedRest();               // 展开「显示其它 N 个」
+  // ---- 单个「🗑️ 删除」：不用先打勾，点一下就删这一个 ----
+  T.ask(true);
+  await T.App.deleteGatedOne('13900141005', '测试-4');
+  let s4 = await call(net.d1, 'GET', '/api/class/status?phone=13900141005');
+  ok(s4.data.removed === false, '单个删除：他也不再被拦了');
+  ok((T.App.state.removedPhones || []).length === 0, '这一区被清空了');
+
+  // ---- 名单里的孩子也在拦截区时：删除必须点名警告 ----
+  net.d1.tables.removed_students.push({ phone: STUDENT, name: '张子皓-Harvey', removed_at: new Date().toISOString() });
+  ['13900141011', '13900141012'].forEach((p, i) => {
+    net.d1.tables.removed_students.push({ phone: p, name: '旧测试-' + i, removed_at: '2026-08-23T05:13:36.599Z' });
+  });
+  await T.App.loadRemovedList();
   T.App.pickAllGated(true);
-  ok((T.App.state.picked || []).filter(k => k.indexOf('g:') === 0).length === T.App._gatedSplit().listed.length,
-     '拦截区全选 → 当前列出来的号码全打上勾');
-  T.App.pickAllGated(false);
-  ok((T.App.state.picked || []).length === 0, '拦截区取消全选 → 清空');
-  T.App.toggleGatedRest();
+  T.ask(false);                                  // 先点「否」，只看弹窗写了什么
+  await T.App.deletePicked();
+  const warn = T.lastConfirm().msg;
+  ok(warn.indexOf('还在你的学生名单里') >= 0 && warn.indexOf('张子皓-Harvey') >= 0,
+     '★ 勾到名单里的孩子时，弹窗点名警告"删掉拦截后他能直接进来"');
+  ok((T.App.state.removedPhones || []).length === 3, '点「否」→ 3 个都还在');
 
-  // ---- 一键收起全部旧号码 ----
+  // ---- 「🧹 收起不删」是另一条路：只是不显示，拦截一点没松 ----
   T.ask(true);
   await T.App.hideAllGated();
   html = T.App.renderStudents();
-  ok(html.indexOf('13900141003') < 0 && html.indexOf('显示其它') < 0, '一键收起后页面不再列任何旧号码，也没有"显示其它"的残留');
-  const hid = T.App._hiddenGated();
-  ok(['13900141001', '13900141002', '13900141003'].every(p => hid.indexOf(p) >= 0),
-     '三个旧号码都进了「已收起」（随时能找回来）');
-  ok(html.indexOf('展开已收起的号码') >= 0, '页面上留了找回的入口');
-  for (const p of ['13900141001', '13900141002', '13900141003']) {
-    const s4 = await call(net.d1, 'GET', '/api/class/status?phone=' + p);
-    ok(s4.data.removed === true, p + ' 仍然被拦着（收起只是不显示）');
+  ok(html.indexOf('13900141011') < 0, '收起后旧号码不再占页面');
+  ok(T.App._hiddenGated().indexOf('13900141011') >= 0, '它进了「已收起」名单（随时能找回来）');
+  ok(html.indexOf(STUDENT) >= 0,
+     '★ 还在你名单里的被拦学生，收起也藏不住（否则你只会看到"这孩子怎么进不来"）');
+  for (const p of ['13900141011', '13900141012']) {
+    s4 = await call(net.d1, 'GET', '/api/class/status?phone=' + p);
+    ok(s4.data.removed === true, p + ' 仍然被拦着（收起 ≠ 删除，规则一点没松）');
   }
+  ok(T.toasts.some(t => t.indexOf('仍然被拦着') >= 0), '收起时也明确告诉老师"他们仍然被拦着"');
 
   // ---- 展开找回 + 批量放行 ----
   T.App.toggleHiddenGated();
   html = T.App.renderStudents();
-  ok(html.indexOf('13900141001') >= 0, '「展开已收起的号码」能把它们显示回来');
+  ok(html.indexOf('13900141011') >= 0, '「展开已收起的号码」能把它们显示回来');
   ok(html.indexOf('他们仍然被拦着') >= 0, '并且页面上讲清楚了：被收起 ≠ 放行');
-  T.App.togglePick('g', '13900141001');
-  T.App.togglePick('g', '13900141002');
+  T.App.togglePick('g', '13900141011');
+  T.App.togglePick('g', '13900141012');
   T.ask(true);
   await T.App.unblockPicked();
-  let s5 = await call(net.d1, 'GET', '/api/class/status?phone=13900141001');
-  ok(s5.data.removed === false, '批量放行：13900141001 能登录了');
-  s5 = await call(net.d1, 'GET', '/api/class/status?phone=13900141002');
-  ok(s5.data.removed === false, '批量放行：13900141002 能登录了');
-  s5 = await call(net.d1, 'GET', '/api/class/status?phone=13900141003');
+  let s5 = await call(net.d1, 'GET', '/api/class/status?phone=13900141011');
+  ok(s5.data.removed === false, '批量放行：13900141011 能登录了');
+  s5 = await call(net.d1, 'GET', '/api/class/status?phone=13900141012');
+  ok(s5.data.removed === false, '批量放行：13900141012 能登录了');
+  s5 = await call(net.d1, 'GET', '/api/class/status?phone=' + STUDENT);
   ok(s5.data.removed === true, '没勾的那个照样拦着（批量只作用于勾选的）');
-  ok(T.App._hiddenGated().indexOf('13900141001') < 0, '放行后不再留在"已收起"里（否则以后你又找不到人）');
+  ok(T.App._hiddenGated().indexOf('13900141011') < 0, '放行后不再留在"已收起"里（否则以后你又找不到人）');
 
   T.ask(true);
   T.App.restoreHiddenGated();
   ok(T.App._hiddenGated().length === 0, '「全部放回页面」把已收起名单清空');
-
-  // ---- 名单里有名字、却被拦着的人：一键收起也藏不住 ----
-  net.d1.tables.removed_students.push({ phone: STUDENT, name: '张子皓-Harvey', removed_at: new Date().toISOString() });
-  await T.App.loadRemovedList();
-  T.ask(true);
-  await T.App.hideAllGated();
-  html = T.App.renderStudents();
-  ok(html.indexOf(STUDENT) >= 0,
-     '★ 还在你名单里的被拦学生，一键收起也藏不住（否则你只会看到"这孩子怎么进不来"）');
   ok((T.App.state.picked || []).length === 0, '一轮操作下来勾选状态是干净的');
 }
 

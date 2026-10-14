@@ -3322,26 +3322,39 @@ const App = {
            + 'onclick="App.pickAll(this.checked)"> 全选学生（' + this.state.students.length + '）</label>';
       html += '<button class="btn btn-outline btn-sm" onclick="App.deletePicked()">🗑️ 删除选中（' + pickCount + '）</button>';
       html += '</div>';
-      html += '<div class="pick-count">勾选学生 → 删除后他们登录必须经你同意；'
-           + '勾选下面的被拦号码 → 从页面收起（仍然进不来）。</div>';
+      html += '<div class="pick-count">勾选学生 → 删除后他们登录必须经你同意。'
+           + (gatedAll.length > 0 ? '下面「已被拦截登录」那一区有自己的「全选 / 反选 / 一键删除」，一次清一批。' : '')
+           + '</div>';
       html += '</div>';
     }
 
     if (gatedAll.length > 0) {
+      const pickedGated = (this.state.picked || []).filter(k => k.indexOf('g:') === 0).length;
+      const allGatedPicked = pickedGated > 0 && pickedGated === gatedAll.length;
       html += '<h3 style="color:var(--warning);margin:16px 0 8px">🚫 已被拦截登录（' + gatedAll.length + '人）</h3>';
-      html += '<p class="text-sub fs-12 mb-8">这些号码被删除/移出过，登录会被拦住，必须先申请并经你同意；'
-           + '想直接放行就点「解除拦截」，想批量放行就先打勾再点「🔓 放行选中」</p>';
-      if (gated.length > 0) {
-        const pickedGated = (this.state.picked || []).filter(k => k.indexOf('g:') === 0).length;
-        html += '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px">';
-        html += '<label class="pick-label"><input type="checkbox" class="pick-box" '
-             + (pickedGated === gated.length ? 'checked ' : '')
-             + 'onclick="App.pickAllGated(this.checked)"> 全选本区（' + gated.length + '）</label>';
-        html += '<button class="btn btn-primary btn-sm" onclick="App.unblockPicked()">🔓 放行选中</button>';
-        html += '<button class="btn btn-outline btn-sm" onclick="App.hideAllGated()">🧹 一键收起全部旧号码（'
-             + (split.restCount + split.tuckedCount) + '）</button>';
-        html += '</div>';
-      }
+      html += '<p class="text-sub fs-12 mb-8">这些号码被删除/移出过，登录会被拦住，必须先申请并经你同意。'
+           + '想让他们进来就点「🔓 放行」；这个号码不要了、想从名单里彻底清掉，就点「🗑️ 删除」</p>';
+      // 批量条：全选 → 反选 → 一键删除。老师 2026-10-14 原话：
+      // 「有一个全选的功能……点了全选之后，把不用的给反选，也就是说，
+      //   选删除的（人），有些不删除的就不要点」「点了全选之后就显示一键删除，
+      //   然后点是否，我们就可以确认是或者否，删除了之后就不要再存在了」
+      html += '<div class="pick-card">';
+      html += '<div class="pick-tools">';
+      html += '<label class="pick-label"><input type="checkbox" class="pick-box" '
+           + (allGatedPicked ? 'checked ' : '')
+           + 'onclick="App.pickAllGated(this.checked)"> 全选（' + gatedAll.length + '）</label>';
+      html += '<button class="btn btn-outline btn-sm" onclick="App.invertGated()">🔄 反选</button>';
+      html += '<button class="btn btn-outline btn-sm" onclick="App.deletePicked()">🗑️ 一键删除（' + pickedGated + '）</button>';
+      html += '</div>';
+      html += '<div class="pick-count">全选会把这一区 <b>' + gatedAll.length + ' 个号码</b>全勾上（含折叠和已收起的）；'
+           + '不想删的先点它的 ☐ 取消勾选，或者点「🔄 反选」。<br>'
+           + '「删除」= 从这个拦截名单里彻底清掉：删完就不在列表里了，该号码也不再被拦（重新注册会像新学生一样进「待分配」）。</div>';
+      html += '</div>';
+      html += '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px">';
+      html += '<button class="btn btn-primary btn-sm" onclick="App.unblockPicked()">🔓 放行选中（' + pickedGated + '）</button>';
+      html += '<button class="btn btn-outline btn-sm" onclick="App.hideAllGated()">🧹 收起不删（'
+           + (split.restCount + split.tuckedCount) + '）</button>';
+      html += '</div>';
       gated.forEach(g => { html += this._gatedCardHtml(g, false); });
       if (split.restCount > 0) {
         const showAll = !!this.state.showAllGated;
@@ -3359,7 +3372,7 @@ const App = {
         html += '</div>';
         if (this.state.showHiddenGated) {
           html += '<p class="text-sub fs-12 mb-8">下面这些是你收起来的号码 —— <b>他们仍然被拦着</b>，'
-               + '登录一样要你同意。打勾后点上面的「🔓 放行选中」就可以让他们回来。</p>';
+               + '登录一样要你同意。点「🔓 放行」让他们回来，点「🗑️ 删除」就从名单里彻底清掉。</p>';
           split.tucked.forEach(g => { html += this._gatedCardHtml(g, true); });
         }
       }
@@ -3505,13 +3518,14 @@ const App = {
     this.renderContent();
   },
 
-  // ===== 老师端：批量管理（多选 / 全选 / 一次删几个）=====================
+  // ===== 老师端：批量管理（多选 / 全选 / 反选 / 一次删几个）=================
   // 老师 2026-10-14 原话：「有一个全选的功能，多选的功能，这样一次性可以多删几个」、
-  // 「删除之后就拦截，需要老师确认才能登」、「删完了之后保证这些学生不在这个列表里」。
-  // 所以一个「删除选中」同时服务两种对象，结果都是同一句话 —— 从列表里消失 + 进不来：
-  //   · 学生（待分配 / 已分配）→ 从名单删掉 + 写进后台拦截名单（登录必须老师同意）
-  //   · 早年的拦截号码（早就不在名单里）→ 从页面收起，拦截照旧（没有放开任何一道门）
-  // 永远不会把号码从后台拦截名单里"抹掉" —— 那等于放行，和老师的规则相反。
+  // 「这 48 个号码，每个都有删除的按钮……点了全选之后就显示一键删除，然后点是否，
+  //   我们就可以确认是或者否，删除了之后就不要再存在了」、「全选之后把不用的给反选」。
+  // 所以「删除」对两种对象都是同一句话 —— 从你的列表里消失：
+  //   · 学生（待分配 / 已分配）→ 从名单删掉 + 写进后台拦截名单（再次登录必须老师同意）
+  //   · 拦截区里的号码 → 从后台拦截名单里彻底删掉（不再被拦，`_dropGates`）
+  // 注意「🧹 收起不删」是另一条路：只是不显示，拦截一点没松（`_hiddenGated`）。
   _HIDDEN_GATED_KEY: 'amy-hidden-gated-v1',
 
   _hiddenGated() {
@@ -3558,7 +3572,10 @@ const App = {
     html += '</div>';
     html += '<div class="ac-actions">';
     html += '<button class="btn btn-primary btn-sm" onclick="App.unblockStudent(\'' + phoneJs + '\', \''
-         + String(name).replace(/'/g, "\\'") + '\')">🔓 解除拦截</button>';
+         + String(name).replace(/'/g, "\\'") + '\')">🔓 放行</button>';
+    // 老师 2026-10-14：「这 48 个号码，每个都有删除的按钮……删除了之后就不要再存在了」
+    html += '<button class="btn btn-outline btn-sm" onclick="App.deleteGatedOne(\'' + phoneJs + '\', \''
+         + String(name).replace(/'/g, "\\'") + '\')">🗑️ 删除</button>';
     html += '</div>';
     html += '<div class="fs-12 text-sub mt-4">移出时间：'
          + (g.removed_at ? new Date(g.removed_at).toLocaleString('zh-CN') : '-') + '</div>';
@@ -3590,10 +3607,23 @@ const App = {
     this.renderContent();
   },
 
-  // 拦截区自己的全选：只作用于当前列出来的号码（展开「显示其它」后会包括旧号码）。
+  // 拦截区自己的全选：一次勾上这一区**全部**号码（含默认折叠的「其它」
+  // 和你收起来的那些）。老师 2026-10-14 说的就是「这 48 个号码的全选」，
+  // 所以范围是整区，不是"当前看得见的那些"。
   pickAllGated(checked) {
     const keys = [];
-    if (checked) this._gatedSplit().listed.forEach(g => keys.push(this._pickKey('g', g.phone)));
+    if (checked) (this.state.removedPhones || []).forEach(g => keys.push(this._pickKey('g', g.phone)));
+    this.state.picked = (this.state.picked || []).filter(k => k.indexOf('g:') !== 0).concat(keys);
+    this.renderContent();
+  },
+
+  // 反选：勾上的取消、没勾的勾上（同样以整区为范围）。老师要的就是
+  // 「全选之后，把不用的给反选」——先一键全勾，再把不想删的那几个点掉。
+  invertGated() {
+    const have = new Set((this.state.picked || []).filter(k => k.indexOf('g:') === 0));
+    const keys = (this.state.removedPhones || [])
+      .map(g => this._pickKey('g', g.phone))
+      .filter(k => !have.has(k));
     this.state.picked = (this.state.picked || []).filter(k => k.indexOf('g:') !== 0).concat(keys);
     this.renderContent();
   },
@@ -3608,18 +3638,22 @@ const App = {
     return { students: students, gated: gated };
   },
 
-  // 一个按钮两种对象，结果都一样：从你的列表里消失 + 进不来。
+  // 一个按钮两种对象，结果都是同一句话 —— 从你的列表里消失：
+  //   · 学生（待分配 / 已分配）→ 从名单删掉 + 写进后台拦截名单（再次登录必须老师同意）
+  //   · 已经被拦的号码 → 从这个拦截名单里**彻底删掉**（不再被拦）
+  // 老师 2026-10-14 定的：「删除了之后就不要再存在了」。所以拦截区里的删除是真的删。
   async deletePicked() {
     if (!this.isTeacher()) return;
     const picked = this._pickedGroups();
     if (!picked.students.length && !picked.gated.length) {
-      this.showToast('先在要删的那一行前面打勾');
+      this.showToast('先在要删的那一行前面打勾（或用「全选」）');
       return;
     }
     const targets = this.state.students.filter(s => picked.students.indexOf(s.phone) >= 0);
-    let msg = '删除选中的 ' + (targets.length + picked.gated.length) + ' 项？\n\n';
+    let msg = '确认删除选中的 ' + (targets.length + picked.gated.length) + ' 项？\n\n';
     if (targets.length) msg += '· ' + targets.length + ' 名学生：从名单删除，再次登录必须经你同意\n';
-    if (picked.gated.length) msg += '· ' + picked.gated.length + ' 个已被拦的号码：从页面收起（仍然进不来）\n';
+    if (picked.gated.length) msg += '· ' + picked.gated.length + ' 个已被拦的号码：从拦截名单里彻底删除\n';
+    msg += this._rosterWarn(picked.gated);
     msg += '\n删除后他们会从这个列表里消失。';
     if (!confirm(msg)) return;
 
@@ -3630,18 +3664,69 @@ const App = {
       const gated = await Api.classRemove(st.phone, st.name);   // 删除 = 进拦截名单
       if (!gated) gateFailed++;
     }
-    if (picked.gated.length) {
-      const hidden = this._hiddenGated().slice();
-      picked.gated.forEach(p => { if (hidden.indexOf(p) < 0) hidden.push(p); });
-      this._saveHiddenGated(hidden);
-    }
+    if (picked.gated.length) await this._dropGates(picked.gated);
     if (targets.length) this.syncToCloud();
     await this.loadRemovedList();
     this.state.picked = [];
     this.state.showAllGated = false;
     this.renderContent();
     if (gateFailed) this.showToast('⚠️ 有 ' + gateFailed + ' 人没写进后台拦截，请再删一次', 'warn');
-    else this.showToast('✅ 已删除 ' + (targets.length + picked.gated.length) + ' 项，再次登录都要你同意');
+    else if (targets.length && picked.gated.length) {
+      this.showToast('✅ 删除 ' + targets.length + ' 人（再次登录要你同意）+ ' + picked.gated.length + ' 个号码（已清掉）');
+    } else if (picked.gated.length) {
+      this.showToast('✅ 已删除 ' + picked.gated.length + ' 个号码，他们不再被拦了');
+    } else {
+      this.showToast('✅ 已删除 ' + targets.length + ' 名学生，再次登录都要你同意');
+    }
+  },
+
+  // 每行自带的「🗑️ 删除」——不用先打勾，点一下就删这一个。
+  async deleteGatedOne(phone, name) {
+    if (!this.isTeacher()) return;
+    let msg = '删除「' + (name || phone) + '」？\n\n'
+            + '删除后 TA 从这个拦截名单里彻底消失，不再需要你同意就能登录'
+            + '（如果重新注册，会像新学生一样出现在「待分配」，你可以再删）。';
+    const s = (this.state.students || []).find(x => x.phone === phone);
+    if (s) msg += '\n\n⚠️ ' + s.name + ' 还在你的学生名单里：删掉拦截后 TA 能直接进来。';
+    if (!confirm(msg)) return;
+    const n = await this._dropGates([phone]);
+    await this.loadRemovedList();
+    this.renderContent();
+    if (n === 0) this.showToast('⚠️ 删除失败，请检查网络后重试', 'warn');
+    else this.showToast('✅ 已删除「' + (name || phone) + '」，不再被拦了');
+  },
+
+  // 勾中的号码里，有多少还在这位老师的学生名单里。删掉这些号码的拦截记录 =
+  // 他们能直接登录，是老师最容易忽略的后果，所以弹窗必须点名。
+  _rosterWarn(phones) {
+    const hit = [];
+    (phones || []).forEach(p => {
+      const s = (this.state.students || []).find(x => x.phone === p);
+      if (s) hit.push(s.name || p);
+    });
+    if (!hit.length) return '';
+    const show = hit.slice(0, 6).join('、') + (hit.length > 6 ? ' 等' : '');
+    return '\n⚠️ 其中 ' + hit.length + ' 个还在你的学生名单里：' + show
+         + '\n删掉拦截后他们可以直接进来，不用再申请。\n';
+  },
+
+  // 真正把号码从后台拦截名单里删掉。返回成功个数；一批一次请求，
+  // 48 个号码不会变成 48 次往返（手机上那是半分钟白屏）。
+  async _dropGates(phones) {
+    const list = (phones || []).filter(Boolean);
+    if (!list.length) return 0;
+    let n = await Api.classUnblockMany(list);
+    if (n === null) {
+      // 整批请求失败：退化成一个个来，能救几个是几个，绝不谎报成功
+      n = 0;
+      for (const p of list) { if (await Api.classUnblock(p)) n++; }
+    }
+    // 本机也把痕迹清掉：墓碑（否则下次合并又把他藏起来）和「已收起」
+    for (const p of list) await Api.untombstonePhone(p);
+    const hid = this._hiddenGated();
+    const left = hid.filter(p => list.indexOf(p) < 0);
+    if (left.length !== hid.length) this._saveHiddenGated(left);
+    return n;
   },
 
   // 一次性把那批早年的号码从页面上收起来（拦截照旧，规则不变）。
@@ -3684,17 +3769,7 @@ const App = {
     const phones = this._pickedGroups().gated;
     if (!phones.length) { this.showToast('先勾选要放行的号码'); return; }
     if (!confirm('解除对选中的 ' + phones.length + ' 个号码的登录拦截？\n\n解除后他们可以直接登录，不需要再申请。')) return;
-    let done = 0;
-    for (const phone of phones) {
-      const ok = await Api.classUnblock(phone);
-      if (ok) {
-        done++;
-        await Api.untombstonePhone(phone);
-        // 放行了就别再留在「已收起」里 —— 否则他再被删时会不进页面，你又找不到人。
-        const hid = this._hiddenGated();
-        if (hid.indexOf(phone) >= 0) this._saveHiddenGated(hid.filter(p => p !== phone));
-      }
-    }
+    const done = await this._dropGates(phones);
     await this.loadRemovedList();
     this.state.picked = [];
     this.renderContent();

@@ -867,6 +867,25 @@ const Api = {
     } catch (e) { console.warn('classUnblock failed:', e); return false; }
   },
 
+  // Teacher: clear a whole batch. Returns how many the server confirmed, or
+  // null if the request itself failed — a caller must NOT report success on
+  // null, or the teacher is left believing 48 numbers are gone when they are
+  // still gated (and the list will reappear on the next refresh).
+  async classUnblockMany(phones) {
+    const list = (phones || []).map(p => String(p || '').trim()).filter(Boolean);
+    if (!list.length) return 0;
+    try {
+      const res = await fetch(this._classUrl('/api/class/unblock'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phones: list, teacher: this.session && this.session.phone }),
+      });
+      if (!res.ok) return null;
+      const d = await res.json();
+      return (d && typeof d.count === 'number') ? d.count : list.length;
+    } catch (e) { console.warn('classUnblockMany failed:', e); return null; }
+  },
+
   // -- wrong-question archive (D1) -----------------------------------------
   // Student fires this from saveAnswer when correct=false. Best-effort: a
   // failed report does not block local storage, so the kid still gets

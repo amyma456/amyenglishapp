@@ -1268,16 +1268,26 @@ async function classApi(request, url, env) {
     const body = await readJsonBody(request);
     if (!body) return json({ error: 'bad_json' }, 400);
     if (!isTeacher(body)) return json({ error: 'forbidden' }, 403);
-    const phone = String(body.phone || '').trim();
-    if (!phone) return json({ error: 'missing_phone' }, 400);
-    await db
-      .prepare('DELETE FROM removed_students WHERE phone = ?')
-      .bind(phone).run();
-    // Any application they had open is moot the moment the teacher lets them in.
-    await db
-      .prepare("UPDATE join_requests SET status = 'approved', resolved_at = ? WHERE phone = ? AND status = 'pending'")
-      .bind(new Date().toISOString(), phone).run();
-    return json({ ok: true });
+    // One phone (the per-row button) or a batch (the teacher's 「全选 → 一键删除」).
+    // Batched because the UI can hand us ~50 phones at once and 50 sequential
+    // client round-trips on a phone is a 30-second spinner that loses its
+    // connection halfway. Same two statements either way, so a batch cannot
+    // diverge from the single-phone path.
+    const list = Array.isArray(body.phones)
+      ? body.phones.map(p => String(p || '').trim()).filter(Boolean).slice(0, 500)
+      : [String(body.phone || '').trim()].filter(Boolean);
+    if (!list.length) return json({ error: 'missing_phone' }, 400);
+    const now = new Date().toISOString();
+    for (const phone of list) {
+      await db
+        .prepare('DELETE FROM removed_students WHERE phone = ?')
+        .bind(phone).run();
+      // Any application they had open is moot the moment the teacher clears them.
+      await db
+        .prepare("UPDATE join_requests SET status = 'approved', resolved_at = ? WHERE phone = ? AND status = 'pending'")
+        .bind(now, phone).run();
+    }
+    return json({ ok: true, count: list.length });
   }
 
   return json({ error: 'not_found' }, 404);
