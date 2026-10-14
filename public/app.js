@@ -3089,7 +3089,7 @@ const App = {
               if (a && !a.correct) wrongStudents.push(s.name);
             });
             if (wrongStudents.length > 0) {
-              errors.push({ day: day.day_cn, module: m.name_cn, question: q.question || q.sentence, answer: q.options ? String.fromCharCode(65+q.answer) : q.answer, explanation_cn: q.explanation_cn, explanation_en: q.explanation_en, students: wrongStudents });
+              errors.push({ day: day.day_cn, module: m.name_cn, question: q.question || q.sentence, answer: q.options ? String.fromCharCode(65+q.answer) : q.answer, explanation_cn: q.explanation_cn, explanation_en: q.explanation_en, students: wrongStudents, dayIdx: di });
             }
           });
         }
@@ -3098,7 +3098,7 @@ const App = {
     errors.sort((a,b) => b.students.length - a.students.length);
     errors.forEach(e => {
       html += '<div class="error-item">';
-      html += '<div class="e-q"><strong>' + e.day + '·' + e.module + '</strong> ' + e.question + '</div>';
+      html += '<div class="e-q"><strong>' + this._dayTag(e.day, e.module, e.dayIdx) + '</strong> ' + e.question + '</div>';
       html += '<div class="q-answer">正确答案：' + e.answer + '</div>';
       html += '<div class="e-students">❌ 做错学生(' + e.students.length + '人)：' + e.students.join('、') + '</div>';
       html += '<div class="q-explanation show"><div class="cn">📖 ' + e.explanation_cn + '</div><div class="en">📘 ' + e.explanation_en + '</div></div>';
@@ -3165,6 +3165,28 @@ const App = {
       });
   },
 
+  // ===== 错题标签上的"具体日期" =====
+  // 家长反馈：卷面上只写「周一·语法」，翻回去对不上是哪天做的，没法跟踪。
+  // 题库按自然周轮换（data.js 里 HOMEWORK_EPOCH = 第 1 周的周一 2026-09-28），
+  // 所以「第几周的第几天」能唯一换算成一个具体日期：
+  //   日期 = HOMEWORK_EPOCH + 本周序号 × 7 + 第几天
+  // 用作业日的日期（而不是"实际答题那天"）是为了让日期和周几永远对得上 ——
+  // 孩子周三补做周一的题，卷面上仍然是「2026-10-12 周一」，不会自相矛盾。
+  _weekDayYmd(dayIdx) {
+    const ep = (typeof HOMEWORK_EPOCH !== 'undefined' && HOMEWORK_EPOCH) ? HOMEWORK_EPOCH : null;
+    if (!ep) return '';
+    const d = new Date(ep.getTime());
+    d.setDate(d.getDate() + this._weekIdx() * 7 + (Number(dayIdx) || 0));
+    const p = n => (n < 10 ? '0' : '') + n;
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+  },
+
+  // 统一的错题标签：[2026-10-12 周一·语法]（拿不到日期时退回 [周一·语法]）
+  _dayTag(dayCn, moduleCn, dayIdx) {
+    const ymd = this._weekDayYmd(dayIdx);
+    return '[' + (ymd ? ymd + ' ' : '') + (dayCn || '') + '·' + (moduleCn || '') + ']';
+  },
+
   // ===== Teacher: Print Error Sheet =====
   renderPrint() {
     let html = '<h2 style="color:var(--primary-dark);margin-bottom:12px">🖨️ 错题卷打印</h2>';
@@ -3192,7 +3214,7 @@ const App = {
           m.questions.forEach((q, qi) => {
             const a = this._lookupWrongAnswer(student.id, di, mi, qi);
             if (a && !a.correct) {
-              errors.push({ day: day.day_cn, module: m.name_cn, q: q, type: m.type });
+              errors.push({ day: day.day_cn, module: m.name_cn, q: q, type: m.type, dayIdx: di });
             }
           });
         }
@@ -3223,7 +3245,7 @@ const App = {
       html += '<h3 style="margin:12px 0 8px">一、错题重做（共' + errors.length + '题）</h3>';
       errors.forEach((e, i) => {
         html += '<div class="a4-q">';
-        html += '<div class="a4-q-num">' + (i+1) + '. [' + e.day + '·' + e.module + '] ' + this._a4QuestionHtml(e.q) + '</div>';
+        html += '<div class="a4-q-num">' + (i+1) + '. ' + this._dayTag(e.day, e.module, e.dayIdx) + ' ' + this._a4QuestionHtml(e.q) + '</div>';
         if (e.q.options) {
           e.q.options.forEach((o, oi) => {
             html += '<div style="margin-left:20px">' + String.fromCharCode(65+oi) + '. ' + o + '</div>';
@@ -9289,7 +9311,7 @@ const App = {
     } else {
       errors.forEach((e, i) => {
         html += '<div class="error-item">';
-        html += '<div class="e-q"><strong>' + e.day + '·' + e.module + '</strong> ' + (e.q.question || e.q.sentence) + '</div>';
+        html += '<div class="e-q"><strong>' + this._dayTag(e.day, e.module, e.dayIdx) + '</strong> ' + (e.q.question || e.q.sentence) + '</div>';
         html += '<div class="q-answer">正确答案：' + (e.q.options ? String.fromCharCode(65+e.q.answer) : e.q.answer) + '</div>';
         html += '<div class="q-explanation show"><div class="cn">📖 ' + (e.q.explanation_cn||'') + '</div></div>';
         html += '<button class="btn btn-outline btn-sm mt-8" onclick="App.practiceSimilar(' + i + ')">🔄 做相似题</button>';
