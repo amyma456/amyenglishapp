@@ -467,12 +467,27 @@ console.log('=== 5. 客户端：登录流程真的按这套语义走 ===');
   ok(S.el('removed-card').innerHTML.indexOf('未通过') >= 0, '学生端告知"上次申请未通过"');
 
   // ---- 老师端看得见拦截名单，并显式放行 ----
+  await T.App.syncFromCloud();            // 老师进页面第一件事就是同步
   await T.App.loadRemovedList();
   ok((T.App.state.removedPhones || []).some(g => g.phone === STUDENT), '老师端拉到了拦截名单');
   const html = T.App.renderStudents();
   ok(html.indexOf('已被拦截登录') >= 0, '学生管理页显示「已被拦截登录」区块');
   ok(html.indexOf('解除拦截') >= 0, '区块里有「解除拦截」按钮');
   ok(html.indexOf('需你同意才能登录') >= 0, '写清了规则：需老师同意才能登录');
+
+  // 早年被清掉的测试号（不在老师当前名单里）不该铺满页面，但要翻得到
+  net.d1.tables.removed_students.push({ phone: '13900139000', name: '小舟-Zoe', removed_at: '2026-08-23T05:13:36.599Z' });
+  await T.App.loadRemovedList();
+  const htmlFold = T.App.renderStudents();
+  ok(htmlFold.indexOf('13900139000') < 0, '不在名单里的旧拦截号默认折叠（页面不被几十个测试号铺满）');
+  ok(htmlFold.indexOf('显示其它 1 个已拦截号码') >= 0, '给了「显示其它 N 个」的入口');
+  T.App.toggleGatedRest();
+  const htmlOpen = T.App.renderStudents();
+  ok(htmlOpen.indexOf('13900139000') >= 0, '点开后能看到并放行那个号');
+  T.App.toggleGatedRest();
+  // 收尾：把这个临时号码从后台清掉，别影响后面的断言
+  net.d1.tables.removed_students = net.d1.tables.removed_students.filter(r => r.phone !== '13900139000');
+  await T.App.loadRemovedList();
 
   T.ask(true);
   await T.App.unblockStudent(STUDENT, '张子皓-Harvey');

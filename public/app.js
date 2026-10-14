@@ -3299,12 +3299,20 @@ const App = {
 
     // 🚫 被拦在门外的人：后台移出名单。规则是永久的 —— 老师删过谁，谁再次
     // 登录就必须老师同意。名单在这里显示，老师才不会以为「加了名字就能进」。
-    const gated = this.state.removedPhones || [];
-    if (gated.length > 0) {
-      html += '<h3 style="color:var(--warning);margin:16px 0 8px">🚫 已被拦截登录（' + gated.length + '人）</h3>';
+    // 名单里可能躺着几十个早年的测试号，所以默认只列「还在这孩子名单里的」
+    // 和「刚申请过的」，其余折叠起来（老师想翻还是能翻到）。
+    const gatedAll = this.state.removedPhones || [];
+    const rosterPhones = new Set((this.state.students || []).map(s => s.phone));
+    const appliedPhones = new Set((this.state.joinRequests || []).map(r => r.phone));
+    const gated = gatedAll.filter(g => rosterPhones.has(g.phone) || appliedPhones.has(g.phone));
+    const gatedRest = gatedAll.filter(g => !rosterPhones.has(g.phone) && !appliedPhones.has(g.phone));
+    const showAll = !!this.state.showAllGated;
+    const listed = showAll ? gatedAll : gated;
+    if (listed.length > 0) {
+      html += '<h3 style="color:var(--warning);margin:16px 0 8px">🚫 已被拦截登录（' + gatedAll.length + '人）</h3>';
       html += '<p class="text-sub fs-12 mb-8">这些号码被删除/移出过，登录会被拦住，必须先申请并经你同意；'
            + '想直接放行就点「解除拦截」</p>';
-      gated.forEach(g => {
+      listed.forEach(g => {
         const inRoster = this.state.students.find(s => s.phone === g.phone);
         html += '<div class="assign-card" style="border-color:var(--warning)">';
         html += '<div class="ac-info">';
@@ -3320,6 +3328,11 @@ const App = {
              + (g.removed_at ? new Date(g.removed_at).toLocaleString('zh-CN') : '-') + '</div>';
         html += '</div>';
       });
+      if (gatedRest.length > 0) {
+        html += '<button class="btn btn-outline btn-sm mb-16" onclick="App.toggleGatedRest()">'
+             + (showAll ? '收起其它 ' + gatedRest.length + ' 个已拦截号码' : '显示其它 ' + gatedRest.length + ' 个已拦截号码（不在你的名单里）')
+             + '</button>';
+      }
     }
 
     // Re-join applications from removed students
@@ -3432,8 +3445,7 @@ const App = {
   },
 
   // 老师显式放行。这是唯一一条「不经过学生申请」也能开门的路径，必须是点出来的。
-  async unblockStudent(phone, name) {
-    if (!this.isTeacher()) return;
+  async unblockStudent(phone, name) {    if (!this.isTeacher()) return;
     if (!confirm('解除对「' + (name || phone) + '」的登录拦截？\n\n解除后 TA 可以直接登录，不需要再申请。')) return;
     const ok = await Api.classUnblock(phone);
     if (!ok) { this.showToast('⚠️ 解除失败，请检查网络后重试', 'warn'); return; }
@@ -3442,6 +3454,12 @@ const App = {
     const me = this.state.students.find(s => s.phone === phone);
     await this.loadRemovedList();
     this.showToast('✅ 已解除拦截，' + ((me && me.name) || name || phone) + ' 可以登录了');
+    this.renderContent();
+  },
+
+  // 折叠/展开那批「不在名单里」的已拦截号码（多半是早年清掉的测试号）。
+  toggleGatedRest() {
+    this.state.showAllGated = !this.state.showAllGated;
     this.renderContent();
   },
 
