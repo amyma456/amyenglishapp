@@ -28,13 +28,20 @@ async function tts(text) {
 }
 
 async function asr(buf, hint) {
-  const r = await fetch(ENDPOINT + '/api/transcribe?model=turbo&prefer=cf&prompt=' + encodeURIComponent(hint), {
-    method: 'POST',
-    headers: { 'Content-Type': 'audio/mpeg' },
-    body: buf,
-  });
-  const t = await r.text();
-  try { return JSON.parse(t).text || ''; } catch (e) { return ''; }
+  // 空转写十有八九是上游抽风，不是音频的问题 —— 空就重试一次，
+  // 否则"哪种写法更好"会被随机噪声带偏。
+  let last = '';
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const r = await fetch(ENDPOINT + '/api/transcribe?model=turbo&prefer=cf&prompt=' + encodeURIComponent(hint), {
+      method: 'POST',
+      headers: { 'Content-Type': 'audio/mpeg' },
+      body: buf,
+    });
+    const t = await r.text();
+    try { last = JSON.parse(t).text || ''; } catch (e) { last = ''; }
+    if (last) return last;
+  }
+  return last;
 }
 
 // 字母串"保住了没有"：每个字母名都要在转写里出现（按出现次数算，重复字母要求重复数）
