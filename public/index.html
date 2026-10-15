@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="125">
+<meta name="app-version" content="126">
 <link rel="manifest" href="manifest.json">
 <!-- iOS 的"添加到主屏幕"不认 SVG（装出来是白板/网页截图），必须给 PNG。
      图标与启动图由 tools/gen-pwa-icons.js 生成，别手改。 -->
@@ -486,6 +486,18 @@ body.stage-mode .content-area{padding-block:0}
 .q-option.correct{background:var(--success-light);border-color:var(--success);color:var(--success);animation:ackPop .42s ease}
 .q-option.wrong{background:var(--danger-light);border-color:var(--danger);color:var(--danger)}
 .q-answer{font-size:12px;color:var(--success);margin-top:6px;font-weight:600}
+/* ===== 完形填空「同句多空合成一屏」（v126）=============================
+   一句话里挖了两个空（今天的第 4、5 空）时，孩子在这一屏一次性做完：
+   上面是那句话（空的位置是槽位），下面每个空一组选项，全选对了才出跟读。 */
+.cloze-group{display:flex;flex-direction:column;gap:10px}
+.cq-sentence{font-size:15px;line-height:1.9;padding:12px 14px;background:var(--bg);
+  border-radius:var(--radius-sm);border:1px solid #FFE0CC}
+.cq-slot{display:inline-block;min-width:52px;text-align:center;padding:1px 8px;margin:0 3px;
+  background:var(--orange-wash);border-bottom:2px solid var(--primary);
+  border-radius:5px;font-size:12px;color:var(--orange-press);font-weight:600;vertical-align:baseline}
+.cq-blank{padding:10px 12px;background:var(--bg);border-radius:var(--radius-sm);border:1px solid #FFE0CC}
+.cq-blank-num{font-size:12px;color:var(--orange-press);font-weight:600;margin-bottom:6px}
+.cq-options{gap:6px}
 /* 答错引导提示（v104）。同一套样式也给口语模块的 .speak-tip 用 ——
    答错时那里显示的是中文提示词，不再是"点绿色正确答案"。 */
 .q-answer.q-hint,.speak-tip.q-hint{
@@ -1159,9 +1171,9 @@ div[data-gated] .ac-info{gap:10px}
   这个坑很隐蔽：代码明明改了、也部署上去了，手机上跑的还是几个月前的逻辑。
   以后每次发版，这里跟着 app-version 一起改。
 -->
-<script src="recorder.js?v=125"></script>
-<script src="api.js?v=125"></script>
-<script src="app.js?v=125"></script>
+<script src="recorder.js?v=126"></script>
+<script src="api.js?v=126"></script>
+<script src="app.js?v=126"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {

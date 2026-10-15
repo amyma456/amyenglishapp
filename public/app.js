@@ -562,6 +562,11 @@ const App = {
       if (s.kind === 'question' || s.kind === 'speaking') {
         if (answered(s.mi, s.qi)) { touched[s.mi] = true; continue; }
         firstUn = i;
+      } else if (s.kind === 'clozegroup') {
+        // 完形填空一组（同句多个空）：整组都答过才算做过。
+        const grp = s.qis || [s.qi];
+        if (grp.every(qi => answered(s.mi, qi))) { touched[s.mi] = true; continue; }
+        firstUn = i;
       } else if (s.kind === 'writing') {
         const blanks = (day.modules[s.mi] || {}).blanks || [];
         let miss = -1;
@@ -1309,6 +1314,16 @@ const App = {
       return (pairs && pairs[s.si] && pairs[s.si].en) || '';
     }
     if (s.kind === 'question') return this._questionSpeechText(m, m.questions[s.qi]);
+    // 完形填空逐句翻译（v126）：听的是填满空之后的完整句
+    if (s.kind === 'cqtrans') {
+      var cs = this._splitSentences(m.passage)[s.si] || '';
+      return this._clozeFillSentence(m, cs, false) || cs;
+    }
+    // 完形填空一组：整句（所有空都填好）就是孩子要听和要读的那句
+    if (s.kind === 'clozegroup') {
+      var fq = m.questions && m.questions[s.qi];
+      return fq ? this._buildReadSentence(m, fq) : '';
+    }
     if (s.kind === 'speaking') {
       var q = m.questions && m.questions[s.qi];
       return (q && (q.audio_text || q.sentence)) || '';
@@ -1338,6 +1353,14 @@ const App = {
         var rs = this._buildReadSentence(m, q2);
         if (rs) out.push(rs);
       }
+    } else if (s.kind === 'clozegroup') {
+      // 每个空选对后跟读的都是同一句填满后的完整句（一组共用一个跟读面板），
+      // 所以只要取这一组第一空对应的那句就够。
+      var fq0 = m.questions && m.questions[s.qi];
+      if (fq0) {
+        var grs = this._buildReadSentence(m, fq0);
+        if (grs) out.push(grs);
+      }
     } else if (s.kind === 'writingread') {
       // 这一屏的每一句都是孩子要点开听的，全部提前取好
       return this._writingSentences(m);
@@ -1361,6 +1384,17 @@ const App = {
       var copts = (cq && cq.options) || [];
       for (var k = 0; k < copts.length; k++) {
         if (copts[k]) this.prefetchTts(String(copts[k]), fromIdx, curPref);
+      }
+      // 完形填空一组里的**每一个空**的选项都要预取（v126）——孩子在一屏里
+      // 连选好几个空的答案，点错的选项也要立刻读出来，不能等。
+      if (curStep.kind === 'clozegroup' && (curStep.qis || []).length) {
+        for (var gi = 0; gi < curStep.qis.length; gi++) {
+          var gq = cm && cm.questions && cm.questions[curStep.qis[gi]];
+          var gopts = (gq && gq.options) || [];
+          for (var gk = 0; gk < gopts.length; gk++) {
+            if (gopts[gk]) this.prefetchTts(String(gopts[gk]), fromIdx, curPref);
+          }
+        }
       }
       // 当前屏自己的示范句也要：口语跟读的「先听一遍」读的是问句+答句整句，
       // 阅读逐句的听入口就是那句话本身 —— 孩子落在这屏的头几秒就会去点，
@@ -6076,6 +6110,120 @@ const App = {
       .filter(function(x) { return x.length > 1; });
   },
 
+  // ===== 完形填空的空位（v126）===========================================
+  //
+  // 完形填空的题干是 "4___" 这种编号，孩子要听的是**它所在的那句课文**。
+  // 麻烦在于同一句里可能挖了好几个空（今天的 "You 4___ take care of it, and
+  // it will make you 5___."），以前把空读作 blank，孩子听到的是
+  // "You blank take care of it... blank" —— 完全不成句，也不知道该填哪儿。
+  //
+  // 现在统一：找到这个空所在的句子，把**这一句里所有的空**都用它们的正确
+  // 答案填好，朗读的是填满后的完整句子。孩子听到的就是一句正常的话。
+  // 空位编号本身的空（"4___" 里那个 4）不单独念。
+  _clozeAnswerOf(q) {
+    if (!q) return '';
+    if (q.options && typeof q.answer === 'number' && q.options[q.answer] != null) {
+      return String(q.options[q.answer]).trim();
+    }
+    if (q.answer != null && typeof q.answer === 'string') return q.answer.trim();
+    return '';
+  },
+
+  // 题干 "4___" / "___" / "3 ____" 里那个空位标记（含前面的编号），
+  // 以及它前面紧挨着的数字（"4" + "___"），用于在课文里定位。
+  _clozeMarker(q) {
+    const m = String((q && q.question) || '').match(/(\d*)\s*(_{2,})/);
+    if (!m) return null;
+    return { full: m[0], num: m[1] || '', blanks: m[2] };
+  },
+
+  // 一个模块里所有的空位，按它们在 passage 里出现的先后排好，带上各自的
+  // 正确答案。返回 [{ num, raw, answer, qIdx }]。raw 是课文里那一小段标记
+  // （"4___"），用于 replace。
+  _clozeBlanks(m) {
+    if (!m || m.type !== 'cloze' || !Array.isArray(m.questions)) return [];
+    const self = this;
+    const out = [];
+    m.questions.forEach(function(q, qi) {
+      const mk = self._clozeMarker(q);
+      if (!mk) return;
+      out.push({ num: mk.num, raw: mk.full, answer: self._clozeAnswerOf(q), qIdx: qi });
+    });
+    return out;
+  },
+
+  // 这句课文里都有哪些空（按下标比对，比字符串匹配稳）。
+  _clozeSentenceOf(m, q) {
+    const mk = this._clozeMarker(q);
+    if (!mk || !m || !m.passage) return null;
+    const sents = this._splitSentences(m.passage);
+    // 先按「这句话里含有这个空位标记」找；找不到再用编号回退匹配。
+    let hit = sents.filter(function(s) { return s.indexOf(mk.full) >= 0; })[0];
+    if (!hit && mk.num) {
+      hit = sents.filter(function(s) {
+        return new RegExp('\\b' + mk.num + '\\s*_{2,}').test(s);
+      })[0];
+    }
+    return hit || null;
+  },
+
+  // 把一句话里**所有的空**都填上正确答案，得到可以直接朗读 / 显示的完整句。
+  // 已经答过的空用孩子当时的答案（对错都算，错题回顾才看得到他写了什么）；
+  // 没答过的用正确答案 —— 示范朗读要读对的。
+  _clozeFillSentence(m, sentence, preferPicked) {
+    if (!sentence) return '';
+    const blanks = this._clozeBlanks(m);
+    let s = sentence;
+    for (const b of blanks) {
+      if (s.indexOf(b.raw) < 0) continue;
+      let fill = b.answer;
+      if (preferPicked) {
+        const picked = this._pickedClozeAnswer(m, b);
+        if (picked) fill = picked;
+      }
+      if (!fill) continue;
+      s = s.replace(b.raw, fill);
+    }
+    // 兜底：还有没填上的空（数据里标记写法和题干对不上），一律抹掉那个
+    // 编号+下划线，别留下 "4___" 或者 "blank" 给孩子听。
+    s = s.replace(/\d*\s*_{2,}/g, ' ');
+    return s.replace(/\s+/g, ' ').replace(/\s+([,.!?;:])/g, '$1').trim();
+  },
+
+  // 孩子在这道空上选过什么（答对答错都返回），没有就返回空串。
+  _pickedClozeAnswer(m, b) {
+    try {
+      const mi = this.state.currentModuleIdx;
+      const rec = this.state.answers && this.state.answers[this.state.currentDay]
+                && this.state.answers[this.state.currentDay][mi];
+      if (!rec) return '';
+      const a = rec[b.qIdx];
+      if (!a || a.picked == null) return '';
+      if (m.questions[b.qIdx].options) {
+        const o = m.questions[b.qIdx].options[a.picked];
+        return o == null ? '' : String(o).trim();
+      }
+      return String(a.picked).trim();
+    } catch (e) { return ''; }
+  },
+
+  // 把完形填空的题目按"所在课文句子"分组（v126）。同一句里的多个空
+  // 归成一组，孩子一屏做完：这是今天第 4、5 空同句的根治办法。
+  // 找不到所在句的题各自成一组，保证一题都不会漏。
+  _clozeQuestionGroups(m) {
+    if (!m || m.type !== 'cloze' || !Array.isArray(m.questions)) return [];
+    const self = this;
+    const groups = [];
+    const bySentence = {};
+    m.questions.forEach(function(q, qi) {
+      const sent = self._clozeSentenceOf(m, q);
+      const key = sent || ('__solo_' + qi);
+      if (!bySentence[key]) { bySentence[key] = []; groups.push(bySentence[key]); }
+      bySentence[key].push(qi);
+    });
+    return groups;
+  },
+
   // Pair each English sentence with its Chinese counterpart — but only when
   // the two really line up. Across the current passages 4 of 5 match; one has
   // 8 English sentences against 7 Chinese, because a translator merged two.
@@ -6167,6 +6315,135 @@ const App = {
   // they are asked to try again instead of being able to click past it.
   PASS_SCORE: 60,
 
+  // 翻译三档（v126，家长定的松紧）：
+  //   ≥60        过（跟阅读理解同一把尺）
+  //   40 ~ 59    「错得不多」→ 把中文原文亮出来给他自己对照，仍然放行
+  //   < 40       「出入太大」→ 必须重说一遍，不放行
+  TRANS_PASS: 60,
+  TRANS_SOFT: 40,
+
+  // ===== 完形填空逐句翻译（v126）========================================
+  //
+  // 家长原话：「所有句子主读完了之后，要翻译每个句子……就像之前做阅读理解
+  // 一样，每个句子点出来去翻译，然后每个句子的单词可以点一下出来中文意思，
+  // 让学生自己先翻译。如果他翻译错了，就出来听力，就出来翻译的原文。错的
+  // 不多的话，就错放过。如果错的太多，出入太大的话，就要重新读。」
+  //
+  // 完形填空的课文本身**没有** passage_cn（不像阅读理解是一句一句配好的
+  // 中文），所以这里不能用 _pairSentences 那套。参考译文来自题目自带的
+  // explanation_cn 汇总，或者模块上的 passage_cn（如果某天补上了）。
+  renderClozeTransStep(m, mi, si, dayIdx) {
+    const sents = this._splitSentences(m.passage);
+    const sent = sents[si] || '';
+    Recorder.warmUp(); Api.warmup();
+
+    let html = '<div class="sent-step">';
+    html += '<div class="sent-progress">翻译 ' + (si + 1) + ' / ' + sents.length + ' 句</div>';
+    // 空位在这句里 → 显示填好正确答案的完整句，孩子翻译的是完整的一句话。
+    const shown = this._clozeFillSentence(m, sent, false) || sent;
+    html += '<div class="sent-text sent-words">' + this._wordSpans(shown) + '</div>';
+    html += '<div class="sent-tip">👆 点单词看中文意思 · 点下面听整句英文</div>';
+    html += '<div class="sent-listen">'
+         + this._gateListenHtml(this._gid('cqtrsg', mi, si), shown, '🔊 听整句英文') + '</div>';
+    html += '<div class="sent-hint">先自己想一想这句是什么意思，再按住说中文</div>';
+    html += '<button class="word-read-btn hold-target" id="cqtrs-btn-' + mi + '-' + si + '"'
+         + ' onpointerdown="App._translateClozeSentence(event,' + mi + ',' + si + ')"'
+         + ' onpointerup="App._holdEnd(event)" onpointercancel="App._holdEnd(event)"'
+         + ' oncontextmenu="return false">按住说中文</button>';
+    html += '<div id="cqtrs-status-' + mi + '-' + si + '"></div>';
+    html += '<div id="cqtrs-result-' + mi + '-' + si + '"></div>';
+    html += '</div>';
+    return html;
+  },
+
+  // 这句课文的参考中文。「弹原文」时用它。取不到就返回空串，此时只给
+  // 分档提示、不亮参考译文。
+  _clozeSentenceRefCn(m, si, sentence) {
+    // 1) 模块整体配了 passage_cn 且句数对得上 → 直接用这一句
+    const pairs = this._pairSentences(m);
+    if (pairs && pairs[si]) return pairs[si].cn;
+    // 2) 这句里挖了空 → 用那个空的 explanation_cn（就是这句话的意思）
+    const blanks = this._clozeBlanks(m).filter(function(b) {
+      return sentence && sentence.indexOf(b.raw) >= 0;
+    });
+    if (blanks.length) {
+      const q = m.questions[blanks[0].qIdx];
+      if (q && q.explanation_cn) return q.explanation_cn;
+    }
+    // 3) 整篇 passage_cn 只有一句、句数对不上 → 当作整篇参考给出
+    if (m.passage_cn && String(m.passage_cn).length) return String(m.passage_cn);
+    return '';
+  },
+
+  _translateClozeSentence(ev, mi, si) {
+    const self = this;
+    const m = HOMEWORK_DATA[this.state.currentDay].modules[mi];
+    const sents = this._splitSentences(m.passage);
+    const raw = sents[si] || '';
+    const shown = this._clozeFillSentence(m, raw, false) || raw;
+    const refCn = this._clozeSentenceRefCn(m, si, raw);
+    const btn = document.getElementById('cqtrs-btn-' + mi + '-' + si);
+    const status = document.getElementById('cqtrs-status-' + mi + '-' + si);
+    if (btn) btn.classList.add('reading');
+
+    this._holdStart(ev, 'cqtrs-' + mi + '-' + si, '这句的意思', status, function(out, text) {
+      if (btn) btn.classList.remove('reading');
+      if (!out) return;
+      const heard = text ? self._toSimplified(text) : '';
+      const r = refCn ? self.scoreTranslation(refCn, heard) : { score: 0, covered: 0, total: 0 };
+      const slot = document.getElementById('cqtrs-result-' + mi + '-' + si);
+
+      // 三档判定：过 / 小错放过（亮原文） / 出入太大（重说）
+      const band = self._transBand(heard ? r.score : 0, !!heard);
+
+      let html = '<div class="spell-summary">';
+      html += '<div class="ss-head"><span class="ss-score">' + (heard ? r.score : '—') + '</span>'
+           + '<span class="ss-label">' + self._transBandLabel(band, r) + '</span></div>';
+      if (heard) {
+        html += '<div class="tr-block"><div class="tr-label">你说的</div>'
+             + '<div class="tr-text">' + heard + '</div></div>';
+      }
+      // 小错 / 大错都亮原文 —— 家长："翻译错了，就出来翻译的原文"
+      if (band !== 'pass' && refCn) {
+        html += '<div class="tr-block"><div class="tr-label">' + (band === 'soft' ? '参考答案' : '原文（照着说一遍）')
+             + '</div><div class="tr-text ref">' + refCn + '</div></div>';
+      }
+      if (out.samples) {
+        const joined = Recorder.join([out.samples], 0);
+        if (joined) html += '<audio controls src="' + URL.createObjectURL(joined.blob)
+                         + '" style="width:100%;max-width:280px;height:32px"></audio>';
+      }
+      html += '</div>';
+      if (slot) slot.innerHTML = html;
+      if (status) status.innerHTML = '';
+
+      // 只有"出入太大"才锁住不放行，并让他照着原文再说一遍。
+      const passed = band !== 'hard';
+      if (!passed && slot) slot.insertAdjacentHTML('beforeend', self._retryHint(false, !!heard));
+      self._gateStep(passed ? self.TRANS_PASS : 0, passed);
+
+      Api.submitSpeakingScore({
+        studentId: self._myStudentId(), dayIdx: self.state.currentDay,
+        moduleIdx: mi, itemIdx: si, round: 1, type: 'translate-sentence',
+        label: shown, score: r.score, spoken: heard, source: 'asr',
+      });
+    }, true, 'zh');
+  },
+
+  // 没听清也算"要重来"，但不叫"错"（识别问题不该算孩子的账）。
+  _transBand(score, hasSpeech) {
+    if (!hasSpeech) return 'hard';
+    if (score >= this.TRANS_PASS) return 'pass';
+    if (score >= this.TRANS_SOFT) return 'soft';
+    return 'hard';
+  },
+
+  _transBandLabel(band, r) {
+    if (band === 'pass') return '意思对上了（覆盖 ' + r.covered + '/' + r.total + ' 字）';
+    if (band === 'soft') return '意思差一点（覆盖 ' + r.covered + '/' + r.total + ' 字）· 对一下参考答案';
+    return r.total ? '出入太大，照着原文再说一遍' : '没听清，再说一次';
+  },
+
   _gateStep(score, hasSpeech) {
     const next = document.getElementById('stage-next-btn');
     const passed = !!hasSpeech && score >= this.PASS_SCORE;
@@ -6190,6 +6467,191 @@ const App = {
     this._lockNextOnRender = false;
     const next = document.getElementById('stage-next-btn');
     if (next) { next.disabled = true; next.classList.remove('nudge'); }
+  },
+
+  // ===== 完形填空：一句里的空一起做完（v126）============================
+  //
+  // 家长原话：「完形填空今天的第四空和第五空是同一个句子，挖了两个空。
+  // 也就是说，在做题的时候，一次性把 4 和 5 一次性在选择里头做完，以至于
+  // 后面他跟着系统读的时候，系统不会再说 4 blank 或者 5 blank，而是一起
+  // 会把这个 blank 的空词给真正的写出来，成为一个完整的句子。」
+  //
+  // 这一屏做的就是这个：上面是被挖空的那句话（没有空的那部分照原样显示，
+  // 空的位置显示成带编号的槽位），下面每一行是一个空 + 它的 ABCD。孩子
+  // 一次性把这一句里所有空都选对，然后跟读**填满后的完整句子**。
+  //
+  // 和单题模式共用同一套判分/跟读积木（_renderHoldReadPanel /
+  // _buildReadSentence / selectAnswer 的判定逻辑），所以对错反馈、跟读
+  // ≥60 分门槛、错题上报全部一致。
+  renderClozeGroupStep(m, mi, qis, dayIdx) {
+    Recorder.warmUp(); Api.warmup();
+    const g = qis || [m.questions.map(function(_, i) { return i; })];
+    const list = Array.isArray(g) ? qis : [qis];
+    const firstQ = m.questions[list[0]];
+    const sent = this._clozeSentenceOf(m, firstQ) || '';
+    const numLabel = list.map(function(i) { return (i + 1); }).join('、');
+
+    let html = '<div class="cloze-group">';
+    html += '<div class="sent-progress">第 ' + numLabel + ' 空 · 同一句话一起做完</div>';
+
+    // 句子本体：空的位置换成槽位（显示编号），其余部分可点（查词）。
+    html += '<div class="cq-sentence sent-words">'
+         + this._clozeSentenceHtml(m, sent) + '</div>';
+    html += '<div class="sent-tip">👆 点单词看中文意思 · 下面每个空都选好再读整句</div>';
+
+    // 每个空一小组：标签 + 四个选项。选对了就锁住这一组。
+    list.forEach(function(qi) {
+      const q = m.questions[qi];
+      const solved = this._questionSolved(mi, qi, dayIdx);
+      html += '<div class="cq-blank" id="cq-b-' + mi + '-' + qi + '">';
+      html += '<div class="cq-blank-num">第 ' + (qi + 1) + ' 空</div>';
+      html += '<div class="q-options cq-options" id="qo-' + mi + '-' + qi + '"'
+           + (solved ? ' style="pointer-events:none"' : '') + '>';
+      (q.options || []).forEach(function(o, oi) {
+        const cls = solved && oi === q.answer ? ' correct' : '';
+        html += '<div class="q-option' + cls + '"'
+             + (solved ? ' style="pointer-events:none"' : '')
+             + ' onclick="App.selectClozeBlank(' + mi + ',' + qi + ',' + oi + ',' + dayIdx + ')">'
+             + String.fromCharCode(65 + oi) + '. ' + o + '</div>';
+      });
+      html += '</div>';
+      html += '<div class="q-answer" id="ans-' + mi + '-' + qi + '" style="display:none"></div>';
+      html += '<div class="q-explanation" id="exp-' + mi + '-' + qi + '"><div class="cn">'
+           + (q.explanation_cn || '') + '</div></div>';
+      html += '</div>';
+    }, this);
+
+    // 跟读区：整组共用一个 —— 读的是**填满所有空之后的完整句子**。
+    // 所有空都选对了才把跟读面板端出来。
+    const allSolved = list.every(qi => this._questionSolved(mi, qi, dayIdx));
+    html += '<div id="cq-follow-' + mi + '-' + list[0] + '" class="qr-follow"></div>';
+    if (allSolved) {
+      html += '<div id="cq-ready-' + mi + '-' + list[0] + '" style="display:none"></div>';
+    }
+    html += '</div>';
+    return html;
+  },
+
+  // 一句话的展示版：空位换成槽位标签，旁边保留编号，其余按可点单词渲染。
+  _clozeSentenceHtml(m, sentence) {
+    if (!sentence) return '';
+    // 先把每个空替换成一个占位符，再把剩下的文字交给 _wordSpans。
+    const blanks = this._clozeBlanks(m);
+    const PH = '\u0001';                     // 不可能出现在课文里的分隔符
+    let s = sentence;
+    const slots = [];
+    for (const b of blanks) {
+      if (s.indexOf(b.raw) < 0) continue;
+      s = s.replace(b.raw, ' ' + PH + b.num + PH + ' ');
+      slots.push(b.num);
+    }
+    // 还没对上标记的残留空位（数据写法不一）也一起收进槽位
+    s = s.replace(/(\d*)\s*_{2,}/g, function(mm, n) {
+      const num = n || '';
+      slots.push(num);
+      return ' ' + PH + num + PH + ' ';
+    });
+    const parts = s.split(PH);
+    let out = '';
+    parts.forEach(function(p, i) {
+      if (i % 2 === 1) {
+        out += '<span class="cq-slot">' + (p ? '第' + p + '空' : '＿＿') + '</span>';
+      } else {
+        out += this._wordSpans(p);
+      }
+    }, this);
+    return out;
+  },
+
+  // 点一个空里的选项。判分逻辑和 selectAnswer 的学生分支完全一致：
+  //   · 选错 → 只划掉他点的那个，给一句中文提示，不进跟读
+  //   · 选对 → 亮绿 + 记分；**这一组全选对了**才端出跟读面板
+  selectClozeBlank(mi, qi, oi, dayIdx) {
+    const m = HOMEWORK_DATA[dayIdx].modules[mi];
+    const q = m.questions[qi];
+    const isCorrect = oi === q.answer;
+    const ansEl = document.getElementById('ans-' + mi + '-' + qi);
+    const opts = document.querySelectorAll('#qo-' + mi + '-' + qi + ' .q-option');
+
+    if (this.isTeacher()) {
+      this._recordAnswer(dayIdx, mi, qi, oi, isCorrect);
+      opts.forEach((el, i) => {
+        el.classList.remove('correct', 'wrong');
+        el.style.pointerEvents = 'none';
+        if (i === q.answer) el.classList.add('correct');
+        if (i === oi && !isCorrect) el.classList.add('wrong');
+      });
+      if (ansEl) {
+        ansEl.style.display = 'block';
+        ansEl.innerHTML = isCorrect ? '✅ 正确！'
+          : '❌ 错误。正确答案：' + String.fromCharCode(65 + q.answer);
+      }
+      if (!isCorrect) {
+        const ex = document.getElementById('exp-' + mi + '-' + qi);
+        if (ex) ex.classList.add('show');
+      }
+      return;
+    }
+
+    if (!isCorrect) {
+      const attempt = this._wrongTryBump('q-' + mi + '-' + qi);
+      opts.forEach((el, i) => {
+        el.classList.remove('correct');
+        if (i === oi || el.classList.contains('wrong')) {
+          el.classList.add('wrong');
+          el.style.pointerEvents = 'none';
+        } else {
+          el.style.pointerEvents = 'auto';
+        }
+      });
+      if (ansEl) {
+        this._showWrongHint(ansEl, this._wrongHintHtml({
+          attempt: attempt, opts: q.options, answer: q.answer,
+          correctText: (q.options && q.options[q.answer]) || '',
+          picked: oi, clue3: q.explanation_cn,
+          retryTip: '把这一句再听一遍，想想哪个词最合得上。',
+        }));
+      }
+      this._playWrongSound();
+      const pickedText = (q.options && q.options[oi] != null) ? String(q.options[oi]) : '';
+      if (pickedText && this.state.audioEnabled) this.speak(pickedText);
+      return;
+    }
+
+    // 选对
+    this._stopCurrentAudio();
+    this._playCorrectSound();
+    this._wrongTryClear('q-' + mi + '-' + qi);
+    opts.forEach((el, i) => {
+      el.classList.remove('wrong');
+      el.style.pointerEvents = 'none';
+      if (i === q.answer) el.classList.add('correct');
+    });
+    if (ansEl) {
+      ansEl.style.display = 'block';
+      this._clearWrongHint(ansEl);
+      ansEl.innerHTML = '✅ 选对了';
+    }
+    // 记下这一次的选择：跟读面板（和它内部走错的修复流程）收尾时会用它
+    // 去 _recordAnswer —— 和普通选择题同一条路，别让跟读面板找不到这题。
+    this._lastPick = this._lastPick || {};
+    this._lastPick[mi + '-' + qi] = { oi: oi, isCorrect: true };
+    this._recordAnswer(dayIdx, mi, qi, oi, true);
+
+    // 这一组是不是全选完了？
+    const group = (this._currentClozeGroup && this._currentClozeGroup.mi === mi)
+      ? this._currentClozeGroup.qis : [qi];
+    const allSolved = group.every(function(x) { return this._questionSolved(mi, x, dayIdx); });
+    if (!allSolved) return;
+
+    // 全选对了：把跟读面板端出来，读的是填满后的完整句子。
+    const followEl = document.getElementById('cq-follow-' + mi + '-' + group[0]);
+    const firstQ = m.questions[group[0]];
+    const sentence = this._buildReadSentence(m, firstQ);
+    if (followEl) this._renderHoldReadPanel(followEl, mi, group[0], dayIdx, sentence);
+    // 整组全对 → 放行底部"下一题"（跟读过了再由面板解锁）。
+    const next = document.getElementById('stage-next-btn');
+    if (next) { next.disabled = false; next.classList.add('nudge'); }
   },
 
   // ===== Reading: one sentence at a time =====
@@ -8396,17 +8858,34 @@ const App = {
       if (m.passage) {
         this._splitSentences(m.passage).forEach((sent, si) =>
           steps.push({ mi, si, kind: 'sentence' }));
-        const pairs = this._pairSentences(m);
-        if (pairs) {
-          // Read it sentence by sentence, then translate it sentence by
-          // sentence. No full-text screen in between.
-          pairs.forEach((pr, si) => steps.push({ mi, si, kind: 'translate' }));
+        if (m.type === 'cloze') {
+          // 完形填空（v126）：整篇课文逐句翻译，和阅读理解同一套 ——
+          // 一屏一句、词可点、按住说中文、三档判定。翻译完再开始填空。
+          this._splitSentences(m.passage).forEach((sent, si) =>
+            steps.push({ mi, si, kind: 'cqtrans' }));
         } else {
-          // Falls back to the whole-passage screen only where the English and
-          // Chinese sentences do not line up, so that passage still gets a
-          // translation exercise rather than none at all.
-          steps.push({ mi, kind: 'passage' });
+          const pairs = this._pairSentences(m);
+          if (pairs) {
+            // Read it sentence by sentence, then translate it sentence by
+            // sentence. No full-text screen in between.
+            pairs.forEach((pr, si) => steps.push({ mi, si, kind: 'translate' }));
+          } else {
+            // Falls back to the whole-passage screen only where the English and
+            // Chinese sentences do not line up, so that passage still gets a
+            // translation exercise rather than none at all.
+            steps.push({ mi, kind: 'passage' });
+          }
         }
+      }
+      // 完形填空的题目：**同一句里挖的多个空合成一屏**（v126）。
+      // 今天的第 4、5 空同属 "You 4___ take care of it, and it will make
+      // you 5___."，孩子一次性选完这两个空，跟读的也是一句完整的
+      // "You must take care of it, and it will make you happy."，
+      // 不会再出现"第4空 / 第5空"分开做、也没有 blank。
+      if (m.type === 'cloze' && m.questions) {
+        const groups = this._clozeQuestionGroups(m);
+        groups.forEach(g => steps.push({ mi, qi: g[0], qis: g, kind: 'clozegroup' }));
+        return;
       }
       if (m.questions) m.questions.forEach((q, qi) => steps.push({ mi, qi, kind: 'question' }));
     });
@@ -8684,6 +9163,32 @@ const App = {
     if (step.kind === 'sentence') {
       html += this.renderSentenceStep(m, step.mi, step.si, dayIdx);
       this._lockNextOnRender = true;
+    } else if (step.kind === 'cqtrans') {
+      // 完形填空的整篇逐句翻译（v126）：和阅读理解逐句翻译同一套交互。
+      html += this.renderClozeTransStep(m, step.mi, step.si, dayIdx);
+      this._lockNextOnRender = true;
+    } else if (step.kind === 'clozegroup') {
+      // 同一句里的多个空合成一屏做完（v126）。
+      this._currentClozeGroup = { mi: step.mi, qis: step.qis || [step.qi] };
+      html += '<div class="stage-q stage-scroll">'
+           + this.renderClozeGroupStep(m, step.mi, step.qis || [step.qi], dayIdx) + '</div>';
+      // 整组都选对了才放行；已经全对过（从下一题退回来）就直接放行。
+      const grp = step.qis || [step.qi];
+      const allDone = grp.every(qi => this._questionSolved(step.mi, qi, dayIdx));
+      if (!this.isTeacher() && !allDone) this._lockNextOnRender = true;
+      // 全对过又退回这一屏：跟读面板要自己回来，否则孩子看到一句全绿的选项
+      // 却没有"读完整句"的入口，底部按钮又是开的，一不留神就跳过去了。
+      if (allDone) {
+        const self2 = this;
+        setTimeout(function() {
+          const fe = document.getElementById('cq-follow-' + step.mi + '-' + grp[0]);
+          if (fe && !fe.innerHTML.trim()) {
+            const fq = m.questions[grp[0]];
+            self2._renderHoldReadPanel(fe, step.mi, grp[0], dayIdx,
+              self2._buildReadSentence(m, fq));
+          }
+        }, 0);
+      }
     } else if (step.kind === 'passage') {
       html += this.renderPassageStep(m, step.mi, dayIdx);
     } else if (step.kind === 'translate') {
@@ -8772,7 +9277,13 @@ const App = {
       else if (step.kind === 'sentence')
         label = nextStep && nextStep.kind === 'sentence' ? '下一句'
               : nextStep && nextStep.kind === 'translate' ? '开始翻译'
+              : nextStep && nextStep.kind === 'cqtrans' ? '开始翻译'
               : nextStep && nextStep.kind === 'passage' ? '整篇翻译' : '下一题';
+      else if (step.kind === 'cqtrans')
+        label = nextStep && nextStep.kind === 'cqtrans' ? '下一句'
+              : (nextStep && nextStep.kind === 'clozegroup') ? '开始填空' : '下一题';
+      else if (step.kind === 'clozegroup')
+        label = nextStep && nextStep.kind === 'clozegroup' ? '下一句的空' : '下一题';
       else if (step.kind === 'translate') label = nextStep && nextStep.kind === 'translate' ? '下一句' : '开始做题';
       else if (step.kind === 'passage') label = '开始做题';
       else if (step.kind === 'writing') label = '开始朗读';
@@ -8843,6 +9354,18 @@ const App = {
       var at = this._ttsText(q.audio_text);
       if (at) return at;
     }
+    // 完形填空（v126）：跟读的是「这一句把所有空都填好」的完整句子。
+    // 同句挖了 4、5 两个空时，两个都填上，孩子读到的是一句完整的人话。
+    // 实测过：以前这里只填当前这个空，同句另一个空留着 ___ → 孩子跟着读
+    // 到一半卡住。
+    if (m && m.type === 'cloze') {
+      var csent = this._clozeSentenceOf(m, q);
+      if (csent) {
+        var cfilled = this._clozeFillSentence(m, csent, false);
+        var ctts = this._ttsText(cfilled);
+        if (ctts) return ctts;
+      }
+    }
     var parts = this._stemParts(q.question);
     var rest = parts.rest;
     if (!rest) return '';
@@ -8870,7 +9393,8 @@ const App = {
       }
       if (ansOpt) stem = stem.replace(/[?？]\s*$/, '?') + ' ' + ansOpt;
     }
-    // 兜底：完形填空的题号（"2___"）且 rest 太短，从 passage 里找原句并填空
+    // 兜底：完形填空的题号（"2___"）且 rest 太短，从 passage 里找原句并
+    // 把同句所有空都填上（v126：不再只填当前这一个）。
     var words = stem.match(/[A-Za-z][A-Za-z'-]*/g) || [];
     if (words.length < 2) {
       var marker = String(q.question || '').match(/\d*_{2,}/);
@@ -8880,14 +9404,8 @@ const App = {
           return s.indexOf(target) >= 0;
         })[0];
         if (hit) {
-          var ans2 = '';
-          if (q.options && typeof q.answer === 'number' && q.options[q.answer] != null) {
-            ans2 = String(q.options[q.answer]).trim();
-          } else if (q.answer != null) {
-            ans2 = String(q.answer).trim();
-          }
-          if (ans2) hit = hit.replace(target, ans2);
-          return this._ttsText(hit);
+          var filledAll = this._clozeFillSentence(m, hit, false);
+          if (filledAll) return this._ttsText(filledAll);
         }
       }
     }
@@ -8897,13 +9415,24 @@ const App = {
   // 一道题该朗读哪一段英文。规则只有一条：读题，不读答案，不读中文。
   //   - 听力题：读 audio_text（听力原文），题干"听到的句子是什么？"是中文，不读
   //   - 阅读理解/语法/时态/单选/KET：读英文题干
-  //   - 完形填空：题干只是"2___"这样的空格编号，读它所在的课文原句，
-  //     空格读作 blank，孩子才知道该填哪一句
+  //   - 完形填空：题干只是"4___"这样的空格编号，读它所在的课文原句 ——
+  //     而且**把这一句里所有的空都填上答案**（v126）。以前读作 blank，孩子
+  //     听到 "You blank take care of it ... blank"，既不成句也不知道填哪儿；
+  //     今天这句挖了 4、5 两个空，两个空一起补全才是人话。
   //   - 都没有英文可读（例如纯中文题干又没原文）→ 返回空串，不朗读
   // 解释（explanation_cn / explanation_en）从来不在这里，答题对错才显示。
   _questionSpeechText(m, q) {
     if (!q) return '';
     if (q.audio_text) return this._ttsText(q.audio_text);
+    // 完形填空优先走「整句补全」：题干本身就是编号，没什么可读的。
+    if (m && m.type === 'cloze') {
+      const sent = this._clozeSentenceOf(m, q);
+      if (sent) {
+        const filled = this._clozeFillSentence(m, sent, false);
+        const t = this._ttsText(filled);
+        if (t) return t;
+      }
+    }
     // "KET: Choose the correct answer." 这类指令不读，只读题目本体
     var parts = this._stemParts(q.question);
     var stem = this._ttsText(parts.rest);
@@ -8918,7 +9447,8 @@ const App = {
       var hit = this._splitSentences(m.passage).filter(function(s) {
         return s.indexOf(target) >= 0;
       })[0];
-      if (hit) return this._ttsText(hit.replace(target, ' blank '));
+      // 兜底也要补全同句的其他空，不再吐 blank。
+      if (hit) return this._ttsText(this._clozeFillSentence(m, hit, false));
     }
     return words.length >= 1 ? stem : '';
   },
