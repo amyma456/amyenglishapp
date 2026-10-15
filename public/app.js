@@ -4127,21 +4127,44 @@ const App = {
     msg += '\n删除后他们会从这个列表里消失。';
     if (!confirm(msg)) return;
 
-    let gateFailed = 0;
+    // ===== 顺序是关键（老师 2026-10-15）=====
+    // 「只要删除了，任何人再进来都需要老师验证」。所以先把拦截写进后台、
+    // **确认写成功**，再动本机名单。反过来做（先删本机 → 再写拦截）有一个
+    // 致命窗口：名单已经没了、拦截却没写上，学生这时登录就是直接放行 ——
+    // 而且本机状态已经被 syncToCloud 推上云，事后连人都找不回来。
+    const phones = targets.map(s => s.phone).filter(Boolean);
+    const entries = targets.map(s => ({ phone: s.phone, name: s.name }));
+    let gateConfirmed = true;      // 没有要拦的人 = 无需确认
+    if (phones.length) {
+      const wrote = await Api.classRemoveMany(entries);
+      if (wrote === null) gateConfirmed = false;
+      // 写完一定要回读核对。接口返回 200 不等于那一行真的落库；老师端**不允许**
+      // 在没有证据的情况下宣布"已删除"。
+      const v = await Api.verifyGated(phones);
+      if (v === null || !v.ok) gateConfirmed = false;
+    }
+
+    if (!gateConfirmed && phones.length) {
+      // 拦截没坐实 —— 学生一个都不从名单上删。宁可让老师看到"没删掉"，
+      // 也不能让他以为删掉了、实际上门还开着。
+      await this.loadRemovedList();
+      this.renderContent();
+      this.showToast('⚠️ 后台拦截没写成功，为安全起见这次没有删除任何学生。请检查网络后重试', 'warn');
+      return;
+    }
+
+    // 到这里后台拦截已经确认落库，再删本机名单是安全的。
     for (const st of targets) {
       this.state.students = await Api.deleteStudent(st);
       delete this.state.parentStudents[st.phone];
-      const gated = await Api.classRemove(st.phone, st.name);   // 删除 = 进拦截名单
-      if (!gated) gateFailed++;
     }
     if (picked.gated.length) await this._dropGates(picked.gated);
-    if (targets.length) this.syncToCloud();
+    if (targets.length) await this.syncToCloud();
     await this.loadRemovedList();
     this.state.picked = [];
     this.state.showAllGated = false;
     this.renderContent();
-    if (gateFailed) this.showToast('⚠️ 有 ' + gateFailed + ' 人没写进后台拦截，请再删一次', 'warn');
-    else if (targets.length && picked.gated.length) {
+    if (targets.length && picked.gated.length) {
       this.showToast('✅ 删除 ' + targets.length + ' 人（再次登录要你同意）+ ' + picked.gated.length + ' 个号码（已清掉）');
     } else if (picked.gated.length) {
       this.showToast('✅ 已删除 ' + picked.gated.length + ' 个号码，他们不再被拦了');
@@ -4292,15 +4315,21 @@ const App = {
     if (!confirm('确认删除该学生？删除后该手机号需申请并经你同意才能重新登录。')) return;
     const student = this.state.students.find(s => s.id === sid || s.phone === sid);
     if (!student) return;
+    // 先写拦截、确认成功，再删本机（同 deletePicked 的顺序，理由见那里）。
+    const gated = await Api.classRemove(student.phone, student.name);
+    const v = gated ? await Api.verifyGated([student.phone]) : null;
+    if (!gated || v === null || !v.ok) {
+      await this.loadRemovedList();
+      this.renderContent();
+      this.showToast('⚠️ 后台拦截没写成功，为安全起见这次没有删除。请检查网络后重试', 'warn');
+      return;
+    }
     // Delete locally. Api.deleteStudent also records the phone as deleted —
     // without that tombstone the cloud merge put the student straight back,
     // which is why 删除 used to look like a no-op.
     this.state.students = await Api.deleteStudent(student);
     delete this.state.parentStudents[student.phone];
     this.syncToCloud();
-    // Server-side gate: without this write the student can just re-login.
-    const gated = await Api.classRemove(student.phone, student.name);
-    if (!gated) this.showToast('⚠️ 删除已保存，但写入后台失败，该学生仍可能重新进入', 'warn');
     await this.loadRemovedList();
     this.renderContent();
   },
@@ -4354,13 +4383,20 @@ const App = {
     if (!confirm('确认移除该学生？移除后该学生需申请并经你同意才能重新加入。')) return;
     const student = this.state.students.find(s => s.id === sid);
     if (!student) return;
+    // Same gate as removeFromClass — a full removal must not be a loophole.
+    // 先拦后台、确认成功再动本机名单；顺序不能反（见 deletePicked 的说明）。
+    const gated = await Api.classRemove(student.phone, student.name);
+    const v = gated ? await Api.verifyGated([student.phone]) : null;
+    if (!gated || v === null || !v.ok) {
+      await this.loadRemovedList();
+      this.renderContent();
+      this.showToast('⚠️ 后台拦截没写成功，为安全起见这次没有移除。请检查网络后重试', 'warn');
+      return;
+    }
     student.class = '';
     student.approved = false;
     await Api.saveStudent(student);
     this.syncToCloud();
-    // Same gate as removeFromClass — a full removal must not be a loophole.
-    const gated = await Api.classRemove(student.phone, student.name);
-    if (!gated) this.showToast('⚠️ 移除已保存，但写入后台失败，该学生仍可能重新进入', 'warn');
     await this.loadRemovedList();
     this.renderContent();
   },
@@ -4483,15 +4519,23 @@ const App = {
     }
 
     if (alsoDelete) {
+      // 先一次批量写拦截、确认成功，再删本机名单（顺序见 deletePicked）。
+      // 之前是 N 次单个 classRemove 的 fire-and-forget 数组，失败就静默漏人。
+      const phones = members.map(s => s.phone).filter(Boolean);
+      const wrote = await Api.classRemoveMany(members.map(s => ({ phone: s.phone, name: s.name })));
+      const v = (wrote === null) ? null : await Api.verifyGated(phones);
+      if (wrote === null || v === null || !v.ok) {
+        await this.loadRemovedList();
+        this.renderContent();
+        this.showToast('⚠️ 后台拦截没写成功，为安全起见这次没有删除学生。请检查网络后重试', 'warn');
+        return;
+      }
       // Api.deleteStudent writes a tombstone per phone, so the cloud merge
       // cannot resurrect them on the next poll.
-      const gates = [];
       for (const s of members) {
         this.state.students = await Api.deleteStudent(s);
         delete this.state.parentStudents[s.phone];
-        if (s.phone) gates.push(Api.classRemove(s.phone, s.name));
       }
-      await Promise.all(gates);
       await this.loadRemovedList();
       this.showToast('✅ 已删除班级和 ' + members.length + ' 名学生');
     } else {
@@ -4536,14 +4580,20 @@ const App = {
     if (!confirm('确认将该学生移出班级？移出后该学生需申请并经你同意才能重新加入。')) return;
     const student = this.state.students.find(s => s.id === sid);
     if (!student) return;
+    // Server-side gate — without this the student just re-registers on next
+    // login and lands back in 待分配. 先拦后台、确认成功再动本机（见 deletePicked）。
+    const gated = await Api.classRemove(student.phone, student.name);
+    const v = gated ? await Api.verifyGated([student.phone]) : null;
+    if (!gated || v === null || !v.ok) {
+      await this.loadRemovedList();
+      this.renderContent();
+      this.showToast('⚠️ 后台拦截没写成功，为安全起见这次没有移出。请检查网络后重试', 'warn');
+      return;
+    }
     student.class = '';
     student.approved = false;
     await Api.saveStudent(student);
     this.syncToCloud();
-    // Server-side gate — without this the student just re-registers on next
-    // login and lands back in 待分配.
-    const gated = await Api.classRemove(student.phone, student.name);
-    if (!gated) this.showToast('⚠️ 移出已保存，但写入后台失败，该学生仍可能重新进入', 'warn');
     await this.loadRemovedList();
     this.renderContent();
   },

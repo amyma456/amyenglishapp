@@ -1209,25 +1209,54 @@ async function classApi(request, url, env) {
   }
 
   // -- teacher: record a removal -------------------------------------------
+  // One phone (per-row button / single delete) or a batch (「全选 → 一键删除」).
+  //
+  // 老师 2026-10-15 的原话：「只要删除了，任何人再进来都需要老师验证」。
+  // 批量走同一段 SQL，不可能和单号路径跑偏；一批一次请求也让"删 50 个人"
+  // 不会因为第 37 次往返断网而静默漏掉后面 13 个。
   if (path === '/api/class/remove' && request.method === 'POST') {
     const body = await readJsonBody(request);
     if (!body) return json({ error: 'bad_json' }, 400);
     if (!isTeacher(body)) return json({ error: 'forbidden' }, 403);
-    const phone = String(body.phone || '').trim();
-    if (!phone) return json({ error: 'missing_phone' }, 400);
-    // Never gate a teacher number: the app would then have no way back in.
-    if (isTeacherPhone(phone)) return json({ ok: true, skipped: 'teacher_phone' });
-    const name = String(body.name || '').slice(0, 60);
-    await db
-      .prepare(`INSERT INTO removed_students (phone, name, removed_at) VALUES (?, ?, ?)
-                ON CONFLICT(phone) DO UPDATE SET name = excluded.name, removed_at = excluded.removed_at`)
-      .bind(phone, name, new Date().toISOString()).run();
-    // A removal invalidates any pending request from before it — the student
-    // must apply again under this removal, not ride an old approval queue.
-    await db
-      .prepare("UPDATE join_requests SET status = 'denied', resolved_at = ? WHERE phone = ? AND status = 'pending'")
-      .bind(new Date().toISOString(), phone).run();
-    return json({ ok: true });
+
+    // 归一成 [{phone, name}]，两种入参形态共用下面同一条写入语句。
+    const entries = Array.isArray(body.phones)
+      ? body.phones.map(e => (typeof e === 'string'
+          ? { phone: e, name: '' }
+          : { phone: (e && e.phone) || '', name: (e && e.name) || '' }))
+      : [{ phone: body.phone || '', name: body.name || '' }];
+
+    const now = new Date().toISOString();
+    let count = 0;
+    let skippedTeacher = false;
+    for (const e of entries) {
+      const phone = String(e.phone || '').trim();
+      if (!phone) continue;
+      // Never gate a teacher number: the app would then have no way back in.
+      // 记一下"因为他是老师号而跳过"——单个入参时要把这个信号原样报回去，
+      // 否则调用方分不清"被跳过了"和"写成功了"。
+      if (isTeacherPhone(phone)) { skippedTeacher = true; continue; }
+      const name = String(e.name || '').slice(0, 60);
+      await db
+        .prepare(`INSERT INTO removed_students (phone, name, removed_at) VALUES (?, ?, ?)
+                  ON CONFLICT(phone) DO UPDATE SET name = excluded.name, removed_at = excluded.removed_at`)
+        .bind(phone, name, now).run();
+      // A removal invalidates any pending request from before it — the student
+      // must apply again under this removal, not ride an old approval queue.
+      await db
+        .prepare("UPDATE join_requests SET status = 'denied', resolved_at = ? WHERE phone = ? AND status = 'pending'")
+        .bind(now, phone).run();
+      count++;
+    }
+    // 单个入参时保持老响应形状（ok:true；老师号跳过时带上 skipped）。
+    if (!Array.isArray(body.phones)) {
+      if (!count) {
+        if (skippedTeacher) return json({ ok: true, skipped: 'teacher_phone' });
+        return json({ error: 'missing_phone' }, 400);
+      }
+      return json({ ok: true });
+    }
+    return json({ ok: true, count: count });
   }
 
   // -- student: apply to re-join --------------------------------------------

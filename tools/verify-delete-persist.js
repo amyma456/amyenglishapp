@@ -62,6 +62,11 @@ function makeFetch(net) {
   return async function (url, opts) {
     opts = opts || {};
     const u = String(url);
+    // 模拟「后台 class 接口整体不可用」：移除/列表/放行全挂。
+    // 用于验证"拦截写不进去 ⇒ 一个人都不许删"这条承诺。
+    if (net.classApiDown && u.indexOf('/api/class') >= 0) {
+      throw new Error('class api down');
+    }
     if (u.indexOf('textdb.dev') >= 0) {
       if (net.unreachable) throw new Error('network down');
       if (opts.method === 'POST') {
@@ -81,10 +86,36 @@ function makeFetch(net) {
       return jsonRes({ ok: true });
     }
     if (u.indexOf('/api/class/join-request') >= 0) return jsonRes({ ok: true });
+    // 移出名单的读回：app.js 现在写完拦截要**核对**（verifyGated），
+    // 这里必须跟服务端 /api/class/removed-list 一样把名单吐出来，
+    // 否则核对永远失败、删除会被前置检查挡住（不是被测代码的问题）。
+    if (u.indexOf('/api/class/removed-list') >= 0) {
+      return jsonRes({ removed: (net.removals || []).map(p => ({ phone: p, name: '', removed_at: '' })) });
+    }
+    if (u.indexOf('/api/class/unblock') >= 0) {
+      const body = JSON.parse(opts.body || '{}');
+      const list = Array.isArray(body.phones) ? body.phones : [body.phone];
+      list.filter(Boolean).forEach(p => { net.removals = net.removals.filter(x => x !== p); });
+      return jsonRes({ ok: true, count: list.filter(Boolean).length });
+    }
     if (u.indexOf('/api/class/remove') >= 0) {
       const body = JSON.parse(opts.body || '{}');
-      if (body.phone && net.removals.indexOf(body.phone) < 0) net.removals.push(body.phone);
-      return jsonRes({ ok: true });
+      // 单个 {phone,name} 或批量 {phones:[{phone,name}]}，跟 worker 一致
+      const entries = Array.isArray(body.phones)
+        ? body.phones.map(e => (typeof e === 'string' ? { phone: e } : (e || {})))
+        : [{ phone: body.phone }];
+      let count = 0;
+      entries.forEach(e => {
+        const p = String((e && e.phone) || '').trim();
+        if (!p) return;
+        if (net.removals.indexOf(p) < 0) net.removals.push(p);
+        count++;
+      });
+      if (!Array.isArray(body.phones)) {
+        if (!count) return jsonRes({ error: 'missing_phone' }, 400);
+        return jsonRes({ ok: true });
+      }
+      return jsonRes({ ok: true, count: count });
     }
     if (u.indexOf('/api/class/status') >= 0) {
       const phone = decodeURIComponent((u.split('phone=')[1] || ''));
@@ -562,6 +593,104 @@ console.log('\n=== 11. 老师 2026-10-15 报的：删掉的班级（B班 / X班�
   for (let i = 0; i < 3; i++) { await T.App.syncFromCloud(); await T.App.syncToCloud(); }
   ok(cloudClasses(net).indexOf('X班') < 0, '② 云端最终也清掉了 X班');
   ok(T.App.state.classes.indexOf('X班') < 0, '② 来回同步都不复活');
+}
+
+// ===========================================================================
+// ③ v125：删除 = 一定进后台拦截名单（老师 2026-10-15）
+//
+// 「点了全选删除之后……只要删除了，任何人再进来都需要老师验证。」
+//
+// 旧实现是**先删本机、再写拦截**，中间有一个致命窗口：名单已经没了、拦截却
+// 没写上，学生此刻登录就是直接放行；而且本机状态已经被 syncToCloud 推上云，
+// 事后连人都找不回来。新实现把顺序倒过来 —— 先写拦截、**回读核对**，
+// 坐实了才动本机名单。下面这几条就是钉住这个顺序和这条承诺。
+// ===========================================================================
+const seedPending = () => ({
+  lastUpdated: '2026-10-14T03:03:55.417Z',
+  classes: ['少儿英语A班'],
+  students: [
+    { id: 'p1', name: '待分配甲-Alpha', phone: '13100000001', class: '', approved: false, registeredAt: '2026-08-23T06:15:22.785Z' },
+    { id: 'p2', name: '待分配乙-Beta', phone: '13100000002', class: '', approved: false, registeredAt: '2026-08-23T06:15:22.785Z' },
+    { id: 'p3', name: '已分配丙-Gamma', phone: '13100000003', class: '少儿英语A班', approved: true, registeredAt: '2026-08-23T06:15:22.785Z' },
+  ],
+  deletedPhones: [], deletedClasses: [], revivedPhones: [], revivedClasses: [],
+});
+{
+  const net = makeNet(seedPending());
+  const T = await asTeacher(makeDevice(net, '老师'));
+  await T.App.syncFromCloud();
+
+  // ③-1 一键删「待分配」全区
+  T.App.pickAllPending(true);
+  const pickedCount = T.App.state.picked.filter(k => k.indexOf('s:') === 0).length;
+  ok(pickedCount === 2, '③ 全选待分配 勾上 2 人（实际 ' + pickedCount + '）');
+  T.ask(true);
+  await T.App.deletePickedPending();
+
+  ok(!find(T, '13100000001') && !find(T, '13100000002'), '③ 两个待分配学生从名单里没了');
+  ok(net.removals.indexOf('13100000001') >= 0 && net.removals.indexOf('13100000002') >= 0,
+     '③ 两个号都进了后台拦截名单（再次登录必须老师同意）');
+  // 被删的人重新登录 → /api/class/status 必须说 removed
+  const st1 = await T.Api.classStatus('13100000001');
+  ok(st1 && st1.removed === true, '③ 被删的人再登录，后台判定为「已移出」（拦得住）');
+  // 没删的那个人不受影响
+  const st3 = await T.Api.classStatus('13100000003');
+  ok(st3 && st3.removed === false, '③ 没勾的人不受影响（放行）');
+  // 云端也删干净了
+  await T.App.syncToCloud();
+  ok(!cloudFind(net, '13100000001') && !cloudFind(net, '13100000002'),
+     '③ 云端名单里也没有了（有墓碑，不会复活）');
+}
+{
+  // ③-2 一键删「已分配」全区
+  const net = makeNet(seedPending());
+  const T = await asTeacher(makeDevice(net, '老师'));
+  await T.App.syncFromCloud();
+
+  T.App.pickAllApproved(true);
+  T.ask(true);
+  await T.App.deletePickedApproved();
+
+  ok(!find(T, '13100000003'), '③ 已分配学生删掉了');
+  ok(net.removals.indexOf('13100000003') >= 0, '③ 已分配那个号也进了后台拦截名单');
+  // 待分配那两个人不该被这个按钮误伤
+  ok(!!find(T, '13100000001'), '③ 删「已分配」不会误伤「待分配」');
+  ok(net.removals.indexOf('13100000001') < 0, '③ 待分配的人没有被拦');
+}
+{
+  // ③-3 反选：全选之后把不想删的点掉，只删剩下的
+  const net = makeNet(seedPending());
+  const T = await asTeacher(makeDevice(net, '老师'));
+  await T.App.syncFromCloud();
+
+  T.App.pickAllPending(true);
+  T.App.invertPending();                  // 反选 = 一个都不勾
+  ok(T.App.state.picked.filter(k => k.indexOf('s:') === 0).length === 0,
+     '③ 全选后反选 → 一个都不勾（留下的都不会被删）');
+  T.ask(true);
+  await T.App.deletePickedPending();
+  ok(!!find(T, '13100000001') && !!find(T, '13100000002'),
+     '③ 没勾的人真的没被删（反选留人有效）');
+  ok(net.removals.length === 0, '③ 没勾的人也没被拦');
+}
+{
+  // ③-4 关键承诺：后台拦截写不进去时，一个人都不许删
+  const net = makeNet(seedPending());
+  const T = await asTeacher(makeDevice(net, '老师'));
+  await T.App.syncFromCloud();
+  const before = T.App.state.students.length;
+
+  net.classApiDown = true;               // 后台拦截接口整体不可用
+  T.App.pickAllPending(true);
+  T.ask(true);
+  await T.App.deletePickedPending();
+
+  ok(T.App.state.students.length === before,
+     '③ 拦截没写成功 ⇒ 一个学生都没删（不会出现"名单没了但门还开着"）');
+  ok(!!find(T, '13100000001') && !!find(T, '13100000002'),
+     '③ 两个待分配学生都还在名单上');
+  ok(T.toasts.some(m => m.indexOf('没有删除') >= 0),
+     '③ 老师会收到明确的「这次没删成」提示，而不是假的成功');
 }
 
 console.log('\n' + (fail === 0 ? '全部通过 ✅' : ('有 ' + fail + ' 项没通过 ❌')));

@@ -964,6 +964,47 @@ const Api = {
     } catch (e) { console.warn('classRemove failed:', e); return false; }
   },
 
+  // Teacher removed a whole batch. Same endpoint, one round trip.
+  //
+  // 老师 2026-10-15：「点了全选删除之后……只要删除了，任何人再进来都需要老师验证」。
+  // 之前批量删除走的是 N 次单个 classRemove：手机上几十个号码就是几十次往返，
+  // 中间断一次那一批就静默漏掉（而且失败只报一个数字，老师看不出是谁漏了）。
+  // 一批一次请求，服务端同一段 SQL，不可能和单号路径跑偏。
+  // 返回服务端确认写入的人数；请求本身失败返回 null（调用方绝不能在 null 上
+  // 报成功，否则老师以为删掉了、其实后台一个都没进）。
+  async classRemoveMany(entries) {
+    const payload = (entries || [])
+      .map(e => ({ phone: String((e && e.phone) || '').trim(), name: String((e && e.name) || '').slice(0, 60) }))
+      .filter(e => e.phone);
+    if (!payload.length) return 0;
+    try {
+      const res = await fetch(this._classUrl('/api/class/remove'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phones: payload, teacher: this.session && this.session.phone }),
+      });
+      if (!res.ok) return null;
+      const d = await res.json();
+      return (d && typeof d.count === 'number') ? d.count : payload.length;
+    } catch (e) { console.warn('classRemoveMany failed:', e); return null; }
+  },
+
+  // Read the gate list back and say which phones are ACTUALLY gated.
+  //
+  // 这是「删除 = 一定进拦截名单」这条承诺的唯一验收方式：写入返回 200 不代表
+  // 那一行真的落库（老师那会儿正没信号、服务端 500、请求被中间层吞掉都可能）。
+  // 拿不到名单时返回 null（= 无法确认），调用方必须把 null 当成"没验证成功"，
+  // 而不是默认成功。
+  async verifyGated(phones) {
+    const want = (phones || []).filter(Boolean);
+    if (!want.length) return { ok: true, missing: [] };
+    const list = await this.classRemovedList();
+    if (list === null) return null;                  // 名单拉不到 = 验不了
+    const have = new Set(list.map(g => String((g && g.phone) || '').trim()));
+    const missing = want.filter(p => !have.has(String(p).trim()));
+    return { ok: missing.length === 0, missing: missing };
+  },
+
   // Student asks to re-join. Returns { ok } or null on network failure.
   async classJoinRequest(phone, name) {
     try {

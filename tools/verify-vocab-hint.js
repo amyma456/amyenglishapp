@@ -319,8 +319,8 @@ console.log('\n=== 5. 图片收小 + 提示紧凑：保证"图片 + 提示 + 选
 // ===========================================================================
 console.log('\n=== 6. 版本与缓存名 ===');
 {
-  ok(/name="app-version" content="124"/.test(htmlSrc), '版本号升到 124');
-  ok(/amy-english-v124/.test(swSrc), 'Service Worker 缓存名同步到 v124（不然手机上还是旧版）');
+  ok(/name="app-version" content="125"/.test(htmlSrc), '版本号升到 125');
+  ok(/amy-english-v125/.test(swSrc), 'Service Worker 缓存名同步到 v125（不然手机上还是旧版）');
 }
 
 console.log('\n' + (fail === 0 ? '全部通过' : (fail + ' 项失败')));
