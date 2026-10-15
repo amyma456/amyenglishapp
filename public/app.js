@@ -3694,18 +3694,22 @@ const App = {
     const gatedAll = split.gatedAll;
     const pickCount = (this.state.picked || []).length;
 
-    // 批量管理条 —— 老师要的「全选 / 多选 / 一次性多删几个」
-    if (this.state.students.length > 0 || gated.length > 0) {
+    // 批量管理条 —— 老师 2026-10-15 要的是「两区各有自己的全选 + 反选 + 一键删除」：
+    //   「待分配的学生前面搞一个全选，已分配的学生前面搞一个全选。这样的话，
+    //     作为老师就可以一键删除待分配的学生，然后也可以一键删除已分配的学生。
+    //     点了全选之后，每个学生前面还有一个小复选框，再反选一下复选框，
+    //     也就是不点，那这个学生就会被留下。」
+    // 所以「全选」分两处：下面待分配区、已分配区各一条，互不干扰。
+    // 这里的顶部条只保留一个「跨区总删除」的入口，方便看总数。
+    if (this.state.students.length > 0) {
       const pickedStudents = (this.state.picked || []).filter(k => k.indexOf('s:') === 0).length;
       html += '<div class="pick-card">';
       html += '<div class="pick-tools">';
-      html += '<label class="pick-label"><input type="checkbox" class="pick-box" '
-           + (this.state.students.length > 0 && pickedStudents === this.state.students.length ? 'checked ' : '')
-           + 'onclick="App.pickAll(this.checked)"> 全选学生（' + this.state.students.length + '）</label>';
-      html += '<button class="btn btn-outline btn-sm" onclick="App.deletePicked()">🗑️ 删除选中（' + pickCount + '）</button>';
+      html += '<button class="btn btn-outline btn-sm" onclick="App.deletePicked()">🗑️ 删除全部选中（' + pickedStudents + '）</button>';
+      html += '<button class="btn btn-outline btn-sm" onclick="App.clearPicked()">✖️ 清空勾选</button>';
       html += '</div>';
-      html += '<div class="pick-count">勾选学生 → 删除后他们登录必须经你同意。'
-           + (gatedAll.length > 0 ? '下面「已被拦截登录」那一区有自己的「全选 / 反选 / 一键删除」，一次清一批。' : '')
+      html += '<div class="pick-count">下面<b>待分配</b>和<b>已分配</b>两区各自有「全选 / 反选 / 一键删除」，各选各的、互不影响。'
+           + (gatedAll.length > 0 ? '再下面「已被拦截登录」那一区也有自己的一套。' : '')
            + '</div>';
       html += '</div>';
     }
@@ -3782,8 +3786,21 @@ const App = {
 
     // Pending students (need class assignment)
     if (pending.length > 0) {
+      const pendPicked = pending.filter(s => this.isPicked('s', s.phone)).length;
       html += '<h3 style="color:var(--warning);margin-bottom:8px">⏳ 待分配学生（' + pending.length + '人）</h3>';
       html += '<p class="text-sub fs-12 mb-8">这些学生已注册，等待你分配班级</p>';
+      // 待分配区专属批量条：全选 → 反选 → 一键删除这一区
+      html += '<div class="pick-card">';
+      html += '<div class="pick-tools">';
+      html += '<label class="pick-label"><input type="checkbox" class="pick-box" '
+           + (pendPicked > 0 && pendPicked === pending.length ? 'checked ' : '')
+           + 'onclick="App.pickAllPending(this.checked)"> 全选待分配（' + pending.length + '）</label>';
+      html += '<button class="btn btn-outline btn-sm" onclick="App.invertPending()">🔄 反选</button>';
+      html += '<button class="btn btn-outline btn-sm" onclick="App.deletePickedPending()">🗑️ 一键删除待分配（' + pendPicked + '）</button>';
+      html += '</div>';
+      html += '<div class="pick-count">「全选」会把这一区 <b>' + pending.length + ' 人</b>全勾上；'
+           + '想留下谁，就点掉他前面的 ☐（不勾的不会被删），或者点「🔄 反选」。</div>';
+      html += '</div>';
       pending.forEach((s, i) => {
         html += '<div class="assign-card"' + (i === 0 ? ' id="pending-card-top"' : '') + '>';
         html += '<div class="ac-info">';
@@ -3816,7 +3833,21 @@ const App = {
 
     // Approved students table
     if (approved.length > 0) {
+      const apprPicked = approved.filter(s => this.isPicked('s', s.phone)).length;
       html += '<h3 style="color:var(--success);margin:16px 0 8px">✅ 已分配学生（' + approved.length + '人）</h3>';
+      // 已分配区专属批量条：全选 → 反选 → 一键删除这一区
+      html += '<div class="pick-card">';
+      html += '<div class="pick-tools">';
+      html += '<label class="pick-label"><input type="checkbox" class="pick-box" '
+           + (apprPicked > 0 && apprPicked === approved.length ? 'checked ' : '')
+           + 'onclick="App.pickAllApproved(this.checked)"> 全选已分配（' + approved.length + '）</label>';
+      html += '<button class="btn btn-outline btn-sm" onclick="App.invertApproved()">🔄 反选</button>';
+      html += '<button class="btn btn-outline btn-sm" onclick="App.deletePickedApproved()">🗑️ 一键删除已分配（' + apprPicked + '）</button>';
+      html += '</div>';
+      html += '<div class="pick-count">「全选」会把这一区 <b>' + approved.length + ' 人</b>全勾上；'
+           + '想留下谁，就点掉他前面的 ☐（不勾的不会被删），或者点「🔄 反选」。'
+           + '删除 = 从名单移除，他们再次登录要经你同意。</div>';
+      html += '</div>';
       html += '<div class="card"><table class="data-table"><thead><tr><th style="width:34px"></th><th>备注名</th><th>班级</th><th>手机号</th><th>注册时间</th><th>操作</th></tr></thead><tbody>';
       approved.forEach(s => {
         const barred = (this.state.removedPhones || []).some(g => g.phone === s.phone);
@@ -3979,13 +4010,49 @@ const App = {
     this.renderContent();
   },
 
-  // 全选学生（勾选框在批量条上）。故意不把"被拦号码"一起选上 —— 那批号码
-  // 动辄几十个，误勾一下就等于把几千条记录挪来挪去；拦截区有它自己的全选。
-  pickAll(checked) {
-    const keys = [];
-    if (checked) (this.state.students || []).forEach(s => keys.push(this._pickKey('s', s.phone)));
-    // 保留拦截区那边的勾选，两者互不干扰
-    this.state.picked = (this.state.picked || []).filter(k => k.indexOf('s:') !== 0).concat(keys);
+  // 全选/反选 的公共实现。scope 决定作用范围（见 _studentsInScope）：
+  //   'pending'  待分配区   'approved' 已分配区   'all' 全部学生
+  // 只动 's:' 前缀的键，拦截区（'g:'）的勾选原样保留 —— 两套各选各的。
+  _pickStudentsInScope(scope, keys) {
+    const keep = (this.state.picked || []).filter(k => k.indexOf('s:') !== 0);
+    this.state.picked = keep.concat(keys || []);
+    this.renderContent();
+  },
+  _studentsInScope(scope) {
+    const all = this.state.students || [];
+    if (scope === 'pending') return all.filter(s => !s.approved || !s.class);
+    if (scope === 'approved') return all.filter(s => s.approved && s.class);
+    return all;
+  },
+  // 全选某一区（checked=false 即取消整区勾选）。故意不把「被拦号码」一起选上 ——
+  // 那批号码动辄几十个；拦截区有它自己的全选。
+  pickAll(checked) { this.pickAllPending(checked); this._pickStudentsInScope('all', checked ? (this.state.students || []).map(s => this._pickKey('s', s.phone)) : []); },
+  pickAllPending(checked) {
+    const keys = checked ? this._studentsInScope('pending').map(s => this._pickKey('s', s.phone)) : [];
+    this._pickStudentsInScope('pending', keys);
+  },
+  pickAllApproved(checked) {
+    const keys = checked ? this._studentsInScope('approved').map(s => this._pickKey('s', s.phone)) : [];
+    this._pickStudentsInScope('approved', keys);
+  },
+  // 反选某一区：勾上的取消、没勾的勾上。老师要的就是「全选之后，把不用的给反选」。
+  // 注意范围是**整区**（含当前没显示出来的行），否则点了反选会漏掉看不见的人。
+  _invertStudentsInScope(scope) {
+    const have = new Set((this.state.picked || []).filter(k => k.indexOf('s:') === 0));
+    const keys = this._studentsInScope(scope)
+      .map(s => this._pickKey('s', s.phone))
+      .filter(k => !have.has(k));
+    // 整区已有的勾选先清掉，再放上反选结果（这样才能真正"反"过来）
+    const inScope = new Set(this._studentsInScope(scope).map(s => this._pickKey('s', s.phone)));
+    const keep = (this.state.picked || []).filter(k => k.indexOf('s:') !== 0 || !inScope.has(k));
+    this.state.picked = keep.concat(keys);
+    this.renderContent();
+  },
+  invertPending() { this._invertStudentsInScope('pending'); },
+  invertApproved() { this._invertStudentsInScope('approved'); },
+  // 清空所有学生勾选（不动拦截区）
+  clearPicked() {
+    this.state.picked = (this.state.picked || []).filter(k => k.indexOf('s:') !== 0);
     this.renderContent();
   },
 
@@ -4024,6 +4091,27 @@ const App = {
   //   · 学生（待分配 / 已分配）→ 从名单删掉 + 写进后台拦截名单（再次登录必须老师同意）
   //   · 已经被拦的号码 → 从这个拦截名单里**彻底删掉**（不再被拦）
   // 老师 2026-10-14 定的：「删除了之后就不要再存在了」。所以拦截区里的删除是真的删。
+  // 一键删除某一区（待分配 / 已分配）。范围限死在本区，不会误伤另一区。
+  async deletePickedPending() { return this._deletePickedInScope('pending'); },
+  async deletePickedApproved() { return this._deletePickedInScope('approved'); },
+  async _deletePickedInScope(scope) {
+    const label = scope === 'pending' ? '待分配' : '已分配';
+    const pickedInScope = this._studentsInScope(scope).filter(s => this.isPicked('s', s.phone));
+    if (!pickedInScope.length) {
+      this.showToast('先用「全选' + label + '」或点前面的 ☐，选好要删的人');
+      return;
+    }
+    // 只删本区里勾上的人，别的区就算也勾着也不动
+    const phones = pickedInScope.map(s => s.phone);
+    const prevPicked = this.state.picked;
+    this.state.picked = prevPicked.filter(k => k.indexOf('s:') !== 0)
+      .concat(phones.map(p => this._pickKey('s', p)));
+    await this.deletePicked();
+    // 删完后把本区残余的勾选清掉（另一区保留）
+    this.state.picked = (this.state.picked || []).filter(k => k.indexOf('s:') !== 0);
+    this.renderContent();
+  },
+
   async deletePicked() {
     if (!this.isTeacher()) return;
     const picked = this._pickedGroups();
@@ -4417,10 +4505,30 @@ const App = {
       await Api.saveStudents(this.state.students);
     }
 
+    // 班级彻底消失的完整处方（老师 2026-10-15：「写定了没有了就是没有了，
+    // 不要再出现了」）——四步一个都不能少，顺序也不能换：
+    //   1) 先把墓碑写进本机（deletedClasses）
+    //   2) 本机名录里立刻删掉这个班
+    //   3) 把本机名录落盘
+    //   4) **等**墓碑和名录一起推上云（await，不能再"挂着不管"）
+    // 之前第 4 步是 fire-and-forget 的 syncToCloud()：一旦它失败（老师那会儿
+    // 正没信号），云端 blob 里旧班级还在、墓碑却没上去，于是下次任何一台设备
+    // 同步都会把「B班 / A班」原样拉回来 —— 这就是"删了又出来"的病根。
     this.state.classes = this.state.classes.filter(c => c !== cls);
-    await Api.tombstoneClass(cls);          // before the sync, or it comes back
-    await Api.saveClasses(this.state.classes);
-    this.syncToCloud();
+    await Api.tombstoneClass(cls);          // 1) 本机墓碑，必须在 push 之前
+    await Api.saveClasses(this.state.classes);  // 3) 本机名录落盘
+    if (!Api.cloudAvailable()) { this.renderContent(); return; }
+    const res = await Api.syncUp(this.state.students, this.state.classes, {
+      authoritative: true,
+    });
+    if (!res.ok) {
+      // 墓碑没推上云 —— 必须让老师知道，否则这个班下次还会冒出来
+      this.showToast('⚠️ 班级已在本机删除，但没同步上云（网络问题）。请点「🔄 立即同步」重试', 'warn');
+    } else {
+      this.state.students = res.students;
+      this.state.classes = res.classes;
+      this.showToast('✅ 班级"' + cls + '"已删除，不会再出现');
+    }
     this.renderContent();
   },
 

@@ -603,9 +603,40 @@ console.log('=== 7. 老师端批量管理：全选 / 反选 / 一键删除（学
      '「全选学生」不顺手把那批旧号码也勾上（老师想删孩子时不该误动几十个旧记录）');
   let html = T.App.renderStudents();
   ok((html.match(/pick-box[^>]*checked/g) || []).length >= 3, '学生的勾选框都进到选中态（全选真的生效了）');
-  ok(html.indexOf('全选学生（3）') >= 0, '批量条写清了这次会全选几个学生');
   T.App.pickAll(false);
   ok((T.App.state.picked || []).length === 0, '再点一次全选 → 全部取消');
+
+  // ---- 老师 2026-10-15：待分配 / 已分配 两区各有自己的全选 + 反选 + 一键删除 ----
+  // 三个学生里：s9 新同学、s11 马帅 是待分配；s10 张子皓 是已分配。
+  T.App.pickAllPending(true);
+  picked = T.App.state.picked || [];
+  ok(picked.length === 2 && T.App.isPicked('s', '13500135000') && T.App.isPicked('s', '17763891729'),
+     '「全选待分配」只勾上 2 个待分配的学生');
+  ok(!T.App.isPicked('s', STUDENT), '「全选待分配」不碰已分配的学生');
+  html = T.App.renderStudents();
+  ok(html.indexOf('全选待分配（2）') >= 0, '待分配区的批量条写清了这一区几个人');
+  ok(html.indexOf('全选已分配（1）') >= 0, '已分配区的批量条也写清了这一区几个人');
+  // 反选：把不想删的点掉 —— 这里在 2 个待分配里反选，应该变成「一个都不勾」
+  T.App.invertPending();
+  picked = T.App.state.picked || [];
+  ok(picked.filter(k => k.indexOf('s:') === 0).length === 0,
+     '对待分配区反选：刚全勾的 2 个全部取消（反选真的反了）');
+  // 再反选一次 → 又全勾上
+  T.App.invertPending();
+  picked = T.App.state.picked || [];
+  ok(picked.filter(k => k.indexOf('s:') === 0).length === 2, '再反选一次 → 又变回全勾');
+  // 单点取消其中一个（老师原话：「再反选一下复选框，也就是不点，那这个学生就会被留下」）
+  T.App.togglePick('s', '17763891729', false);
+  ok(!T.App.isPicked('s', '17763891729') && T.App.isPicked('s', '13500135000'),
+     '手动点掉马帅的 ☐ → 他不会在待分配一键删除里被带走');
+  T.App.clearPicked();
+
+  // ---- 已分配区自己的全选 ----
+  T.App.pickAllApproved(true);
+  ok(T.App.isPicked('s', STUDENT) && T.App.state.picked.length === 1,
+     '「全选已分配」只勾上那 1 个已分配的学生');
+  T.App.clearPicked();
+  ok((T.App.state.picked || []).length === 0, '「清空勾选」把所有学生勾选清掉');
 
   // ---- 多选两个学生，一次删掉（老师要的"一次性多删几个"）----
   T.App.togglePick('s', '13500135000');

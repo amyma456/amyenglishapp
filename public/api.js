@@ -338,9 +338,12 @@ const CloudSync = {
 
     // Drop whatever is tombstoned — this is the delete that used to come
     // straight back on the next merge.
+    // 同理：挂在已删班级上的学生，推之前先把班级字段抹掉，否则云端 blob
+    // 里又会出现这个名字（见 down() 的同一处说明）。
     const mergedStudents = [];
     (localStudents || []).forEach(s => {
       if (!s || !s.phone || tomb.phones.has(s.phone)) return;
+      if (s.class && tomb.classes.has(s.class)) { s.class = ''; s.approved = false; }
       mergedStudents.push(s);
     });
 
@@ -348,6 +351,7 @@ const CloudSync = {
       cloudData.students.forEach(cs => {
         if (!cs || !cs.phone) return;
         if (tomb.phones.has(cs.phone)) return;
+        if (cs.class && tomb.classes.has(cs.class)) return;   // 死班级：不采纳
         const local = mergedStudents.find(s => s.phone === cs.phone);
         if (!local) {
           mergedStudents.push({
@@ -415,6 +419,16 @@ const CloudSync = {
 
     const tomb = this._tombstones(cloudData, opts.tombstones);
 
+    // 已删除的班级名是**全局事实**：任何一个学生记录里若还挂着这个名字
+    // （别的设备刚改的、云端 blob 的旧副本、或学生端推上来的旧快照），
+    // 都必须当场抹成"未分配"，否则这个班会在班级列表里阴魂不散地冒回来。
+    // 老师 2026-10-15：「写定了没有了就是没有了，不要再出现了」。
+    const deadClass = (c) => c && tomb.classes.has(c);
+    const scrubClass = (s) => {
+      if (s && deadClass(s.class)) { s.class = ''; s.approved = false; }
+      return s;
+    };
+
     // A deletion made on another device arrives as a tombstone. Apply it
     // here too, otherwise this device keeps showing the deleted record.
     if (tomb.phones.size) {
@@ -427,17 +441,21 @@ const CloudSync = {
       for (let i = localClasses.length - 1; i >= 0; i--) {
         if (localClasses[i] && tomb.classes.has(localClasses[i])) localClasses.splice(i, 1);
       }
+      localStudents.forEach(scrubClass);
     }
 
     if (cloudData.students && Array.isArray(cloudData.students)) {
       cloudData.students.forEach(cs => {
         if (!cs || !cs.phone) return;
         if (tomb.phones.has(cs.phone)) return;
+        if (deadClass(cs.class)) return;      // 学生还挂在已删班级上：整条不采纳
         const local = localStudents.find(s => s.phone === cs.phone);
         if (local) {
           local.name = cs.name || local.name;
-          if (cs.class !== undefined) local.class = cs.class;
-          if (cs.approved !== undefined) local.approved = cs.approved;
+          if (!deadClass(cs.class)) {
+            if (cs.class !== undefined) local.class = cs.class;
+            if (cs.approved !== undefined) local.approved = cs.approved;
+          }
           local.registeredAt = cs.registeredAt || local.registeredAt;
         } else {
           localStudents.push({
@@ -445,8 +463,8 @@ const CloudSync = {
             name: cs.name,
             phone: cs.phone,
             parentPhone: cs.phone,
-            class: cs.class || '',
-            approved: cs.approved || false,
+            class: deadClass(cs.class) ? '' : (cs.class || ''),
+            approved: deadClass(cs.class) ? false : (cs.approved || false),
             registeredAt: cs.registeredAt || new Date().toISOString(),
           });
         }
@@ -595,6 +613,10 @@ const Api = {
 
   hasTombstonePhone(phone) {
     return (Store.doc().deletedPhones || []).indexOf(phone) >= 0;
+  },
+
+  hasTombstoneClass(cls) {
+    return (Store.doc().deletedClasses || []).indexOf(cls) >= 0;
   },
 
   async saveClasses(classes) {                       // -> REPLACE classes

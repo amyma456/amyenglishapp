@@ -502,6 +502,68 @@ console.log('\n=== 10. 云端暂时连不上：本地删除不许被冲掉，恢
   ok((net.blob.deletedPhones || []).indexOf('13900139400') >= 0, '墓碑也一起推了上去');
 }
 
+// ===========================================================================
+console.log('\n=== 11. 老师 2026-10-15 报的：删掉的班级（B班 / X班）又自己冒出来 ===');
+// 病根有两处：
+//   ① deleteClass 以前用 fire-and-forget 的 syncToCloud() 推墓碑 —— 那一下
+//      要是没成功，云端 blob 里旧班级还在、墓碑却没上去，下次同步就拉回来了。
+//   ② 只要还有**学生记录**挂着这个名字（别台设备的旧快照、学生端推上来的
+//      旧数据），并集合并就会把这个班重新造出来。
+{
+  const net = makeNet(seedCloud());
+  const T = await asTeacher(makeDevice(net, '老师'));
+  await T.App.syncFromCloud();
+
+  // ① 删除必须**等**墓碑推上云，不再是挂着不管
+  net.unreachable = true;
+  T.ask(true);
+  await T.App.deleteClass('B班');
+  ok(T.Api.hasTombstoneClass('B班'),
+     '① 断网时本机墓碑也写下来了（不会随页面关掉就丢）');
+  ok(T.App.state.classes.indexOf('B班') < 0, '① 本机班级列表里当场就没了');
+  ok((net.blob.deletedClasses || []).indexOf('B班') < 0,
+     '① 断网时云端墓碑当然还没上去（这正是以前会复活的时刻）');
+
+  net.unreachable = false;               // 网络恢复
+  await T.App.syncToCloud();             // 手动"立即同步"
+  ok((net.blob.deletedClasses || []).indexOf('B班') >= 0, '① 联网后墓碑终于推上云');
+
+  // 反复同步都不能复活
+  for (let i = 0; i < 3; i++) { await T.App.syncFromCloud(); await T.App.syncToCloud(); }
+  ok(T.App.state.classes.indexOf('B班') < 0, '① 反复同步，B班 不再出现');
+  ok(cloudClasses(net).indexOf('B班') < 0, '① 云端也不会被并集捞回来');
+}
+{
+  const net = makeNet(seedCloud());
+  const T = await asTeacher(makeDevice(net, '老师'));
+  await T.App.syncFromCloud();
+
+  T.ask(true, false);                    // 删班级=是，同时删学生=否（学生留着变待分配）
+  await T.App.deleteClass('X班');
+  ok(T.App.state.classes.indexOf('X班') < 0, '② X班 删掉');
+
+  // ② 模拟"另一台设备 / 学生端"带着旧数据上来：云端 blob 里仍有班级名，
+  //    并且有学生挂在 X班 上（旧快照残留）。
+  net.blob.classes = (net.blob.classes || []).concat(['X班']);   // 旧副本把班级塞回来
+  net.blob.students = (net.blob.students || []).map(s =>
+    s.phone === '18408439432' ? Object.assign({}, s, { class: 'X班', approved: true }) : s);
+  // 本机也制造一份"学生还挂着已删班级"的脏状态（老设备同步过来的样子）
+  const dirty = T.App.state.students.find(s => s.phone === '18408439432');
+  if (dirty) { dirty.class = 'X班'; dirty.approved = true; }
+
+  await T.App.syncFromCloud();           // 拉一次：旧数据想借学生把班级带回来
+  ok(T.App.state.classes.indexOf('X班') < 0,
+     '② 学生身上挂着已删班级，也不能把这个班带回来');
+  const m = find(T, '18408439432');
+  ok(m && m.class === '', '② 该学生被自动抹成未分配（而不是保留一个不存在的班级）');
+  ok(m && m.approved === false, '② 同时退回"未批准"，跟他没被分配过一样');
+
+  await T.App.syncToCloud();
+  for (let i = 0; i < 3; i++) { await T.App.syncFromCloud(); await T.App.syncToCloud(); }
+  ok(cloudClasses(net).indexOf('X班') < 0, '② 云端最终也清掉了 X班');
+  ok(T.App.state.classes.indexOf('X班') < 0, '② 来回同步都不复活');
+}
+
 console.log('\n' + (fail === 0 ? '全部通过 ✅' : ('有 ' + fail + ' 项没通过 ❌')));
 process.exit(fail === 0 ? 0 : 1);
 
