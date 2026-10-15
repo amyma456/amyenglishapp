@@ -39,6 +39,9 @@ const App = {
     // 被老师「收起」的拦截号码（纯本机界面偏好，不进云端）：这些人**仍然被拦着**，
     // 只是不再占着学生管理页。想看 / 想放行时随时展开回来。
     showHiddenGated: false,
+    // v128：学生管理页面精简后，「更多」（同步 / 被删名单 / 入班申请）默认收起。
+    // 老师 2026-10-15：「这个页面调了好多次，你给调得太复杂了，搞最简单的。」
+    showMore: false,
   },
 
   async init() {
@@ -3697,211 +3700,188 @@ const App = {
   },
 
   // ===== Teacher: Student Management =====
+  //
+  // 老师 2026-10-15：「这块还是太复杂了。显示所有的学生已分配的放在一起，未分配的
+  // 都显示到一起，然后点删除就能删除掉，就直接从列表里消失。然后他们要再加入的话，
+  // 就需要老师验证才能通过 —— 这个规则永远不变。这个页面调了好多次，你给调得太
+  // 复杂了，搞最简单的。」
+  //
+  // 所以页面只剩两件事：
+  //   ① 未分配（一群人）  —— 一个全选、一个删除
+  //   ② 已分配（一群人）  —— 一个全选、一个删除
+  // 其余（被拦截名单、重新入班申请、同步状态、班级数）统统折进最下面的「⚙️ 更多」，
+  // 平时不展开、不占地方。功能一个没少，只是不再挤在孩子名单前面。
+  //
+  // 删除的规则（老师反复确认过的，**永远不变**）：
+  //   从名单删掉 + 写进后台拦截名单 ⇒ 他再次登录必须经老师同意。
+  //   顺序是「先落闸、验回来、再删人」（见 deletePicked），不许反过来。
   renderStudents() {
-    let html = '<h2 style="color:var(--primary-dark);margin-bottom:12px">👥 学生管理</h2>';
-    html += '<div class="flex-between mb-16">';
-    html += '<div class="stat-row" style="flex:1">';
-    html += '<div class="stat-box"><div class="num">' + this.state.students.length + '</div><div class="label">总注册</div></div>';
-    // Newest first — the student who just requested to join appears at the
-    // very top instead of at the bottom of the list.
-    const pending = this.state.students.filter(s => !s.approved || !s.class)
+    const all = this.state.students || [];
+    // 未分配 = 还没班级（或还没批准）；已分配 = 有班级且已批准。
+    // 未分配按注册时间倒序，刚申请的人排最上面，老师一眼能看到。
+    const pending = all.filter(s => !s.approved || !s.class)
       .slice()
       .sort((a, b) => new Date(b.registeredAt || 0) - new Date(a.registeredAt || 0));
-    html += '<div class="stat-box"><div class="num" style="color:var(--warning)">' + pending.length + '</div><div class="label">待分配</div></div>';
-    const approved = this.state.students.filter(s => s.approved && s.class);
-    html += '<div class="stat-box"><div class="num" style="color:var(--success)">' + approved.length + '</div><div class="label">已分配</div></div>';
-    html += '<div class="stat-box"><div class="num">' + this.state.classes.length + '</div><div class="label">班级数</div></div>';
-    html += '</div>';
-    html += '<button class="btn btn-outline btn-sm" onclick="App.manualSync()">🔄 立即同步</button>';
-    html += '</div>';
+    const approved = all.filter(s => s.approved && s.class);
 
-    html += '<div class="card mb-16" style="background:var(--success-light);border:1px solid var(--success)">';
-    html += '<div class="fs-12" style="color:var(--success)">✅ 云端同步：' + this._syncStatusText() + '（每15秒自动刷新，学生申请加入会立刻弹出提醒）</div>';
-    html += '</div>';
+    let html = '<h2 style="color:var(--primary-dark);margin-bottom:4px">👥 学生管理</h2>';
+    html += '<p class="text-sub fs-12 mb-16">点<b>全选</b>→点<b>删除</b>，人就从列表里没了。'
+         + '被删的人再登录，必须你点同意才能进来（这条永远不变）。</p>';
 
-    // 🚫 被拦在门外的人：后台移出名单。规则是永久的 —— 老师删过谁，谁再次
-    // 登录就必须老师同意。名单在这里显示，老师才不会以为「加了名字就能进」。
-    // 名单里可能躺着几十个早年的测试号，所以默认只列「还在这孩子名单里的」
-    // 和「刚申请过的」，其余折叠起来（老师想翻还是能翻到）。
-    const split = this._gatedSplit();
-    const gated = split.listed;
-    const gatedAll = split.gatedAll;
-    const pickCount = (this.state.picked || []).length;
-
-    // 批量管理条 —— 老师 2026-10-15 要的是「两区各有自己的全选 + 反选 + 一键删除」：
-    //   「待分配的学生前面搞一个全选，已分配的学生前面搞一个全选。这样的话，
-    //     作为老师就可以一键删除待分配的学生，然后也可以一键删除已分配的学生。
-    //     点了全选之后，每个学生前面还有一个小复选框，再反选一下复选框，
-    //     也就是不点，那这个学生就会被留下。」
-    // 所以「全选」分两处：下面待分配区、已分配区各一条，互不干扰。
-    // 这里的顶部条只保留一个「跨区总删除」的入口，方便看总数。
-    if (this.state.students.length > 0) {
-      const pickedStudents = (this.state.picked || []).filter(k => k.indexOf('s:') === 0).length;
-      html += '<div class="pick-card">';
-      html += '<div class="pick-tools">';
-      html += '<button class="btn btn-outline btn-sm" onclick="App.deletePicked()">🗑️ 删除全部选中（' + pickedStudents + '）</button>';
-      html += '<button class="btn btn-outline btn-sm" onclick="App.clearPicked()">✖️ 清空勾选</button>';
-      html += '</div>';
-      html += '<div class="pick-count">下面<b>待分配</b>和<b>已分配</b>两区各自有「全选 / 反选 / 一键删除」，各选各的、互不影响。'
-           + (gatedAll.length > 0 ? '再下面「已被拦截登录」那一区也有自己的一套。' : '')
-           + '</div>';
-      html += '</div>';
-    }
-
-    if (gatedAll.length > 0) {
-      const pickedGated = (this.state.picked || []).filter(k => k.indexOf('g:') === 0).length;
-      const allGatedPicked = pickedGated > 0 && pickedGated === gatedAll.length;
-      html += '<h3 style="color:var(--warning);margin:16px 0 8px">🚫 已被拦截登录（' + gatedAll.length + '人）</h3>';
-      html += '<p class="text-sub fs-12 mb-8">这些号码被删除/移出过，登录会被拦住，必须先申请并经你同意。'
-           + '想让他们进来就点「🔓 放行」；这个号码不要了、想从名单里彻底清掉，就点「🗑️ 删除」</p>';
-      // 批量条：全选 → 反选 → 一键删除。老师 2026-10-14 原话：
-      // 「有一个全选的功能……点了全选之后，把不用的给反选，也就是说，
-      //   选删除的（人），有些不删除的就不要点」「点了全选之后就显示一键删除，
-      //   然后点是否，我们就可以确认是或者否，删除了之后就不要再存在了」
-      html += '<div class="pick-card">';
-      html += '<div class="pick-tools">';
-      html += '<label class="pick-label"><input type="checkbox" class="pick-box" '
-           + (allGatedPicked ? 'checked ' : '')
-           + 'onclick="App.pickAllGated(this.checked)"> 全选（' + gatedAll.length + '）</label>';
-      html += '<button class="btn btn-outline btn-sm" onclick="App.invertGated()">🔄 反选</button>';
-      html += '<button class="btn btn-outline btn-sm" onclick="App.deletePicked()">🗑️ 一键删除（' + pickedGated + '）</button>';
-      html += '</div>';
-      html += '<div class="pick-count">全选会把这一区 <b>' + gatedAll.length + ' 个号码</b>全勾上（含折叠和已收起的）；'
-           + '不想删的先点它的 ☐ 取消勾选，或者点「🔄 反选」。<br>'
-           + '「删除」= 从这个拦截名单里彻底清掉：删完就不在列表里了，该号码也不再被拦（重新注册会像新学生一样进「待分配」）。</div>';
-      html += '</div>';
-      html += '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px">';
-      html += '<button class="btn btn-primary btn-sm" onclick="App.unblockPicked()">🔓 放行选中（' + pickedGated + '）</button>';
-      html += '<button class="btn btn-outline btn-sm" onclick="App.hideAllGated()">🧹 收起不删（'
-           + (split.restCount + split.tuckedCount) + '）</button>';
-      html += '</div>';
-      gated.forEach(g => { html += this._gatedCardHtml(g, false); });
-      if (split.restCount > 0) {
-        const showAll = !!this.state.showAllGated;
-        html += '<button class="btn btn-outline btn-sm" style="margin-bottom:8px" onclick="App.toggleGatedRest()">'
-             + (showAll ? '收起其它 ' + split.restCount + ' 个已拦截号码' : '显示其它 ' + split.restCount + ' 个已拦截号码（不在你的名单里）')
-             + '</button>';
-      }
-      // 被老师收起的号码：仍然拦着，只是不在页面上占位置。想看 / 想放行随时展开。
-      if (split.tuckedCount > 0) {
-        html += '<div style="margin:8px 0">';
-        html += '<button class="btn btn-outline btn-sm" onclick="App.toggleHiddenGated()">'
-             + (this.state.showHiddenGated ? '收起「已收起的号码」' : '👁️ 展开已收起的号码（' + split.tuckedCount + '）')
-             + '</button>';
-        html += '<button class="btn btn-outline btn-sm" style="margin-left:6px" onclick="App.restoreHiddenGated()">↩️ 全部放回页面</button>';
-        html += '</div>';
-        if (this.state.showHiddenGated) {
-          html += '<p class="text-sub fs-12 mb-8">下面这些是你收起来的号码 —— <b>他们仍然被拦着</b>，'
-               + '登录一样要你同意。点「🔓 放行」让他们回来，点「🗑️ 删除」就从名单里彻底清掉。</p>';
-          split.tucked.forEach(g => { html += this._gatedCardHtml(g, true); });
-        }
-      }
-    }
-
-    // Re-join applications from removed students
-    const joinReqs = this.state.joinRequests || [];
-    if (joinReqs.length > 0) {
-      html += '<h3 style="color:var(--primary-dark);margin:16px 0 8px">📮 重新入班申请（' + joinReqs.length + '人）</h3>';
-      html += '<p class="text-sub fs-12 mb-8">这些学生曾被移出班级，正在申请重新加入</p>';
-      joinReqs.forEach(r => {
-        html += '<div class="assign-card" style="border-color:var(--primary)">';
-        html += '<div class="ac-info">';
-        html += '<div><span class="ac-name">' + (r.name||'-') + '</span> <span class="ac-phone">' + (r.phone||'-') + '</span></div>';
-        html += '<span class="badge badge-pending">申请重新加入</span>';
-        html += '</div>';
-        html += '<div class="ac-actions">';
-        html += '<button class="btn btn-primary btn-sm" onclick="App.approveJoin(\'' + r.id + '\')">✅ 同意</button>';
-        html += '<button class="btn btn-outline btn-sm" onclick="App.denyJoin(\'' + r.id + '\')">✖️ 拒绝</button>';
-        html += '</div>';
-        html += '<div class="fs-12 text-sub mt-4">申请时间：' + (r.created_at ? new Date(r.created_at).toLocaleString('zh-CN') : '-') + '</div>';
-        html += '</div>';
-      });
-    }
-
-    // Pending students (need class assignment)
-    if (pending.length > 0) {
+    // ===== ① 未分配 =====
+    html += '<h3 style="color:var(--warning);margin:0 0 8px">⏳ 未分配（' + pending.length + '人）</h3>';
+    if (!pending.length) {
+      html += '<div class="card text-center text-sub fs-12" style="padding:14px">暂时没有未分配的学生</div>';
+    } else {
       const pendPicked = pending.filter(s => this.isPicked('s', s.phone)).length;
-      html += '<h3 style="color:var(--warning);margin-bottom:8px">⏳ 待分配学生（' + pending.length + '人）</h3>';
-      html += '<p class="text-sub fs-12 mb-8">这些学生已注册，等待你分配班级</p>';
-      // 待分配区专属批量条：全选 → 反选 → 一键删除这一区
-      html += '<div class="pick-card">';
-      html += '<div class="pick-tools">';
-      html += '<label class="pick-label"><input type="checkbox" class="pick-box" '
-           + (pendPicked > 0 && pendPicked === pending.length ? 'checked ' : '')
-           + 'onclick="App.pickAllPending(this.checked)"> 全选待分配（' + pending.length + '）</label>';
-      html += '<button class="btn btn-outline btn-sm" onclick="App.invertPending()">🔄 反选</button>';
-      html += '<button class="btn btn-outline btn-sm" onclick="App.deletePickedPending()">🗑️ 一键删除待分配（' + pendPicked + '）</button>';
-      html += '</div>';
-      html += '<div class="pick-count">「全选」会把这一区 <b>' + pending.length + ' 人</b>全勾上；'
-           + '想留下谁，就点掉他前面的 ☐（不勾的不会被删），或者点「🔄 反选」。</div>';
-      html += '</div>';
-      pending.forEach((s, i) => {
-        html += '<div class="assign-card"' + (i === 0 ? ' id="pending-card-top"' : '') + '>';
+      html += this._simplePickBar('pending', '未分配', pending.length, pendPicked);
+      pending.forEach(s => {
+        html += '<div class="assign-card">';
         html += '<div class="ac-info">';
-        html += '<label class="pick-label ac-pick">';
-        html += '<input type="checkbox" class="pick-box" ' + (this.isPicked('s', s.phone) ? 'checked ' : '')
-             + 'onclick="App.togglePick(\'s\',\'' + String(s.phone).replace(/'/g, "\\'") + '\')">';
-        html += '<span class="ac-grow"><span class="ac-name">' + s.name + '</span> <span class="ac-phone">' + (s.phone||'-') + '</span></span>';
-        html += '</label>';
-        html += '<span class="badge badge-pending">待分配</span>';
-        // 名字在名单上 ≠ 能登录。被后台拦着的，这里必须说清楚。
-        if ((this.state.removedPhones || []).some(g => g.phone === s.phone)) {
-          html += '<span class="badge badge-pending">🚫 登录被拦</span>';
-        }
+        html += this._studentPickLabel(s);
         html += '</div>';
         html += '<div class="ac-actions">';
-        // Class assignment dropdown
         html += '<select id="assign-sel-' + s.id + '" style="padding:4px 8px;border-radius:6px;border:1.5px solid #FFE0CC;font-size:12px">';
         html += '<option value="">-- 选择班级 --</option>';
-        this.state.classes.forEach(c => {
-          html += '<option value="' + c + '">' + c + '</option>';
-        });
+        (this.state.classes || []).forEach(c => { html += '<option value="' + c + '">' + c + '</option>'; });
         html += '</select>';
         html += '<button class="btn btn-primary btn-sm" onclick="App.assignStudent(\'' + s.id + '\')">✅ 分配班级</button>';
-        html += '<button class="btn btn-outline btn-sm" onclick="App.rejectStudent(\'' + s.id + '\')">🗑️ 删除</button>';
         html += '</div>';
-        html += '<div class="fs-12 text-sub mt-4">注册时间：' + (s.registeredAt ? new Date(s.registeredAt).toLocaleString('zh-CN') : '-') + '</div>';
         html += '</div>';
       });
     }
 
-    // Approved students table
-    if (approved.length > 0) {
+    // ===== ② 已分配 =====
+    html += '<h3 style="color:var(--success);margin:20px 0 8px">✅ 已分配（' + approved.length + '人）</h3>';
+    if (!approved.length) {
+      html += '<div class="card text-center text-sub fs-12" style="padding:14px">暂时没有已分配的学生</div>';
+    } else {
       const apprPicked = approved.filter(s => this.isPicked('s', s.phone)).length;
-      html += '<h3 style="color:var(--success);margin:16px 0 8px">✅ 已分配学生（' + approved.length + '人）</h3>';
-      // 已分配区专属批量条：全选 → 反选 → 一键删除这一区
-      html += '<div class="pick-card">';
-      html += '<div class="pick-tools">';
-      html += '<label class="pick-label"><input type="checkbox" class="pick-box" '
-           + (apprPicked > 0 && apprPicked === approved.length ? 'checked ' : '')
-           + 'onclick="App.pickAllApproved(this.checked)"> 全选已分配（' + approved.length + '）</label>';
-      html += '<button class="btn btn-outline btn-sm" onclick="App.invertApproved()">🔄 反选</button>';
-      html += '<button class="btn btn-outline btn-sm" onclick="App.deletePickedApproved()">🗑️ 一键删除已分配（' + apprPicked + '）</button>';
-      html += '</div>';
-      html += '<div class="pick-count">「全选」会把这一区 <b>' + approved.length + ' 人</b>全勾上；'
-           + '想留下谁，就点掉他前面的 ☐（不勾的不会被删），或者点「🔄 反选」。'
-           + '删除 = 从名单移除，他们再次登录要经你同意。</div>';
-      html += '</div>';
-      html += '<div class="card"><table class="data-table"><thead><tr><th style="width:34px"></th><th>备注名</th><th>班级</th><th>手机号</th><th>注册时间</th><th>操作</th></tr></thead><tbody>';
+      html += this._simplePickBar('approved', '已分配', approved.length, apprPicked);
       approved.forEach(s => {
-        const barred = (this.state.removedPhones || []).some(g => g.phone === s.phone);
-        html += '<tr><td style="width:34px"><input type="checkbox" class="pick-box" '
-             + (this.isPicked('s', s.phone) ? 'checked ' : '')
-             + 'onclick="App.togglePick(\'s\',\'' + String(s.phone).replace(/'/g, "\\'") + '\')"></td>';
-        html += '<td>' + s.name + (barred ? ' 🚫' : '') + '</td><td>' + (s.class||'-') + '</td><td>' + (s.phone||'-') + '</td>';
-        html += '<td class="fs-12">' + (s.registeredAt ? new Date(s.registeredAt).toLocaleDateString('zh-CN') : '-') + '</td>';
-        html += '<td><button class="btn btn-outline btn-sm" onclick="App.removeStudent(\'' + s.id + '\')">移除</button>'
-             + (barred ? ' <button class="btn btn-primary btn-sm" onclick="App.unblockStudent(\'' + String(s.phone).replace(/'/g, "\\'") + '\', \'' + String(s.name).replace(/'/g, "\\'") + '\')">🔓 放行</button>' : '')
-             + '</td></tr>';
+        html += '<div class="assign-card">';
+        html += '<div class="ac-info">';
+        html += this._studentPickLabel(s);
+        html += '<span class="badge badge-assigned">' + (s.class || '-') + '</span>';
+        html += '</div>';
+        html += '</div>';
       });
-      html += '</tbody></table></div>';
     }
 
-    if (this.state.students.length === 0) {
-      html += '<div class="card text-center text-sub">暂无注册学生<br><span class="fs-12">学生登录后会自动出现在这里</span></div>';
+    if (!all.length) {
+      html += '<div class="card text-center text-sub" style="margin-top:16px">暂无注册学生<br>'
+           + '<span class="fs-12">学生登录后会自动出现在这里</span></div>';
     }
+
+    // ===== ⚙️ 更多：其余那些老师平时不需要看的东西 =====
+    // 按钮上只写"有几个"，让老师知道里面有没有需要处理的事，但不占用页面。
+    const nGated = (this.state.removedPhones || []).length;
+    const nJoin = (this.state.joinRequests || []).length;
+    const moreHints = [];
+    if (nJoin) moreHints.push('入班申请 ' + nJoin);
+    if (nGated) moreHints.push('被删名单 ' + nGated);
+    const moreLabel = this.state.showMore
+      ? '▲ 收起'
+      : ('⚙️ 更多' + (moreHints.length ? '（' + moreHints.join('、') + '）' : ''));
+    html += '<div id="more-box" style="margin-top:24px">';
+    html += '<button class="btn btn-outline btn-sm" onclick="App.toggleMore()">' + moreLabel + '</button>';
+    if (this.state.showMore) {
+      html += '<div class="card" style="margin-top:8px">';
+      html += '<div class="fs-12" style="color:var(--text-sub);margin-bottom:8px">'
+           + '✅ 云端同步：' + this._syncStatusText() + '（每15秒自动刷新）</div>';
+      html += '<button class="btn btn-outline btn-sm" onclick="App.manualSync()">🔄 立即同步</button>';
+      html += '<span class="fs-12 text-sub" style="margin-left:8px">共注册 ' + all.length
+           + ' 人 · ' + (this.state.classes || []).length + ' 个班级</span>';
+      html += '</div>';
+      html += this._moreJoinRequestsHtml();
+      html += this._moreGatedHtml();
+    }
+    html += '</div>';
+
     return html;
   },
+
+  // 两区共用的那一行：全选 ☐ + 删除按钮。就这两样，老师要的就是这个。
+  _simplePickBar(scope, label, total, pickedN) {
+    const allPicked = pickedN > 0 && pickedN === total;
+    let html = '<div class="pick-card">';
+    html += '<div class="pick-tools">';
+    html += '<label class="pick-label"><input type="checkbox" class="pick-box" '
+         + (allPicked ? 'checked ' : '')
+         + 'onclick="App.pickAllIn(this.checked,\'' + scope + '\')"> 全选（' + total + '）</label>';
+    html += '<button class="btn btn-outline btn-sm" onclick="App.deleteInScope(\'' + scope + '\')">'
+         + '🗑️ 删除选中（' + pickedN + '）</button>';
+    html += '</div>';
+    html += '<div class="pick-count">不想删谁，就点掉他前面的 ☐ —— 没勾的不会被删。</div>';
+    html += '</div>';
+    return html;
+  },
+
+  // 学生卡片左边那个「☐ + 名字 + 手机号」。两区长得一样。
+  _studentPickLabel(s) {
+    const phoneJs = String(s.phone || '').replace(/'/g, "\\'");
+    const barred = (this.state.removedPhones || []).some(g => g.phone === s.phone);
+    let html = '<label class="pick-label ac-pick">';
+    html += '<input type="checkbox" class="pick-box" ' + (this.isPicked('s', s.phone) ? 'checked ' : '')
+         + 'onclick="App.togglePick(\'s\',\'' + phoneJs + '\')">';
+    html += '<span class="ac-grow"><span class="ac-name">' + s.name + '</span> '
+         + '<span class="ac-phone">' + (s.phone || '-') + '</span></span>';
+    html += '</label>';
+    if (barred) html += '<span class="badge badge-pending">🚫 需你同意</span>';
+    return html;
+  },
+
+  toggleMore() { this.state.showMore = !this.state.showMore; this.renderContent(); },
+
+  // 「更多」里的：重新入班申请
+  _moreJoinRequestsHtml() {
+    const reqs = this.state.joinRequests || [];
+    if (!reqs.length) return '';
+    let html = '<h3 style="color:var(--primary-dark);margin:16px 0 8px">📮 申请重新入班（' + reqs.length + '人）</h3>';
+    html += '<p class="text-sub fs-12 mb-8">这些学生被删过，正在申请回来。同意了他才能继续用。</p>';
+    reqs.forEach(r => {
+      html += '<div class="assign-card" style="border-color:var(--primary)">';
+      html += '<div class="ac-info">';
+      html += '<div><span class="ac-name">' + (r.name || '-') + '</span> <span class="ac-phone">' + (r.phone || '-') + '</span></div>';
+      html += '<span class="badge badge-pending">申请重新加入</span>';
+      html += '</div>';
+      html += '<div class="ac-actions">';
+      html += '<button class="btn btn-primary btn-sm" onclick="App.approveJoin(\'' + r.id + '\')">✅ 同意</button>';
+      html += '<button class="btn btn-outline btn-sm" onclick="App.denyJoin(\'' + r.id + '\')">✖️ 拒绝</button>';
+      html += '</div>';
+      html += '</div>';
+    });
+    return html;
+  },
+
+  // 「更多」里的：被删过的号码名单。只保留「放行」和「删除」两件事，
+  // 不再有全选/反选/收起那一堆 —— 这块平时没人动。
+  _moreGatedHtml() {
+    const gatedAll = this.state.removedPhones || [];
+    if (!gatedAll.length) return '';
+    let html = '<h3 style="color:var(--warning);margin:16px 0 8px">🚫 被删过的号码（' + gatedAll.length + '）</h3>';
+    html += '<p class="text-sub fs-12 mb-8">这些人登录会被拦住，必须你同意。'
+         + '点「🔓 放行」让他以后不用验证；点「🗑️ 删除」就彻底清掉这个号码。</p>';
+    gatedAll.forEach(g => {
+      const inRoster = (this.state.students || []).find(s => s.phone === g.phone);
+      const name = (inRoster && inRoster.name) || g.name || '-';
+      const phoneJs = String(g.phone).replace(/'/g, "\\'");
+      const nameJs = String(name).replace(/'/g, "\\'");
+      html += '<div class="assign-card" style="border-color:var(--warning)">';
+      html += '<div class="ac-info">';
+      html += '<span class="ac-grow"><span class="ac-name">' + name + '</span> '
+           + '<span class="ac-phone">' + (g.phone || '-') + '</span></span>';
+      html += '<span class="badge badge-pending">🚫 需你同意才能登录</span>';
+      html += '</div>';
+      html += '<div class="ac-actions">';
+      html += '<button class="btn btn-primary btn-sm" onclick="App.unblockStudent(\'' + phoneJs + '\', \'' + nameJs + '\')">🔓 放行</button>';
+      html += '<button class="btn btn-outline btn-sm" onclick="App.deleteGatedOne(\'' + phoneJs + '\', \'' + nameJs + '\')">🗑️ 删除</button>';
+      html += '</div>';
+      html += '</div>';
+    });
+    return html;
+  },
+
 
   // Assign student to a class (also approves them)
   async assignStudent(sid) {
@@ -4084,6 +4064,20 @@ const App = {
   },
   invertPending() { this._invertStudentsInScope('pending'); },
   invertApproved() { this._invertStudentsInScope('approved'); },
+
+  // ===== v128：页面精简后对外只留这两件事 =====
+  // 老师 2026-10-15：「搞最简单的」。所以整个学生管理只剩「全选」+「删除」。
+  // 这两个是新名字；下面 pickAllPending / deletePickedPending 等老名字全部
+  // 保留成别名 —— 一是测试在用，二是万一别处还有调用点，不必一个个去改。
+  // scope: 'pending'（未分配）| 'approved'（已分配）
+  pickAllIn(checked, scope) {
+    if (scope === 'approved') return this.pickAllApproved(checked);
+    return this.pickAllPending(checked);
+  },
+  async deleteInScope(scope) {
+    return this._deletePickedInScope(scope);
+  },
+
   // 清空所有学生勾选（不动拦截区）
   clearPicked() {
     this.state.picked = (this.state.picked || []).filter(k => k.indexOf('s:') !== 0);
@@ -4129,10 +4123,9 @@ const App = {
   async deletePickedPending() { return this._deletePickedInScope('pending'); },
   async deletePickedApproved() { return this._deletePickedInScope('approved'); },
   async _deletePickedInScope(scope) {
-    const label = scope === 'pending' ? '待分配' : '已分配';
     const pickedInScope = this._studentsInScope(scope).filter(s => this.isPicked('s', s.phone));
     if (!pickedInScope.length) {
-      this.showToast('先用「全选' + label + '」或点前面的 ☐，选好要删的人');
+      this.showToast('先点「全选（' + this._studentsInScope(scope).length + '）」，或点掉不想删的人前面的 ☐');
       return;
     }
     // 只删本区里勾上的人，别的区就算也勾着也不动
