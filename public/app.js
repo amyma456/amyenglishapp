@@ -6358,11 +6358,23 @@ const App = {
 
   // 这句课文的参考中文。「弹原文」时用它。取不到就返回空串，此时只给
   // 分档提示、不亮参考译文。
+  //
+  // v127：完形填空的课文没有 passage_cn，唯一带中文的是题目上的
+  // explanation_cn —— 而那是**解析**不是译文（"水很干净，人们能在里面钓鱼，
+  // 用 catch（捕）。catch fish 意为捕鱼。"）。拿它当译文去和孩子说的中文做
+  // LCS 比对，分数天然偏低，没挖空的句子更是**一个字都没有** → 孩子读得再
+  // 清楚也判"出入太大"还被锁住（家长 2026-10-15 报的就是这个）。
+  // 所以现在优先取数据里逐句写好的 CLOZE_SENTENCE_CN，解析只当最后兜底。
   _clozeSentenceRefCn(m, si, sentence) {
-    // 1) 模块整体配了 passage_cn 且句数对得上 → 直接用这一句
+    if (!m) return '';
+    // 1) 专为完形填空写的逐句译文（首选，教研口径，和 _splitSentences 对齐）
+    const tbl = (typeof CLOZE_SENTENCE_CN !== 'undefined' && CLOZE_SENTENCE_CN)
+      ? CLOZE_SENTENCE_CN[m.id] : null;
+    if (tbl && tbl[si]) return tbl[si];
+    // 2) 模块整体配了 passage_cn 且句数对得上 → 直接用这一句
     const pairs = this._pairSentences(m);
     if (pairs && pairs[si]) return pairs[si].cn;
-    // 2) 这句里挖了空 → 用那个空的 explanation_cn（就是这句话的意思）
+    // 3) 这句里挖了空 → 用那个空的 explanation_cn（是解析，但总比没有强）
     const blanks = this._clozeBlanks(m).filter(function(b) {
       return sentence && sentence.indexOf(b.raw) >= 0;
     });
@@ -6370,7 +6382,7 @@ const App = {
       const q = m.questions[blanks[0].qIdx];
       if (q && q.explanation_cn) return q.explanation_cn;
     }
-    // 3) 整篇 passage_cn 只有一句、句数对不上 → 当作整篇参考给出
+    // 4) 整篇 passage_cn 只有一句、句数对不上 → 当作整篇参考给出
     if (m.passage_cn && String(m.passage_cn).length) return String(m.passage_cn);
     return '';
   },
@@ -6390,21 +6402,30 @@ const App = {
       if (btn) btn.classList.remove('reading');
       if (!out) return;
       const heard = text ? self._toSimplified(text) : '';
-      const r = refCn ? self.scoreTranslation(refCn, heard) : { score: 0, covered: 0, total: 0 };
       const slot = document.getElementById('cqtrs-result-' + mi + '-' + si);
-
-      // 三档判定：过 / 小错放过（亮原文） / 出入太大（重说）
-      const band = self._transBand(heard ? r.score : 0, !!heard);
+      // 没有参考译文就没法判分 —— 绝不能因此把孩子卡在"出入太大"里
+      // （v127：家长报的"明明说得很清楚却判没听清、也没有下一题"就是
+      //   这里的 refCn 为空导致的）。没参考 = 只要说了就算过。
+      const canScore = !!refCn;
+      const r = canScore ? self.scoreTranslation(refCn, heard)
+                         : { score: 0, covered: 0, total: 0 };
+      const band = canScore ? self._transBand(heard ? r.score : 0, !!heard)
+                            : (heard ? 'pass' : 'retry');
 
       let html = '<div class="spell-summary">';
-      html += '<div class="ss-head"><span class="ss-score">' + (heard ? r.score : '—') + '</span>'
-           + '<span class="ss-label">' + self._transBandLabel(band, r) + '</span></div>';
+      if (canScore) {
+        html += '<div class="ss-head"><span class="ss-score">' + (heard ? r.score : '—') + '</span>'
+             + '<span class="ss-label">' + self._transBandLabel(band, r) + '</span></div>';
+      } else {
+        html += '<div class="ss-head"><span class="ss-score">' + (heard ? '✓' : '—') + '</span>'
+             + '<span class="ss-label">' + (heard ? '说得不错，继续下一句' : '没听清，再说一次') + '</span></div>';
+      }
       if (heard) {
         html += '<div class="tr-block"><div class="tr-label">你说的</div>'
              + '<div class="tr-text">' + heard + '</div></div>';
       }
       // 小错 / 大错都亮原文 —— 家长："翻译错了，就出来翻译的原文"
-      if (band !== 'pass' && refCn) {
+      if (canScore && band !== 'pass' && refCn) {
         html += '<div class="tr-block"><div class="tr-label">' + (band === 'soft' ? '参考答案' : '原文（照着说一遍）')
              + '</div><div class="tr-text ref">' + refCn + '</div></div>';
       }
@@ -6418,15 +6439,22 @@ const App = {
       if (status) status.innerHTML = '';
 
       // 只有"出入太大"才锁住不放行，并让他照着原文再说一遍。
-      const passed = band !== 'hard';
-      if (!passed && slot) slot.insertAdjacentHTML('beforeend', self._retryHint(false, !!heard));
+      // 没听清也重来一次（但不算孩子的错，所以只给轻提示）。
+      const passed = !canScore ? !!heard : (band !== 'hard');
+      if (!passed && slot) {
+        slot.insertAdjacentHTML('beforeend',
+          heard ? self._retryHint(false, true) : self._retryHint(false, false));
+      }
+      // 放行时给满档分数解锁底部「下一句」；不放行时明确锁住。
       self._gateStep(passed ? self.TRANS_PASS : 0, passed);
 
-      Api.submitSpeakingScore({
-        studentId: self._myStudentId(), dayIdx: self.state.currentDay,
-        moduleIdx: mi, itemIdx: si, round: 1, type: 'translate-sentence',
-        label: shown, score: r.score, spoken: heard, source: 'asr',
-      });
+      if (canScore) {
+        Api.submitSpeakingScore({
+          studentId: self._myStudentId(), dayIdx: self.state.currentDay,
+          moduleIdx: mi, itemIdx: si, round: 1, type: 'translate-sentence',
+          label: shown, score: r.score, spoken: heard, source: 'asr',
+        });
+      }
     }, true, 'zh');
   },
 

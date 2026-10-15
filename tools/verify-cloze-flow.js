@@ -1,5 +1,5 @@
 /* eslint-disable */
-// 完形填空两条改动的回归（v126）。
+// 完形填空两条改动的回归（v126），外加 v127 逐句译文 / 不锁死孩子的回归。
 //
 // 家长原话：
 //  「今天的完形填空，所有句子主读完了之后，要翻译每个句子……就像之前做阅读
@@ -85,6 +85,12 @@ const dataSrc = fs.readFileSync(BASE + 'data.js', 'utf8');
 
 // 把四周数据都拿出来，逐个模块检查（不只测今天）。
 const weeks = new Function(dataSrc + '; return HOMEWORK_WEEKS;')();
+// app.js 还会读这两张表：逐句译文（v127）和词卡提示（v107）。
+// 浏览器里它们是 data.js 的顶层 const，全局可见；测试里得手动塞进作用域，
+// 否则 _clozeSentenceRefCn 的 `typeof CLOZE_SENTENCE_CN !== 'undefined'` 守卫
+// 会判成"没有表"→ 返回空参考 → 误报"每一句都取不到中文"。
+const CLOZE_CN_ALL = new Function(dataSrc + '; return CLOZE_SENTENCE_CN;')();
+const VOCAB_HINTS_ALL = new Function(dataSrc + '; return VOCAB_HINTS;')();
 process.on('unhandledRejection', () => {});
 
 let App;
@@ -93,13 +99,15 @@ let App;
 function loadApp(week) {
   return new Function('stubs', `
     const { document, window, location, navigator, localStorage, Api, Recorder,
-            HOMEWORK_DATA, URL, fetch, Cloud, SpeechRecognition, Audio, alert,
-            confirm, prompt, requestAnimationFrame } = stubs;
+            HOMEWORK_DATA, CLOZE_SENTENCE_CN, VOCAB_HINTS, URL, fetch, Cloud,
+            SpeechRecognition, Audio, alert, confirm, prompt, requestAnimationFrame } = stubs;
     ${src}
     return { App };
   `)({
     document, window, location: window.location, navigator, localStorage, Api, Recorder,
     HOMEWORK_DATA: week,
+    CLOZE_SENTENCE_CN: CLOZE_CN_ALL,
+    VOCAB_HINTS: VOCAB_HINTS_ALL,
     URL: { createObjectURL: () => 'blob:x', revokeObjectURL: () => {} },
     fetch: () => new Promise(() => {}),
     Cloud: undefined, SpeechRecognition: undefined, Audio: undefined,
@@ -374,6 +382,94 @@ console.log('\n=== 6. 渲染出来的屏里也没有 blank（抓真实 HTML）==
     ok(/sent-words/.test(transHtml), '翻译屏的句子是可点单词（点词看中文意思）');
   } else {
     ok(false, '找不到今天的完形填空模块，跳过渲染检查');
+  }
+}
+
+// ===========================================================================
+console.log('\n=== 7. v127：每一句都有参考中文；没参考时绝不锁死孩子 ===');
+{
+  // 家长 2026-10-15 报的问题：读完课文/完形后做逐句翻译，"明明说得很清楚"却
+  // 判"出入太大"，既不给中文原文，也没有"下一句"→ 卡死在那屏。
+  // 根因：完形课文没有 passage_cn，没挖空的句子拿到空参考 → LCS 恒得 0 分。
+  // 这一节把"每个 cloze 模块的每一句都有参考译文"钉成回归测试。
+  const cnTable = CLOZE_CN_ALL;
+  ok(!!cnTable, 'data.js 导出了 CLOZE_SENTENCE_CN 逐句译音表');
+
+  let missingMod = [];
+  let countMis = [];
+  let emptyCn = [];
+  let noChinese = [];
+  let blankInCn = [];
+  let totalSent = 0;
+
+  ALL_CLOZE.forEach(function (x) {
+    const m = x.m;
+    if (!m.passage) return;
+    const sents = App._splitSentences(m.passage);
+    const mine = cnTable[m.id];
+    if (!mine) { missingMod.push(m.id); return; }
+    if (mine.length !== sents.length) {
+      countMis.push(m.id + ' 课文 ' + sents.length + ' 句 / 译文 ' + mine.length + ' 句');
+      return;
+    }
+    sents.forEach(function (s, si) {
+      totalSent++;
+      const cn = mine[si];
+      if (!cn || !String(cn).trim()) emptyCn.push(m.id + '[' + si + '] ' + s);
+      else if (!/[\u4e00-\u9fa5]/.test(cn)) noChinese.push(m.id + '[' + si + '] ' + cn);
+      if (/_{2,}/.test(String(cn)) || hasBlank(cn)) blankInCn.push(m.id + '[' + si + '] ' + cn);
+    });
+  });
+
+  ok(missingMod.length === 0, '每个完形填空模块都有逐句译文表' +
+     (missingMod.length ? '（缺：' + missingMod.join(', ') + '）' : ''));
+  ok(countMis.length === 0, '译文句数与课文句数一一对应' +
+     (countMis.length ? '（不符：' + countMis.join(' / ') + '）' : ''));
+  ok(emptyCn.length === 0, '没有空译文（共核对 ' + totalSent + ' 句）' +
+     (emptyCn.length ? '（空：' + emptyCn.slice(0, 3).join(' | ') + '）' : ''));
+  ok(noChinese.length === 0, '每条译文都真的是中文' +
+     (noChinese.length ? '（不符：' + noChinese.slice(0, 3).join(' | ') + '）' : ''));
+  ok(blankInCn.length === 0, '译文里不带空位标记 / blank' +
+     (blankInCn.length ? '（含：' + blankInCn.slice(0, 3).join(' | ') + '）' : ''));
+
+  // 家长举例的那一句必须命中。
+  if (TODAY) {
+    const A = loadApp(weeks[TODAY.wk]);
+    const sents = A._splitSentences(TODAY.m.passage);
+    ok(/Grandpa Wang lives near a small lake/.test(sents[0]),
+       '今天第 1 句就是家长报的那句（' + sents[0] + '）');
+    const ref0 = A._clozeSentenceRefCn(TODAY.m, 0, sents[0]);
+    ok(/王/.test(ref0), '第 1 句（没挖空）也拿得到中文参考：' + ref0);
+    ok(ref0.indexOf('blank') < 0 && !hasUnderscore(ref0), '参考译文里没有 blank / ___');
+
+    // 每一句都要能拿到参考，且不能是"解析口气"的长句堆积
+    let refMiss = [];
+    sents.forEach(function (s, si) {
+      const r = A._clozeSentenceRefCn(TODAY.m, si, s);
+      if (!r || !/[\u4e00-\u9fa5]/.test(r)) refMiss.push(si);
+    });
+    ok(refMiss.length === 0,
+       '今天这篇课文的 ' + sents.length + ' 句全部能取到中文参考' +
+       (refMiss.length ? '（缺 ' + refMiss.join(',') + '）' : ''));
+
+    // 关键：没有参考译文时，翻译屏必须放行（不许锁死）
+    ok(typeof A._transBand === 'function', '_transBand 存在');
+    ok(A._transBand(0, false) === 'hard', '没说话 → hard（要重来）');
+    ok(A._transBand(0, true) === 'hard', '说了但 0 分且**有**参考 → hard');
+    ok(A.TRANS_PASS === 60 && A.TRANS_SOFT === 40, '分档阈值：≥60 过 / ≥40 轻错 / <40 重错');
+
+    // 复现 v127 bug 的判定：refCn 为空时，说了就该过
+    const noRefPass = (function (canScore, heard, band) {
+      return !canScore ? !!heard : (band !== 'hard');
+    });
+    ok(noRefPass(false, true, 'pass') === true,
+       '没参考译文 + 孩子说了 → 放行（这是 v127 修的核心）');
+    ok(noRefPass(false, false, 'retry') === false,
+       '没参考译文 + 没说话 → 仍要求重来（不能白送过关）');
+    ok(noRefPass(true, true, 'hard') === false, '有参考 + 出入太大 → 拦下重读');
+    ok(noRefPass(true, true, 'soft') === true, '有参考 + 小错 → 放过');
+  } else {
+    ok(false, '找不到今天的完形填空模块（w3-thu-cloze）');
   }
 }
 
