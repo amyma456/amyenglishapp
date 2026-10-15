@@ -169,7 +169,11 @@ async function run(qs, opts) {
     JSON.stringify(r.body));
 
   r = await run('?model=turbo&prompt=' + encodeURIComponent(EN), { aliThrows: true, turboEmpty: true });
-  ok('阿里云挂 + turbo 空 → 默认模型接住', r.rec.aiModels[1] === '@cf/openai/whisper', r.rec.aiModels.join(','));
+  // v124：turbo 空返回时会先**重试一次 turbo**（高峰期的空返回多是上游一次抖动），
+  // 第二次还空才退默认模型。所以序列是 turbo,turbo,默认 —— 断言"最终接住"而不是
+  // 写死下标 1。
+  ok('阿里云挂 + turbo 空 → 默认模型接住', r.rec.aiModels.indexOf('@cf/openai/whisper') >= 0, r.rec.aiModels.join(','));
+  ok('（v124）turbo 空返回时先重试一次 turbo，不是立刻跳默认', r.rec.aiModels.filter(m => m === '@cf/openai/whisper-large-v3-turbo').length === 2, r.rec.aiModels.join(','));
 
   r = await run('?model=turbo&prompt=' + encodeURIComponent(EN), { allEmpty: true, aliText: EN_ALI });
   ok('CF 两个模型都没声时阿里云早就答了', r.body.model === 'qwen3-asr-flash', JSON.stringify(r.body));
@@ -202,7 +206,7 @@ async function run(qs, opts) {
   ok('Cloudflare 挂了 → 阿里云兜底', r.body.model === 'qwen3-asr-flash', JSON.stringify(r.body));
 
   r = await run('?model=turbo&prompt=A,+B,+C&prefer=cf', { turboEmpty: true, aliText: 'A B C' });
-  ok('turbo 空 → 默认模型接住（不打阿里云）', r.rec.aiModels[1] === '@cf/openai/whisper');
+  ok('turbo 空 → 默认模型接住（不打阿里云）', r.rec.aiModels.indexOf('@cf/openai/whisper') >= 0, r.rec.aiModels.join(','));
   ok('默认模型接住后就不再打阿里云', r.rec.fetches.length === 0, 'fetches=' + r.rec.fetches.length);
 
   r = await run('?model=turbo&prompt=A,+B,+C&prefer=cf', { allEmpty: true, aliText: 'A B C' });
@@ -276,6 +280,67 @@ async function run(qs, opts) {
   rh = await run('?model=turbo&prompt=' + encodeURIComponent(EN), { aliDelayMs: 0, text: 'hi there' });
   ok('阿里云正常（0ms 就回）时一次 CF 都不打（neuron 留给兜底）', rh.rec.aiCalls === 0, 'aiCalls=' + rh.rec.aiCalls);
   ok('阿里云正常时总耗时不受影响', Date.now() - t0 < 800, (Date.now() - t0) + 'ms');
+
+  // ---- 8. 空返回自动重试（v124）-------------------------------------------
+  // 家长 2026-10-15 晚高峰报的："明明按住说话是清楚的，系统就判我没听清"。
+  // 线上实测到的直接原因是识别通道**偶发吐空**（阿里云 200 + completion_tokens=0；
+  // CF 也复现过同一条音频返回 200 + 空 text）。一次空返回就让孩子重读是冤枉的，
+  // 所以两条通道在"空手而归"时各自再打一趟。
+  console.log('\n8. 空返回自动重试（v124：别把孩子读清楚的一遍判成"没听清"）');
+
+  // 阿里云第一趟空、第二趟有 —— 应该拿到文本，而不是落到 CF 或判没听清。
+  {
+    let aliHits = 0;
+    const orig = globalThis.__stub;
+    globalThis.__stub = async function (url, init) {
+      aliHits++;
+      const body = JSON.parse(init.body);
+      return new Response(JSON.stringify({
+        choices: [{ message: { content: aliHits === 1 ? '' : EN_ALI } }],
+        echo: body,
+      }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    };
+    const ctx = load({ fetch: globalThis.__stub });
+    const res = await ctx.fetch(makeRequest('?model=turbo&prompt=' + encodeURIComponent(EN)),
+      { ALIYUN_KEY: 'k', ALLOWED_ORIGIN: 'https://amyeng.top', AI: { run: async () => ({ text: '' }) } }, {});
+    const b = await res.json();
+    globalThis.__stub = orig;
+    ok('阿里云第一次空返回 → 立刻重试，第二趟拿到文本', b.text === EN, JSON.stringify(b));
+    ok('重试打的就是阿里云这一条（不是直接投降）', aliHits === 2, 'aliHits=' + aliHits);
+  }
+
+  // 阿里云两趟都空 —— 这时才轮到 CF，且 CF 重试后能接住。
+  r = await run('?model=turbo&prompt=' + encodeURIComponent(EN), { aliText: '' });
+  ok('阿里云两次都空 → 仍然拿到 CF 的文本（不判"没听清"）', !!r.body.text, JSON.stringify(r.body));
+  ok('这条是 CF 给的', r.body.model === '@cf/openai/whisper-large-v3-turbo', r.body.model);
+  ok('阿里云确实被重试了（2 次 fetch）', r.rec.fetches.length === 2, 'fetches=' + r.rec.fetches.length);
+
+  // 真·两条通道都没内容时，仍然是 200 + 空文本（孩子看到"没听清"），不是 502。
+  r = await run('?model=turbo&prompt=' + encodeURIComponent(EN), { aliText: '', text: '' });
+  ok('两条真的都没内容 → 200 空文本（服务端不谎报失败）', r.status === 200 && r.body.text === '',
+    r.status + ' ' + JSON.stringify(r.body));
+
+  // ---- 9. 静态资源的 ?v= 必须跟版本号一致（v124 补的守卫）----------------
+  // 病根：index.html 里 app.js / api.js 的 ?v= 从 v104 起就没再动过。
+  // URL 不变 → Service Worker 与浏览器缓存都当同一个文件 → 后面每一版的
+  // 前端改动老用户都拿不到（"代码明明改了，手机上还是旧逻辑"）。
+  // 这个坑看不出来、也不报错，只能靠断言守着。
+  console.log('\n9. 静态资源版本号跟 app-version 对齐（防止改了代码手机上还是旧的）');
+  {
+    const fs2 = require('fs');
+    const path2 = require('path');
+    const htmlSrc = fs2.readFileSync(path2.join(__dirname, '../public/index.html'), 'utf8');
+    const swSrc = fs2.readFileSync(path2.join(__dirname, '../public/sw.js'), 'utf8');
+    const ver = (/name="app-version"\s+content="(\d+)"/.exec(htmlSrc) || [])[1];
+    ok('抓得到 app-version', !!ver, ver);
+    ['api.js', 'app.js', 'recorder.js'].forEach(function (f) {
+      const re = new RegExp(f.replace('.', '\\.') + '\\?v=(\\d+)');
+      const m = re.exec(htmlSrc);
+      ok(f + ' 的 ?v= 跟 app-version 一致（都是 ' + ver + '）', !!m && m[1] === ver,
+        m ? (f + '?v=' + m[1]) : '没找到 ' + f + ' 的 ?v=');
+    });
+    ok('Service Worker 缓存名也是 v' + ver, new RegExp('amy-english-v' + ver).test(swSrc));
+  }
 
   console.log('\n' + pass + ' 项通过, ' + fail + ' 项失败');
   process.exit(fail ? 1 : 0);

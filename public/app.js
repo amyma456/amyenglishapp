@@ -9370,6 +9370,19 @@ const App = {
           best = { spoken: t, source: 'whisper', verdict: v };
         }
       }
+      // v124：一路到这儿还是空的（live 没有 + 云端空手）—— 孩子那一遍就是白读了。
+      // 家长 2026-10-15 晚高峰的原话："明明按住说话是清楚的，系统就判我没听清"。
+      // 服务端和 Api.transcribe 已经各自动重试过一轮；这里再兜最后一手：
+      // 换用不带 hint 的默认模式再试一次（hint 太强的偏置在高峰期偶发把结果
+      // 压成空），拿到就是用，拿不到才认"没听清"。整条最多多花 1~2 秒，
+      // 远好过一次冤枉。
+      if (!best) {
+        const retry = await Api.transcribe(forAsr, null, { fast: true });
+        if (retry && retry.text && !Api.isFillerTranscript(retry.text)) {
+          const t2 = retry.text.toLowerCase();
+          best = { spoken: t2, source: 'whisper', verdict: this._readVerdict(sentence, t2) };
+        }
+      }
     } catch (e) { console.warn('verify transcribe failed:', e); }
     return best;
   },

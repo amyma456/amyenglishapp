@@ -1124,7 +1124,11 @@ const Api = {
   // v98：服务端两条通道改成并行竞速（阿里云 2.6s 上限 / Cloudflare 7s 上限），
   // 最坏情况已经压到 9 秒以内。之前 15 秒的上限形同虚设 —— 孩子早就不耐烦了，
   // 而且真到 15 秒才 abort，这一次朗读直接变成"识别失败"，白读。
-  TRANSCRIBE_TIMEOUT: 12000,
+  //
+  // v124：服务端阿里云上限放宽到 3.2s，客户端又会对"空返回"再打一趟（见
+  // transcribe）—— 两趟串行的最坏情况要留够，所以 12s 提到 18s。
+  // 正常情况完全碰不到这个上限（一趟 0.7~1.5s），它只是兜住"服务端真挂了"。
+  TRANSCRIBE_TIMEOUT: 18000,
 
   get HEALTH_URL() {
     const h = (typeof location !== 'undefined' && location.hostname) || '';
@@ -1226,6 +1230,28 @@ const Api = {
   },
 
   async transcribe(blob, meta, opts) {
+    if (!blob) return null;
+    // v124：空返回 / 网络抖动自动再试一次。
+    //
+    // 家长 2026-10-15 晚高峰报的"明明读得清楚，系统就说没听清"，根子在识别
+    // 通道偶发吐空（线上实测：阿里云 200 + completion_tokens=0，CF 也复现过
+    // 同一条音频 200 + 空 text）。一次空返回就让孩子重读是被冤枉的 —— 音频
+    // 明明在那儿。所以这一层对"没有拿到文本"的结果自动重打一次，仍然拿不到
+    // 才把空结果交上去走"没听清"。
+    // 只重试**没有文本**的情况：真拿到文本（哪怕错了）不重试，避免同一遍朗读
+    // 被识别两次、结果打架。
+    // 重试对每个调用方都是透明的 —— 返回结构不变。
+    const once = await this._transcribeOnce(blob, meta, opts);
+    if (once && once.text) return once;
+    // 只有在"调用本身通了、只是没内容"或"超时/网络失败"时才重试。
+    // prefer='cf' 的孤立字母场景本来就常常识别不出（字母音识别端很难），
+    // 那边重试意义不大还拖慢，所以只对默认（整句/单词）路径重试。
+    if (opts && opts.prefer) return once;
+    const again = await this._transcribeOnce(blob, meta, opts);
+    return (again && again.text) ? again : (once || again);
+  },
+
+  async _transcribeOnce(blob, meta, opts) {
     if (!blob) return null;
     const fast = !!(opts && opts.fast);
     const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;

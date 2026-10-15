@@ -1151,9 +1151,17 @@ div[data-gated] .ac-info{gap:10px}
 <script src="cloud.js?v=94"></script>
 <script src="data.js?v=94"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
-<script src="recorder.js?v=104"></script>
-<script src="api.js?v=104"></script>
-<script src="app.js?v=104"></script>
+<!--
+  ?v= 必须跟着版本号走（v124 修正）。
+  这里从 v104 之后一直停在 ?v=104，而 app.js / api.js 的内容每版都在变 ——
+  URL 不变 = Service Worker 和浏览器 HTTP 缓存都当它是同一个文件，
+  于是老用户升级后**永远拿不到新代码**，只有全新安装的设备才是对的。
+  这个坑很隐蔽：代码明明改了、也部署上去了，手机上跑的还是几个月前的逻辑。
+  以后每次发版，这里跟着 app-version 一起改。
+-->
+<script src="recorder.js?v=124"></script>
+<script src="api.js?v=124"></script>
+<script src="app.js?v=124"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {

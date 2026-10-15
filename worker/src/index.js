@@ -760,7 +760,7 @@ function aliyunPayload(bytes, mode, bias, mime) {
   return { model: ALIYUN_ASR_MODEL, messages: messages };
 }
 
-// 阿里云"熔断"（v96）。
+// 阿里云"熔断"（v96，v124 收紧窗口）。
 //
 // 起因：账户欠费时 dashscope 对每一次请求都回 400 Arrearage（约 0.5 秒），
 // 而客户端感知到的是"识别又慢又不出分"。阿里云现在是首选通道，如果每次都
@@ -768,17 +768,22 @@ function aliyunPayload(bytes, mode, bias, mime) {
 // 阿里云 CANCEL_MS，这段时间所有请求直接走 Cloudflare；到点了再放一次过去
 // 试探，充值到账后自动恢复，不用重新部署。
 //
-// 用模块级变量而不是 KV：同一个 isolate 会复用，命中率足够高，而且零成本、
-// 零依赖。isolate 被回收也无所谓 —— 大不了多探一次。
+// v124：60 秒 → 15 秒。晚高峰的限流是"一簇请求撞上限"而不是"账户真的挂了"，
+// 一分钟的窗口太长 —— 里面每一句跟读都得退到 Cloudflare，而 CF 对孩子的短句
+// 本来就更爱吐空，一小时里能攒出一片"没听清"。缩到 15 秒，撞上限后很快就能
+// 重新试探；真欠费时也只是每 15 秒多撞一次（0.5 秒的请求，代价可以忽略）。
 let aliyunDownUntil = 0;
-const ALIYUN_CANCEL_MS = 60 * 1000;
+const ALIYUN_CANCEL_MS = 15 * 1000;
 
-// 阿里云单次调用上限（v96）。实测它在异常时会"挂住"——字母测试里出现过
-// 47 秒和 19 秒才回包的请求。孩子那边感知到的是"核对中"转圈转到最后没有分，
-// 等于白读一遍。给一个上限，超了就立刻落 Cloudflare 兜底，最坏情况也被压住。
-// v98 收到 2600ms：默认路径现在是两条并行，阿里云这条不再是"唯一希望" ——
-// 它超时了 Cloudflare 那条早就在路上。把上限收紧是为了压住最坏情况的总时长。
-const ALIYUN_ASR_TIMEOUT_MS = 2600;
+// 阿里云单次调用上限（v96；v124 因"空返回重试"放宽）。
+//
+// 实测它在异常时会"挂住"——字母测试里出现过 47 秒和 19 秒才回包。孩子那边
+// 感知到的是"核对中"转圈转到最后没有分，等于白读一遍。给一个上限，超了就
+// 立刻落 Cloudflare 兜底。
+// v124：2600 → 3200。因为现在一次跟读可能要打**两趟**阿里云（第一趟空返回时
+// 立刻重试，见 runAliyun），单趟上限太紧会让重试那趟更容易超时。3200ms 仍在
+// 孩子的忍耐线内，而这两趟是串行的最坏情况 —— 正常情况第一趟 700ms 就回来了。
+const ALIYUN_ASR_TIMEOUT_MS = 3200;
 
 // Cloudflare 那条的上限（v98）。env.AI.run 不收 signal，只能在外层 race。
 // 之前它没有上限：字母测试里出现过 8.4 秒才回包，孩子那边就是干等。
@@ -968,19 +973,40 @@ async function transcribe(request, env) {
     if (!hasAliyun || force === 'cf') return { text: '' };
     if (!force && Date.now() < aliyunDownUntil) return { text: '', dead: true };
     const a0 = Date.now();
-    try {
-      const t = await aliyunTranscribe(aliBytes, env, mode, bias, mime);
-      aliMs = Date.now() - a0;
-      // 中文是目标语言本身，不做数字还原；英文还原见 restoreDigits 注释。
-      return {
-        text: t ? (mode === 'zh' ? t : restoreDigits(t, bias)) : '',
-        model: ALIYUN_ASR_MODEL,
-        answered: !!t,
-      };
-    } catch (e) {
-      aliMs = Date.now() - a0;
-      return { text: '', dead: true, err: String(e && e.message || e) };
+    // v124：空返回重试一次。
+    //
+    // 家长 2026-10-15 晚报："明明按住说话是清楚的，系统就判我没听清"，
+    // 而且正好发生在晚 6 点打卡高峰期。线上实测（.tmp 里直接打线上接口）看到
+    // 阿里云 700ms 就回了 200、模型名是空的、completion_tokens=0 —— 不是超时，
+    // 是它**偶尔主动吐空**。这种空返回有明显的内容特征：识别一个字都没产出，
+    // 和"孩子真的没出声"在服务端无法区分，但重试一次通常就好了。
+    // 所以这里只在"第一次空手而归"时，立刻重打一次同一条通道 —— 代价是
+    // 多 ~700ms（那条本来就快），换掉孩子白读一遍 + 被判"没听清"的冤枉。
+    // 不回退识别质量：重试的是同一个模型、同一段音频、同一个偏置。
+    let tried = 0;
+    let lastErr = '';
+    while (tried < 2) {
+      tried++;
+      try {
+        const t = await aliyunTranscribe(aliBytes, env, mode, bias, mime);
+        aliMs = Date.now() - a0;
+        const out = t ? (mode === 'zh' ? t : restoreDigits(t, bias)) : '';
+        if (out) {
+          return { text: out, model: ALIYUN_ASR_MODEL, answered: true };
+        }
+        // 第一次空手而归：再给它一次机会，别急着把"没听清"丢给孩子。
+        if (tried < 2) continue;
+        return { text: '', model: ALIYUN_ASR_MODEL, answered: true };
+      } catch (e) {
+        aliMs = Date.now() - a0;
+        lastErr = String((e && e.message) || e);
+        // 网络/上游抖一下也值得再试一次；欠费、鉴权这种"重试也没用"的
+        // 已经由 aliyunTranscribe 内部熔断了，这里直接放弃。
+        if (/Arrearage|InvalidApiKey|Unauthorized|403|401/i.test(lastErr)) break;
+        if (tried < 2) continue;
+      }
     }
+    return { text: '', dead: true, err: lastErr };
   }
 
   // Cloudflare 一条：先 turbo（更准），空/报错再退默认模型。
@@ -988,22 +1014,29 @@ async function transcribe(request, env) {
   // NOTE: @cf/openai/whisper accepts only `audio` — language and
   // initial_prompt are ignored (tested: a Simplified-Chinese prompt still
   // returned Traditional). Chinese is normalised on the client instead.
+  //
+  // v124：turbo 吐空时，除了退默认模型，还会**重试一次 turbo**。
+  // 高峰期实测 CF 也会偶发空返回（线上 .tmp 直连复现过：同一条音频 200 + 空
+  // text），而它是阿里云空手时的唯一兜底 —— 两条都空，孩子那一遍就白读了。
+  // 重试同一个模型是最省的做法：多数空返回是上游一次抖动，不是音频不行。
   async function runCloudflare() {
     if (force === 'ali') return { text: '' };
     const c0 = Date.now();
     if (wantFast) {
-      try {
-        const o = await env.AI.run(TURBO_MODEL, fastInput(cfBytes, mode, bias));
-        const t = ((o && o.text) || '').trim();
-        if (t) { cfMs = Date.now() - c0; return { text: t, model: TURBO_MODEL, raw: o, answered: true }; }
-        // turbo 答了但是空的：再用默认模型听一遍（它的 initial_prompt 更宽松）。
-      } catch (e) {
-        // 额度耗尽就没必要再打一次默认模型 —— 同一个额度，只会白等半秒。
-        // 其它错误（入参不兼容 / 临时故障）继续往下试默认模型。
-        const msg = String(e && e.message || e);
-        if (/4006|free allocation|neurons/i.test(msg)) {
-          cfMs = Date.now() - c0;
-          return { text: '', dead: true, err: msg };
+      for (let round = 0; round < 2; round++) {
+        try {
+          const o = await env.AI.run(TURBO_MODEL, fastInput(cfBytes, mode, bias));
+          const t = ((o && o.text) || '').trim();
+          if (t) { cfMs = Date.now() - c0; return { text: t, model: TURBO_MODEL, raw: o, answered: true }; }
+          // turbo 答了但是空的：再试一次；第二次还是空就退默认模型。
+        } catch (e) {
+          const msg = String(e && e.message || e);
+          // 额度耗尽就没必要再打 —— 同一个额度，重试和白等都不是好主意。
+          if (/4006|free allocation|neurons/i.test(msg)) {
+            cfMs = Date.now() - c0;
+            return { text: '', dead: true, err: msg };
+          }
+          // 其它错误（入参不兼容 / 临时故障）也再试一次，然后退默认模型。
         }
       }
     }
