@@ -47,6 +47,8 @@ const App = {
   async init() {
     await this.loadData();
     this.loadVoices();
+    // v129：长按朗读时不许浏览器弹「复制 / 选中」把录音抢走（家长 2026-10-16）
+    this._bindNoCopy();
     // 先听再读的门禁：一次绑定，全平台所有朗读控件都走它
     this._bindGateGuard();
     if (typeof Cloud !== 'undefined') Cloud.init();
@@ -2036,6 +2038,70 @@ const App = {
   },
 
   _gateGuardBound: false,
+  // ===== v129：长按不被「复制 / 选中」抢走 =====
+  //
+  // 家长 2026-10-16：「按住说中文这里，因为在浏览器1点它就会显示复制，导致很多次
+  // 点了之后并不能读，而是一直点复制，导致进程加慢。有的浏览器不会这样，但是有的
+  // 就是这样。」
+  //
+  // 为什么光靠 CSS 修不掉：
+  //   · 长按那一下，浏览器**先**发 selectstart / 开始选词，**再**弹「复制」菜单。
+  //     菜单一出来，指针就被系统接管 —— 我们的 pointerup 永远收不到，录音一直挂着，
+  //     孩子得等 15 秒看门狗才恢复。这就是他说的"进程加慢"。
+  //   · 家长按的是**句子**（那一屏句子就在按钮上方），而句子当时是可选中文字。
+  //   · 微信 / UC / 夸克内置浏览器对 -webkit-touch-callout 的支持不一致，
+  //     CSS 挡不住，必须事件层兜住。
+  //
+  // 三件事一起做才稳：CSS 禁选（见 index.html）＋ 事件拦截 ＋ 录音掉线自愈。
+  _bindNoCopy() {
+    if (this._noCopyBound) return;
+    this._noCopyBound = true;
+    const doc = document;
+    // 输入框 / 可编辑区必须放行 —— 登录、填词、作文都要能选中和粘贴。
+    const isEditable = function(t) {
+      if (!t || !t.tagName) return false;
+      const tag = t.tagName.toUpperCase();
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true;
+      if (t.isContentEditable) return true;
+      return !!(t.closest && t.closest('input,textarea,select,[contenteditable="true"]'));
+    };
+
+    // ① 选词一开始就掐掉：这是"复制"菜单真正的入口。
+    const killSelect = function(ev) {
+      if (isEditable(ev.target)) return;
+      ev.preventDefault();
+    };
+    doc.addEventListener('selectstart', killSelect, { passive: false });
+    doc.addEventListener('dragstart', function(ev) {
+      if (isEditable(ev.target)) return;
+      ev.preventDefault();
+    }, { passive: false });
+
+    // ② 长按菜单（含 iOS 的放大镜 / 呼出菜单）。整页禁掉 —— 这是个学习
+    //    应用，页面上的文字没有一处是给孩子复制的。
+    doc.addEventListener('contextmenu', function(ev) {
+      if (isEditable(ev.target)) return;
+      ev.preventDefault();
+    });
+
+    // ③ 录音期间"指针被系统抢走"的自愈：正常松手走 pointerup，可一旦弹了
+    //    复制菜单 / 切了应用，pointerup 就永远不来。这几种情况一律当成松手
+    //    收尾，别让孩子对着一个红按钮干等。
+    const self = this;
+    const bail = function() {
+      if (self._holdKey) self._holdEnd();
+    };
+    // 手指离开视口 / 指针被取消 / 页面被切走
+    doc.addEventListener('pointercancel', bail);
+    window.addEventListener('blur', bail);
+    doc.addEventListener('visibilitychange', function() {
+      if (doc.hidden) bail();
+    });
+    // 兜底：真被抢走了，也不许一直挂着。正常屏（非自动收）把上限从 15 秒
+    // 收到 10 秒 —— 孩子读一句话用不了这么久，早点收尾早点能重来。
+    // 看门狗本身在 _holdStart 里挂，这里只改默认时长（见 HOLD_MAX_MS）。
+  },
+
   _bindGateGuard() {
     if (this._gateGuardBound) return;
     this._gateGuardBound = true;
@@ -6239,7 +6305,7 @@ const App = {
     if (!pair) return '<div class="card text-center text-sub">这篇课文暂不支持逐句翻译</div>';
     Recorder.warmUp(); Api.warmup();
 
-    let html = '<div class="sent-step">';
+    let html = '<div class="sent-step hold-zone">';
     html += '<div class="sent-progress">翻译 ' + (si + 1) + ' / ' + pairs.length + ' 句</div>';
     // 同阅读逐句：词可点（查意思），整句听英文改由下面的按钮承担。
     html += '<div class="sent-text sent-words">' + this._wordSpans(pair.en) + '</div>';
@@ -6330,7 +6396,7 @@ const App = {
     const sent = sents[si] || '';
     Recorder.warmUp(); Api.warmup();
 
-    let html = '<div class="sent-step">';
+    let html = '<div class="sent-step hold-zone">';
     html += '<div class="sent-progress">翻译 ' + (si + 1) + ' / ' + sents.length + ' 句</div>';
     // 空位在这句里 → 显示填好正确答案的完整句，孩子翻译的是完整的一句话。
     const shown = this._clozeFillSentence(m, sent, false) || sent;
@@ -6691,7 +6757,7 @@ const App = {
     // 落地这一屏仍会自动播一遍整句并把门禁放行（见 _speakOnRender），
     // 按钮是给孩子"再听一遍"用的。
     const gid = this._gid('sentg', mi, si);
-    let html = '<div class="sent-step">';
+    let html = '<div class="sent-step hold-zone">';
     html += '<div class="sent-progress">第 ' + (si + 1) + ' / ' + sents.length + ' 句</div>';
     html += '<div class="sent-text sent-words" id="sent-' + mi + '-' + si + '">'
          + this._wordSpans(sent) + '</div>';
@@ -7904,7 +7970,21 @@ const App = {
     if (ev) {
       ev.preventDefault();
       if (ev.pointerId !== undefined && ev.currentTarget.setPointerCapture) {
-        try { ev.currentTarget.setPointerCapture(ev.pointerId); } catch (e) {}
+        try {
+          ev.currentTarget.setPointerCapture(ev.pointerId);
+          // v129：被浏览器抢走指针时（弹了复制菜单 / 切应用 / 手势返回），
+          // 系统会把 capture 收回去 —— 这就是「收不到 pointerup」的信号。
+          // 一丢就跑收尾，别让孩子对着红按钮干等 15 秒。
+          var capEl = ev.currentTarget, capId = ev.pointerId, selfCap = this;
+          this._holdCapEl = capEl;
+          this._holdCapId = capId;
+          capEl._lostCapture = function(e) {
+            if (!selfCap._holdKey) return;
+            clearTimeout(selfCap._holdCap);
+            selfCap._holdEnd(e);
+          };
+          capEl.addEventListener('lostpointercapture', capEl._lostCapture);
+        } catch (e) {}
       }
     }
     if (this._holdKey) return;                 // already recording something
@@ -7924,7 +8004,10 @@ const App = {
     // 两个入口都走 _holdEnd，第二个人会被 `if (!key) return` 挡掉。
     var stopOn = !!autoStop;
     var silMs = typeof autoStop === 'number' ? autoStop : this.AUTO_STOP_SILENCE_MS;
-    var capMs = stopOn ? this.AUTO_STOP_CAP_MS : 15000;
+    // 没有自动收尾的屏（"按住说中文"、"按住跟读"…）：松手才是唯一的收尾信号。
+    // v129：上限从 15 秒收到 HOLD_MAX_MS。指针真被浏览器抢走（弹了复制菜单），
+    // 靠 lostpointercapture 兜底；这条超时是最后一道，也别让孩子等太久。
+    var capMs = stopOn ? this.AUTO_STOP_CAP_MS : this.HOLD_MAX_MS;
     var spoke = false, lastLoudAt = 0;
     var t0 = Date.now();
 
@@ -7967,15 +8050,24 @@ const App = {
   AUTO_STOP_SILENCE_MS: 600,     // 字母/整词：说完安静 0.6 秒就收
   AUTO_STOP_MIN_MS: 350,         // 按下到能自动收，至少留 350ms（别把起手的音切掉）
   AUTO_STOP_CAP_MS: 8000,        // 自动收的那几屏，最长也就等 8 秒（原来 15 秒）
+  // v129：非自动收的屏（按住说中文 / 跟读）的超时上限。孩子读一句话用不了
+  // 10 秒；真被浏览器抢走指针时，早一点收尾、早一点能重来。
+  HOLD_MAX_MS: 10000,
 
   async _holdEnd(ev) {
-    if (ev) ev.preventDefault();
+    if (ev && ev.preventDefault) ev.preventDefault();
     var key = this._holdKey, onDone = this._holdDone, statusEl = this._holdStatusEl;
     var needs = this._holdNeedsTranscript;
     var fast = this._holdFast !== false;
     var heldMs = Date.now() - (this._holdStartedAt || 0);
     this._holdKey = null; this._holdDone = null;
     clearTimeout(this._holdCap);
+    // v129：解掉上一步挂的 lostpointercapture 监听，别越积越多。
+    if (this._holdCapEl && this._holdCapEl._lostCapture) {
+      try { this._holdCapEl.removeEventListener('lostpointercapture', this._holdCapEl._lostCapture); } catch (e) {}
+      this._holdCapEl._lostCapture = null;
+    }
+    this._holdCapEl = null;
     if (!key) return;
 
     // A stray tap is not an attempt — drop it rather than scoring silence.

@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="128">
+<meta name="app-version" content="129">
 <link rel="manifest" href="manifest.json">
 <!-- iOS 的"添加到主屏幕"不认 SVG（装出来是白板/网页截图），必须给 PNG。
      图标与启动图由 tools/gen-pwa-icons.js 生成，别手改。 -->
@@ -59,6 +59,38 @@
   --ease:cubic-bezier(.4,0,.2,1); --fast:.18s;
 }
 *{margin:0;padding:0;box-sizing:border-box}
+/* ===== v129：长按不被「复制 / 选中」抢走（家长 2026-10-16）==================
+   家长原话：「按住说中文这里，因为在浏览器1点它就会显示复制，导致很多次点了
+   之后并不能读，而是一直点复制，导致进程加慢。有的浏览器不会这样，但是有的
+   就是这样。」
+
+   为什么 .hold-target 上写了 user-select:none 还是会被抢：
+     1) 长按那一下浏览器先发 selectstart / 选词，再弹「复制」菜单。菜单一出来
+        指针就被系统接管，我们的 pointerup 永远收不到 —— 录音一直挂着，
+        孩子得等 15 秒看门狗才恢复（"进程加慢"就是这么来的）。
+     2) 家长按的是**句子**（"按住说中文"屏上，句子就在按钮上方），而句子当时
+        是可选中的 —— 长按落在文字上，一样弹复制。
+     3) 微信 / UC / 夸克这些内置浏览器对 -webkit-touch-callout 的支持不一致，
+        只靠 CSS 挡不住，必须挂事件兜住。
+
+   所以：① 整个 app 默认不可选中文字（正文本来也不需要复制）；
+        ② 朗读/录音控件整片（含句子、单词、格子）额外钉死；
+        ③ JS 层面对 selectstart / dragstart / contextmenu 做统一拦截 +
+           给被接管的录音装"掉线即收尾"的保险。 */
+html,body{-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;
+  -webkit-touch-callout:none}
+/* 输入框仍然要能选中/粘贴 —— 别把登录、填词、作文这些一起禁掉 */
+input,textarea,[contenteditable="true"]{-webkit-user-select:text!important;
+  -moz-user-select:text!important;user-select:text!important;-webkit-touch-callout:default}
+/* 朗读 / 录音整片区域：句子、单词、格子、按钮，一律不可选中、不弹菜单 */
+.hold-zone,.sent-text,.sent-words,.sent-tip,.sent-hint,.rd-line,.rd-sent,
+.spell-row,.spell-box,.word-read-btn,.tap-speak,.tap-speak-sm,.wr-sent,
+.gate-listen,.cg-sentence,.cq-sentence{
+  -webkit-user-select:none;-moz-user-select:none;user-select:none;
+  -webkit-touch-callout:none}
+/* 可点击的单词：点一下给中文意思，长按不能变选词 */
+.sent-words .lk-word,.rd-w,.lk-word{-webkit-user-select:none;user-select:none;
+  -webkit-touch-callout:none}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;color:var(--text);font-size:14px;line-height:1.6;
   /* 灰白底 + 橘色圆，向外渐变到透明。
      scroll（非 fixed）：长页面往下滚时圆会留在顶部区域，不会一路跟着视口跑。 */
@@ -1165,8 +1197,8 @@ div[data-gated] .ac-info{gap:10px}
   <div class="modal" id="modal-box"></div>
 </div>
 
-<script src="cloud.js?v=128"></script>
-<script src="data.js?v=128"></script>
+<script src="cloud.js?v=129"></script>
+<script src="data.js?v=129"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
 <!--
   ?v= 必须跟着版本号走（v124 修正）。
@@ -1176,9 +1208,9 @@ div[data-gated] .ac-info{gap:10px}
   这个坑很隐蔽：代码明明改了、也部署上去了，手机上跑的还是几个月前的逻辑。
   以后每次发版，这里跟着 app-version 一起改。
 -->
-<script src="recorder.js?v=128"></script>
-<script src="api.js?v=128"></script>
-<script src="app.js?v=128"></script>
+<script src="recorder.js?v=129"></script>
+<script src="api.js?v=129"></script>
+<script src="app.js?v=129"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {
