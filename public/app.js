@@ -49,6 +49,8 @@ const App = {
     this.loadVoices();
     // v129：长按朗读时不许浏览器弹「复制 / 选中」把录音抢走（家长 2026-10-16）
     this._bindNoCopy();
+    // v131：?perf=1 时挂上 ASR 性能诊断面板；普通页面这里什么都不做。
+    this._setupPerfPanel();
     // 先听再读的门禁：一次绑定，全平台所有朗读控件都走它
     this._bindGateGuard();
     if (typeof Cloud !== 'undefined') Cloud.init();
@@ -2103,6 +2105,106 @@ const App = {
     // 兜底：真被抢走了，也不许一直挂着。正常屏（非自动收）把上限从 15 秒
     // 收到 10 秒 —— 孩子读一句话用不了这么久，早点收尾早点能重来。
     // 看门狗本身在 _holdStart 里挂，这里只改默认时长（见 HOLD_MAX_MS）。
+  },
+
+  // ===== v131：ASR 性能诊断面板（只在 ?perf=1 出现） ========================
+  //
+  // 家长要"出分快一点"，但快不快得有数字。这个面板把最近 30 次朗读的
+  // 真实耗时、打了几趟、走了哪条通道摆在一起，方便对着它做优化。
+  //
+  // 三条硬规矩：
+  //   ① 普通页面完全看不见（PERF_ENABLED() 为假时直接 return，容器
+  //      始终 hidden、始终空 —— 学生和家长根本不知道它存在）；
+  //   ② 只显示数字与枚举：耗时、趟数、通道名。**没有**录音内容、
+  //      **没有** API Key、**没有**学生手机号；
+  //   ③ 任何一步出错都静默吞掉（诊断面板绝不能影响正常打卡）。
+  _setupPerfPanel() {
+    try {
+      if (!Api.PERF_ENABLED()) return;
+      this._perfOn = true;
+      const box = document.getElementById('perf-panel');
+      if (!box) return;
+      box.hidden = false;
+      document.body.classList.add('perf-on');
+      this._perfEl = box;
+      this.renderPerfPanel();
+      // 每次出分后自动刷新一下（renderPerfPanel 很轻，就是拼字符串）
+      const self = this;
+      this._perfTimer = setInterval(function() { self.renderPerfPanel(); }, 1500);
+    } catch (e) { /* 诊断面板不许影响主流程 */ }
+  },
+
+  renderPerfPanel() {
+    try {
+      const box = this._perfEl;
+      if (!box || !this._perfOn) return;
+      const s = Api.perfSummary();
+      const xs = Api.perfSamples();
+      let html = '<h4>🔬 ASR 性能诊断（?perf=1）'
+        + '<button class="pf-x" onclick="App.hidePerfPanel()">关闭</button>'
+        + '<button class="pf-x" onclick="App.clearPerfPanel()">清空</button></h4>';
+      if (!s) {
+        html += '<div class="pf-note">还没有样本。去读一句英文/中文，这里就会出数字。</div>';
+        box.innerHTML = html;
+        return;
+      }
+      html += '<div class="pf-sum">样本 ' + s.n + ' 次 ｜ 均值 <b>' + s.avg
+        + 'ms</b> ｜ p50 ' + s.p50 + ' ｜ p90 ' + s.p90 + ' ｜ 最慢 ' + s.max
+        + 'ms<br>总趟数 ' + s.attempts + '（平均 ' + s.avgAttempts
+        + ' 趟/次，重试过 ' + s.retried + ' 次）｜ 空结果 ' + s.empty
+        + ' ｜ 报错 ' + s.errors + ' ｜ 判失败 ' + s.failed + ' ｜ 低分 ' + s.low + '</div>';
+      html += '<table><tr><th>#</th><th>场景</th><th>总耗时</th><th>趟</th>'
+        + '<th>空</th><th>通道</th><th>服务端 Server-Timing</th>'
+        + '<th>音频</th><th>colo</th><th>结果</th></tr>';
+      // 最新的在最上面
+      for (let i = xs.length - 1; i >= 0; i--) {
+        const x = xs[i];
+        const slow = x.totalMs >= 4000 ? ' pf-slow' : '';
+        const bad = (x.result === 'fail') ? ' pf-fail' : '';
+        const chans = x.hops.map(h => h.channel || '-').join('/');
+        const tim = x.hops.map(h => h.timing || '-').join(' / ');
+        const aud = x.hops.map(h => h.audioIn || '-').join('/');
+        const colo = x.hops.map(h => h.colo || '-').join('/');
+        html += '<tr class="pf-row' + slow + bad + '">'
+          + '<td>' + (i + 1) + '</td>'
+          + '<td>' + this._perfEsc(x.what) + '</td>'
+          + '<td>' + x.totalMs + 'ms</td>'
+          + '<td>' + x.attempts + '</td>'
+          + '<td>' + x.empty + '</td>'
+          + '<td>' + this._perfEsc(chans) + '</td>'
+          + '<td>' + this._perfEsc(tim) + '</td>'
+          + '<td>' + this._perfEsc(aud) + '</td>'
+          + '<td>' + this._perfEsc(colo) + '</td>'
+          + '<td>' + this._perfEsc(x.result) + '</td>'
+          + '</tr>';
+      }
+      html += '</table>';
+      html += '<div class="pf-note">预算：整次朗读 ≤' + Api.ASR_MAX_TRIPS + ' 趟 / ≤'
+        + (Api.ASR_BUDGET_MS / 1000) + 's。这里有"总耗时"和"几趟"两个数 —— '
+        + '总耗时高但只 1 趟 = 单趟慢（网络/上游）；趟数多 = 在重试（该压重试）。</div>';
+      box.innerHTML = html;
+    } catch (e) { /* 同上 */ }
+  },
+
+  _perfEsc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  },
+
+  hidePerfPanel() {
+    this._perfOn = false;
+    if (this._perfTimer) clearInterval(this._perfTimer);
+    this._perfEl = null;
+    try {
+      const box = document.getElementById('perf-panel');
+      if (box) { box.hidden = true; box.innerHTML = ''; }
+      document.body.classList.remove('perf-on');
+    } catch (e) {}
+  },
+
+  clearPerfPanel() {
+    Api.perfClear();
+    this.renderPerfPanel();
   },
 
   _bindGateGuard() {
@@ -5078,6 +5180,11 @@ const App = {
     this._spReadUI(mi, qi, dayIdx, 'scoring');
 
     const self = this;
+    // v131：松手 → 出分，算作"一次朗读"。清空重试预算并开一个性能样本。
+    Api.asrResetBudget();
+    Api.perfBegin('sentence');
+    const perfT0 = (typeof performance !== 'undefined' && performance.now)
+      ? performance.now() : Date.now();
     const liveP = this._liveStop();
     const clipP = this._finishClipCapture();
     Promise.all([liveP, clipP]).then(async function(res) {
@@ -5088,9 +5195,13 @@ const App = {
         best ? best.spoken : null,
         best ? best.source : null,
         best ? best.verdict : null);
+      // v131：收口 —— 只记"耗时/趟数/结果档位"，不记文本内容。
+      Api.perfEnd({ kind: !best ? 'fail'
+        : (best.verdict && best.verdict.passed ? 'pass' : 'low') });
     }).catch(function(e) {
       console.warn('Speaking read capture failed:', e);
       self._spShowResult(mi, qi, dayIdx, ctx, null, null, null);
+      Api.perfEnd({ kind: 'fail' });
     });
   },
 
@@ -7072,9 +7183,15 @@ const App = {
       }
       const forAsr = (out.samples && Recorder.padForAsr(out.samples)) || out.blob;
       // 整篇翻译说的是中文 —— turbo + mode=zh（v86），同逐句翻译。
-      const res = await Api.transcribe(forAsr, null, { fast: true, lang: 'zh' });
+      // v131：清预算 + 开性能样本（中文口述翻译）
+      Api.asrResetBudget();
+      Api.perfBegin('zh-translate-whole');
+      const res = await Api.transcribe(forAsr, null, { fast: true, lang: 'zh', budgeted: true });
       const heard = res && res.text && !Api.isFillerTranscript(res.text) ? res.text : '';
       const r = this.scoreTranslation(m.passage_cn, heard);
+      // v131：中文口述的"结果档位"只看有没有听清 —— 不做分数档判断，
+      // 因为它本来就不判对错（意思覆盖而已）。
+      Api.perfEnd({ kind: heard ? 'pass' : 'fail' });
 
       let html = '<div class="spell-summary">';
       html += '<div class="ss-head"><span class="ss-score">' + (heard ? r.score : '—') + '</span>'
@@ -8135,9 +8252,12 @@ const App = {
     // 按钮也一直是按不下去的红色（家长反馈的"这里跑不通"）。
     var res = null;
     try {
+      // v131：清预算（每次按住都是一个独立的朗读），并带上 budgeted 让它
+      // 受统一预算约束 —— 字母/音节那条带 prefer 的本来就只打一趟。
+      Api.asrResetBudget();
       res = await Api.transcribe(forAsr, null,
-        fast ? { fast: true, hint: this._holdHint || '', prefer: this._holdPrefer || '' }
-             : { fast: true, lang: 'zh' });
+        fast ? { fast: true, hint: this._holdHint || '', prefer: this._holdPrefer || '', budgeted: true }
+             : { fast: true, lang: 'zh', budgeted: true });
     } catch (e) { console.warn('hold transcribe failed:', e); }
     var text = res && res.text ? res.text : null;
     if (Api.isFillerTranscript(text)) text = null;
@@ -10089,7 +10209,7 @@ const App = {
     try {
       // hint 把目标句喂给识别端当偏置（v98）：题库是固定的，孩子要读的就是这
       // 一句 —— 把句子给它，同音词（there/their、`see/sea`）和吞音都会少一大截。
-      const out = await Api.transcribe(forAsr, null, { fast: true, hint: sentence });
+      const out = await Api.transcribe(forAsr, null, { fast: true, hint: sentence, budgeted: true });
       if (out && out.text && !Api.isFillerTranscript(out.text)) {
         const t = out.text.toLowerCase();
         const v = this._readVerdict(sentence, t);
@@ -10099,12 +10219,15 @@ const App = {
       }
       // v124：一路到这儿还是空的（live 没有 + 云端空手）—— 孩子那一遍就是白读了。
       // 家长 2026-10-15 晚高峰的原话："明明按住说话是清楚的，系统就判我没听清"。
-      // 服务端和 Api.transcribe 已经各自动重试过一轮；这里再兜最后一手：
       // 换用不带 hint 的默认模式再试一次（hint 太强的偏置在高峰期偶发把结果
-      // 压成空），拿到就是用，拿不到才认"没听清"。整条最多多花 1~2 秒，
-      // 远好过一次冤枉。
-      if (!best) {
-        const retry = await Api.transcribe(forAsr, null, { fast: true });
+      // 压成空），拿到就是用，拿不到才认"没听清"。
+      //
+      // v131：这一手仍然保留（它是真正救回"被冤枉"的那一道），但**必须**
+      // 受统一预算约束 —— 原来它和 Api.transcribe 内部的重试叠加，最坏会打
+      // 到 20 次云端调用 / 等 72 秒。现在 asrCanRetry() 说了算：
+      // 趟数到顶或时间超预算，就认这一遍没听清，让孩子重读（而不是干等）。
+      if (!best && Api.asrCanRetry()) {
+        const retry = await Api.transcribe(forAsr, null, { fast: true, budgeted: true });
         if (retry && retry.text && !Api.isFillerTranscript(retry.text)) {
           const t2 = retry.text.toLowerCase();
           best = { spoken: t2, source: 'whisper', verdict: this._readVerdict(sentence, t2) };
@@ -10288,9 +10411,15 @@ const App = {
       if (blob) {
         const forAsr = (self._spClipSamples && Recorder.padForAsr(self._spClipSamples)) || blob;
         try {
-          const out = await Api.transcribe(forAsr, null, { fast: true });
+          // v131：清预算 + 性能样本（错词修复）。带 hint 走偏置，识别更准。
+          Api.asrResetBudget();
+          Api.perfBegin('word-repair');
+          const out = await Api.transcribe(forAsr, null, {
+            fast: true, hint: (R.word || ''), budgeted: true,
+          });
           if (out && out.text && !Api.isFillerTranscript(out.text)) text = out.text.toLowerCase();
         } catch (e) { console.warn('word repair transcribe failed', e); }
+        Api.perfEnd({ kind: text ? 'pass' : 'fail' });
       }
       self._wordRepairJudge(text);
     });
@@ -10467,6 +10596,9 @@ const App = {
     this._setHoldReadUI(mi, qi, 'scoring', null, false);
 
     const self = this;
+    // v131：同样清预算 + 开性能样本（这条是「按住读整句」那条路）
+    Api.asrResetBudget();
+    Api.perfBegin('hold-sentence');
     const liveP = this._liveStop();
     const clipP = this._finishClipCapture();
 
@@ -10477,9 +10609,12 @@ const App = {
         best ? best.spoken : null,
         best ? best.source : null,
         best ? best.verdict : null);
+      Api.perfEnd({ kind: !best ? 'fail'
+        : (best.verdict && best.verdict.passed ? 'pass' : 'low') });
     }).catch(function(e) {
       console.warn('Hold-read capture failed:', e);
       self._showHoldReadResult(mi, qi, dayIdx, ctx.sentence, null, null, null);
+      Api.perfEnd({ kind: 'fail' });
     });
   },
 

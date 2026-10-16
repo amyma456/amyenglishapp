@@ -1169,7 +1169,148 @@ const Api = {
   // v124：服务端阿里云上限放宽到 3.2s，客户端又会对"空返回"再打一趟（见
   // transcribe）—— 两趟串行的最坏情况要留够，所以 12s 提到 18s。
   // 正常情况完全碰不到这个上限（一趟 0.7~1.5s），它只是兜住"服务端真挂了"。
+  // v131：重试收敛成"整次朗读 ≤2 趟"，单趟预算由 _asrBudget 统一下发，
+  // 这个常量降级为**兜底上限**（见 ASR_BUDGET_MS）。保持不变以免影响旧行为。
   TRANSCRIBE_TIMEOUT: 18000,
+
+  // ===== v131：ASR 性能埋点 =================================================
+  //
+  // 家长要的是"出分快一点"。要优化就得先有数字 —— 这一版先把每次朗读的
+  // 真实耗时、走了哪条通道、重试了几趟记下来，再去动重试逻辑。
+  //
+  // 三条硬规矩（用户明确要求）：
+  //   ① 只记录**数字和枚举**，绝不落 API Key / 录音内容 / 学生手机号；
+  //   ② 响应头缺失（跨域被剥掉、老 Worker）时静默留空，**不许报错**；
+  //   ③ 普通页面完全不显示、不打扰，只有 ?perf=1 才露面。
+  PERF_ENABLED() {
+    try {
+      return typeof location !== 'undefined'
+        && /[?&]perf=1\b/.test(String(location.search || ''));
+    } catch (e) { return false; }
+  },
+
+  // 最近 N 次朗读的样本（只存内存，刷新即清空 —— 不落盘，免得留隐私数据）
+  PERF_MAX: 30,
+  _perf: [],
+
+  // 一次"朗读"（从松手到出分）的会话。开始时开一个，结束时收口。
+  perfBegin(what) {
+    if (!this.PERF_ENABLED()) return null;
+    const s = {
+      what: String(what || 'read'),   // 场景名，如 'sentence' / 'cloze-zh' / 'repair'
+      t0: (typeof performance !== 'undefined' && performance.now)
+        ? performance.now() : Date.now(),
+      attempts: 0,        // _transcribeOnce 被调了几趟
+      empty: 0,           // 其中空结果几趟
+      errors: 0,          // 网络/超时几趟
+      hops: [],           // 每趟的明细（下面 pushHop 填）
+      endAt: null,
+    };
+    this._perfCur = s;
+    return s;
+  },
+
+  // 每趟 _transcribeOnce 收尾时调一次。
+  // headers 可能根本没有（跨域/老 Worker），全部按"取不到就留空"处理。
+  perfHop(info) {
+    const s = this._perfCur;
+    if (!s) return;
+    const h = (info && info.headers) || null;
+    const pick = (name) => {
+      try { return (h && h.get) ? (h.get(name) || '') : ''; } catch (e) { return ''; }
+    };
+    s.attempts++;
+    if (info && info.empty) s.empty++;
+    if (info && info.error) s.errors++;
+    s.hops.push({
+      ms: Math.max(0, Math.round((info && info.ms) || 0)),
+      // 谁答的：worker 会回 X-Asr-Channel，没有就留空
+      channel: pick('X-Asr-Channel').slice(0, 40),
+      // 服务端内部耗时：aliyun=xx;cloudflare=yy 这种（v98 起的 Server-Timing）
+      timing: pick('Server-Timing').slice(0, 120),
+      // 送上去的音频大小，判断"是不是反复传同一段"
+      audioIn: pick('X-Audio-In').slice(0, 20),
+      // 哪个边缘节点处理的（排障用：某些 colo 到上游特别慢）
+      colo: pick('X-Edge-Colo').slice(0, 12),
+      text: info && info.text ? String(info.text).length : 0,   // ★ 只记长度，不记内容
+      err: (info && info.errName) || '',
+    });
+  },
+
+  // 收口：算总耗时并归档。result 只记"有没有文本 / 多少分"，不记文本本身。
+  perfEnd(result) {
+    const s = this._perfCur;
+    this._perfCur = null;
+    if (!s) return null;
+    const now = (typeof performance !== 'undefined' && performance.now)
+      ? performance.now() : Date.now();
+    s.totalMs = Math.max(0, Math.round(now - s.t0));
+    s.result = (result && result.kind) ? String(result.kind) : 'unknown';
+    this._perf.push(s);
+    if (this._perf.length > this.PERF_MAX) this._perf.shift();
+    return s;
+  },
+
+  perfSamples() { return this._perf.slice(); },
+  perfClear() { this._perf.length = 0; this._perfCur = null; },
+
+  // 汇总：给 ?perf=1 面板用。全部是数值，没有隐私。
+  perfSummary() {
+    const xs = this._perf;
+    if (!xs.length) return null;
+    const nums = xs.map(x => x.totalMs).sort((a, b) => a - b);
+    const pct = (p) => nums[Math.min(nums.length - 1, Math.floor(nums.length * p))];
+    const sum = (f) => xs.reduce((a, x) => a + (f(x) || 0), 0);
+    return {
+      n: xs.length,
+      avg: Math.round(sum(x => x.totalMs) / xs.length),
+      p50: pct(0.5),
+      p90: pct(0.9),
+      max: nums[nums.length - 1],
+      attempts: sum(x => x.attempts),
+      empty: sum(x => x.empty),
+      errors: sum(x => x.errors),
+      // 平均一趟，用来判断"是趟数多还是单趟慢"
+      avgAttempts: +(sum(x => x.attempts) / xs.length).toFixed(2),
+      retried: xs.filter(x => x.attempts > 1).length,
+      failed: xs.filter(x => x.result === 'fail').length,
+      low: xs.filter(x => x.result === 'low').length,
+    };
+  },
+
+  // ===== v131：整次朗读的统一预算 ==========================================
+  //
+  // 收敛前的最坏情况（照代码读出来的，不是估计）：
+  //   Worker runAliyun      最多 2 次阿里云
+  //   Worker runCloudflare  最多 3 次 CF（turbo ×2 + 默认 ×1）
+  //   Api.transcribe        空则再来一趟         → ×2
+  //   app._bestTranscript   再兜一趟（不带 hint）→ ×2
+  //   合计：云端 ASR 调用 20 次、客户端最坏等 4×18s = 72 秒。
+  //
+  // 这就是"出分很慢"的根源 —— 不是单趟慢，是**三层重试各自叠加**。
+  // 现在给整次朗读一个总预算：到点就收，拿到的第一个有效文本就算数。
+  ASR_BUDGET_MS: 12000,     // 整次朗读的总时间预算
+  ASR_MAX_TRIPS: 2,         // 整次朗读最多打 2 趟 _transcribeOnce
+  _asrSpent: 0,             // 本次朗读已经花掉的时间
+  _asrTrips: 0,             // 本次朗读已经打过的趟数
+
+  // 开始一次朗读：清零预算。**所有入口都要调**，否则预算会跨次累加。
+  asrResetBudget() { this._asrSpent = 0; this._asrTrips = 0; },
+
+  // 还能不能再打一趟？两个条件同时满足才行。
+  asrCanRetry() {
+    if (this._asrTrips >= this.ASR_MAX_TRIPS) return false;
+    if (this._asrSpent >= this.ASR_BUDGET_MS) return false;
+    return true;
+  },
+
+  // 本趟还允许跑多久：不能超过总预算的剩余量。
+  // 传下去当 AbortController 的超时，避免"单趟 18s 把预算一次性吃光"。
+  asrTripTimeout() {
+    const left = this.ASR_BUDGET_MS - this._asrSpent;
+    if (left <= 0) return 0;
+    return Math.min(this.TRANSCRIBE_TIMEOUT, left);
+  },
 
   get HEALTH_URL() {
     const h = (typeof location !== 'undefined' && location.hostname) || '';
@@ -1282,12 +1423,16 @@ const Api = {
     // 只重试**没有文本**的情况：真拿到文本（哪怕错了）不重试，避免同一遍朗读
     // 被识别两次、结果打架。
     // 重试对每个调用方都是透明的 —— 返回结构不变。
+    //
+    // v131：不再"无脑重一次"，改为受**统一预算**约束（asrCanRetry）。
+    // 这就是原来"三层重试各自叠加、最坏 20 次调用 / 72 秒"的收敛点。
     const once = await this._transcribeOnce(blob, meta, opts);
     if (once && once.text) return once;
     // 只有在"调用本身通了、只是没内容"或"超时/网络失败"时才重试。
     // prefer='cf' 的孤立字母场景本来就常常识别不出（字母音识别端很难），
     // 那边重试意义不大还拖慢，所以只对默认（整句/单词）路径重试。
     if (opts && opts.prefer) return once;
+    if (!this.asrCanRetry()) return once;          // ★ 预算用完 / 趟数到顶就收
     const again = await this._transcribeOnce(blob, meta, opts);
     return (again && again.text) ? again : (once || again);
   },
@@ -1295,8 +1440,20 @@ const Api = {
   async _transcribeOnce(blob, meta, opts) {
     if (!blob) return null;
     const fast = !!(opts && opts.fast);
+    const t0 = (typeof performance !== 'undefined' && performance.now)
+      ? performance.now() : Date.now();
+    // v131：单趟超时不能超过总预算的剩余量 —— 否则一趟 18s 就把预算吃光，
+    // 后面连"补一趟"的机会都没有了。剩余为 0 时直接不打（省一次白等）。
+    const budgetLeft = this.asrTripTimeout();
+    if (opts && opts.budgeted && budgetLeft <= 0) {
+      this.perfHop({ ms: 0, error: true, errName: 'budget_exhausted', empty: true });
+      return null;
+    }
+    const tripMs = (opts && opts.budgeted) ? budgetLeft : this.TRANSCRIBE_TIMEOUT;
     const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
-    const timer = ctrl ? setTimeout(() => ctrl.abort(), this.TRANSCRIBE_TIMEOUT) : null;
+    const timer = ctrl ? setTimeout(() => ctrl.abort(), tripMs) : null;
+    this._asrTrips++;
+    let headers = null, errName = '';
     try {
       const lang = (opts && opts.lang) || '';
       const hint = String((opts && opts.hint) || '').slice(0, 200);
@@ -1314,16 +1471,33 @@ const Api = {
         signal: ctrl ? ctrl.signal : undefined,
       });
       if (timer) clearTimeout(timer);
+      // v131：诊断用的响应头。跨域/老 Worker 可能一个都没有 —— 取不到就留空，
+      // 绝不能因为读头而抛错。headers.get 在缺失时本来就返回 null。
+      headers = res.headers;
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
-      return { text: (data.text || '').trim(), words: data.words || null };
+      const text = (data.text || '').trim();
+      this._noteSpent(t0);
+      this.perfHop({ ms: this._elapsed(t0), headers, text, empty: !text });
+      return { text, words: data.words || null };
     } catch (e) {
       if (timer) clearTimeout(timer);
+      errName = (e && e.name === 'AbortError') ? 'timeout' : String((e && e.message) || e);
       console.warn('transcribe failed:', e && e.name === 'AbortError' ? 'timeout' : e);
+      this._noteSpent(t0);
+      this.perfHop({ ms: this._elapsed(t0), headers, error: true, empty: true, errName });
       // Park it so a later attempt can fill the transcript in.
       if (meta && meta.clipId) this._queueTranscribe(meta.clipId);
       return null;
     }
+  },
+
+  // 本次朗读已花时间（预算扣减要用真实墙钟，不能只数趟数）
+  _noteSpent(t0) { this._asrSpent += this._elapsed(t0); },
+  _elapsed(t0) {
+    const now = (typeof performance !== 'undefined' && performance.now)
+      ? performance.now() : Date.now();
+    return Math.max(0, now - t0);
   },
 
   // Clips awaiting a retry. Kept as ids only — the audio itself is already

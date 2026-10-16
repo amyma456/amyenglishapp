@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="130">
+<meta name="app-version" content="131">
 <link rel="manifest" href="manifest.json">
 <!-- iOS 的"添加到主屏幕"不认 SVG（装出来是白板/网页截图），必须给 PNG。
      图标与启动图由 tools/gen-pwa-icons.js 生成，别手改。 -->
@@ -1073,6 +1073,28 @@ div[data-gated] .ac-info{gap:10px}
    让老师的注意力落在「未分配 / 已分配」两块名单上。 */
 #more-box > .card{background:var(--card);border-style:dashed}
 #more-box h3{font-size:14px}
+
+/* v131：ASR 性能诊断面板 —— 只在 ?perf=1 出现，固定贴底、不挡内容。
+   全部用等宽字体，方便一行行对数字。 */
+#perf-panel{position:fixed;left:0;right:0;bottom:0;z-index:9999;
+  max-height:52vh;overflow:auto;background:#1D1D22;color:#E8E8EC;
+  font:11px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  border-top:2px solid var(--orange);padding:8px 10px 12px;
+  box-shadow:0 -6px 18px rgba(0,0,0,.28)}
+#perf-panel h4{margin:0 0 6px;font-size:11px;font-weight:700;color:#FFB067;
+  display:flex;align-items:center;gap:8px}
+#perf-panel .pf-x{margin-left:auto;cursor:pointer;background:#33333B;
+  color:#E8E8EC;border:0;border-radius:4px;padding:2px 8px;font-size:11px}
+#perf-panel table{width:100%;border-collapse:collapse}
+#perf-panel th,#perf-panel td{text-align:left;padding:2px 6px 2px 0;
+  white-space:nowrap;vertical-align:top}
+#perf-panel th{color:#8E8E9A;font-weight:500;border-bottom:1px solid #35353D}
+#perf-panel tr.pf-slow td{color:#FF8A6B}
+#perf-panel tr.pf-fail td{color:#FFD166}
+#perf-panel .pf-sum{margin-bottom:6px;color:#B9F18D;white-space:normal}
+#perf-panel .pf-note{color:#8E8E9A;margin-top:6px;white-space:normal}
+/* 面板占了下半屏 —— 给它留出滚动余量，别把「下一题」压在底下点不到 */
+body.perf-on .content-area{padding-bottom:54vh}
 </style>
 </head>
 <body>
@@ -1178,6 +1200,10 @@ div[data-gated] .ac-info{gap:10px}
   <div class="content-area" id="content-area"></div>
 </div>
 
+<!-- v131：ASR 性能诊断面板。**只**在 ?perf=1 时才被填内容并显示；
+     普通页面这里始终是空的、display:none，学生和家长完全看不见。 -->
+<div id="perf-panel" hidden></div>
+
 <!-- Icon sprite — 24x24 画布 / 1.5px 线宽 / 纯描边 / currentColor -->
 <svg style="display:none" aria-hidden="true" focusable="false"><defs>
 <g id="ico" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -1208,8 +1234,8 @@ div[data-gated] .ac-info{gap:10px}
   <div class="modal" id="modal-box"></div>
 </div>
 
-<script src="cloud.js?v=130"></script>
-<script src="data.js?v=130"></script>
+<script src="cloud.js?v=131"></script>
+<script src="data.js?v=131"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
 <!--
   ?v= 必须跟着版本号走（v124 修正）。
@@ -1219,9 +1245,9 @@ div[data-gated] .ac-info{gap:10px}
   这个坑很隐蔽：代码明明改了、也部署上去了，手机上跑的还是几个月前的逻辑。
   以后每次发版，这里跟着 app-version 一起改。
 -->
-<script src="recorder.js?v=130"></script>
-<script src="api.js?v=130"></script>
-<script src="app.js?v=130"></script>
+<script src="recorder.js?v=131"></script>
+<script src="api.js?v=131"></script>
+<script src="app.js?v=131"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {
