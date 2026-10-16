@@ -851,8 +851,38 @@ const App = {
   // EXCEPT when the teacher removed them: then the server-side gate holds
   // them on the removed page until a re-join request is approved.
   async registerStudent(phone, name) {
-    const status = await Api.classStatus(phone);
-    if (status && status.removed) {
+    // ===== 拦截必须"查不到就拦住"（v132，老师 2026-10-16）=====
+    //
+    // 老师报：「删除了，就显示不在，说是那样说，但是仍然还在删除了」——
+    // 删完过一会儿又冒回来。根因就在这**一个 &&** 上：
+    //
+    //   旧写法  if (status && status.removed)  {...}
+    //
+    // classStatus() 在网络失败 / 超时 / 接口非 200 时**返回 null**。
+    // 那时 `status && status.removed` 是 false → **当场放行**，
+    // 被删掉的学生照样走完注册、被 push 进本机名单，再 syncToCloud() 推上云，
+    // 老师端于是又看到他 —— 名单回滚，删除白做。
+    //
+    // 这是个"fail-open"错误：**查不到就当成没被删**。方向正好反了。
+    // 老师要的规矩是「只要删除了，任何人再进来都需要老师同意」，
+    // 所以这里必须是 **fail-closed：查不到 = 先拦住**。
+    //
+    // 代价：极少数网络抖动时，一个**正常**学生会看到一个"正在核对"的页面，
+    // 过一两秒自动重试就放他进去（下面 _retryClassStatus）。这个代价值得——
+    // 反过来是"被删的人偷偷进来了"，老师完全看不见，那才是真出事。
+    let status = await Api.classStatus(phone);
+    if (status === null) {
+      // 第一次没查到：再试两次（共 3 次，间隔 800ms / 1600ms）。
+      // 绝大多数抖动在这三次内就恢复了，正常学生不会真的被卡住。
+      status = await this._retryClassStatus(phone, 2);
+    }
+    if (status === null) {
+      // 三次都查不到 —— 不放行。给一个明确的"核对中"页面 + 手动重试按钮，
+      // 而不是悄悄把他放进去。
+      this.showGateCheckFailed(phone, name);
+      return;
+    }
+    if (status.removed) {
       this.showRemovedPage(status);
       return;
     }
@@ -924,6 +954,9 @@ const App = {
     const btn = document.getElementById('removed-btn');
     if (!card || !btn) return;
     const st = this.state.removedStatus || {};
+    // v132：核对失败页（showGateCheckFailed 画的）自己管自己的按钮，
+    // 这里别去覆盖它 —— 否则会把"重新核对"按钮改成"申请重新加入"。
+    if (st.checkFailed) return;
     const req = st.request;
     const pending = !!(req && req.status === 'pending');
     const denied = !!(req && req.status === 'denied');
@@ -979,6 +1012,45 @@ const App = {
       this.state.removedStatus = status;
       this.renderRemovedCard();
     }, 15000);
+  },
+
+  // 拦截查询的短暂重试（v132）。只在"第一次没查到"时用，间隔递增。
+  // 返回最后一次结果：拿到对象就返回它，三次都失败返回 null。
+  async _retryClassStatus(phone, timesLeft) {
+    if (timesLeft <= 0) return null;
+    const wait = timesLeft === 2 ? 800 : 1600;
+    await new Promise(r => setTimeout(r, wait));
+    const s = await Api.classStatus(phone);
+    if (s !== null) return s;
+    return this._retryClassStatus(phone, timesLeft - 1);
+  },
+
+  // 三次都查不到拦截状态时显示。**不放行**，也不假装"你被删了"——
+  // 只说"正在核对"，给一个重试按钮。老师看到的后果是：
+  // 没有任何人能靠断网绕过删除。
+  showGateCheckFailed(phone, name) {
+    document.getElementById('login-page').classList.add('hidden');
+    document.getElementById('main-app').classList.add('hidden');
+    const wp = document.getElementById('waiting-page');
+    if (wp) wp.classList.add('hidden');
+    const rp = document.getElementById('removed-page');
+    if (rp) rp.classList.remove('hidden');
+    this.state.removedStatus = { checkFailed: true, request: null };
+    const card = document.getElementById('removed-card');
+    const btn = document.getElementById('removed-btn');
+    if (card) {
+      card.innerHTML =
+        '<div style="font-size:48px;margin-bottom:8px">📡</div>'
+        + '<p style="font-size:15px;color:var(--warning);font-weight:600">正在核对你的身份</p>'
+        + '<p class="text-sub fs-12 mt-8">网络不太稳定，暂时联系不上服务器。'
+        + '请确认网络通畅后点下面的按钮重试。</p>';
+    }
+    if (btn) {
+      btn.textContent = '🔄 重新核对';
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      btn.onclick = () => { btn.textContent = '⏳ 核对中…'; this.registerStudent(phone, name); };
+    }
   },
 
   async logout() {
@@ -2706,9 +2778,25 @@ const App = {
         const alreadyRemoved = rp && !rp.classList.contains('hidden');
         if (!alreadyRemoved) {
           const st = await Api.classStatus(this.state.phone);
-          if (st && st.removed) {
-            this.showRemovedPage(st);
-            return;
+          // v132：先处理"查得到"的情况。注意不再用 `st && st.removed`
+          // 那种写法 —— 它会把 null 混进"没被删"里（fail-open）。
+          if (st !== null) {
+            this._gateMissStreak = 0;
+            if (st.removed) {
+              this.showRemovedPage(st);
+              return;
+            }
+          } else {
+            // 查不到（null）时**不当作没事**。登录那一刻的 fail-closed
+            // 已经拦住绝大多数情况；这里只是"人在里面了、老师中途把他删了"
+            // 这条路的兜底 —— 连续两次查不到就把他请到核对页，别让他继续做题。
+            this._gateMissStreak = (this._gateMissStreak || 0) + 1;
+            if (this._gateMissStreak >= 2) {
+              this._gateMissStreak = 0;
+              const again = await this._retryClassStatus(this.state.phone, 2);
+              if (again === null) { this.showGateCheckFailed(this.state.phone, this.state.userName); return; }
+              if (again.removed) { this.showRemovedPage(again); return; }
+            }
           }
         }
       }
