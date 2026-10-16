@@ -2826,7 +2826,11 @@ const App = {
   _alertedPendingPhones: null,
 
   _currentPendingStudents() {
-    return (this.state.students || []).filter(s => !s.approved || !s.class);
+    // v133：已被删的人不算"新来的待分配"，否则老师刚删掉他，
+    // 这个函数又把他当"新学生"弹横幅提醒 —— 正是老师说的"删了还在"。
+    const gated = new Set((this.state.removedPhones || []).map(g => g && g.phone).filter(Boolean));
+    return (this.state.students || []).filter(s => s && s.phone && !gated.has(s.phone))
+      .filter(s => !s.approved || !s.class);
   },
 
   // Called after every cloud sync on the teacher side. The first call after
@@ -4006,7 +4010,22 @@ const App = {
   //   从名单删掉 + 写进后台拦截名单 ⇒ 他再次登录必须经老师同意。
   //   顺序是「先落闸、验回来、再删人」（见 deletePicked），不许反过来。
   renderStudents() {
-    const all = this.state.students || [];
+    // ===== v133：名单必须**扣掉已被删的人**（老师 2026-10-16）=====
+    //
+    // 老师：「这些学生名单删除了之后，还是存在少儿英语A班的田默涵，
+    //        包括测试test这个账号，删除了仍然存在。我需要删除之后再也看不见。」
+    //
+    // 根因：这个函数原来直接拿 `this.state.students` 就渲染了，**从不看拦截名单**。
+    // 而删除做的是两件事：①写后台拦截名单 ②从本机 students 里摘掉。
+    // 只要 ② 因为任何原因没落干净（另一台设备推回旧快照、本机 blob 残留、
+    // 学生在删除前刚注册过），这条记录就会**重新出现在页面上** ——
+    // 后台明明拦着、老师眼里却"删不掉"。
+    //
+    // 所以这里加一道**渲染层的硬过滤**：只要手机号在拦截名单里，
+    // 就不进这两个区。这是最后一道防线，跟后台拦截是**两个独立的保证** ——
+    // 后台管"他进不进得来"，这里管"你看不看得见"。两个都要有。
+    const gated = new Set((this.state.removedPhones || []).map(g => g && g.phone).filter(Boolean));
+    const all = (this.state.students || []).filter(s => s && s.phone && !gated.has(s.phone));
     // 未分配 = 还没班级（或还没批准）；已分配 = 有班级且已批准。
     // 未分配按注册时间倒序，刚申请的人排最上面，老师一眼能看到。
     const pending = all.filter(s => !s.approved || !s.class)
