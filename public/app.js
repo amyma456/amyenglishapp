@@ -447,6 +447,9 @@ const App = {
   // 一断网就把全班显示成"未打卡"是最坏的降级方式。
   //
   // 老师端要跨班看，所以逐个班拉一遍再合并（班级数量个位数，够用）。
+  //
+  // 返回**这次真的并进来了几条**（v130）。switchTab 靠它决定要不要补渲染：
+  // 一条都没变就别白刷一遍，否则屏幕上会闪一下 —— 那比慢更让人难受。
   async _pullCloudCheckins(scope) {
     const who = this._myWho();
     if (this.isTeacher()) {
@@ -2978,10 +2981,32 @@ const App = {
     // A pending auto-advance must not fire after the child has navigated away,
     // or it silently skips a question when they come back.
     clearTimeout(this._advanceTimer);
+
+    // v130：点一下必须**立刻**切屏。
+    //
+    // 以前这里在 renderContent() 之前 await 了一次云端拉取，于是从手指落下到
+    // 内容变样要等一整趟网络往返 —— 大陆手机数据下 300ms~2s，家长的感觉就是
+    // 「点了没反应」，然后连点好几下。选项卡高亮倒是瞬间变了，内容却停在上一
+    // 屏，看起来像卡死。
+    //
+    // 现在拆成两步：
+    //   ① 立刻用**本机已有数据**同步渲染一次 —— 一帧内出画面；
+    //   ② 云端数据回来后，只有真的变了才补渲染一次（没变就不动，避免闪烁）。
+    //
+    // 本机数据不是"空"：打卡记录本来就落在 localStorage，登录时也拉过一次，
+    // 所以第一屏不是占位图，只是可能比云端略旧。拉失败就保持现状 ——
+    // 一断网就把全班显示成"未打卡"是最坏的降级方式（这条原则没变）。
+    //
+    // 连点同一个页签直接忽略：重画一遍内容一样，还会把滚动位置顶回去。
+    // 「口语记录」除外 —— 每次进去都要重新读一遍 IndexedDB，新录的才会出现。
+    if (tab !== 'speaking' && this.state.currentTab === tab && this._tabPainted) return;
+    this._tabPainted = true;
+
     this.state.currentTab = tab;
     this.renderTabs();
-    // Speaking records live in IndexedDB, but renderers are synchronous.
-    // Pull them into state first, then render from the cache.
+
+    // 「口语记录」例外：它读的是 IndexedDB，渲染函数是同步的、没法 await，
+    // 所以必须先拉回来再渲染，否则第一屏是空的。
     if (tab === 'speaking') {
       try {
         this.state.speakingRecords = await Api.getSpeakingRecords();
@@ -2992,15 +3017,24 @@ const App = {
         this.state.speakingRecords.forEach(r => { r.audioUrl = byId[r.clipId] || null; });
       } catch(e) { this.state.speakingRecords = []; }
     }
-    // v120：打卡记录烧进了 D1，渲染前先把后台那份拉回来。渲染函数是同步的，
-    // 不先拉就只能读到本机那份 —— 那正是"全是未打卡"的老毛病。
-    // 老师端三个页都建在 checkins 上，一起拉。
+
+    // ① 先画出来 —— 不等网络
+    this.renderContent();
+
+    // ② 再去拉云；回来了且数据真的变了，补渲染一次
     const needsCheckins = ['myprogress', 'compare', 'daily', 'checkin', 'scores'];
     if (needsCheckins.indexOf(tab) >= 0) {
-      try { await this._pullCloudCheckins(tab === 'myprogress' ? 'me' : 'class'); }
-      catch (e) { console.warn('pull checkins failed:', e); }
+      const scope = tab === 'myprogress' ? 'me' : 'class';
+      // 换了 tab 就作废这次补渲染 —— 否则人已经走了，旧数据还把新页面刷掉。
+      const token = (this._tabSeq || 0) + 1;
+      this._tabSeq = token;
+      this._pullCloudCheckins(scope).then((changed) => {
+        if (this._tabSeq !== token) return;        // 已经切走了
+        if (this.state.currentTab !== tab) return;
+        if (!changed) return;                      // 数据没变，别白刷一遍造成闪烁
+        this.renderContent();
+      }).catch(e => { console.warn('pull checkins failed:', e); });
     }
-    this.renderContent();
   },
 
   async renderContent() {

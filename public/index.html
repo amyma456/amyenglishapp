@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="129">
+<meta name="app-version" content="130">
 <link rel="manifest" href="manifest.json">
 <!-- iOS 的"添加到主屏幕"不认 SVG（装出来是白板/网页截图），必须给 PNG。
      图标与启动图由 tools/gen-pwa-icons.js 生成，别手改。 -->
@@ -130,7 +130,18 @@ input,textarea,select{font-family:inherit;font-size:14px;outline:none}
 .nav-tabs button{display:inline-flex;align-items:center;gap:7px;flex:none;
   padding:9px 14px;border-radius:var(--radius-pill);background:transparent;
   color:var(--ink-2);font-size:14px;font-weight:500;white-space:nowrap;
-  transition:background var(--fast) var(--ease),color var(--fast) var(--ease)}
+  transition:background var(--fast) var(--ease),color var(--fast) var(--ease);
+  /* v130：手机上一碰就要有反应。
+     touch-action:manipulation 去掉那 300ms 的"等双击"延迟 —— 这是"点了没反应"
+     的主因之一；tap-highlight 会盖住我们自己的按下态，关掉。
+     按下态用 .active 之外单独的 :active，手指一落就有色，不等 JS 跑完。 */
+  touch-action:manipulation;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  -webkit-user-select:none;user-select:none;
+  will-change:background-color}
+.nav-tabs button:active{background:var(--orange-wash);color:var(--ink);
+  transition:none}
+.nav-tabs button.active:active{background:var(--orange-press);color:#fff}
 .nav-tabs button:hover{background:var(--orange-wash);color:var(--ink)}
 .nav-tabs button.active{background:var(--orange);color:#fff}
 
@@ -1197,8 +1208,8 @@ div[data-gated] .ac-info{gap:10px}
   <div class="modal" id="modal-box"></div>
 </div>
 
-<script src="cloud.js?v=129"></script>
-<script src="data.js?v=129"></script>
+<script src="cloud.js?v=130"></script>
+<script src="data.js?v=130"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
 <!--
   ?v= 必须跟着版本号走（v124 修正）。
@@ -1208,9 +1219,9 @@ div[data-gated] .ac-info{gap:10px}
   这个坑很隐蔽：代码明明改了、也部署上去了，手机上跑的还是几个月前的逻辑。
   以后每次发版，这里跟着 app-version 一起改。
 -->
-<script src="recorder.js?v=129"></script>
-<script src="api.js?v=129"></script>
-<script src="app.js?v=129"></script>
+<script src="recorder.js?v=130"></script>
+<script src="api.js?v=130"></script>
+<script src="app.js?v=130"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {

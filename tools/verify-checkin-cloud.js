@@ -271,9 +271,32 @@ ok(cmp.indexOf('checkin-dot done') >= 0 || cmp.indexOf('checkin-dot  done') >= 0
 console.log('== 9) 拉取时机与历史补录 ==');
 ok(/_pullCloudCheckins\(/.test(appSrc), '_pullCloudCheckins 存在');
 ok(/const needsCheckins = \['myprogress', 'compare', 'daily', 'checkin', 'scores'\]/.test(appSrc),
-  '孩子端 myprogress/compare 与老师端 daily/checkin/scores 都会先拉后台');
-ok(/await this\._pullCloudCheckins\(tab === 'myprogress' \? 'me' : 'class'\)/.test(appSrc),
-  '进 tab 时同步拉一次（渲染函数是同步的，不先拉就只能看到本机那份）');
+  '孩子端 myprogress/compare 与老师端 daily/checkin/scores 都会拉后台');
+// v130：原来是"进 tab 时**先** await 拉一次再渲染"。那是对的，但慢 ——
+// 手指落下要等一整趟网络往返，家长说"点了没反应"。现在改成
+// 「先用本机数据渲染 → 再拉 → 数据真变了才补渲染」。
+// 这里锁的是**新契约**，而且比原来更严：不仅要求拉了，还要求"变了必须补渲染"，
+// 否则就会退化成"永远只显示本机那份"（就是 v120 之前那个"全是未打卡"的老毛病）。
+ok(/_pullCloudCheckins\(scope\)/.test(appSrc),
+  '★ 进 tab 仍然会拉后台（只是不再挡在渲染前面）');
+ok(/if \(!changed\) return;[\s\S]{0,80}this\.renderContent\(\);/.test(appSrc),
+  '★ 云端数据变了必须补渲染一次 —— 否则又变成只看本机那份');
+ok(/if \(this\.state\.currentTab !== tab\) return;/.test(appSrc),
+  '★ 拉取途中切走了就不补渲染（别让旧数据刷掉新页面）');
+// 只针对 switchTab 那一段查"有没有把网络挡在渲染前面"。
+// refreshCheckins（老师点的"刷新"按钮）**应该** await —— 那个按钮的全部意义
+// 就是"等它拉完"，不在这儿管。
+const switchTabBody = (function () {
+  const i = appSrc.indexOf('async switchTab(tab)');
+  if (i < 0) return '';
+  const j = appSrc.indexOf('\n  async renderContent(', i);
+  return (j < 0) ? appSrc.slice(i) : appSrc.slice(i, j);
+})();
+ok(switchTabBody.length > 0, '取到了 switchTab 的函数体');
+ok(!/await this\._pullCloudCheckins\(/.test(switchTabBody),
+  '★ switchTab 里不许再把网络往返放在渲染前面（"反应太慢"的病根）');
+ok(/this\.renderContent\(\);[\s\S]*_pullCloudCheckins\(scope\)/.test(switchTabBody),
+  '★ 顺序必须是"先渲染 → 再拉云"');
 ok(/_backfillCheckins\(\)/.test(appSrc), '历史补录存在');
 ok(/this\._backfillCheckins\(\);/.test(appSrc), 'showApp 里会补报一次');
 // 真跑一次补录
