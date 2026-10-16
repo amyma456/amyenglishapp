@@ -6593,11 +6593,30 @@ const App = {
   // Punctuation ends a sentence. Abbreviations would trip this up, but the
   // passages are graded readers — plain sentences, no "Dr." or "e.g.".
   _splitSentences(text) {
-    return String(text || '')
+    // v135 两处修正（都来自真实课文的踩坑）：
+    // ① 引号结尾："…colour." Amy wants…" —— 句号在引号**里面**，
+    //    原来的 lookbehind（只认 [.!?]）在引号后切不开，两句粘成一句，
+    //    中英句数永远对不上（WEEK2 周六撞过）。lookbehind 放宽到 [.!?]["']?。
+    // ② 缩写点："His science teacher, Mr. Brown, encourages…" —— "Mr." 的点
+    //    被当成句号，一句劈成两句（WEEK1 周三撞过）。切完之后把以缩写结尾的
+    //    碎片并回前一段。
+    const parts = String(text || '')
       .replace(/\s+/g, ' ')
-      .split(/(?<=[.!?])\s+/)
+      .split(/(?<=[.!?]["']?)\s+(?=[A-Z0-9"“'])/)
       .map(function(x) { return x.trim(); })
       .filter(function(x) { return x.length > 1; });
+    // \b 必须有：否则 "coast." 尾部的 "st" 会被当成缩写 "St."（大小写不敏感），
+    // 一整句并进前一句 —— 第一版就栽在这里。
+    const ABBR = /(?:\b(?:Mr|Mrs|Ms|Dr|St|Prof|Sr|Jr|vs|etc))\.?$/i;
+    const out = [];
+    for (let i = 0; i < parts.length; i++) {
+      if (out.length && ABBR.test(out[out.length - 1])) {
+        out[out.length - 1] += ' ' + parts[i];
+      } else {
+        out.push(parts[i]);
+      }
+    }
+    return out;
   },
 
   // ===== 完形填空的空位（v126）===========================================
@@ -6722,9 +6741,27 @@ const App = {
   _pairSentences(m) {
     if (!m || !m.passage || !m.passage_cn) return null;
     const en = this._splitSentences(m.passage);
-    const cn = String(m.passage_cn).replace(/\s+/g, '')
+    let cn = String(m.passage_cn).replace(/\s+/g, '')
       .split(/(?<=[。！？])/).map(function (x) { return x.trim(); })
       .filter(function (x) { return x.length > 1; });
+    // v135：中文句数多于英文时，先把"说话尾缀"并回前一句再比。
+    // 英文把引语和说话人写在同一句 —— "Dolphins!" she shouted. ——
+    // 中文按标点切却是「海豚！」「她喊道。」两段，句数永远对不上，
+    // 整篇就退化成"一口气翻全文"（老师原话：学生会有压力）。
+    // 尾缀的特征：≤8 个字、以 说/喊/问/答/叫/笑/叹/道 类动词收尾，
+    // 短到不像一句独立的话（WEEK3 周六撞过）。
+    if (en.length && cn.length > en.length) {
+      const merged = [];
+      for (let i = 0; i < cn.length; i++) {
+        const f = cn[i];
+        if (merged.length && f.length <= 8 && /(说|喊|问|答|叫|笑|叹|道)[。！？]?$/.test(f)) {
+          merged[merged.length - 1] += f;
+        } else {
+          merged.push(f);
+        }
+      }
+      cn = merged;
+    }
     if (!en.length || en.length !== cn.length) return null;
     return en.map(function (e, i) { return { en: e, cn: cn[i] }; });
   },

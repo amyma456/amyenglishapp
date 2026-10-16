@@ -3887,7 +3887,7 @@ const WEEK2 = [
         "type": "reading",
         "duration": 5,
         "passage": "There was an art show at Rainbow School last Thursday. The hall was full of paintings and photos. Amy showed three paintings of the sea. She used blue, white and green. A judge from the city art club looked at every piece carefully. In the end, Amy won the first prize! She got a new set of colour pencils and a book about famous painters. \"Keep practising,\" the judge told her. \"You have a good eye for colour.\" Amy wants to be a painter like her uncle one day.",
-        "passage_cn": "上周四，彩虹学校举办了一场美术展。大厅里挂满了绘画和摄影作品。艾米展出了三幅海的画，用了蓝色、白色和绿色。一位来自市艺术俱乐部的评委仔细看了每一件作品。最后，艾米获得了一等奖！她得到了一盒新彩铅和一本关于著名画家的书。评委对她说：坚持练习，你对色彩很有感觉。艾米想有一天成为像她叔叔一样的画家。",
+        "passage_cn": "上周四，彩虹学校举办了一场美术展。大厅里挂满了绘画和摄影作品。艾米展出了三幅海的画。她用了蓝色、白色和绿色。一位来自市艺术俱乐部的评委仔细看了每一件作品。最后，艾米获得了一等奖！她得到了一盒新彩铅和一本关于著名画家的书。评委对她说，要坚持练习。她夸艾米对色彩很有感觉。艾米想有一天成为像她叔叔一样的画家。",
         "questions": [
           {
             "id": "w2-sat-rd1",
@@ -3938,7 +3938,7 @@ const WEEK2 = [
         "type": "reading",
         "duration": 10,
         "passage": "In my town, every season is different. Spring is warm and rainy. Flowers come out and birds sing in the trees. Summer is hot. Children love swimming in the river and eating ice cream. Autumn is my favorite season. It is cool and the leaves turn yellow and red. We often fly kites in the park. Winter is cold and it sometimes snows. My brother and I make a big snowman in front of our house. Which season do you like best?",
-        "passage_cn": "在我的小镇，每个季节都不一样。春天温暖多雨，花儿开放，鸟儿在树上唱歌。夏天很热，孩子们喜欢在河里游泳、吃冰淇淋。秋天是我最喜欢的季节，天气凉爽，树叶变成黄色和红色。我们常在公园里放风筝。冬天很冷，有时会下雪。我和哥哥在房前堆一个大雪人。你最喜欢哪个季节？",
+        "passage_cn": "在我的小镇，每个季节都不一样。春天温暖多雨。花儿开放，鸟儿在树上唱歌。夏天很热。孩子们喜欢在河里游泳、吃冰淇淋。秋天是我最喜欢的季节。天气凉爽，树叶变成黄色和红色。我们常在公园里放风筝。冬天很冷，有时会下雪。我和哥哥在房前堆一个大雪人。你最喜欢哪个季节？",
         "questions": [
           {
             "id": "w2-sun-rd1",
@@ -4258,7 +4258,7 @@ const WEEK3 = [
         "type": "reading",
         "duration": 10,
         "passage": "On her way home, Lily saw a wallet lying on the ground. She picked it up and opened it. There was a lot of money and an ID card inside. The card showed a man's name and address. Lily went to the address with her mother. The man was very surprised and thankful. He offered Lily some money, but she said no. \"It is not my money,\" she said. The next day, a letter from the man arrived at Lily's school. Her teacher read it to the whole class. Everyone clapped for Lily.",
-        "passage_cn": "在回家路上，莉莉看见地上有一个钱包。她捡起来打开，里面有很多钱和一张身份证。身份证上写着一位男士的姓名和地址。莉莉和妈妈一起去了那个地址。那位男士又惊讶又感激。他要给莉莉一些钱，但她拒绝了。她说：这不是我的钱。第二天，那位男士的一封寄到了莉莉的学校。老师把信念给全班听，大家都为莉莉鼓掌。",
+        "passage_cn": "在回家路上，莉莉看见地上有一个钱包。她捡起来打开了钱包。里面有很多钱和一张身份证。身份证上写着一位男士的姓名和地址。莉莉和妈妈一起去了那个地址。那位男士又惊讶又感激。他要给莉莉一些钱，但她拒绝了。她说，这不是我的钱。第二天，那位男士的一封信寄到了莉莉的学校。她的老师把信念给全班听。大家都为莉莉鼓掌。",
         "questions": [
           {
             "id": "w3-tue-rd1",
@@ -5101,7 +5101,7 @@ const WEEK3 = [
         "type": "reading",
         "duration": 10,
         "passage": "Mike is only ten, but he is already the best chess player in his school. He learned chess from his grandfather when he was six. Now he practises for an hour every evening. Last month, Mike took part in a city competition. There were more than fifty players, and most of them were older than him. Mike lost his second game and felt nervous. But he calmed down and won the next four games. In the end, he finished third and got a bronze medal. \"Losing is not the end,\" Mike says. \"It teaches me where I am weak.\"",
-        "passage_cn": "迈克只有十岁，却已经是他学校里最好的棋手。他六岁时跟爷爷学会了下棋。现在他每天晚上练习一小时。上个月，迈克参加了市里的比赛。参赛的有五十多名选手，大多数比他年纪大。迈克输了第二局，感到紧张。但他冷静下来，赢了接下来的四局。最后他获得第三名，拿到一枚铜牌。输了不是终点，迈克说，它让我知道自己哪里弱。",
+        "passage_cn": "迈克只有十岁，却已经是他学校里最好的棋手。他六岁时跟爷爷学会了下棋。现在他每天晚上练习一小时。上个月，迈克参加了市里的比赛。参赛的有五十多名选手，大多数比他年纪大。迈克输了第二局，感到紧张。但他冷静下来，赢了接下来的四局。最后他获得第三名，拿到一枚铜牌。输了不是终点，迈克说。它让我知道自己哪里弱。",
         "questions": [
           {
             "id": "w3-sun-rd1",
@@ -5370,7 +5370,7 @@ const WEEK4 = [
         "type": "reading",
         "duration": 5,
         "passage": "Last year, the students of Greenfield Middle School started a special project. They noticed that people in their town threw away plastic bottles every day. The students set up bottle bins around the streets and made posters about recycling. At first, only a few people used the bins. The students didn't give up. They visited the local radio station and talked about their project on air. Soon more and more people joined in. After six months, the town had collected over two million bottles. The money from recycling was used to build a small library for the school. \"Children can change the world too,\" the mayor said when she opened the library.",
-        "passage_cn": "去年，绿田中学的学生们启动了一个特别的项目。他们注意到镇上的人每天扔掉塑料瓶。学生们在街头设置了瓶子回收箱，还制作了关于回收利用的海报。起初只有少数人使用回收箱，但学生们没有放弃。他们去了本地广播电台，在节目里介绍他们的项目。很快越来越多的人加入了。六个月后，全镇收集了超过两百万个瓶子。回收换来的钱被用来给学校建了一座小图书馆。市长在图书馆启用时说：孩子们也能改变世界。",
+        "passage_cn": "去年，绿田中学的学生们启动了一个特别的项目。他们注意到镇上的人每天扔掉塑料瓶。学生们在街头设置了瓶子回收箱，还制作了关于回收利用的海报。起初，只有少数人使用回收箱。但学生们没有放弃。他们去了本地广播电台，在节目里介绍他们的项目。很快越来越多的人加入了。六个月后，全镇收集了超过两百万个瓶子。回收换来的钱被用来给学校建了一座小图书馆。市长在图书馆启用时说，孩子们也能改变世界。",
         "questions": [
           {
             "id": "w4-mon-rd1",
@@ -5426,7 +5426,7 @@ const WEEK4 = [
         "type": "reading",
         "duration": 10,
         "passage": "Do you know how tea travelled around the world? Tea was first grown in China thousands of years ago. At that time, it was used as a medicine. Later, people began to drink it for pleasure. In the seventeenth century, ships carried tea from China to Europe. It quickly became popular in England. Tea houses opened in big cities, and drinking tea became an important part of daily life. Today, millions of cups of tea are drunk around the world every day. In England, people often add milk to their tea. In China, many people drink it plain. Different countries, different habits — but the same little leaf.",
-        "passage_cn": "你知道茶叶是如何传遍世界的吗？茶最早种植于几千年前的中国。那时它被当作药用。后来人们开始把它当作饮品享用。十七世纪，商船把茶叶从中国运到欧洲。它在英格兰迅速流行起来。大城市里茶馆开张，喝茶成为日常生活的重要部分。如今全世界每天要喝掉数百万杯茶。在英格兰，人们常往茶里加牛奶；在中国，很多人喝清茶。国家不同，习惯不同——但都是同一种小小的叶子。",
+        "passage_cn": "你知道茶叶是如何传遍世界的吗？茶最早种植于几千年前的中国。那时它被当作药用。后来人们开始把它当作饮品享用。十七世纪，商船把茶叶从中国运到欧洲。它在英格兰迅速流行起来。大城市里茶馆开张，喝茶成为日常生活的重要部分。如今全世界每天要喝掉数百万杯茶。在英格兰，人们常往茶里加牛奶。在中国，很多人喝清茶。国家不同，习惯不同——但都是同一种小小的叶子。",
         "questions": [
           {
             "id": "w4-tue-rd1",
@@ -5697,7 +5697,7 @@ const WEEK4 = [
         "type": "reading",
         "duration": 5,
         "passage": "The Great Wall is one of the greatest wonders of the world. It winds like a giant dragon across the mountains of northern China. The wall was first built more than two thousand years ago. Different states built walls to protect their land. Later, they were joined together. The wall that we see today was mostly built in the Ming Dynasty. In the past, soldiers stood on the wall and watched for enemies. Beacons were lit to send messages quickly over long distances. Today, the wall is no longer used for war. Millions of visitors climb it every year and enjoy the amazing views. As an old saying goes, \"He who has never been to the Great Wall is not a true man.\"",
-        "passage_cn": "长城是世界上最伟大的奇迹之一。它像一条巨龙蜿蜒穿过中国北方的群山。长城最早建于两千多年前。不同的诸侯国修筑城墙来保护自己的土地，后来这些城墙被连接起来。我们今天看到的长城大部分建于明代。过去，士兵们站在城墙上瞭望敌情，点燃烽火台把消息快速传到远方。如今，长城不再用于战争。每年数百万游客登上长城，欣赏壮丽的景色。正如古语所说：不到长城非好汉。",
+        "passage_cn": "长城是世界上最伟大的奇迹之一。它像一条巨龙蜿蜒穿过中国北方的群山。长城最早建于两千多年前。不同的诸侯国修筑城墙来保护自己的土地。后来，这些城墙被连接起来。我们今天看到的长城大部分建于明代。过去，士兵们站在城墙上瞭望敌情。他们点燃烽火台，把消息快速传到远方。如今，长城不再用于战争。每年数百万游客登上长城，欣赏壮丽的景色。正如古语所说，不到长城非好汉。",
         "questions": [
           {
             "id": "w4-wed-rd1",
@@ -6197,7 +6197,7 @@ const WEEK4 = [
         "type": "reading",
         "duration": 5,
         "passage": "Last year, Tom took part in a charity run across part of the Gobi Desert. Before the race, he trained for six months. Runners had to carry their own food and water for three days. On the second day, Tom's water ran out, and the sun was burning. Another runner, an old man, shared his water with Tom. \"We are not rivals,\" the man said. \"We are friends in the desert.\" In the end, Tom finished forty-first out of two hundred runners, but he raised ten thousand yuan for sick children. He says the medal that matters is not made of gold.",
-        "passage_cn": "去年，汤姆参加了一场穿越戈壁滩部分的慈善跑。赛前他训练了六个月。参赛者要自己带三天的食物和水。第二天，汤姆的水喝完了，太阳火辣辣的。另一位选手——一位老先生，把自己的水分给了汤姆。我们不是对手，老先生说，我们是沙漠里的朋友。最后，汤姆在两百名选手中名列第四十一，但他为患病儿童筹到了一万元。他说，真正重要的奖牌不是金子做的。",
+        "passage_cn": "去年，汤姆参加了一场穿越戈壁滩部分的慈善跑。赛前他训练了六个月。参赛者要自己带三天的食物和水。第二天，汤姆的水喝完了，太阳火辣辣的。另一位选手——一位老先生，把自己的水分给了汤姆。我们不是对手，老先生说。我们是沙漠里的朋友。最后，汤姆在两百名选手中名列第四十一，但他为患病儿童筹到了一万元。他说，真正重要的奖牌不是金子做的。",
         "questions": [
           {
             "id": "w4-sat-rd1",
@@ -6508,7 +6508,8 @@ const CLOZE_SENTENCE_CN = {
     '安娜没有生气。',
     '她为丽塔做了一张漂亮的卡片。',
     '她在上面写道："在我困难的时候，你帮助过我。',
-    '现在让我来帮助你。"每天放学后，安娜都花一个小时给丽塔补数学。',
+    '现在让我来帮助你。"',
+    '每天放学后，安娜都花一个小时给丽塔补数学。',
     '一个月后，丽塔通过了那次考试。',
     '"谢谢你没有放弃我，"丽塔眼里含着泪水说。'
   ],
