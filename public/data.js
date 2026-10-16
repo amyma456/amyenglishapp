@@ -6399,7 +6399,39 @@ const HOMEWORK_WEEK_IDX = (function () {
 })();
 
 // 对外暴露的仍是 7 天数组，app.js / api.js 现有逻辑全部不用改。
-const HOMEWORK_DATA = HOMEWORK_WEEKS[HOMEWORK_WEEK_IDX];
+//
+// v134：这里从 const 改成 let，只为一件事 —— 老师端「题库预览」要能翻到下周去
+// （老师 2026-10-16：「老师端能够看到两周的作业题，并且每天的作业题显示的
+// 和学生界面是一样的……提前把后一天的题给更新一下」）。
+//
+// 原来的毛病：「周计划」页两个区块都遍历同一个 HOMEWORK_DATA，于是「下周」
+// 那一栏显示的其实是**本周的题**，只是把日期换成了下周的 —— 老师照着检查
+// 下周的题，检查的根本不是下周要发给学生的题。今天（2026-10-16）生效的是
+// WEEK_IDX=2（WEEK3），下周真正要发的是 WEEK4，页面上却看不到。
+//
+// 78 处读取点一处都不用动：它们读的就是这个全局名字，换入换出即可。
+// app.js 每次渲染前都会调 hwSetActiveWeek() 把周次重新对齐一次，所以就算
+// 中途异常退出、没走到"恢复"那一步，下一帧也会自己纠正回来。
+let HOMEWORK_DATA = HOMEWORK_WEEKS[HOMEWORK_WEEK_IDX];
+
+// 取「相对当前自然周偏移 offset 周」的那份题库。越界一律夹取，
+// 永远不返回 undefined —— 调用方不用自己判边界。
+//   offset = 0  → 本周（学生正在做的）
+//   offset = 1  → 下周（老师要提前检查的）
+function hwWeekData(offset) {
+  const n = Number(offset) || 0;
+  let i = HOMEWORK_WEEK_IDX + n;
+  if (i < 0) i = 0;
+  if (i > HOMEWORK_WEEKS.length - 1) i = HOMEWORK_WEEKS.length - 1;
+  return HOMEWORK_WEEKS[i];
+}
+
+// 把「当前生效的一周」切到 offset 周。老师预览下周时用，退出预览切回 0。
+// 只改本机这个变量，不碰云端、不碰学生端 —— 每台设备各切各的。
+function hwSetActiveWeek(offset) {
+  HOMEWORK_DATA = hwWeekData(offset);
+  return HOMEWORK_DATA;
+}
 
 // ===== 完形填空课文的逐句中文译文（v127）=================================
 //

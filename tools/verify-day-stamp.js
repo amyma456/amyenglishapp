@@ -256,8 +256,8 @@ console.log('\n=== 3. 整张错题卷跑一遍：每道题都带具体日期 ===
         ok(/HOMEWORK_EPOCH/.test(src) && /HOMEWORK_EPOCH/.test(dataSrc),
            'app.js 推算日期用的是 data.js 里的周锚点，不是另写一份');
 
-        ok(/name="app-version" content="133"/.test(htmlSrc), '版本号升到 133');
-        ok(/amy-english-v133/.test(swSrc), 'Service Worker 缓存名同步到 v133（不然手机上还是旧版）');
+        ok(/name="app-version" content="134"/.test(htmlSrc), '版本号升到 134');
+        ok(/amy-english-v134/.test(swSrc), 'Service Worker 缓存名同步到 v134（不然手机上还是旧版）');
       }
 
       console.log('\n' + (fail ? '❌ ' + fail + ' 项未通过' : '✅ 全部通过'));

@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="133">
+<meta name="app-version" content="134">
 <link rel="manifest" href="manifest.json">
 <!-- iOS 的"添加到主屏幕"不认 SVG（装出来是白板/网页截图），必须给 PNG。
      图标与启动图由 tools/gen-pwa-icons.js 生成，别手改。 -->
@@ -412,6 +412,28 @@ body.stage-mode .content-area{padding-block:0}
    保证「上一题/下一题」永远不被横幅盖住。 */
 .stage{height:calc(100dvh - var(--nav-h) - var(--banner-h,0px));
   display:flex;flex-direction:column;gap:10px;padding-bottom:12px}
+
+/* ===== 老师端「题库预览」顶栏（v134）=====================================
+   老师要在**和学生一模一样**的那一屏上做题、查错，所以学生舞台必须原样
+   搬过来。但舞台是 calc(100dvh - ...) 满屏的、body 又不滚动 —— 直接在
+   上面压一排按钮会把底部的「上一题/下一题」挤出屏幕。
+   所以这里不覆盖舞台，而是给它让出一行的高度（--pv-h），让顶栏和舞台
+   在同一条垂直流里各占各的。舞台内部的样式一个字节都没动。 */
+body.preview-mode{--pv-h:44px}
+body.preview-mode .stage{height:calc(100dvh - var(--nav-h) - var(--pv-h) - var(--banner-h,0px))}
+
+.pv-bar{flex:none;height:var(--pv-h,44px);display:flex;align-items:center;gap:8px;
+  padding:0 4px;border-bottom:1px solid var(--line)}
+.pv-bar .pv-title{flex:1;min-width:0;font-size:13px;font-weight:600;color:var(--primary-dark);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pv-bar button{flex:none}
+/* 换天面板：浮层，不占流 —— 舞台高度不会因为开关面板而跳动 */
+.pv-picker{position:fixed;left:8px;right:8px;top:calc(var(--nav-h) + var(--pv-h,44px) + 4px);
+  z-index:60;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow-lg);padding:12px}
+.pv-picker .pv-row{display:flex;flex-wrap:wrap;gap:6px}
+.pv-picker .pv-row + .pv-row{margin-top:8px}
+.pv-picker .pv-mods{font-size:11px;color:var(--ink-3);margin-top:8px;line-height:1.5}
 
 .stage-head{flex:none;display:flex;align-items:center;gap:12px}
 .sh-name{font-size:13px;font-weight:500;color:var(--ink-2);white-space:nowrap}
@@ -1234,8 +1256,8 @@ body.perf-on .content-area{padding-bottom:54vh}
   <div class="modal" id="modal-box"></div>
 </div>
 
-<script src="cloud.js?v=133"></script>
-<script src="data.js?v=133"></script>
+<script src="cloud.js?v=134"></script>
+<script src="data.js?v=134"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
 <!--
   ?v= 必须跟着版本号走（v124 修正）。
@@ -1245,9 +1267,9 @@ body.perf-on .content-area{padding-bottom:54vh}
   这个坑很隐蔽：代码明明改了、也部署上去了，手机上跑的还是几个月前的逻辑。
   以后每次发版，这里跟着 app-version 一起改。
 -->
-<script src="recorder.js?v=133"></script>
-<script src="api.js?v=133"></script>
-<script src="app.js?v=133"></script>
+<script src="recorder.js?v=134"></script>
+<script src="api.js?v=134"></script>
+<script src="app.js?v=134"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {

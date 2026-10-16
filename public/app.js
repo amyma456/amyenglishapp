@@ -11,6 +11,12 @@ const App = {
     className: '',
     currentDay: 0,
     currentTab: 'weekly',
+    // v134 老师「题库预览」：正在用学生界面看哪一天。
+    //   previewDay  = null  → 没在预览，一切照旧
+    //   previewDay  = 0..6  → 正在预览这一天
+    //   previewWeek = 0 本周 / 1 下周（相对当前自然周）
+    previewDay: null,
+    previewWeek: 0,
     currentModule: null,
     vocabStage: 0,
     vocabWordIdx: 0,
@@ -2020,6 +2026,32 @@ const App = {
     return w > 0 ? '_w' + w : '';
   },
 
+  // v134：把「当前生效的一周」对齐到该对齐的那一周。
+  //
+  // 只有老师、且**正停在预览页**时才切到别的周；其它一切情况都强制回到本周。
+  // 所以这不是"设一次状态"，而是**每次渲染都重新宣告一次** —— 中途抛错、
+  // 没走到恢复那一步也没关系，下一帧自己纠正。
+  //
+  // 判定挂的是 currentTab，不是 previewDay：老师只要切走标签，周次立刻还原。
+  // （挂 previewDay 会留个坑 —— 切回周计划时 previewDay 还在，周计划就会
+  //  把下周的题当成本周的显示，正好是这次要修的那个毛病。）
+  _syncWeekData() {
+    if (typeof hwSetActiveWeek !== 'function') return;   // 老缓存里没有，不动
+    hwSetActiveWeek(this._previewWeekOffset());
+  },
+
+  // 当前应该生效的周偏移。0 = 本周。
+  _previewWeekOffset() {
+    if (!this.isTeacher()) return 0;
+    if (this.state.currentTab !== 'preview') return 0;
+    return this.state.previewWeek || 0;
+  },
+
+  // 老师此刻是不是真的在预览舞台上（学生端永远 false）
+  _inPreview() {
+    return this.isTeacher() && this.state.currentTab === 'preview';
+  },
+
   _gateOpen(gid) { return !!this._gates[gid]; },
 
   // 门禁 id 统一从这里出，**必须带"第几天"**：题号 mi/qi 在不同天是重复的，
@@ -3114,6 +3146,10 @@ const App = {
     if (isTeacher) {
       tabs = [
         { id: 'weekly', icon: 'i-list', name: '周计划' },
+        // v134：老师自己想先做一遍、提前发现问题的那一屏。渲染的就是学生
+        // 做题的那套界面（renderStage），不是另做一份预览版 —— 不然"看到的
+        // 和学生看到的不一样"就没意义了。
+        { id: 'preview', icon: 'i-eye', name: '题库预览' },
         { id: 'daily', icon: 'i-calendar', name: '每日详情' },
         { id: 'edit', icon: 'i-pencil', name: '作业编辑' },
         { id: 'checkin', icon: 'i-chart', name: '打卡监控' },
@@ -3235,8 +3271,19 @@ const App = {
     const area = document.getElementById('content-area');
     const isTeacher = this.isTeacher();
     const tab = this.state.currentTab;
+    // v134：每次渲染先把"生效的是哪一周"重新对齐一次（老师预览下周时是下周，
+    // 其它任何时候都是本周）。放在最前面，保证下面所有渲染读到的 HOMEWORK_DATA
+    // 一定是对的。见 _syncWeekData 的注释。
+    this._syncWeekData();
     // Only the homework stage locks the page; every other view scrolls.
-    document.body.classList.toggle('stage-mode', !isTeacher && tab === 'today');
+    // 老师预览走的是同一套舞台，所以也要 stage-mode —— 不然同一个界面在
+    // 老师这儿长得跟学生那儿不一样，"和学生界面一样"就落空了。
+    const inPreviewStage = isTeacher && tab === 'preview';
+    document.body.classList.toggle('stage-mode',
+      (!isTeacher && tab === 'today') || inPreviewStage);
+    // preview-mode 只负责给舞台让出顶栏那一行的高度（见 index.html），
+    // 舞台内部样式不动 —— 学生看到的还是原来那一屏。
+    document.body.classList.toggle('preview-mode', inPreviewStage);
 
     // Assign/delete/update all end with renderContent — refresh the
     // pending badge here so the count always matches reality.
@@ -3245,6 +3292,7 @@ const App = {
     if (isTeacher) {
       switch(tab) {
         case 'weekly': area.innerHTML = this.renderWeekly(); break;
+        case 'preview': area.innerHTML = this.renderPreview(); break;
         case 'daily': area.innerHTML = this.renderDaily(); break;
         case 'edit': area.innerHTML = this.renderEdit(); break;
         case 'checkin': area.innerHTML = this.renderCheckin(); break;
@@ -3291,13 +3339,19 @@ const App = {
     html += '</div>';
 
     // Render one week block (weekOffset: 0=this week, 1=next week)
+    //
+    // v134：每个区块必须取**自己那一周**的题库。以前两处都遍历同一个
+    // HOMEWORK_DATA，于是「下周」栏列出来的是本周的题、只是日期换成了下周的
+    // —— 老师照它检查下周的题，检查的全是错的。（今天 WEEK_IDX=2，本该看到
+    // WEEK4，实际看到的是 WEEK3。）
     var renderWeekBlock = (weekOffset, dates) => {
+      var weekDays = (typeof hwWeekData === 'function') ? hwWeekData(weekOffset) : HOMEWORK_DATA;
       var label = weekOffset === 0
         ? '📅 本周作业（' + this.formatDateCn(dates[0]) + ' ~ ' + this.formatDateCn(dates[6]) + '）'
         : '📅 下周作业（' + this.formatDateCn(dates[0]) + ' ~ ' + this.formatDateCn(dates[6]) + '）';
       var out = '<h3 style="color:var(--primary-dark);margin:16px 0 8px">' + label + '</h3>';
       out += '<div class="day-grid">';
-      HOMEWORK_DATA.forEach((day, i) => {
+      weekDays.forEach((day, i) => {
         const isToday = this.isDayToday(i, weekOffset);
         out += '<div class="day-card ' + (day.is_speaking_day ? 'speaking' : '') + '" style="' + (isToday ? 'border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-light)' : '') + '" onclick="App.viewDay(' + i + ',' + weekOffset + ')">';
         out += '<div class="day-name">' + day.day_cn + (isToday ? ' <span style="font-size:11px;color:var(--primary)">今天</span>' : '') + '</div>';
@@ -3305,6 +3359,9 @@ const App = {
         out += '<div class="day-type">' + (day.is_speaking_day ? '🎤 AI口语日' : '📝 练习日') + '</div>';
         out += '<div class="day-modules">' + day.modules.map(m => m.name_cn).join('<br>') + '</div>';
         out += '<div class="day-duration">共' + day.total_duration + '分钟</div>';
+        // v134：一眼看出"点这里就是用学生那套界面做一遍"。
+        // stopPropagation 是必须的 —— 不然会先触发卡片的 viewDay，两个都开。
+        out += '<button class="btn btn-sm btn-outline mt-8" onclick="event.stopPropagation();App.openPreview(' + i + ',' + weekOffset + ')">👀 学生界面</button>';
         out += '</div>';
       });
       out += '</div>';
@@ -3320,12 +3377,17 @@ const App = {
 
   viewDay(idx, weekOffset) {
     weekOffset = weekOffset || 0;
-    const day = HOMEWORK_DATA[idx];
+    // v134：按 weekOffset 取对应那一周的题库（以前固定取本周的，所以点"下周"
+    // 的卡片，展开的是本周的题）。
+    const weekDays = (typeof hwWeekData === 'function') ? hwWeekData(weekOffset) : HOMEWORK_DATA;
+    const day = weekDays[idx];
     const detail = document.getElementById('day-detail');
     if (!detail) return;
     const dateLabel = this.getDayDateLabel(idx, weekOffset);
     const weekLabel = weekOffset === 0 ? '本周' : '下周';
     let html = '<h3 style="color:var(--primary-dark);margin:16px 0 8px">' + weekLabel + day.day_cn + '（' + dateLabel + '）作业详情</h3>';
+    // v134：题型清单 + 学生界面，两种看法，互不耽误
+    html += '<div class="mb-16"><button class="btn-primary" onclick="App.openPreview(' + idx + ',' + weekOffset + ')">👀 用学生界面做一遍这一天</button></div>';
     day.modules.forEach(m => {
       html += '<div class="module-card">';
       html += '<div class="module-header"><span class="m-name">' + this.getModuleIcon(m.type) + ' ' + m.name_cn + '</span><span class="m-duration">' + m.duration + '分钟</span></div>';
@@ -3408,6 +3470,109 @@ const App = {
       text = text.replace('{{' + b.id + '}}', '<span class="writing-blank" style="color:var(--primary)">[' + b.hint_cn + ']</span>');
     });
     return text;
+  },
+
+  // ===== Teacher: 题库预览（v134）========================================
+  //
+  // 老师 2026-10-16：「老师端能够看到两周的作业题，并且每天的作业题显示的
+  // 和学生界面是一样的。这样的话，老师可以将做题做一遍，然后发现问题提前把
+  // 后一天的题给更新一下……每天的题型和这个学生的题做题的界面给融合一下，
+  // 这样的话，两个都不耽误」
+  //
+  // 实现要点只有一句：**这里渲染的就是学生的 renderStage()，不是另做的
+  // 预览版**。只要另做一份，它就会慢慢走样，"和学生界面一样"这句承诺就废了。
+  //
+  // 老师在预览里怎么点都留不下痕迹，这不是靠这一页的自觉，而是靠三处已有的
+  // 硬闸：
+  //   · _recordAnswer 第一行 `if (this.isTeacher() || !this.state.phone) return;`
+  //     —— 所有答案、打卡、错题上报的唯一汇集点
+  //   · _savePos 同样第一行就 return —— 断点续做位置不会被污染
+  //   · renderStage 内部所有"锁住下一题"的门禁都带 `!this.isTeacher()`
+  //     —— 老师可以自由翻遍全天的题，不会被"没跟读够 60 分"卡住
+  // 口语录音那条路上原来没有闸，v134 单独补了（见 _persistSpeakingClip）。
+  //
+  // 周数据：下周的题从 hwWeekData(1) 取。原来「周计划」两个区块都遍历同一个
+  // HOMEWORK_DATA，「下周」栏显示的是本周的题 —— 老师提前检查下周的题，
+  // 检查的根本不是下周要发的那份。
+  openPreview(dayIdx, weekOffset) {
+    this.state.previewDay = dayIdx;
+    this.state.previewWeek = weekOffset || 0;
+    this.state.currentDay = dayIdx;   // renderStage 内部按 currentDay 取词汇坐标
+    this.state.stepIdx = 0;           // 老师是来查题的，不是来续做的，从头看
+    this._pvPickerOpen = false;
+    this.switchTab('preview');
+  },
+
+  closePreview() {
+    this.state.previewDay = null;
+    this.state.previewWeek = 0;
+    this.state.stepIdx = 0;
+    this._pvPickerOpen = false;
+    // 走 switchTab 而不是只 renderContent —— 它会把 currentTab 改掉，
+    // 于是 _previewWeekOffset() 立刻回到 0，题库自动切回本周。
+    this.switchTab('weekly');
+  },
+
+  // 预览页内换天 / 换周，不离开预览
+  previewGo(dayIdx, weekOffset) {
+    this.state.previewDay = dayIdx;
+    this.state.previewWeek = weekOffset || 0;
+    this.state.currentDay = dayIdx;
+    this.state.stepIdx = 0;
+    this._pvPickerOpen = false;
+    this.renderContent();
+  },
+
+  togglePvPicker() {
+    this._pvPickerOpen = !this._pvPickerOpen;
+    this.renderContent();
+  },
+
+  renderPreview() {
+    const weekOff = this._previewWeekOffset();
+    const weekDays = (typeof hwWeekData === 'function') ? hwWeekData(weekOff) : HOMEWORK_DATA;
+    let d = this.state.previewDay;
+    if (d === null || d === undefined || !weekDays[d]) d = this.getTodayWeekdayIdx();
+    // 回写：下面 renderStage 读的是 state.currentDay，两边必须是同一天
+    this.state.previewDay = d;
+    this.state.currentDay = d;
+
+    const day = weekDays[d];
+
+    let html = '';
+
+    // ---- 顶栏（占 --pv-h 那一行，舞台自动让位）----
+    html += '<div class="pv-bar">';
+    html += '<button class="btn btn-sm" onclick="App.closePreview()">✕ 退出</button>';
+    html += '<span class="pv-title">👀 ' + (weekOff === 0 ? '本周' : '下周') + ' · ' + day.day_cn
+         + (this.isDayToday(d, weekOff) ? '（今天）' : '') + '</span>';
+    html += '<button class="btn btn-sm btn-outline" onclick="App.togglePvPicker()">换天 ▾</button>';
+    html += '</div>';
+
+    // ---- 换天浮层：默认收起，不影响舞台高度 ----
+    if (this._pvPickerOpen) {
+      html += '<div class="pv-picker">';
+      html += '<div class="pv-row">';
+      html += '<button class="btn btn-sm ' + (weekOff === 0 ? 'btn-primary' : '') + '" onclick="App.previewGo(' + d + ',0)">本周</button>';
+      html += '<button class="btn btn-sm ' + (weekOff === 1 ? 'btn-primary' : '') + '" onclick="App.previewGo(' + d + ',1)">下周</button>';
+      html += '<span class="fs-12 text-sub" style="align-self:center;margin-left:auto">点日期直接跳过去</span>';
+      html += '</div>';
+      html += '<div class="pv-row">';
+      weekDays.forEach((dd, i) => {
+        const on = i === d;
+        html += '<button class="btn btn-sm ' + (on ? 'btn-primary' : '') + '" onclick="App.previewGo(' + i + ',' + weekOff + ')">'
+             + dd.day_cn + (this.isDayToday(i, weekOff) ? '·今天' : '') + '</button>';
+      });
+      html += '</div>';
+      html += '<div class="pv-mods">' + this.getDayDateLabel(d, weekOff) + ' · 共'
+           + (day.total_duration || 0) + '分钟 · '
+           + (day.modules || []).map(m => m.name_cn).join(' · ') + '</div>';
+      html += '</div>';
+    }
+
+    // ---- 学生界面本体：同一个函数，逐字未改 ----
+    html += this.renderStage(d);
+    return html;
   },
 
   // ===== Teacher: Daily Detail =====
@@ -5583,13 +5748,27 @@ const App = {
 
     let clipId = null, url = null;
     if (blob) {
-      try {
-        const saved = await Api.uploadRecording(blob, meta);
-        clipId = saved.id; url = saved.url;
-      } catch (e) { console.warn('Speaking clip upload failed:', e); }
+      if (this.isTeacher()) {
+        // v134 老师预览：录音只在本机放给自己听，不上传、不留档。
+        //
+        // 不加这一道的后果是实打实的：老师身上没有 students 记录，
+        // _myStudentId() 会退化成 's' + 手机号，于是老师每录一遍，就往
+        // 「口语记录」里多一条挂在这个假学号下的记录，还白占上传带宽。
+        // 老师是来检查题的，不该在她自己的档案里留东西。
+        try { url = URL.createObjectURL(blob); } catch (e) { url = null; }
+      } else {
+        try {
+          const saved = await Api.uploadRecording(blob, meta);
+          clipId = saved.id; url = saved.url;
+        } catch (e) { console.warn('Speaking clip upload failed:', e); }
+      }
     }
-    try { await Api.submitSpeakingScore(Object.assign({ clipId }, meta)); }
-    catch (e) { console.warn('Speaking score save failed:', e); }
+    // 评分同理：老师预览不提交，但下面的分数照常显示 —— 她要看的正是
+    // "这个评分到底对不对"，只是不该写进任何人的账里。
+    if (!this.isTeacher()) {
+      try { await Api.submitSpeakingScore(Object.assign({ clipId }, meta)); }
+      catch (e) { console.warn('Speaking score save failed:', e); }
+    }
 
     const slot = document.getElementById('sp-clip-' + mi);
     if (slot) {

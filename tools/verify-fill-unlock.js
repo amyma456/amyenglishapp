@@ -310,8 +310,8 @@ console.log('\n=== 8. 静态检查：新写法在位 ===');
   ok(studentPath.indexOf("ansEl.innerHTML = '✅ 正确！';") < 0,
      '学生路径上不再有"只显示正确、不给下一步"的写法（老师端预览保留原样）');
 
-  ok(/name="app-version" content="133"/.test(htmlSrc), '版本号升到 133');
-  ok(/amy-english-v133/.test(swSrc), 'Service Worker 缓存名同步到 v133（不然手机上还是旧版）');
+  ok(/name="app-version" content="134"/.test(htmlSrc), '版本号升到 134');
+  ok(/amy-english-v134/.test(swSrc), 'Service Worker 缓存名同步到 v134（不然手机上还是旧版）');
 }
 
 console.log('\n' + (fail ? '❌ ' + fail + ' 项未通过' : '✅ 全部通过'));
