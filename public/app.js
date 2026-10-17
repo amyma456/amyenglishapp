@@ -23,6 +23,12 @@ const App = {
     vocabScore: 0,
     // 这一套词汇坐标属于哪个模块（断点记录要用；-1 = 还没进过词汇闯关）
     vocabMi: -1,
+    // v136：**已经学完的那个词的序号**（-1 = 一个都还没学完）。
+    // 底部「下一个单词」只在这个词学完（所有阶段走完）时才亮 —— 以前它靠
+    // `_spell` 判，而 `_spell` 只在"逐字母拼读"那一屏才有值，看图选词 /
+    // 选释义两屏是 null，于是孩子一张图都没选就能一路点到底，整个词汇游戏
+    // 被跳过去（家长 2026-10-17 报的"题没做完，下一题又能开始做了"）。
+    vocabDoneIdx: -1,
     selectedVoice: 'female',
     answers: {},
     checkins: {},
@@ -498,6 +504,8 @@ const App = {
       stage: this.state.vocabStage,
       score: this.state.vocabScore,
       reviewDone: !!this.state.vocabReviewDone,
+      // v136：这个词学完了没有 —— 断点续做时靠它判断底部按钮该不该亮
+      doneIdx: this.state.vocabDoneIdx,
     };
     rec.at = Date.now();
     store[k] = rec;
@@ -6090,6 +6098,10 @@ const App = {
       this.state.vocabWordIdx = Math.floor(v.wordIdx);
       this.state.vocabScore = Math.max(0, Math.floor(v.score) || 0);
       this.state.vocabReviewDone = !!v.reviewDone;
+      // v136：上次学到第几个词**学完了**。没这个记录（旧版本存的位置）一律
+      // 当作"还没学完"——宁可让孩子把当前这个词重走一遍，也不许跳过。
+      this.state.vocabDoneIdx = (typeof v.doneIdx === 'number' && isFinite(v.doneIdx))
+        ? Math.floor(v.doneIdx) : -1;
       // 阶段号要按当前这个词的阶段数夹一下，否则数据一变就会渲染到
       // 不存在的阶段（stage 为 undefined，取 .type 直接炸）
       const stCount = (((m.words[this.state.vocabWordIdx] || m.words[0] || {}).stages) || []).length || 1;
@@ -6102,6 +6114,7 @@ const App = {
       this.state.vocabWordIdx = 0;
       this.state.vocabScore = 0;
       this.state.vocabReviewDone = false;
+      this.state.vocabDoneIdx = -1;
     }
     // Check if previous day has learned words for review —— 已经点过
     // "复习完成"就不再回放这一屏，否则断点续做会先被按回复习页。
@@ -6508,6 +6521,9 @@ const App = {
     const m = HOMEWORK_DATA[dayIdx].modules[mi];
     this.state.vocabStage++;
     if (this.state.vocabStage >= stageCount) {
+      // v136：这个词的最后一个阶段走完了 —— 记下"第几个词学完了"，
+      // 底部「下一个单词」就靠它亮。见 _vocabFootLocked。
+      this.state.vocabDoneIdx = this.state.vocabWordIdx;
       this.state.vocabStage = 0;
       this.state.vocabWordIdx++;
     }
@@ -6535,7 +6551,19 @@ const App = {
   nextVocabWord(mi, dayIdx) {
     var m = HOMEWORK_DATA[dayIdx] && HOMEWORK_DATA[dayIdx].modules[mi];
     if (!m || !m.words) { this.nextStep(); return; }
-    if (this.state.vocabWordIdx >= m.words.length - 1) { this.nextStep(); return; }
+    // v136：这个词没学完，就别想跳到下一个词 —— 页面上的按钮是灰的，
+    // 这里再挡一道（旧缓存页面里的按钮、或程序化调用绕不过去）。
+    if (this._vocabFootLocked(mi, dayIdx)) {
+      this.showToast('先把这个词学完，再点下一个单词', 'warn');
+      return;
+    }
+    if (this.state.vocabWordIdx >= m.words.length - 1) {
+      // 最后一个词学完了 → 直接进下一屏。顺手把"学完了"记下来，
+      // 万一孩子退回来，底部按钮不会又变成灰的。
+      this.state.vocabDoneIdx = this.state.vocabWordIdx;
+      this.nextStep();
+      return;
+    }
     // 拼读阶段（逐字母/音节）没读完、或还有字母没读对，都不放行 —— 双保险：
     // 按钮本身 disabled，这里再挡一道（防止旧缓存页面里的按钮、或程序化
     // 调用绕过去）。v93 起加了 allOk；v119 起再加 contDone（连起来读过一遍）。
@@ -6550,6 +6578,7 @@ const App = {
         return;
       }
     }
+    this.state.vocabDoneIdx = this.state.vocabWordIdx;   // v136：这个词学完了
     this.state.vocabWordIdx++;
     this.state.vocabStage = 0;
     this.state.vocabMi = mi;
@@ -6559,6 +6588,30 @@ const App = {
     this._syncVocabFootLabel(mi, dayIdx);
   },
 
+  // 词汇游戏底部那颗按钮该不该锁（v136）。
+  //
+  // "这个词学完了"有两条路都算数：
+  //   ① 拼读那一屏：每个格子读对 + 整词 + 连起来读一遍（_spell 三个条件）
+  //      —— 这是旧版本就在用的判据，保留；
+  //   ② 这个词的所有阶段都走完了（vocabDoneIdx）。
+  // 以前只有 ①，而 _spell 由 renderVocabStage 在每屏开头清成 null、只有在
+  // 拼读屏才重新赋值 —— 「看图选词」「选释义」两屏的底部按钮等于没门，
+  // 孩子一张图都不用点就能一路「下一个单词」点到头，整个词汇模块被跳过去
+  // （家长 2026-10-17：「题没做完，下一题又能开始做了」）。
+  _vocabFootLocked(mi, dayIdx) {
+    if (this.isTeacher()) return false;
+    var m = HOMEWORK_DATA[dayIdx] && HOMEWORK_DATA[dayIdx].modules[mi];
+    if (!m || !m.words) return false;
+    var wIdx = this.state.vocabWordIdx;
+    if (wIdx >= m.words.length) return false;              // 全学完的完成页
+    var sp = this._spell;
+    if (sp && sp.mi === mi && sp.finished && sp.allOk !== false && sp.contDone === true) {
+      return false;                                        // 拼读这一关过了
+    }
+    if (this.state.vocabDoneIdx >= wIdx) return false;      // 这个词已经学完
+    return true;
+  },
+
   // Last word in the game? Then the button really is 下一题.
   _syncVocabFootLabel(mi, dayIdx) {
     var m = HOMEWORK_DATA[dayIdx] && HOMEWORK_DATA[dayIdx].modules[mi];
@@ -6566,17 +6619,9 @@ const App = {
     if (!m || !m.words || !btn) return;
     var last = this.state.vocabWordIdx >= m.words.length - 1;
     btn.textContent = last ? '下一题' : '下一个单词';
-    // 逐字母/音节阶段：每个格子 + 整词都读完（_spell.finished）之前锁死。
-    // v93 起还要「全部读对」：_finishSpell 算出 allOk=false 时按钮继续锁着，
-    // 孩子重读那个字母会把 finished 打回 false，走完汇总才可能解锁。
-    // v119 起还要「连起来读通过」（_spell.contDone）—— 家长实测："读完全部字母
-    // 它就显示下一个单词能点了，但下一个单词这里应该还是虚的，连读完一遍才能
-    // 到下一个单词"。contDone 在 startContinuous 里清零、连读读全了才置 true。
-    // 老师预览不锁。_finishSpell 完成后会再调到这里，按钮就地解锁。
-    var sp = this._spell;
-    var locked = !this.isTeacher() && sp && sp.mi === mi
-              && (!sp.finished || sp.allOk === false || sp.contDone !== true);
-    btn.disabled = !!locked;
+    // v93：全部字母读对；v119：连起来读通过；v136：当前这个词整个学完。
+    // 老师预览不锁。_finishSpell / nextVocabStage 完成后都会再调到这里。
+    btn.disabled = this._vocabFootLocked(mi, dayIdx);
   },
 
   // Every word picture is a play button. Children reach for the picture, not
@@ -7018,6 +7063,8 @@ const App = {
 
   // Steps that must be passed start with the forward button disabled.
   _applyStepLock() {
+    // 老师端是预览，任何一屏都不锁（老师要能直接翻着看题）。
+    if (this.isTeacher()) { this._lockNextOnRender = false; return; }
     if (!this._lockNextOnRender) return;
     this._lockNextOnRender = false;
     const next = document.getElementById('stage-next-btn');
@@ -7196,7 +7243,11 @@ const App = {
     // 这一组是不是全选完了？
     const group = (this._currentClozeGroup && this._currentClozeGroup.mi === mi)
       ? this._currentClozeGroup.qis : [qi];
-    const allSolved = group.every(function(x) { return this._questionSolved(mi, x, dayIdx); });
+    // v136：这里原来是 `every(function(x) { return this._questionSolved(...) })`
+    // —— 普通 function 的 this 不是 App，一选中整组就抛 TypeError，
+    // 后面"把跟读面板端出来"和"解锁下一题"两步全被跳过：孩子把整组空都
+    // 选对了，界面却像没反应。箭头函数保住 this。
+    const allSolved = group.every(x => this._questionSolved(mi, x, dayIdx));
     if (!allSolved) return;
 
     // 全选对了：把跟读面板端出来，读的是填满后的完整句子。
@@ -7204,9 +7255,12 @@ const App = {
     const firstQ = m.questions[group[0]];
     const sentence = this._buildReadSentence(m, firstQ);
     if (followEl) this._renderHoldReadPanel(followEl, mi, group[0], dayIdx, sentence);
-    // 整组全对 → 放行底部"下一题"（跟读过了再由面板解锁）。
+    // v136：整组选对只是**拿到跟读资格**，离"做完"还差跟读这一关。
+    // 以前这里直接 next.disabled = false —— 孩子把 ABCD 选完、一个字没读，
+    // 底部「下一题」就亮了（家长 2026-10-17：「题没做完，下一题又能开始做了」）。
+    // 现在保持锁，等跟读面板打分通过时由 _gateStep 解锁。
     const next = document.getElementById('stage-next-btn');
-    if (next) { next.disabled = false; next.classList.add('nudge'); }
+    if (next) { next.disabled = true; next.classList.remove('nudge'); }
   },
 
   // ===== Reading: one sentence at a time =====
@@ -9673,6 +9727,16 @@ const App = {
   nextStep() {
     clearTimeout(this._advanceTimer);
     this._stopCurrentAudio();
+    // v136：通用硬门禁 —— 底部那颗按钮还灰着，就不许翻页。按钮 disabled 时
+    // 孩子点不到，但旧计时器、残留的自动翻页、程序化调用都能绕过 DOM 直接
+    // 叫到这里。只要门没开，一律原地不动。
+    const steps = this._buildSteps(this.state.currentDay);
+    if (!this.isTeacher()) {
+      const st0 = steps[this.state.stepIdx];
+      const nb0 = document.getElementById('stage-next-btn')
+               || (st0 && st0.mi !== undefined ? document.getElementById('stage-next-' + st0.mi) : null);
+      if (nb0 && nb0.disabled) return;
+    }
     // 硬门禁：写作朗读这一屏必须读完最后一句才放行。按钮本身也是锁的，
     // 这里是防止别处（旧计时器、外部调用）把这一屏替孩子翻过去。
     if (!this._writingReadGateOpen()) {
@@ -9680,7 +9744,6 @@ const App = {
       if (nextBtn) { nextBtn.disabled = true; nextBtn.classList.remove('nudge'); }
       return;
     }
-    const steps = this._buildSteps(this.state.currentDay);
     if (this.state.stepIdx < steps.length - 1) {
       this.state.stepIdx++;
       this.renderContent();
@@ -9762,12 +9825,14 @@ const App = {
       this._currentClozeGroup = { mi: step.mi, qis: step.qis || [step.qi] };
       html += '<div class="stage-q stage-scroll">'
            + this.renderClozeGroupStep(m, step.mi, step.qis || [step.qi], dayIdx) + '</div>';
-      // 整组都选对了才放行；已经全对过（从下一题退回来）就直接放行。
+      // 整组都选对了才有资格跟读；读完（面板打分通过）才放行。
+      // v136：不再因为"上次已经全对"就直接放行 —— 那等于让孩子选完 ABCD
+      // 跳过跟读就进下一题。宁可让他回退到这一屏时再读一遍。
+      if (!this.isTeacher()) this._lockNextOnRender = true;
       const grp = step.qis || [step.qi];
       const allDone = grp.every(qi => this._questionSolved(step.mi, qi, dayIdx));
-      if (!this.isTeacher() && !allDone) this._lockNextOnRender = true;
       // 全对过又退回这一屏：跟读面板要自己回来，否则孩子看到一句全绿的选项
-      // 却没有"读完整句"的入口，底部按钮又是开的，一不留神就跳过去了。
+      // 却没有"读完整句"的入口，只能对着灰按钮干等。
       if (allDone) {
         const self2 = this;
         setTimeout(function() {
@@ -9853,9 +9918,9 @@ const App = {
     if (step.kind === 'vocab') {
       // 拼读阶段没读完先禁用（_renderSpellRead 刚设置过 _spell），0ms 后
       // _syncVocabFootLabel 会再校准一次 —— 这里先按当前状态渲染，避免闪一下。
-      // v119：连读（contDone）没通过也先禁用，和 _syncVocabFootLabel 同一套条件。
-      var vLocked = !this.isTeacher() && this._spell && this._spell.mi === step.mi
-                    && (!this._spell.finished || this._spell.contDone !== true);
+      // v119：连读（contDone）没通过也先禁用。
+      // v136：判据统一收进 _vocabFootLocked —— 当前这个词没学完就是灰的。
+      var vLocked = this._vocabFootLocked(step.mi, dayIdx);
       html += '<button class="btn-ghost" id="stage-next-' + step.mi + '"' + (vLocked ? ' disabled' : '')
            + ' onclick="App.nextVocabWord(' + step.mi + ',' + dayIdx + ')">下一个单词</button>';
     } else {
@@ -9882,7 +9947,15 @@ const App = {
               : nextStep && nextStep.kind === 'review' ? '开始错词巩固' : '完成巩固';
       else if (step.kind === 'review') label = nextStep && nextStep.kind === 'review' ? '下一个错词' : '完成复习';
       else label = '下一题';
-      html += '<button class="btn-ghost" id="stage-next-btn" onclick="App.nextStep()">' + label + '</button>';
+      // v136：锁**直接写进 HTML**。以前只在 innerHTML 落地之后由
+      // _applyStepLock() 补一次 disabled，任何一次重绘（切 tab 回来、
+      // 静默更新、局部刷新）都会把这颗按钮还原成"亮的"，孩子一点就跳过去
+      // —— 家长反复报的"虚的、能点"就是这么来的。现在渲染即带锁，
+      // _applyStepLock 只当第二道保险。
+      // 老师端（题库预览）永远不带锁：老师要能直接翻着看题。
+      var lockedNow = !this.isTeacher() && !!this._lockNextOnRender;
+      html += '<button class="btn-ghost" id="stage-next-btn"' + (lockedNow ? ' disabled' : '')
+           + ' onclick="App.nextStep()">' + label + '</button>';
     }
     html += '</div>';
 

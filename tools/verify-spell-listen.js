@@ -146,6 +146,9 @@ const UNITS = word.word.split('');
 
 function enterStage() {
   App.state.vocabWordIdx = wordIdx;
+  // v136：底部按钮还要看「这个词学完了没有」
+  App.state.vocabDoneIdx = wordIdx - 1;
+  App.state.vocabReviewDone = true;
   App.state.vocabStage = stageIdx;
   App._spell = null;
   App.renderVocabStage(m, MI, DAY);
@@ -409,15 +412,20 @@ console.log('\n== 7) 连读没读完：「下一个单词」永远是虚的 ==')
 console.log('\n== 8) 三处放行条件一致 + 版本号 ==');
 {
   const appSrc = src;
-  const hits = (appSrc.match(/contDone !== true/g) || []).length;
-  ok(hits >= 2, '「contDone !== true 就不放行」在 _syncVocabFootLabel 和 renderStage 两处都写了（' + hits + ' 处）');
+  // v136：判据收进了一个函数里（_vocabFootLocked），不再两处各写一遍 ——
+  // 那正是以前"改了一处漏了一处"的病根。这里改成验"判据只有一份，且三处都走它"。
+  const footCalls = (appSrc.match(/_vocabFootLocked\(/g) || []).length;
+  ok(/sp\.contDone === true/.test(appSrc) || /contDone !== true/.test(appSrc),
+     '连读通过（contDone）仍然是放行条件之一');
+  ok(footCalls >= 4,
+     '同一套判据被共用：定义 + nextVocabWord + _syncVocabFootLabel + renderStage（' + footCalls + ' 处）');
   ok(/先把字母和单词连着读一遍，才能到下一个单词/.test(appSrc),
      'nextVocabWord 里给孩子一句明确的提示语');
   ok(/还有字母没读对，按住红色的格子再读一次/.test(appSrc), '还有错字母时另有一句');
   ok(!/this\._gateNudge\(this\._gid\('spellg'/.test(appSrc), '逐字母那套门禁已经拆掉，不再 nudge');
   ok(/按住每个格子读一遍，再按住整词读一遍/.test(appSrc), '这一屏的指令同步改了');
-  ok(/name="app-version" content="135"/.test(htmlSrc), '版本号升到 135');
-  ok(/amy-english-v135/.test(swSrc), 'Service Worker 缓存名同步到 v135（不然手机上还是旧版）');
+  ok(/name="app-version" content="136"/.test(htmlSrc), '版本号升到 136');
+  ok(/amy-english-v136/.test(swSrc), 'Service Worker 缓存名同步到 v136（不然手机上还是旧版）');
 }
 
 console.log('\n' + (fail ? ('有 ' + fail + ' 项失败 ❌') : '全部通过 ✅'));

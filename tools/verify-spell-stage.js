@@ -149,6 +149,9 @@ if (wordIdx < 0) { console.log('  FAIL 第 1 周没有 letter_read 阶段'); pro
 
 function enterStage() {
   App.state.vocabWordIdx = wordIdx;
+  // v136：底部按钮还要看「这个词学完了没有」，进入一个词就等于它还没学完
+  App.state.vocabDoneIdx = wordIdx - 1;
+  App.state.vocabReviewDone = true;
   App.state.vocabStage = stageIdx;
   App._spell = null;
   App.renderVocabStage(m, MI, DAY);
@@ -184,13 +187,21 @@ App.nextVocabWord(MI, DAY);
 ok(App.state.vocabWordIdx === wordIdx + 1, '跳到下一个词（' + App.state.vocabWordIdx + '）');
 ok(App._spell === null, '切词后 _spell 已清空');
 
-console.log('\n== 5) 非拼读阶段（learn）不锁按钮 ==');
+console.log('\n== 5) 非拼读阶段（learn）锁不锁，看这个词学完没学完 ==');
 App.state.vocabStage = 0;                     // learn 阶段
+App.state.vocabWordIdx = wordIdx;
+App.state.vocabDoneIdx = wordIdx - 1;
 App._spell = { mi: MI, finished: false };     // 模拟上一阶段残留
 App.renderVocabStage(m, MI, DAY);             // renderVocabStage 应清掉它
 ok(App._spell === null, '残留 _spell 被清空');
 App._syncVocabFootLabel(MI, DAY);
-ok(btn.disabled === false, 'learn 阶段按钮不锁');
+// v136（家长 2026-10-17：「题没做完，下一题又能开始做了」）：
+// 以前 learn / 看图选词 / 选释义这几屏根本没有门禁（只有拼读屏判 _spell），
+// 孩子一张图不选就能一路点到头。现在这个词没学完，底部按钮就是灰的。
+ok(btn.disabled === true, '这个词还没学完 → learn 阶段按钮也是锁的（v136）');
+App.state.vocabDoneIdx = wordIdx;
+App._syncVocabFootLabel(MI, DAY);
+ok(btn.disabled === false, '这个词学完了 → 按钮才放行');
 
 console.log('\n== 6) 按住格子：大字悬浮层出现/消失 ==');
 enterStage();
