@@ -344,7 +344,14 @@ console.log('\n=== 3. 口语选择题：答错同样只给中文提示 ===');
     document.querySelectorAll = realQSA;
     ok(!optEls[q.answer]._cls.has('correct'), '口语选错：正确选项不亮绿');
     ok(optEls[wrongIdx]._cls.has('wrong'), '口语选错：点错的那句标红划掉');
-    ok(tipEl._cls.has('q-hint') && /不是这个/.test(tipEl.innerHTML), '口语选错：给出中文提示词');
+    // v137（家长 2026-10-17）：口语的提示不再说"不是这个、在剩下的里挑 A/B/C"，
+    // 改成老师那样讲意思 —— 问句什么意思、你选的那句什么意思、答句该说什么。
+    ok(tipEl._cls.has('q-hint') && /这句回答不了这个问题/.test(tipEl.innerHTML),
+       '口语选错：给出中文提示词');
+    ok(String(tipEl.innerHTML).indexOf(String(q.sentence_cn)) >= 0,
+       '口语第 1 次错：先讲问句的中文意思');
+    ok(String(tipEl.innerHTML).indexOf(String((q.options_cn || [])[wrongIdx])) >= 0,
+       '口语第 1 次错：把他点的那句翻成中文告诉他');
     ok(String(tipEl.innerHTML).indexOf(String(q.options[q.answer])) < 0, '口语第 1 次错：提示里没有正确答案的内容');
     ok(!/点绿色/.test(tipEl.innerHTML), '口语里也不再出现"点绿色"');
   }
@@ -591,7 +598,8 @@ console.log('\n=== 6. 静态检查：那套"点绿框过关"的代码真的删�
     const wrong = (i >= 0 && j > i) ? body.slice(i, j) : '';
     ok(!!wrong, 'selectSpeakAnswer 里找得到答错分支');
     ok(wrong.indexOf("add('correct'") < 0, 'selectSpeakAnswer 的答错分支里没有 add(correct)');
-    ok(wrong.indexOf('_wrongHintHtml') >= 0, 'selectSpeakAnswer 的答错分支走的是中文提示');
+    // v137：口语改走自己的老师式中文提示（_speakWrongHintHtml）
+    ok(wrong.indexOf('_speakWrongHintHtml') >= 0, 'selectSpeakAnswer 的答错分支走的是老师式中文提示');
   }
   {
     const body = grab('submitFill');
@@ -607,7 +615,10 @@ console.log('\n=== 6. 静态检查：那套"点绿框过关"的代码真的删�
   for (const [name, fn] of [['selectAnswer', 'selectAnswer'], ['selectSpeakAnswer', 'selectSpeakAnswer'],
                             ['checkVocabAnswer', 'checkVocabAnswer'], ['submitFill', 'submitFill']]) {
     const body = grab(fn);
-    ok(/_retryTip|retryTip:/.test(body) || fn === 'checkVocabAnswer',
+    // selectSpeakAnswer 从 v137 起不再带 retryTip —— 它整段换成了
+    // 「问句什么意思 → 你选的那句什么意思 → 答句该说什么」的引导，
+    // "该怎么办"就写在引导里（再听一遍、一句一句翻成中文再选）。
+    ok(/_retryTip|retryTip:|_speakWrongHintHtml/.test(body) || fn === 'checkVocabAnswer',
        name + ' 的提示里带了一句"该怎么办"的中文提醒');
   }
 

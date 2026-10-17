@@ -2107,8 +2107,12 @@ const App = {
     const now = Date.now();
     if (this._gateNudgeAt && now - this._gateNudgeAt < 900) return;   // 一次手势别提示两遍
     this._gateNudgeAt = now;
+    let msg = '';
     document.querySelectorAll('[data-gate="' + gid + '"]').forEach(function(el) {
       if (el.classList.contains('gate-listen') || el.getAttribute('data-listen') === '1') return;
+      // 允许各个界面自己写提示语：v137 翻译屏要用"先听英文再说中文"，
+      // 跟读屏用默认那句，两种场景一句话说不清。
+      if (!msg && el.getAttribute('data-nudge')) msg = el.getAttribute('data-nudge');
       el.classList.add('gate-shake');
       setTimeout(function() { el.classList.remove('gate-shake'); }, 460);
     });
@@ -2118,7 +2122,7 @@ const App = {
       listen.classList.add('gate-hint-glow');
       setTimeout(function() { listen.classList.remove('gate-hint-glow'); }, 1250);
     }
-    this.showToast('🔊 先听一遍示范，再开口读哦', 'warn');
+    this.showToast(msg || '🔊 先听一遍示范，再开口读哦', 'warn');
   },
 
   // 那颗「🔊 先听一遍」按钮。say 是示范内容（英文），label 可换措辞。
@@ -5215,14 +5219,22 @@ const App = {
   },
 
   // Get shuffled options for a speaking question, with mapping to original answer index
+  //
+  // v137：中文意思（q.options_cn）必须跟着一起打乱。它和 options 是一一对应的，
+  // 只打乱英文、中文还按原顺序排，答错时给出的"你选的那句意思是……"就会指错
+  // 句子 —— 比不给提示更糟。cn 用同一份 shuffledIndices 映射，错位不可能发生。
   _getShuffledSpeakingOptions(q) {
     var origOptions = q.options;
     var origAnswer = q.answer;
+    var origCn = q.options_cn || null;
     var indices = origOptions.map(function(_, i) { return i; });
     var shuffledIndices = this._shuffle(indices);
     var shuffledOptions = shuffledIndices.map(function(i) { return origOptions[i]; });
     var newAnswerIdx = shuffledIndices.indexOf(origAnswer);
-    return { options: shuffledOptions, answer: newAnswerIdx };
+    var shuffledCn = (origCn && origCn.length === origOptions.length)
+      ? shuffledIndices.map(function(i) { return origCn[i]; })
+      : null;
+    return { options: shuffledOptions, answer: newAnswerIdx, cn: shuffledCn };
   },
 
   renderSpeakingQuestion(m, mi, qi, dayIdx) {
@@ -5295,6 +5307,9 @@ const App = {
       const tryKey = 'sp-' + mi + '-' + qi;
       const attempt = this._wrongTryBump(tryKey);
       this._playWrongSound();
+      // 先记下"这一次之前已经划掉过哪几句"，提示里要跳过它们。
+      const dead = [];
+      opts.forEach((el, i) => { if (el.classList.contains('wrong')) dead.push(i); });
       opts.forEach((el, i) => {
         el.classList.remove('correct');
         if (i === oi || el.classList.contains('wrong')) {
@@ -5304,16 +5319,21 @@ const App = {
           el.style.pointerEvents = 'auto';
         }
       });
-      const correctText = (options && options[correctAnswer] != null) ? String(options[correctAnswer]) : '';
+      if (dead.indexOf(oi) < 0) dead.push(oi);
       if (tip) {
-        this._showWrongHint(tip, this._wrongHintHtml({
+        // 中文意思优先用打乱后的那一份（和 screen 上的顺序一致）；万一没有
+        // 打乱记录（直接调用 / 老缓存），退回原始顺序 —— 只有长度对得上才用，
+        // 对不上就当作没有，绝不让订单错位。
+        const cns = (shuffled && shuffled.cn) ? shuffled.cn
+          : ((q.options_cn && q.options_cn.length === options.length) ? q.options_cn : null);
+        this._showWrongHint(tip, this._speakWrongHintHtml({
           attempt: attempt,
+          q: q,
           opts: options,
+          cns: cns,
           answer: correctAnswer,
-          correctText: correctText,
           picked: oi,
-          clue3: q.explanation_cn,
-          retryTip: '先听完问题再选，注意问的是 What / Where 还是 When。',
+          dead: dead,
         }));
       }
       // 把选错的这句读出来给他听 —— 靠耳朵就能发现差在哪。提示词挂着不动，
@@ -5356,6 +5376,102 @@ const App = {
       // Show read-along section for the full Q + A sentence
       self2.startReadAlong(mi, qi, dayIdx);
     }});
+  },
+
+  // AI 口语练习答错后的中文提示（v137）。
+  //
+  // 家长 2026-10-17：「选错了答案，它会提示，但是提示得太傻了。他告诉不是 A
+  // 就是 B、就是 C，从逻辑上告诉大家是错的，但是他没有告诉学生题是什么意思。
+  // 比如说问句是什么意思、找的答句是什么意思，像老师一步一步启发学生那样
+  // 的中文给提示出来。」
+  //
+  // 以前这里走的是 _wrongHintHtml 的通用三档：第 1 次"不是这个，再想想"、
+  // 第 2 次报"正确答案有几个词、在 A、C、D 里挑"、第 3 次点名。对选择题也许
+  // 够用，对口语题完全没用 —— 口语题的四个选项**全是英文**，孩子手里没有
+  // 任何中文坐标，你跟他讲"不是 B 就是 C"，他能做的只有瞎猜字母。
+  //
+  // 所以这里换成老师的三步走（用的是每道题配好的 q.answer_cn_hint /
+  // q.options_cn，见 data.js 的 SPEAK_HINTS）：
+  //   ① 问句到底在问什么 → 答句必须说出哪一类东西（意思层面，不提字母）
+  //      再把他刚点的那句翻成中文，当面告诉他"这句答的不是这个问题"
+  //   ② 把还没划掉的几句全翻成中文，让他一句一句对回英文去找
+  //   ③ 才点名，并给出中文意思 + 题库里的解析
+  // 全程不提前点亮正确项，最后一下仍然要他自己点。
+  _speakWrongHintHtml(o) {
+    o = o || {};
+    const q = o.q || {};
+    const attempt = o.attempt || 1;
+    const opts = o.opts || [];
+    const cns = (o.cns && o.cns.length === opts.length) ? o.cns : null;
+    const picked = (o.picked == null) ? null : o.picked;
+    const dead = o.dead || (picked == null ? [] : [picked]);
+    const qCn = String(q.sentence_cn || '');
+    const want = String(q.answer_cn_hint || '').trim();
+    const correctIdx = (o.answer == null) ? -1 : o.answer;
+    const correctEn = (correctIdx >= 0 && opts[correctIdx] != null) ? String(opts[correctIdx]) : '';
+    const correctCn = (cns && correctIdx >= 0 && cns[correctIdx]) ? String(cns[correctIdx]) : '';
+
+    // 没有中文数据（题库更新了但提示没跟上）→ 退回通用提示，绝不瞎编意思。
+    if (!cns) {
+      return this._wrongHintHtml({
+        attempt: attempt,
+        opts: opts,
+        answer: o.answer,
+        correctText: correctEn,
+        picked: picked,
+        clue1: want || '先把问句的意思弄明白：它问的是「' + qCn + '」。',
+        clue3: q.explanation_cn,
+        retryTip: '先听完问句，再一句一句把选项翻成中文，看哪一句在回答这个问题。',
+      });
+    }
+
+    // ① 第一次错：说清问什么、你选的那句什么意思、为什么对不上
+    if (attempt <= 1) {
+      let t = '🤔 这句回答不了这个问题。<br>';
+      if (qCn) t += '📖 问句的意思是：「' + qCn + '」<br>';
+      if (want) t += '💡 ' + want + '<br>';
+      const pickEn = (picked != null && opts[picked] != null) ? String(opts[picked]) : '';
+      const pickCn = (picked != null && cns[picked]) ? String(cns[picked]) : '';
+      if (pickCn) {
+        t += '🔤 你选的这句';
+        if (pickEn) t += ' “' + this._escHtml(pickEn) + '”';
+        t += ' 意思是：' + this._escHtml(pickCn) + '<br>'
+          + '<span class="fs-12">　→ 它答的不是这个问题，所以对不上。</span><br>';
+      }
+      t += '<span class="fs-12">🎧 再听一遍问句，然后把每一句都在心里翻成中文再选。</span>';
+      return t;
+    }
+
+    // ② 第二次错：把还没划掉的几句全翻成中文，让他自己对回英文 ——
+    //    这一步才是"读懂意思再选"，而不是按字母排除。
+    if (attempt === 2) {
+      const rest = [];
+      cns.forEach(function (cn, i) {
+        if (dead.indexOf(i) >= 0) return;
+        if (!cn) return;
+        rest.push(this._escHtml(String(cn)));
+      }, this);
+      let t = '🔎 换个办法：一句一句翻成中文，再对一次。<br>';
+      if (qCn) t += '📖 问句问的是：「' + qCn + '」<br>';
+      if (rest.length) {
+        t += '<span class="fs-12">上面还没划掉的句子，意思分别是：</span><br>'
+          + rest.map(function (x) { return '· ' + x; }).join('<br>') + '<br>';
+      }
+      // 问句中文本身可能已经带问号，拼进去时先去掉，免得出现「……？」？」
+      const qShort = qCn.replace(/[。．.！!？?\s]+$/, '');
+      t += '❓ 上面哪一句在回答「' + (qShort || '这个问题') + '」？找到它，点它。';
+      return t;
+    }
+
+    // ③ 第三次起：点名 + 中文意思 + 解析，但最后一下仍由孩子自己点
+    let t = '👉 就差一点啦。答案是 ';
+    const letter = correctIdx >= 0 ? String.fromCharCode(65 + correctIdx) : '';
+    if (letter) t += letter + '：';
+    if (correctEn) t += '“' + this._escHtml(correctEn) + '”';
+    if (correctCn) t += '<br>　意思是：' + this._escHtml(correctCn);
+    if (q.explanation_cn) t += '<br>📖 ' + q.explanation_cn;
+    t += '<br><span class="fs-12">点它一下，我们就往下走。</span>';
+    return t;
   },
 
   // 口语跟读：问句 + 答句整句连读。点一下开始、读完再点一下停止打分，
@@ -6825,8 +6941,16 @@ const App = {
     html += '<div class="sent-tip">👆 点单词看中文意思 · 点下面听整句英文</div>';
     html += '<div class="sent-listen">'
          + this._gateListenHtml(this._gid('trsg', mi, si), pair.en, '🔊 听整句英文') + '</div>';
-    html += '<div class="sent-hint">用中文说出这句话的意思</div>';
-    html += '<button class="word-read-btn hold-target" id="trs-btn-' + mi + '-' + si + '"'
+    html += '<div class="sent-hint">先点上面「听整句英文」，再用中文说出这句话的意思</div>';
+    // v137：先说中文也得先听英文。家长 2026-10-17：「按住说中文的时候，
+    // 之前是要点一下英文听完，然后去说中文，现在不点也能直接说」——
+    // 这一屏的听入口有 data-gate，但"按住说中文"这颗按钮一直没挂门，
+    // 于是孩子可以跳过听力直接把中文蒙一遍。现在挂同一个 gid：
+    // 听完那句英文（_gateUnlock）按钮才摘锁，没听就按住会被 _gateNudge
+    // 拦下来，并闪一下上面那颗「听整句英文」。
+    html += '<button class="word-read-btn hold-target gate-locked" id="trs-btn-' + mi + '-' + si + '"'
+         + ' data-gate="' + this._gid('trsg', mi, si) + '"'
+         + ' data-nudge="🔊 先听一遍这句英文，再用中文说意思"'
          + ' onpointerdown="App._translateSentence(event,' + mi + ',' + si + ')"'
          + ' onpointerup="App._holdEnd(event)" onpointercancel="App._holdEnd(event)"'
          + ' oncontextmenu="return false">按住说中文</button>';
@@ -6917,8 +7041,11 @@ const App = {
     html += '<div class="sent-tip">👆 点单词看中文意思 · 点下面听整句英文</div>';
     html += '<div class="sent-listen">'
          + this._gateListenHtml(this._gid('cqtrsg', mi, si), shown, '🔊 听整句英文') + '</div>';
-    html += '<div class="sent-hint">先自己想一想这句是什么意思，再按住说中文</div>';
-    html += '<button class="word-read-btn hold-target" id="cqtrs-btn-' + mi + '-' + si + '"'
+    html += '<div class="sent-hint">先听一遍英文，想一想这句是什么意思，再按住说中文</div>';
+    // v137：同上，完形填空的逐句翻译也要"先听英文，再说中文"。
+    html += '<button class="word-read-btn hold-target gate-locked" id="cqtrs-btn-' + mi + '-' + si + '"'
+         + ' data-gate="' + this._gid('cqtrsg', mi, si) + '"'
+         + ' data-nudge="🔊 先听一遍这句英文，再用中文说意思"'
          + ' onpointerdown="App._translateClozeSentence(event,' + mi + ',' + si + ')"'
          + ' onpointerup="App._holdEnd(event)" onpointercancel="App._holdEnd(event)"'
          + ' oncontextmenu="return false">按住说中文</button>';
