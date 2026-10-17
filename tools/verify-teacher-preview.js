@@ -254,17 +254,23 @@ console.log('\n== ⑦ 老师在预览里一个字节都写不进去 ==');
        '★★ 提交评分排在老师分支之后（老师根本走不到这一步）');
   }
 
-  // ④ 写作朗读门禁不能把老师卡死（这条本来就有，回归锁住）
+  // ④ 写作朗读门禁：v138 起老师也不再豁免（预览要和学生一模一样），
+  //    老师翻不过去时用那颗明说的「跳过本题（老师）」。
   const wg = methodBody(appCode, '_writingReadGateOpen');
-  ok(/if\s*\(\s*this\.isTeacher\(\)\s*\)\s*return\s+true/.test(wg),
-     '★★ 写作朗读门禁对老师直接放行（否则老师翻不过作文那一屏）');
+  ok(!/if\s*\(\s*this\.isTeacher\(\)\s*\)\s*return\s+true/.test(wg),
+     '★★ 写作朗读门禁不再给老师开口子（预览照锁）');
 
-  // ⑤ 学生在预览里的门禁一律保留
+  // ⑤ 预览里的门禁和学生同一套：renderStage 的"锁下一题"不再带 !isTeacher，
+  //    改由底部那颗「跳过本题（老师）」给老师留出口。
   const rs = methodBody(appCode, 'renderStage');
   const teacherGuards = (rs.match(/!this\.isTeacher\(\)/g) || []).length;
-  ok(teacherGuards >= 4,
-     '★★ renderStage 里 ≥4 处"锁下一题"都带 !isTeacher（老师免锁，学生照锁）',
+  ok(teacherGuards <= 2,
+     '★★ renderStage 里"锁下一题"不再带 !isTeacher（预览照锁，只剩错题/错词两处）',
      '实际 ' + teacherGuards + ' 处');
+  ok(/跳过本题（老师）/.test(rs) && /nextStep\(true\)/.test(rs),
+     '★★ 锁着的时候给老师一颗明说的「跳过本题（老师）」→ nextStep(true)');
+  ok(/isTeacher\(\)\s*&&\s*this\.state\.currentTab\s*===\s*'preview'/.test(rs),
+     '★ 这颗跳过键只在「题库预览」里出现（学生端看不到）');
 }
 
 // ===========================================================================

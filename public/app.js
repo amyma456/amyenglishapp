@@ -3331,6 +3331,10 @@ const App = {
       // 位置一变化就落盘：这样"答到一半就退出"也能被记住，下次登录直接
       // 回到这一屏（而不只是回到"最后一道答过的题"）。
       this._savePos(this.state.currentDay);
+    } else if (inPreviewStage) {
+      // v138：预览和学生对同一套门禁 —— 少这一下，老师那边就是"没做题
+      // 也能点下一题"。_savePos 不调：老师的位置不进学生账里。
+      this._applyStepLock();
     }
   },
 
@@ -5687,7 +5691,8 @@ const App = {
       btn.style.background = 'var(--primary)';
       btn.innerHTML = '🎤 重读整句';
       btn.disabled = false;
-      if (!this.isTeacher()) {
+      // v138：只动"这一题自己的"底部按钮 —— 晚到的回调不许去改别的屏。
+      if (this._stepBelongsTo(mi, qi)) {
         const next = document.getElementById('stage-next-btn');
         if (next) { next.disabled = true; next.classList.remove('nudge'); }
       }
@@ -5697,9 +5702,12 @@ const App = {
       btn.style.background = 'var(--success)';
       btn.innerHTML = '✅ 已通过 ' + score + ' 分';
       btn.disabled = true;
-      if (!this.isTeacher()) {
-        // 学生路径：跟读 ≥60 分，把底部 stage-next-btn 解锁（橙色轻推
-        // 提示孩子/家长可以进下一题了）。
+      // v138：通过 = 这道口语题真的做完了。先落状态（_speakingGateOpen 只认它），
+      // 再去点亮底部按钮；而且只在"这一屏还是这道题"时才点 —— 否则上一题
+      // 打完分才回来的回调会把孩子正看着的下一题也点亮（就是这么"虚"的）。
+      this._spPassed = this._spPassed || {};
+      this._spPassed[dayIdx + '-' + mi + '-' + qi] = score || 60;
+      if (this._stepBelongsTo(mi, qi)) {
         const next = document.getElementById('stage-next-btn');
         if (next) { next.disabled = false; next.classList.add('nudge'); }
       }
@@ -5720,7 +5728,7 @@ const App = {
       btn.style.background = 'var(--primary)';
       btn.innerHTML = '🎤 再点一次重读';
       btn.disabled = false;
-      if (!this.isTeacher()) {
+      if (this._stepBelongsTo(mi, qi) && !this._speakingGateOpen(mi, qi, dayIdx)) {
         // <60 分：底部"下一题"保持灰色锁定，重读通过后才会解锁。
         const next = document.getElementById('stage-next-btn');
         if (next) { next.disabled = true; next.classList.remove('nudge'); }
@@ -5807,7 +5815,9 @@ const App = {
   nextSpeaking(mi, qi, dayIdx) {
     // In the student's one-question stage each speaking question IS a step —
     // advancing in place would leave the progress counter behind.
-    if (!this.isTeacher()) { this.nextStep(); return; }
+    // v138：预览也是"一题一屏"，老师在这里也必须走 nextStep，否则题换了、
+    // 底部那颗按钮还挂在上一题身上，门禁就对不上了。
+    if (!this.isTeacher() || this.state.currentTab === 'preview') { this.nextStep(); return; }
     const m = HOMEWORK_DATA[dayIdx].modules[mi];
     document.getElementById('sp-content-' + mi).innerHTML = this.renderSpeakingQuestion(m, mi, qi, dayIdx);
   },
@@ -6715,7 +6725,8 @@ const App = {
   // 孩子一张图都不用点就能一路「下一个单词」点到头，整个词汇模块被跳过去
   // （家长 2026-10-17：「题没做完，下一题又能开始做了」）。
   _vocabFootLocked(mi, dayIdx) {
-    if (this.isTeacher()) return false;
+    // v138：老师预览也照锁 —— 预览要验的就是"能不能不做就往前走"。
+    // 老师真想快进，用底部那颗明说的「跳过本题（老师）」。
     var m = HOMEWORK_DATA[dayIdx] && HOMEWORK_DATA[dayIdx].modules[mi];
     if (!m || !m.words) return false;
     var wIdx = this.state.vocabWordIdx;
@@ -7190,12 +7201,53 @@ const App = {
 
   // Steps that must be passed start with the forward button disabled.
   _applyStepLock() {
-    // 老师端是预览，任何一屏都不锁（老师要能直接翻着看题）。
-    if (this.isTeacher()) { this._lockNextOnRender = false; return; }
+    // v138：老师预览也照锁。v136 曾给老师开个"免锁"口子（想让老师能一路翻着
+    // 看题），结果家长在预览里看到的就是"我还没做题呢，下一题已经可以点了"
+    // —— 预览不照学生规矩来，就验不出学生那边的问题。老师现在改用下面那颗
+    // 「跳过本题（老师）」走，锁本身对学生、老师一视同仁。
     if (!this._lockNextOnRender) return;
     this._lockNextOnRender = false;
     const next = document.getElementById('stage-next-btn');
     if (next) { next.disabled = true; next.classList.remove('nudge'); }
+  },
+
+  // ===== 门禁（v138）======================================================
+  //
+  // 家长 2026-10-17：「今天的 AI 口语练习，我还没做题呢，下一题就已经出现了，
+  // 已经可以点选了。这个还没有改，赶紧改。」
+  //
+  // 屏幕上的按钮是不是灰的，只是**表现**；真正的判据要能离开 DOM 单独回答
+  // "这一屏到底做完没有"。以前没有这个判据，于是：
+  //   · 任何一处 `next.disabled = false`（上一屏跟读通过的回调、晚到的
+  //     上传/打分、别的题型收尾）都能把**当前这一屏**点亮；
+  //   · 老师端预览干脆完全不锁，看到的就是"没做题也能点"。
+  // 下面两个函数把判据立起来，nextStep() 只认它们，不认按钮长什么样。
+
+  // 这一屏是不是正属于这道题。晚到的异步回调（上一题的打分、纠错、上传）
+  // 只该点亮它自己的那一屏，绝不能去点亮孩子正看着的另一题。
+  _stepBelongsTo(mi, qi) {
+    const steps = this._buildSteps(this.state.currentDay);
+    const st = steps[this.state.stepIdx];
+    if (!st) return false;
+    if (mi !== undefined && mi !== null && st.mi !== mi) return false;
+    if (qi !== undefined && qi !== null && st.qi !== qi) return false;
+    return true;
+  },
+
+  // 口语这一题做完了没有：选对答案 + 整句跟读通过，缺一不可。
+  // 只认状态（_spPassed），不看按钮 —— 按钮被谁点亮都不算数。
+  _speakingGateOpen(mi, qi, dayIdx) {
+    const k = (dayIdx === undefined ? this.state.currentDay : dayIdx) + '-' + mi + '-' + qi;
+    return !!(this._spPassed && this._spPassed[k]);
+  },
+
+  // 当前这一屏的"能不能翻页"，纯状态判断（不看 DOM）。
+  // 目前只有口语有独立判据；其余题型的判据仍由各自的 DOM 锁 + nextStep
+  // 里的 disabled 检查兜着（v136 起已在 215 屏上逐屏验过）。
+  _stepGateOpen(step, dayIdx) {
+    if (!step) return true;
+    if (step.kind === 'speaking') return this._speakingGateOpen(step.mi, step.qi, dayIdx);
+    return true;
   },
 
   // ===== 完形填空：一句里的空一起做完（v126）============================
@@ -9182,7 +9234,8 @@ const App = {
     const steps = this._buildSteps(this.state.currentDay);
     const s = steps[this.state.stepIdx];
     if (!s || s.kind !== 'writingread') return true;
-    if (this.isTeacher()) return true;
+    // v138：老师预览也不再豁免 —— 预览要验的就是"能不能不读就过去"。
+    // 老师真想快进，用底部那颗「跳过本题（老师）」（nextStep(true) 会绕开这里）。
     const m = HOMEWORK_DATA[this.state.currentDay].modules[s.mi];
     return this._writingAllRead(m, s.mi);
   },
@@ -9361,8 +9414,12 @@ const App = {
     return html;
   },
 
-  // 解锁「下一题」——和 _gateStep 通过时的表现保持一致
+  // 解锁「下一题」——和 _gateStep 通过时的表现保持一致。
+  // v138：先过一遍状态门 —— 这函数是给填空/写作那几屏收尾用的，绝不能拿来
+  // 点亮一道还没做完的口语题。
   _unlockStep() {
+    const steps = this._buildSteps(this.state.currentDay);
+    if (!this._stepGateOpen(steps[this.state.stepIdx], this.state.currentDay)) return;
     const next = document.getElementById('stage-next-btn');
     if (next) { next.disabled = false; next.classList.add('nudge'); }
   },
@@ -9851,25 +9908,38 @@ const App = {
     else { this._pendingSpeak = sent; this._pendingSpeakGate = gate; }
   },
 
-  nextStep() {
+  nextStep(force) {
     clearTimeout(this._advanceTimer);
     this._stopCurrentAudio();
-    // v136：通用硬门禁 —— 底部那颗按钮还灰着，就不许翻页。按钮 disabled 时
-    // 孩子点不到，但旧计时器、残留的自动翻页、程序化调用都能绕过 DOM 直接
-    // 叫到这里。只要门没开，一律原地不动。
+    // force 只给「题库预览」里那颗明说的「跳过本题（老师）」用，别处在代码里
+    // 传 true 也不算数 —— 否则又是一个能让门禁失效的口子。
+    if (force && !(this.isTeacher() && this.state.currentTab === 'preview')) force = false;
     const steps = this._buildSteps(this.state.currentDay);
-    if (!this.isTeacher()) {
-      const st0 = steps[this.state.stepIdx];
+    const st0 = steps[this.state.stepIdx];
+    if (!force) {
+      // ① 状态门（v138）：不看按钮长什么样，只看这一屏做完没有。
+      //    家长 2026-10-17：「我还没做题呢，下一题就已经出现了，已经可以点选了」
+      //    —— 按钮被别处的异步回调点亮过，这一层照样不放行。
+      if (!this._stepGateOpen(st0, this.state.currentDay)) {
+        const nb = document.getElementById('stage-next-btn');
+        if (nb && !nb.disabled) {
+          nb.disabled = true; nb.classList.remove('nudge');
+          this.showToast('🔒 这题还没做完：先选对答案，再把整句读完', 'warn');
+        }
+        return;
+      }
+      // ② 按钮门（v136）：还灰着就不许翻页。按钮 disabled 时孩子点不到，但
+      //    旧计时器、残留的自动翻页、程序化调用都能绕过 DOM 叫到这里。
       const nb0 = document.getElementById('stage-next-btn')
                || (st0 && st0.mi !== undefined ? document.getElementById('stage-next-' + st0.mi) : null);
       if (nb0 && nb0.disabled) return;
-    }
-    // 硬门禁：写作朗读这一屏必须读完最后一句才放行。按钮本身也是锁的，
-    // 这里是防止别处（旧计时器、外部调用）把这一屏替孩子翻过去。
-    if (!this._writingReadGateOpen()) {
-      const nextBtn = document.getElementById('stage-next-btn');
-      if (nextBtn) { nextBtn.disabled = true; nextBtn.classList.remove('nudge'); }
-      return;
+      // ③ 硬门禁：写作朗读这一屏必须读完最后一句才放行。按钮本身也是锁的，
+      //    这里是防止别处（旧计时器、外部调用）把这一屏替孩子翻过去。
+      if (!this._writingReadGateOpen()) {
+        const nextBtn = document.getElementById('stage-next-btn');
+        if (nextBtn) { nextBtn.disabled = true; nextBtn.classList.remove('nudge'); }
+        return;
+      }
     }
     if (this.state.stepIdx < steps.length - 1) {
       this.state.stepIdx++;
@@ -9955,7 +10025,8 @@ const App = {
       // 整组都选对了才有资格跟读；读完（面板打分通过）才放行。
       // v136：不再因为"上次已经全对"就直接放行 —— 那等于让孩子选完 ABCD
       // 跳过跟读就进下一题。宁可让他回退到这一屏时再读一遍。
-      if (!this.isTeacher()) this._lockNextOnRender = true;
+      // v138：老师预览不再免锁。
+      this._lockNextOnRender = true;
       const grp = step.qis || [step.qi];
       const allDone = grp.every(qi => this._questionSolved(step.mi, qi, dayIdx));
       // 全对过又退回这一屏：跟读面板要自己回来，否则孩子看到一句全绿的选项
@@ -10000,25 +10071,27 @@ const App = {
       const blanked = !q.options;
       const qHasRead = !!this._buildReadSentence(m, q);
       const solved = blanked && this._questionSolved(step.mi, step.qi, dayIdx);
-      if (!this.isTeacher() && (blanked ? !solved : qHasRead)) this._lockNextOnRender = true;
+      // v138：老师预览同样照锁（见 _applyStepLock 的说明）。
+      if (blanked ? !solved : qHasRead) this._lockNextOnRender = true;
       const self = this;
       setTimeout(function(){ self._autoSpeakQuestion(m, step.mi, step.qi, dayIdx); }, 250);
     } else if (step.kind === 'speaking') {
       html += '<div class="stage-q" id="sp-content-' + step.mi + '">'
            + this.renderSpeakingQuestion(m, step.mi, step.qi, dayIdx) + '</div>';
-      // 学生路径：口语题同样先锁 stage-next-btn，选对选项 + 整句跟读
-      // ≥60 分才解锁——和选择题的门槛一致，没读完不能点"下一题"。
-      if (!this.isTeacher()) this._lockNextOnRender = true;
+      // 口语：选对选项 + 整句跟读 ≥60 分才放行。
+      // v138：判据换成状态（_speakingGateOpen），学生和老师预览同一套 ——
+      // 已经做完过（从下一题退回来）就直接放行，没做完一率灰着。
+      if (!this._speakingGateOpen(step.mi, step.qi, dayIdx)) this._lockNextOnRender = true;
     } else if (step.kind === 'vocab') {
       html += '<div class="stage-q">' + this.renderVocabGame(m, step.mi, dayIdx) + '</div>';
     } else if (step.kind === 'writing') {
       html += '<div class="stage-q stage-scroll">' + this.renderWritingTemplate(m, step.mi, dayIdx) + '</div>';
       // 空没填对之前不放行；上一题回来时若已经全对就直接放行
-      if (!this.isTeacher() && !this._writingAllBlanksRight(m, step.mi, dayIdx)) this._lockNextOnRender = true;
+      if (!this._writingAllBlanksRight(m, step.mi, dayIdx)) this._lockNextOnRender = true;
     } else if (step.kind === 'writingread') {
       html += '<div class="stage-q">' + this.renderWritingRead(m, step.mi, dayIdx) + '</div>';
       // 全部句子读对（≥60 分）之前不放行
-      if (!this.isTeacher() && !this._writingAllRead(m, step.mi)) this._lockNextOnRender = true;
+      if (!this._writingAllRead(m, step.mi)) this._lockNextOnRender = true;
     } else if (step.kind === 'retry') {
       // 「还剩 N 题」按当前这一步往后数，孩子知道还有多远到头。
       let left = 0;
@@ -10050,6 +10123,11 @@ const App = {
       var vLocked = this._vocabFootLocked(step.mi, dayIdx);
       html += '<button class="btn-ghost" id="stage-next-' + step.mi + '"' + (vLocked ? ' disabled' : '')
            + ' onclick="App.nextVocabWord(' + step.mi + ',' + dayIdx + ')">下一个单词</button>';
+      // 预览里词汇这一屏也锁着：老师想快进就整块跳过（学生看不到这颗键）。
+      if (vLocked && this.isTeacher() && this.state.currentTab === 'preview') {
+        html += '<button class="btn-ghost" id="pv-skip-btn" style="font-size:12px;opacity:.75"'
+             + ' onclick="App.nextStep(true)">跳过本题（老师）</button>';
+      }
     } else {
       // Name the button after what actually comes next: reading a passage is
       // a run of sentences, not a run of questions.
@@ -10079,10 +10157,16 @@ const App = {
       // 静默更新、局部刷新）都会把这颗按钮还原成"亮的"，孩子一点就跳过去
       // —— 家长反复报的"虚的、能点"就是这么来的。现在渲染即带锁，
       // _applyStepLock 只当第二道保险。
-      // 老师端（题库预览）永远不带锁：老师要能直接翻着看题。
-      var lockedNow = !this.isTeacher() && !!this._lockNextOnRender;
+      // v138：老师预览也带锁 —— 预览要验的正是"学生能不能蒙过去"，免锁就白看。
+      var lockedNow = !!this._lockNextOnRender;
       html += '<button class="btn-ghost" id="stage-next-btn"' + (lockedNow ? ' disabled' : '')
            + ' onclick="App.nextStep()">' + label + '</button>';
+      // 但老师不能因此被卡在某一屏翻不下去 —— 给老师一颗**明说的**跳过键，
+      // 只出现在「题库预览」里，学生端永远看不到（也不受它影响）。
+      if (lockedNow && this.isTeacher() && this.state.currentTab === 'preview') {
+        html += '<button class="btn-ghost" id="pv-skip-btn" style="font-size:12px;opacity:.75"'
+             + ' onclick="App.nextStep(true)">跳过本题（老师）</button>';
+      }
     }
     html += '</div>';
 
@@ -11276,10 +11360,11 @@ const App = {
       }
       this._playCorrectSound();
       this._setHoldReadUI(mi, qi, 'passed', score, true);
-      if (!this.isTeacher()) {
-        // 学生路径：把 stage-next-btn 解锁，让孩子/家长自己点下一题。
+      if (this._stepBelongsTo(mi, qi)) {
+        // 把 stage-next-btn 解锁，让孩子/家长自己点下一题。
         // 不再 setTimeout 自动朗读——上一题读音还停在孩子耳边，会盖住
         // 朗读下一题的提示，反而容易让节奏乱掉。
+        // v138：预览里的老师走同一条路（只认这一屏是不是这道题）。
         const next = document.getElementById('stage-next-btn');
         if (next) { next.disabled = false; next.classList.add('nudge'); }
       } else if (qi < m.questions.length - 1) {
@@ -11295,7 +11380,7 @@ const App = {
     // （比如多读了一堆别的词）→ 按原来的流程整句重读。
     if (badWords.length) {
       this._setHoldReadUI(mi, qi, 'repair', score, false, { badCount: badWords.length });
-      if (!this.isTeacher()) {
+      if (this._stepBelongsTo(mi, qi)) {
         const next = document.getElementById('stage-next-btn');
         if (next) { next.disabled = true; next.classList.remove('nudge'); }
       }
@@ -11310,7 +11395,7 @@ const App = {
     }
 
     this._setHoldReadUI(mi, qi, 'failed', score, false, { badWords: badWords });
-    if (!this.isTeacher()) {
+    if (this._stepBelongsTo(mi, qi)) {
       const next = document.getElementById('stage-next-btn');
       if (next) { next.disabled = true; next.classList.remove('nudge'); }
     }
@@ -11336,7 +11421,7 @@ const App = {
     }
     this._playCorrectSound();
     this._setHoldReadUI(mi, qi, 'passed', score, true);
-    if (!this.isTeacher()) {
+    if (this._stepBelongsTo(mi, qi)) {
       const next = document.getElementById('stage-next-btn');
       if (next) { next.disabled = false; next.classList.add('nudge'); }
     } else if (qi < m.questions.length - 1) {

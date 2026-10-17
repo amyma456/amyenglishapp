@@ -278,23 +278,28 @@ console.log('\n=== 6. 选择题不受影响：选对也要跟读 ≥60 分才解
 }
 
 // ===========================================================================
-console.log('\n=== 7. 老师端预览不受门槛影响 ===');
+console.log('\n=== 7. 老师端预览也走同一套门槛（v138 起）+ 有跳过键 ===');
 {
   App.state.role = 'teacher';
   App.state.currentDay = DAY;
   App.state.phone = '13259532991';
+  App.state.currentTab = 'preview';
   App.state.stepIdx = stepOf(GMI, FQI);
   App._lockNextOnRender = false;
   App.renderStage(DAY);
-  ok(App._lockNextOnRender === false, '老师端不进"必须做对"的门槛');
+  // v138：家长 2026-10-17 在预览里看到"我还没做题呢，下一题已经可以点了" ——
+  // 预览免锁就验不出学生那边的问题。现在预览也锁，老师用「跳过本题（老师）」走。
+  ok(App._lockNextOnRender === true, '老师端预览同样进"必须做对"的门槛（v138）');
   App.state.role = 'student';
+  App.state.currentTab = 'today';
   App.state.phone = PHONE;
 }
 
 // ===========================================================================
 console.log('\n=== 8. 静态检查：新写法在位 ===');
 {
-  ok(/if \(!this\.isTeacher\(\) && \(blanked \? !solved : qHasRead\)\) this\._lockNextOnRender = true;/.test(src),
+  ok(/\(blanked \? !solved : qHasRead\)\)? this\._lockNextOnRender = true;/.test(src) &&
+     /const blanked = !q\.options;/.test(src),
      '填空题按"写对"、选择题按"可跟读"分流判断（blanked ? !solved : qHasRead）');
   ok(/const blanked = !q\.options;/.test(src), '用"有没有 options"认填空题');
   ok(/_questionSolved\(mi, qi, dayIdx\) \{/.test(src), '_questionSolved 有定义');
@@ -310,8 +315,8 @@ console.log('\n=== 8. 静态检查：新写法在位 ===');
   ok(studentPath.indexOf("ansEl.innerHTML = '✅ 正确！';") < 0,
      '学生路径上不再有"只显示正确、不给下一步"的写法（老师端预览保留原样）');
 
-  ok(/name="app-version" content="137"/.test(htmlSrc), '版本号升到 137');
-  ok(/amy-english-v137/.test(swSrc), 'Service Worker 缓存名同步到 v137（不然手机上还是旧版）');
+  ok(/name="app-version" content="138"/.test(htmlSrc), '版本号升到 138');
+  ok(/amy-english-v138/.test(swSrc), 'Service Worker 缓存名同步到 v138（不然手机上还是旧版）');
 }
 
 console.log('\n' + (fail ? '❌ ' + fail + ' 项未通过' : '✅ 全部通过'));
