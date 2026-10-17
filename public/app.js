@@ -5594,22 +5594,35 @@ const App = {
       self._spShowResult(mi, qi, dayIdx, ctx,
         best ? best.spoken : null,
         best ? best.source : null,
-        best ? best.verdict : null);
+        best ? best.verdict : null,
+        !best && self._lastClipVoiceOk());
       // v131：收口 —— 只记"耗时/趟数/结果档位"，不记文本内容。
-      Api.perfEnd({ kind: !best ? 'fail'
-        : (best.verdict && best.verdict.passed ? 'pass' : 'low') });
+      Api.perfEnd({ kind: (!best && !self._lastClipVoiceOk()) ? 'fail'
+        : (!best ? 'voice' : (best.verdict && best.verdict.passed ? 'pass' : 'low')) });
     }).catch(function(e) {
       console.warn('Speaking read capture failed:', e);
-      self._spShowResult(mi, qi, dayIdx, ctx, null, null, null);
+      self._spShowResult(mi, qi, dayIdx, ctx, null, null, null, self._lastClipVoiceOk());
       Api.perfEnd({ kind: 'fail' });
     });
   },
 
   // 出分：逐词上色（绿勾/红波浪线），≥60 过、<60 锁下一题必须重读。
-  _spShowResult(mi, qi, dayIdx, ctx, spoken, source, verdict) {
+  _spShowResult(mi, qi, dayIdx, ctx, spoken, source, verdict, voiceOk) {
     const sentence = ctx.sentence;
     if (!spoken) {
-      // 没识别出内容：清掉标记让孩子重来，不自造分数。
+      // v139：识别端没回话，但录音里确实有人声 → 这道题算做完。
+      // 家长 2026-10-17：「明明说得很清楚，他就说没听清，孩子要重复四五遍」——
+      // 这一条就是那个"四五遍"的口子，现在堵上。
+      if (voiceOk) {
+        this._clearReadMarks(mi, qi);
+        this._playCorrectSound();
+        this._spReadUI(mi, qi, dayIdx, 'passed', null);
+        this._persistSpeakingClip(mi, qi, dayIdx, ctx.q, null, {
+          spoken: '', source: 'voice', lenient: true,
+        });
+        return;
+      }
+      // 真的没录到声音：只提示这一件事，让孩子再来一次。
       this._clearReadMarks(mi, qi);
       this._spReadUI(mi, qi, dayIdx, 'noaudio');
       return;
@@ -5682,7 +5695,8 @@ const App = {
       btn.style.background = 'var(--primary)';
       btn.innerHTML = '🎤 点我读';
       btn.disabled = false;
-      if (statusEl) statusEl.innerHTML = '<span style="color:var(--danger)">⚠️ 没录到声音或识别失败，请再试一次</span>';
+      // v139：只有"真的没录到声音"才走到这里，措辞也只说这一件事。
+      if (statusEl) statusEl.innerHTML = '<span style="color:var(--danger)">🎤 这次没录到声音，再点一下读</span>';
       return;
     }
     if (status === 'repair') {
@@ -5700,20 +5714,26 @@ const App = {
     }
     if (status === 'passed') {
       btn.style.background = 'var(--success)';
-      btn.innerHTML = '✅ 已通过 ' + score + ' 分';
+      // score 为 null = 本地判定"确实读了"，但识别端没给分 —— 只报通过。
+      const hasScore = (typeof score === 'number');
+      btn.innerHTML = '✅ 已通过' + (hasScore ? ' ' + score + ' 分' : '');
       btn.disabled = true;
       // v138：通过 = 这道口语题真的做完了。先落状态（_speakingGateOpen 只认它），
       // 再去点亮底部按钮；而且只在"这一屏还是这道题"时才点 —— 否则上一题
       // 打完分才回来的回调会把孩子正看着的下一题也点亮（就是这么"虚"的）。
       this._spPassed = this._spPassed || {};
-      this._spPassed[dayIdx + '-' + mi + '-' + qi] = score || 60;
+      this._spPassed[dayIdx + '-' + mi + '-' + qi] = hasScore ? score : 60;
       if (this._stepBelongsTo(mi, qi)) {
         const next = document.getElementById('stage-next-btn');
         if (next) { next.disabled = false; next.classList.add('nudge'); }
       }
       if (statusEl) {
-        let html = '<div style="font-size:34px;font-weight:700;color:var(--success);line-height:1.15">' + score + ' 分</div>'
-                 + '<span style="color:var(--success);font-weight:600">✅ 读得很好，通过！</span>';
+        let html = (hasScore
+          ? '<div style="font-size:34px;font-weight:700;color:var(--success);line-height:1.15">' + score + ' 分</div>'
+          : '<div style="font-size:34px;font-weight:700;color:var(--success);line-height:1.15">✓</div>')
+                 + '<span style="color:var(--success);font-weight:600">'
+                 + (hasScore ? '✅ 读得很好，通过！' : '✅ 读到了，通过！录音已经存下来')
+                 + '</span>';
         if (m && m.questions && qi < m.questions.length - 1) {
           html += '<div style="margin-top:10px"><button class="speak-btn" style="background:var(--success)" '
                 + 'onclick="App.nextSpeaking(' + mi + ',' + (qi + 1) + ',\'' + dayIdx + '\')">下一题 →</button></div>';
@@ -5829,6 +5849,10 @@ const App = {
   _startClipCapture() {
     this._spClip = null;
     this._spClipBlob = null;
+    // v139：上一遍的波形/meta 必须清掉。_lastClipVoiceOk() 靠它们判断"这次
+    // 有没有出声" —— 留着上一次的，就会把一次真的没录到的朗读判成"读过"。
+    this._spClipSamples = null;
+    this._spClipMeta = null;
     if (!Recorder.supported()) {
       this._spClipStarting = null;
       return Promise.resolve(false);
@@ -6985,12 +7009,16 @@ const App = {
       if (btn) btn.classList.remove('reading');
       if (!out) return;
       const heard = text ? self._toSimplified(text) : '';
+      // v139：出声了就算数。识别端没回话（晚高峰吐空）不再让孩子重说。
+      const voiceOk = !heard && self._voiceOk(out);
       const r = self.scoreTranslation(pair.cn, heard);
 
       let html = '<div class="spell-summary">';
-      html += '<div class="ss-head"><span class="ss-score">' + (heard ? r.score : '—') + '</span>'
+      html += '<div class="ss-head"><span class="ss-score">'
+           + (heard ? r.score : (voiceOk ? '✓' : '—')) + '</span>'
            + '<span class="ss-label">' + (heard ? '意思覆盖 ' + r.covered + '/' + r.total + ' 字'
-                                                : '没听清，再说一次') + '</span></div>';
+                                                : (voiceOk ? self.VOICE_PASS_LABEL
+                                                           : '这次没录到声音，再说一次')) + '</span></div>';
       if (heard) {
         html += '<div class="tr-block"><div class="tr-label">你说的</div>'
              + '<div class="tr-text">' + heard + '</div></div>';
@@ -7007,20 +7035,73 @@ const App = {
       if (slot) slot.innerHTML = html;
       if (status) status.innerHTML = '';
 
-      const passed = self._gateStep(heard ? r.score : 0, !!heard);
-      if (slot && !passed) slot.insertAdjacentHTML('beforeend', self._retryHint(false, !!heard));
+      const passed = heard ? self._gateStep(r.score, true)
+                           : (voiceOk ? self._gateStep(self.TRANS_PASS, true) : false);
+      if (slot && !passed) slot.insertAdjacentHTML('beforeend', self._retryHint(false, false));
 
-      Api.submitSpeakingScore({
-        studentId: self._myStudentId(), dayIdx: self.state.currentDay,
-        moduleIdx: mi, itemIdx: si, round: 1, type: 'translate-sentence',
-        label: pair.en, score: r.score, spoken: heard, source: 'asr',
-      });
+      if (heard) {
+        Api.submitSpeakingScore({
+          studentId: self._myStudentId(), dayIdx: self.state.currentDay,
+          moduleIdx: mi, itemIdx: si, round: 1, type: 'translate-sentence',
+          label: pair.en, score: r.score, spoken: heard, source: 'asr',
+        });
+      }
     }, true, 'zh');
   },
 
   // A step is cleared only when the child actually got it. Below the mark
   // they are asked to try again instead of being able to click past it.
   PASS_SCORE: 60,
+
+  // ===== v139：本地"到底有没有出声"判定 ===================================
+  //
+  // 家长 2026-10-17：「明明按住说得很清楚，他偏说没听清，孩子要重复四五遍」。
+  //
+  // 根子在**把"识别端没回话"当成了"孩子没读"**。识别端（阿里云/whisper）在
+  // 晚高峰会偶发吐空 —— 音频完整传上去了，模型一个字都没产出。以前这个空结果
+  // 被当成"没过"，孩子只能一遍遍重读，可他明明每遍都读对了。这就是最伤兴趣
+  // 的那件事：不是他不行，是系统听不见。
+  //
+  // 现在多一把尺子：录音本身在本地就有波形，可以直接量"这一段里有没有人声、
+  // 有多长"。只要量到确实出了声，就绝不判他重来 —— 该给的分给分，该放的行
+  // 放行，录音留给老师听。真正没出声（误触、麦克风没开）才提示再来一次。
+  //
+  // 阈值取的是"有人声"的量级：麦克风开了 AGC，正常说话峰值 0.1~0.5，
+  // 安静房间底噪在 0.01 上下，0.02 正好卡在两者之间。
+  VOICE_MIN_PEAK: 0.02,
+  VOICE_MIN_SEC: 0.2,
+
+  _voiceOk(out) {
+    if (!out) return false;
+    const s = out.samples;
+    const th = this.VOICE_MIN_PEAK;
+    if (s && s.length) {
+      let peak = 0, first = -1, last = -1;
+      for (let i = 0; i < s.length; i++) {
+        const v = s[i] < 0 ? -s[i] : s[i];
+        if (v > peak) peak = v;
+        if (v > th) { if (first < 0) first = i; last = i; }
+      }
+      if (peak < th || first < 0) return false;
+      return (last - first + 1) / (Recorder.TARGET_RATE || 16000) >= this.VOICE_MIN_SEC;
+    }
+    // 只留了 meta 的路径（片段已经被收走）：退化成 peak + 时长两个数。
+    const peak = Number(out.peak) || 0;
+    const dur = Number(out.duration) || 0;
+    return peak >= th && dur >= this.VOICE_MIN_SEC;
+  },
+
+  // 整句跟读/口语那两条路只在 _spClipSamples / _spClipMeta 里留着这一段。
+  _lastClipVoiceOk() {
+    if (this._spClipSamples && this._spClipSamples.length) {
+      return this._voiceOk({ samples: this._spClipSamples, peak: (this._spClipMeta || {}).peak });
+    }
+    const meta = this._spClipMeta || {};
+    return this._voiceOk({ peak: meta.peak, duration: meta.duration });
+  },
+
+  // 出声了但识别端没给文本 —— 这一条统一的说法。**不再出现"没听清"。**
+  VOICE_PASS_LABEL: '✅ 过（这段朗读已经存下来了）',
 
   // 翻译三档（v126，家长定的松紧）：
   //   ≥60        过（跟阅读理解同一把尺）
@@ -7117,6 +7198,8 @@ const App = {
       // （v127：家长报的"明明说得很清楚却判没听清、也没有下一题"就是
       //   这里的 refCn 为空导致的）。没参考 = 只要说了就算过。
       const canScore = !!refCn;
+      // v139：确实出声了但识别端没回话 → 直接放行，不让孩子重说。
+      const voiceOk = !heard && self._voiceOk(out);
       const r = canScore ? self.scoreTranslation(refCn, heard)
                          : { score: 0, covered: 0, total: 0 };
       const band = canScore ? self._transBand(heard ? r.score : 0, !!heard)
@@ -7124,11 +7207,15 @@ const App = {
 
       let html = '<div class="spell-summary">';
       if (canScore) {
-        html += '<div class="ss-head"><span class="ss-score">' + (heard ? r.score : '—') + '</span>'
-             + '<span class="ss-label">' + self._transBandLabel(band, r) + '</span></div>';
+        html += '<div class="ss-head"><span class="ss-score">'
+             + (heard ? r.score : (voiceOk ? '✓' : '—')) + '</span>'
+             + '<span class="ss-label">'
+             + (voiceOk ? self.VOICE_PASS_LABEL : self._transBandLabel(band, r)) + '</span></div>';
       } else {
-        html += '<div class="ss-head"><span class="ss-score">' + (heard ? '✓' : '—') + '</span>'
-             + '<span class="ss-label">' + (heard ? '说得不错，继续下一句' : '没听清，再说一次') + '</span></div>';
+        html += '<div class="ss-head"><span class="ss-score">'
+             + ((heard || voiceOk) ? '✓' : '—') + '</span>'
+             + '<span class="ss-label">'
+             + ((heard || voiceOk) ? '说得不错，继续下一句' : '这次没录到声音，再说一次') + '</span></div>';
       }
       if (heard) {
         html += '<div class="tr-block"><div class="tr-label">你说的</div>'
@@ -7149,8 +7236,8 @@ const App = {
       if (status) status.innerHTML = '';
 
       // 只有"出入太大"才锁住不放行，并让他照着原文再说一遍。
-      // 没听清也重来一次（但不算孩子的错，所以只给轻提示）。
-      const passed = !canScore ? !!heard : (band !== 'hard');
+      // v139：识别端没回话但确实出了声 → 放行，不重说。
+      const passed = voiceOk ? true : (!canScore ? !!heard : (band !== 'hard'));
       if (!passed && slot) {
         slot.insertAdjacentHTML('beforeend',
           heard ? self._retryHint(false, true) : self._retryHint(false, false));
@@ -7179,7 +7266,9 @@ const App = {
   _transBandLabel(band, r) {
     if (band === 'pass') return '意思对上了（覆盖 ' + r.covered + '/' + r.total + ' 字）';
     if (band === 'soft') return '意思差一点（覆盖 ' + r.covered + '/' + r.total + ' 字）· 对一下参考答案';
-    return r.total ? '出入太大，照着原文再说一遍' : '没听清，再说一次';
+    // v139：这里原来写的是"没听清"。既然确实没录到声音，就说清楚是没录到 ——
+    // 家长明确要求这句别再出现，孩子看到"没听清"只会以为是自己读错了。
+    return r.total ? '出入太大，照着原文再说一遍' : '这次没录到声音，再说一次';
   },
 
   _gateStep(score, hasSpeech) {
@@ -7195,7 +7284,7 @@ const App = {
   _retryHint(passed, hasSpeech) {
     if (passed) return '';
     return '<div class="retry-hint">'
-         + (hasSpeech ? '没到 ' + this.PASS_SCORE + ' 分，请重试' : '没听清，请重试')
+         + (hasSpeech ? '没到 ' + this.PASS_SCORE + ' 分，请重试' : '这次没录到声音，再按住说一遍')
          + '</div>';
   },
 
@@ -7499,10 +7588,15 @@ const App = {
       if (!out) return;
       const a = self.alignSpeech(sent, text || '');
       const slot = document.getElementById('sent-result-' + mi + '-' + si);
+      // v139：识别端没回话，但录音里确实有人声 → 算过，不让孩子重读。
+      const voiceOk = !text && self._voiceOk(out);
 
       let html = '<div class="spell-summary">';
-      html += '<div class="ss-head"><span class="ss-score">' + (text ? a.score : '—') + '</span>'
-           + '<span class="ss-label">' + (text ? '读对 ' + a.ok + '/' + a.total + ' 个词' : '没听清，再读一次') + '</span></div>';
+      html += '<div class="ss-head"><span class="ss-score">'
+           + (text ? a.score : (voiceOk ? '✓' : '—')) + '</span>'
+           + '<span class="ss-label">'
+           + (text ? '读对 ' + a.ok + '/' + a.total + ' 个词'
+                   : (voiceOk ? self.VOICE_PASS_LABEL : '这次没录到声音，再读一次')) + '</span></div>';
       if (text) {
         html += '<div class="align-sentence">';
         a.items.forEach(function(x) {
@@ -7542,7 +7636,9 @@ const App = {
       }
       const allOk = !!text && wrongs.length === 0;
 
-      const passed = self._gateStep(allOk ? a.score : 0, allOk);
+      // v139：出了声就算过（识别端空手而归不是孩子的错）。
+      const passed = (voiceOk && !text) ? self._gateStep(self.PASS_SCORE, true)
+                                        : self._gateStep(allOk ? a.score : 0, allOk);
       const slotEl = document.getElementById('sent-result-' + mi + '-' + si);
       if (slotEl && !passed) {
         if (wrongs.length) {
@@ -7552,11 +7648,13 @@ const App = {
         }
       }
 
-      Api.submitSpeakingScore({
-        studentId: self._myStudentId(), dayIdx: self.state.currentDay,
-        moduleIdx: mi, itemIdx: si, round: 1, type: 'sentence',
-        label: sent, score: a.score, spoken: text, source: 'asr',
-      });
+      if (text) {
+        Api.submitSpeakingScore({
+          studentId: self._myStudentId(), dayIdx: self.state.currentDay,
+          moduleIdx: mi, itemIdx: si, round: 1, type: 'sentence',
+          label: sent, score: a.score, spoken: text, source: 'asr',
+        });
+      }
       Api.uploadRecording(out.blob, {
         studentId: self._myStudentId(), dayIdx: self.state.currentDay,
         moduleIdx: mi, itemIdx: si, round: 1, type: 'sentence',
@@ -7660,14 +7758,18 @@ const App = {
     // v109：孤立单词和字母/音节属于同一类（短、没有上下文），走 CF 才对得上；
     // 自动收尾用 900ms 静音窗口（比字母的 600ms 宽一点，别把词尾的辅音切掉）。
     this._holdStart(ev, 'repair-' + prefix + '-' + mi + '-' + si + '-' + idx, word, status, function(out, text) {
-      if (!text) {
-        if (status) status.textContent = '没听清，点一下单词听读音，再按住读一次';
+      // v139：识别端没回话，但录音里确实有人声 —— 这一格算过。
+      // 以前这里直接判"没听清"让孩子再读，是"重复四五遍"的主要来源之一：
+      // 整句里每个红词都要走这一关，卡一格就过不去。
+      const voiceOk = !text && self._voiceOk(out);
+      if (!text && !voiceOk) {
+        if (status) status.textContent = '这次没录到声音，点一下单词听读音，再按住读一次';
         return;
       }
-      const a = self.alignSpeech(word, text);
+      const a = self.alignSpeech(word, text || '');
       // 判"读对了"：位置上对得上，或者这一串识别结果里任意位置出现过这个词。
       // 后者挡住对齐偶尔把词吃进"多余的词"里的情况。
-      const hit = (a.ok >= 1 && a.score >= 60) || self._heardAny(word, text);
+      const hit = voiceOk || (a.ok >= 1 && a.score >= 60) || self._heardAny(word, text);
       const tries = (r.tries[idx] || 0) + 1;
       r.tries[idx] = tries;
       if (hit || tries >= self.REPAIR_GIVE_UP) {
@@ -7744,14 +7846,19 @@ const App = {
       Api.perfBegin('zh-translate-whole');
       const res = await Api.transcribe(forAsr, null, { fast: true, lang: 'zh', budgeted: true });
       const heard = res && res.text && !Api.isFillerTranscript(res.text) ? res.text : '';
+      // v139：出声了就给过 —— 识别端没回话不算孩子没说。
+      const voiceOk = !heard && this._voiceOk(out);
       const r = this.scoreTranslation(m.passage_cn, heard);
-      // v131：中文口述的"结果档位"只看有没有听清 —— 不做分数档判断，
+      // v131：中文口述的"结果档位"只看有没有真的说出内容 —— 不做分数档判断，
       // 因为它本来就不判对错（意思覆盖而已）。
-      Api.perfEnd({ kind: heard ? 'pass' : 'fail' });
+      Api.perfEnd({ kind: (heard || voiceOk) ? 'pass' : 'fail' });
 
       let html = '<div class="spell-summary">';
-      html += '<div class="ss-head"><span class="ss-score">' + (heard ? r.score : '—') + '</span>'
-           + '<span class="ss-label">' + (heard ? '意思覆盖 ' + r.covered + '/' + r.total + ' 字' : '没听清，再试一次') + '</span></div>';
+      html += '<div class="ss-head"><span class="ss-score">'
+           + (heard ? r.score : (voiceOk ? '✓' : '—')) + '</span>'
+           + '<span class="ss-label">'
+           + (heard ? '意思覆盖 ' + r.covered + '/' + r.total + ' 字'
+                    : (voiceOk ? this.VOICE_PASS_LABEL : '这次没录到声音，再试一次')) + '</span></div>';
       if (heard) {
         html += '<div class="tr-block"><div class="tr-label">你说的</div><div class="tr-text">'
              + this._toSimplified(heard) + '</div></div>';
@@ -8329,7 +8436,7 @@ const App = {
         // 反馈：过了（打勾）、要重读（点名那一格）。
         status.innerHTML = '<div class="tap-result ' + ((ok || unclear) ? 'good' : 'bad') + '">'
           + (ok ? (near ? '✅ 有点不准，算你过' : '✅ 读对了')
-                : (unclear ? '✅ 过（没听清，不算错）'
+                : (unclear ? '✅ 过（这个音算对了）'
                            : '🔁 这一格再读一次「' + label + '」'))
           + '</div>';
       }
@@ -8361,15 +8468,18 @@ const App = {
       self.speak(wordText);
       self._spell.finished = false;      // re-reading must re-score and redraw
       var a = self.alignSpeech(wordText, text || '');
-      var score = self._wordTakeScore(wordText, text || '', a);
+      // v139：识别端没回话但确实出了声 → 算读过。分数按及格给，不判 0 分 ——
+      // 判 0 分会让「连续读」那一格一直灰着，孩子只能反复重读整词。
+      var voiceOk = !text && self._voiceOk(out);
+      var score = voiceOk ? self.PASS_SCORE : self._wordTakeScore(wordText, text || '', a);
       self._spell.wordTake = out.samples || null;
       self._spell.score = score;
-      self._spell.heard = text;
+      self._spell.heard = text || (voiceOk ? '（这段已经录下来了）' : null);
       if (status) {
         status.innerHTML = '<div class="tap-result ' + (score >= 60 ? 'good' : 'bad') + '">'
-          + '整词 ' + score + ' 分'
+          + (voiceOk ? '✅ 整词读过了' : '整词 ' + score + ' 分')
           + (text ? '<span class="tap-heard">识别：' + text + '</span>'
-                  : '<span class="tap-heard">没识别出内容</span>') + '</div>';
+                  : '<span class="tap-heard">' + (voiceOk ? '录音已保存，可以继续' : '没识别出内容') + '</span>') + '</div>';
       }
       Api.submitSpeakingScore({
         studentId: self._myStudentId(), dayIdx: self.state.currentDay,
@@ -8447,7 +8557,7 @@ const App = {
     var html = '<div class="spell-summary">';
     html += '<div class="ss-head"><span class="ss-score">'
          + (noSpeech || sp.score === null ? '—' : sp.score) + '</span>'
-         + '<span class="ss-label">' + (noSpeech ? '整词没听清' : '整词得分') + '</span></div>';
+         + '<span class="ss-label">' + (noSpeech ? '整词还没读到（再按一次就好）' : '整词得分') + '</span></div>';
     html += '<div class="sc-grid">' + cells + '</div>';
     if (sp.allOk) {
       // v119：全部读对 → **弹一个卡片**出来（原来只是汇总末尾一颗普通按钮，
@@ -8533,15 +8643,17 @@ const App = {
     this._holdStart(ev, 'cont-' + mi, sp.word, status, function(out, text) {
       if (btn) btn.classList.remove('reading');
       if (!out) return;
+      // v139：识别端没回话但确实出了声 → 连读成立，不让孩子重复整串。
+      var voiceOk = !text && self._voiceOk(out);
       var res = self._scoreSequence(seq, text);
-      sp.contScore = res.score;
+      sp.contScore = voiceOk ? self.PASS_SCORE : res.score;
       sp.contHeard = text;
       // v93：连续读也必须整串都被听到才放行（家长："同样也是全部读的
       // 没问题了才能走"）。没读全就把底部按钮重新按下去；上面已经给每个
       // 片段标了 ok / miss，孩子看得见漏的是哪个。
       // v100：整词被听到（res.wordHit）就算连读成立 —— 孤立字母识别不到不是
       // 孩子的错，不能因为这个把人锁在门外（家长：读得很好却十几分、过不去）。
-      sp.contMiss = !text || (!res.wordHit && res.ok < seq.length);
+      sp.contMiss = voiceOk ? false : (!text || (!res.wordHit && res.ok < seq.length));
       // v119：这一遍读全了，才算"这个单词读完了" —— 底部「下一个单词」这才
       // 亮起来。没读全就一直是灰的（家长："这个单词没有读完，下一个单词这个
       // 地方永远是虚的"）。
@@ -8556,13 +8668,14 @@ const App = {
       var joined = out.samples ? Recorder.join([out.samples], 0) : null;
       var html = '<div class="spell-summary">';
       html += '<div class="ss-head"><span class="ss-score">'
-           + (text ? res.score : '—') + '</span><span class="ss-label">'
-           + (text ? (res.wordHit
+           + (text ? res.score : (voiceOk ? '✓' : '—')) + '</span><span class="ss-label">'
+           + (voiceOk ? self.VOICE_PASS_LABEL
+                      : (text ? (res.wordHit
                         // v100：整词读对但字母格没被识别到时，别再写「读到 2/6」
                         // 让孩子以为读漏了大半 —— 那句话本身就是误报。
                         ? '连续读得分 · 整词读对了'
                         : '连续读得分 · 读到 ' + res.ok + '/' + seq.length)
-                   : '没听清，再读一次') + '</span></div>';
+                   : '这次没录到声音，再读一次')) + '</span></div>';
       if (joined) {
         html += '<audio id="cont-audio-' + mi + '" controls src="' + URL.createObjectURL(joined.blob)
              + '" style="width:100%;max-width:280px;height:32px"></audio>';
@@ -9299,10 +9412,15 @@ const App = {
       if (!out) return;
       const a = self.alignSpeech(sent, text || '');
       const slot = document.getElementById('wr-result-' + mi + '-' + si);
+      // v139：出了声就算过 —— 识别端没回话不让孩子重读。
+      const voiceOk = !text && self._voiceOk(out);
 
       let html = '<div class="spell-summary">';
-      html += '<div class="ss-head"><span class="ss-score">' + (text ? a.score : '—') + '</span>'
-           + '<span class="ss-label">' + (text ? '读对 ' + a.ok + '/' + a.total + ' 个词' : '没听清，再读一次') + '</span></div>';
+      html += '<div class="ss-head"><span class="ss-score">'
+           + (text ? a.score : (voiceOk ? '✓' : '—')) + '</span>'
+           + '<span class="ss-label">'
+           + (text ? '读对 ' + a.ok + '/' + a.total + ' 个词'
+                   : (voiceOk ? self.VOICE_PASS_LABEL : '这次没录到声音，再读一次')) + '</span></div>';
       if (text) {
         html += '<div class="align-sentence">';
         a.items.forEach(function(x) {
@@ -9339,17 +9457,20 @@ const App = {
       }
       const allOk = !!text && wrongs.length === 0;
 
-      if (allOk) self._markWritingSentenceDone(mi, si, m);
+      // v139：识别端空手而归但确实出了声 —— 这句算过。
+      if (allOk || (voiceOk && !text)) self._markWritingSentenceDone(mi, si, m);
       else if (slot) {
         if (wrongs.length) self._renderSentenceRepair('wr', mi, si, wrongs);
         else slot.insertAdjacentHTML('beforeend', self._retryHint(false, !!text));
       }
 
-      Api.submitSpeakingScore({
-        studentId: self._myStudentId(), dayIdx: self.state.currentDay,
-        moduleIdx: mi, itemIdx: si, round: 1, type: 'writing-sentence',
-        label: sent, score: a.score, spoken: text, source: 'asr',
-      });
+      if (text) {
+        Api.submitSpeakingScore({
+          studentId: self._myStudentId(), dayIdx: self.state.currentDay,
+          moduleIdx: mi, itemIdx: si, round: 1, type: 'writing-sentence',
+          label: sent, score: a.score, spoken: text, source: 'asr',
+        });
+      }
       Api.uploadRecording(out.blob, {
         studentId: self._myStudentId(), dayIdx: self.state.currentDay,
         moduleIdx: mi, itemIdx: si, round: 1, type: 'writing-sentence',
@@ -9637,16 +9758,17 @@ const App = {
     // 按着。家长说「提交之后还是反应太慢了」，一半的等待其实来自"按着不放
     // 才敢松"；识别只有一次往返，收尾越早开始就越快。
     this._holdStart(ev, 'review-' + word, word, status, function(out, text) {
-      if (!text) {
-        // 没听清 ≠ 读错。孤立单词本来就难识别，算成孩子的错会把人永久卡在
-        // 这一屏（v99 起字母跟读就是这么处理的，这里补齐）。
+      // v139：识别端没回话但确实出了声 → 按读对算（孤立单词本来就是识别
+      // 最不稳的一类，不能让孩子为识别端的空结果买单）。
+      const voiceOk = !text && self._voiceOk(out);
+      if (!text && !voiceOk) {
         if (status) status.innerHTML = '<div class="review-fix">'
-          + '<div class="rf-head">⚠️ 这次没听清（不算读错）</div>'
+          + '<div class="rf-head">这次没录到声音</div>'
           + '<div class="rf-tip">点一下上面的单词听读音，再按住大声读一次</div></div>';
         return;
       }
-      const a = self.alignSpeech(word, text);
-      if (a.ok >= 1 && a.score >= 60) {
+      const a = self.alignSpeech(word, text || '');
+      if (voiceOk || (a.ok >= 1 && a.score >= 60)) {
         const okN = self._reviewPass(word);
         const btn = document.getElementById('review-btn');
         if (btn) { btn.classList.add('review-done'); btn.disabled = true; }
@@ -11028,11 +11150,12 @@ const App = {
         } catch (e) { console.warn('word repair transcribe failed', e); }
         Api.perfEnd({ kind: text ? 'pass' : 'fail' });
       }
-      self._wordRepairJudge(text);
+      // v139：把"本地有没有出声"一起交给判定 —— 识别端没回话时靠它放行。
+      self._wordRepairJudge(text, !text && self._lastClipVoiceOk());
     });
   },
 
-  _wordRepairJudge(text) {
+  _wordRepairJudge(text, voiceOk) {
     const R = this._wordRepair;
     if (!R) return;
     const btn = document.getElementById('wrep-btn');
@@ -11046,7 +11169,7 @@ const App = {
     // 结果里任何一处跟目标词同音形（_soundAlike，孤立词的宽口径）。
     const a = this.alignSpeech(R.word || '', text || '');
     const aligned = !!(a && a.items && a.items.some(function(x) { return x.target && x.status === 'ok'; }));
-    const ok = aligned || this._heardAny(R.word, text) || this._soundAlike(R.word || '', text);
+    const ok = !!voiceOk || aligned || this._heardAny(R.word, text) || this._soundAlike(R.word || '', text);
     if (ok) {
       // 在原单词的位置上：红波浪线当场变绿打勾。
       const panel = document.getElementById('rd-sent-' + R.mi + '-' + R.qi);
@@ -11061,7 +11184,7 @@ const App = {
     } else {
       this._playWrongSound();
       if (hint) hint.innerHTML = '<span style="color:var(--danger)">'
-        + (text ? '听到的是「' + text + '」，听一遍再读' : '没听清，再读一次')
+        + (text ? '听到的是「' + text + '」，听一遍再读' : '这次没录到声音，点一下听读音再按住读')
         + '</span>';
     }
   },
@@ -11215,12 +11338,14 @@ const App = {
       self._showHoldReadResult(mi, qi, dayIdx, ctx.sentence,
         best ? best.spoken : null,
         best ? best.source : null,
-        best ? best.verdict : null);
-      Api.perfEnd({ kind: !best ? 'fail'
-        : (best.verdict && best.verdict.passed ? 'pass' : 'low') });
+        best ? best.verdict : null,
+        !best && self._lastClipVoiceOk());
+      Api.perfEnd({ kind: (!best && !self._lastClipVoiceOk()) ? 'fail'
+        : (!best ? 'voice' : (best.verdict && best.verdict.passed ? 'pass' : 'low')) });
     }).catch(function(e) {
       console.warn('Hold-read capture failed:', e);
-      self._showHoldReadResult(mi, qi, dayIdx, ctx.sentence, null, null, null);
+      self._showHoldReadResult(mi, qi, dayIdx, ctx.sentence, null, null, null,
+        self._lastClipVoiceOk());
       Api.perfEnd({ kind: 'fail' });
     });
   },
@@ -11257,11 +11382,15 @@ const App = {
     }
     if (status === 'passed') {
       btn.style.background = 'var(--success)';
-      btn.innerHTML = '✅ 已通过 ' + score + ' 分';
+      // score 为空 = 本地判定"确实读了，但识别端没给分数"，只报通过不报分。
+      const hasScore = (typeof score === 'number');
+      btn.innerHTML = '✅ 已通过' + (hasScore ? ' ' + score + ' 分' : '');
       btn.disabled = true;
-      if (statusEl) statusEl.innerHTML =
-        '<div style="font-size:34px;font-weight:700;color:var(--success);line-height:1.15">' + score + ' 分</div>'
-        + '<span style="color:var(--success);font-weight:600">✅ 每个词都读到了，通过！</span>';
+      if (statusEl) statusEl.innerHTML = hasScore
+        ? ('<div style="font-size:34px;font-weight:700;color:var(--success);line-height:1.15">' + score + ' 分</div>'
+          + '<span style="color:var(--success);font-weight:600">✅ 每个词都读到了，通过！</span>')
+        : ('<div style="font-size:34px;font-weight:700;color:var(--success);line-height:1.15">✓</div>'
+          + '<span style="color:var(--success);font-weight:600">✅ 读到了，通过！录音已经存下来</span>');
       return;
     }
     if (status === 'failed') {
@@ -11300,7 +11429,8 @@ const App = {
       btn.style.background = 'var(--primary)';
       btn.innerHTML = '🎤 点我读';
       btn.disabled = false;
-      if (statusEl) statusEl.innerHTML = '<span style="color:var(--danger)">⚠️ 没录到声音或识别失败，请再试一次</span>';
+      // v139：只有"真的没录到声音"才走到这里，措辞也只说这一件事。
+      if (statusEl) statusEl.innerHTML = '<span style="color:var(--danger)">🎤 这次没录到声音，再点一下读</span>';
       return;
     }
   },
@@ -11315,7 +11445,7 @@ const App = {
     if (s) this.speak(s);
   },
 
-  _showHoldReadResult(mi, qi, dayIdx, sentence, spoken, source, verdict) {
+  _showHoldReadResult(mi, qi, dayIdx, sentence, spoken, source, verdict, voiceOk) {
     const m = HOMEWORK_DATA[dayIdx].modules[mi];
     const q = m.questions[qi];
     const lastPick = this._lastPick && this._lastPick[mi + '-' + qi];
@@ -11325,9 +11455,29 @@ const App = {
     if (hint) hint.textContent = '';
 
     if (!spoken) {
-      // No usable audio at all — let the child try again. We don't fabricate
-      // a self-score here: a "speaking" question with no recorded audio
-      // means the mic was denied or transcription failed, so just reset.
+      // v139：识别端一个字都没回来，但录音里确实有人声 —— 这一遍算读过了。
+      // 以前这里让孩子"再读一次"，他读得再清楚也一样卡住，是家长报的
+      // 「重复四五遍」最直接的来源。现在按通过走，录音留着给老师听。
+      if (voiceOk) {
+        this._clearReadMarks(mi, qi);
+        this._recordAnswer(dayIdx, mi, qi, oi, isCorrect);
+        const opts = document.querySelectorAll('#q-' + mi + '-' + qi + ' .q-option');
+        opts.forEach((el, i) => {
+          el.classList.remove('wrong', 'selected');
+          if (i === q.answer) el.classList.add('correct');
+          el.style.pointerEvents = 'none';
+        });
+        const ansEl = document.getElementById('ans-' + mi + '-' + qi);
+        if (ansEl) { ansEl.style.display = 'block'; ansEl.innerHTML = '✅ 读到了，通过'; }
+        this._playCorrectSound();
+        this._setHoldReadUI(mi, qi, 'passed', null, true);
+        if (this._stepBelongsTo(mi, qi)) {
+          const next = document.getElementById('stage-next-btn');
+          if (next) { next.disabled = false; next.classList.add('nudge'); }
+        }
+        return;
+      }
+      // 真的没录到声音 —— 只提示这一件事，不说"没听清"。
       this._clearReadMarks(mi, qi);
       this._setHoldReadUI(mi, qi, 'noaudio', null, false);
       return;
