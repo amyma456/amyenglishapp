@@ -4142,16 +4142,21 @@ const App = {
       html += '<div class="card-title">' + (day ? day.day_cn + '（' + this.getDayDateLabel(Number(k), 0) + '）' : '未归类') + '</div>';
       html += '<table class="data-table"><thead><tr><th>学生</th><th>内容</th><th>轮次</th><th>得分</th><th>分数来源</th><th>时间</th><th>录音</th></tr></thead><tbody>';
       rows.forEach(r => {
-        const score = r.score || 0;
+        // v139：识别端没回话、按"确实读到了"放行的那一遍没有分数。
+        // 这里必须显示"未判分"而不是 0 分 —— 0 分会让老师以为孩子没读。
+        const hasScore = (typeof r.score === 'number');
+        const score = hasScore ? r.score : null;
         // Where the number came from matters more than the number: none of
         // these measure pronunciation.
         const src = r.source === 'asr' ? '语音识别比对'
                   : r.source === 'self' ? '学生自评'
+                  : r.source === 'voice' ? '已录下（识别未回结果）'
                   : '音量';
         html += '<tr><td>' + nameOf(r.studentId) + '</td>';
         html += '<td>' + (r.label || '-') + '</td>';
         html += '<td>' + (r.round || 1) + '</td>';
-        html += '<td>' + score + (r.wordTotal ? ' <span class="fs-12 text-sub">(' + r.okCount + '/' + r.wordTotal + '词)</span>' : '') + '</td>';
+        html += '<td>' + (hasScore ? score : '<span class="fs-12 text-sub">未判分</span>')
+             + (r.wordTotal ? ' <span class="fs-12 text-sub">(' + r.okCount + '/' + r.wordTotal + '词)</span>' : '') + '</td>';
         html += '<td class="fs-12 text-sub">' + src
              + (r.spoken ? '<br><span style="color:var(--ink-3)">识别：' + r.spoken + '</span>' : '')
              + ((r.wrongWords && r.wrongWords.length)
