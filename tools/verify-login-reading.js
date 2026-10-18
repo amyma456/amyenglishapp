@@ -290,14 +290,60 @@ ok(src.indexOf("_readingWrongFlow(m, mi, qi, oi, dayIdx)") >= 0, '阅读理解�
 ok(src.indexOf('loadData failed (auto-login continues)') >= 0, 'loadData 出错不再挡住自动登录');
 ok(apiSrc.indexOf('_LOGIN_COOKIE') >= 0, '登录凭据 cookie 兜底');
 ok(src.indexOf("btn.innerHTML = '⏳ 正在进入…'") >= 0, '登录按钮即时反馈');
-ok(src.indexOf('registerStudent(phone, name)') >= 0 && src.indexOf('后台收尾') >= 0, '学生登录进 App 后网络收尾挪到后台');
+ok(src.indexOf('registerStudent(phone, name, knownDevice)') >= 0 && src.indexOf('_commitStudent(phone, name)') >= 0,
+  '学生登录进 App 后网络收尾挪到后台（v142：先进入，_commitStudent 才上云）');
 
 const html = fs.readFileSync(BASE + 'index.html', 'utf8');
-ok(html.indexOf('app-version" content="141"') >= 0, 'index.html 版本 = 141');
+ok(html.indexOf('app-version" content="142"') >= 0, 'index.html 版本 = 141');
 ok(html.indexOf('id="login-btn"') >= 0, '登录按钮有 id（反馈要挂在它身上）');
 ok(html.indexOf('.login-btn:active') >= 0, '登录按钮有按压反馈样式');
 const sw = fs.readFileSync(BASE + 'sw.js', 'utf8');
-ok(sw.indexOf("amy-english-v141") >= 0, 'sw.js 缓存名 = v140');
+ok(sw.indexOf("amy-english-v142") >= 0, 'sw.js 缓存名 = v140');
+
+console.log('\n[9] v142：登录不等网络；阅读整句不等朗读');
+
+// (a) 接口层：class/status 必须自己掐表 —— fetch 不会超时，Worker 冷启动
+//     实测挂过 20 秒，那就是孩子登录时的那段干等。
+ok(/CLASS_TIMEOUT_MS:\s*\d+/.test(apiSrc), 'class/status 有硬超时常量');
+ok(/AbortController/.test(apiSrc) && /ctrl\.abort\(\)/.test(apiSrc), 'class/status 到点 abort');
+
+// (b) 行为：这台设备登录过（fast=true）时，网络一直不回也要立刻进 App。
+{
+  let shown = 0;
+  App.showApp = function() { shown++; };
+  App.syncToCloud = function() {};
+  App.state.students = [];
+  App.state.parentStudents = {};
+  const realClassStatus = Api.classStatus;
+  Api.classStatus = () => new Promise(() => {});      // 永远不返回（最坏情况）
+  App.registerStudent('13800000001', '测试-Kid', true);
+  ok(shown === 1, '网络一直挂着，老设备也已经进了 App（不再站在登录页等）');
+  App.registerStudent('13800001111', '新-Kid', false);   // 新设备：必须等核对
+  ok(shown === 1, '新设备仍走核对（不会凭 fast 缺省值绕过删除拦截）');
+  Api.classStatus = realClassStatus;
+}
+
+// (c) 老师端：点击到跳转之间不再同步渲染整张周报
+ok(src.indexOf('requestAnimationFrame(function() { self.renderContent(); })') >= 0,
+  'showApp 先切界面，内容挪到下一帧（点击不再像"没反应"）');
+
+// (d) 阅读题：选项一进屏就能点，不用等题干读完
+{
+  const day0 = (HOMEWORK_DATA[0] && HOMEWORK_DATA[0].modules) ? HOMEWORK_DATA[0] : HOMEWORK_DATA;
+  const mods0 = day0.modules || [];
+  const mR = mods0.find(function(mm) {
+    return mm.type === 'reading' && mm.questions && mm.questions.length;
+  });
+  const rmi2 = mods0.indexOf(mR);
+  const htmlR = App._renderOneQuestion(mR, rmi2, 0, 0);
+  const qoTag = (htmlR.match(/<div class="q-options"[^>]*>/) || [''])[0];
+  ok(qoTag && qoTag.indexOf('pointer-events') < 0,
+    '阅读题选项渲染即可点（不再 opacity .4 + pointer-events:none）');
+  ok(htmlR.indexOf('请先听完整朗读') < 0, '不再挂「请先听完整朗读」的等待条');
+  ok(/prefetchTts\(say/.test(src), '整句（问句+答句）在渲染时就预取音频');
+}
+ok(/setTimeout\(decide, 3500\)/.test(src), '点选项的兜底从 8 秒收到 3.5 秒');
+ok(/if \(!self\._audioStarted\) decide\(\)/.test(src), '1.2 秒还没出声就直接结算（不干等）');
 
 console.log('\n' + (fail ? '❌ ' + fail + ' 项未通过' : '✅ 全部通过'));
 process.exit(fail ? 1 : 0);

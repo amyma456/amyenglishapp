@@ -75,8 +75,8 @@ console.log('\n== ① registerStudent 的门必须是 fail-closed ==');
 console.log('\n== ② 必须有一次短暂重试（不能让正常学生被误伤） ==');
 {
   ok(/_retryClassStatus\s*\(/.test(appCode), '★ 有 _retryClassStatus 重试函数');
-  ok(/_retryClassStatus\s*\(\s*phone\s*,\s*2\s*\)/.test(regBody),
-     '★ registerStudent 里调用它做重试');
+  ok(/_retryClassStatus\s*\(\s*phone\s*,\s*(1|2)\s*\)/.test(regBody),
+     '★ registerStudent 里调用它做重试（v142 起只重试 1 次：这条路径上每一跳都是孩子在等）');
 
   // 重试函数本身
   const retryBody = methodBody(appCode, '_retryClassStatus');

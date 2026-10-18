@@ -429,7 +429,7 @@ console.log('== 17) 上报的 student_id 跟名单对不上时，按姓名认领
 // `s<时间戳>` 编号并一直用它上报；老师端是按名单编号取 key 的，那些行就白报了。
 // 2026-10-14 实测：后台同时出现 s1791934007056（名单里没有）与 s1791931729388
 // （名单里的）两行同名同班的 张子皓-Harvey。
-ok(/registerStudent\(phone, name\) \{/.test(appSrc) && /id: 's' \+ Date\.now\(\)/.test(appSrc),
+ok(/registerStudent\(phone, name(, fast)?\) \{/.test(appSrc) && /id: 's' \+ Date\.now\(\)/.test(appSrc),
   '确认存在这个源头：名单同步前登录会现造 s<时间戳> 编号');
 ok(typeof App._rosterIdFor === 'function', '_rosterIdFor 存在');
 ok(App._rosterIdFor(SID, '陈皓铭-Yusuf', '少儿英语A班') === SID,

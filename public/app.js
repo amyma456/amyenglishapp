@@ -150,7 +150,9 @@ const App = {
             this.showApp();
           } else {
             this.state.role = 'user';
-            this.registerStudent(creds.phone, creds.name);
+            // 自动登录 = 凭据就来自这台设备，必然是"老设备"：直接进，
+            // 核对放后台（v142）。隔天打开不该再看到"正在核对"。
+            this.registerStudent(creds.phone, creds.name, true);
           }
         }
       }
@@ -869,6 +871,14 @@ const App = {
 
     // Everything above ran synchronously inside the click so the audio
     // element is unlocked. Only now is it safe to await.
+    //
+    // v142（家长 2026-10-18）：这台设备以前登录过（凭据还在 localStorage
+    // 或一年期 cookie 里）就**直接进**，不再站在登录页等删除状态的网络
+    // 核对 —— 那是"等很久都登不进去"的唯一原因。新设备才核对。
+    const prevCreds = (function() {
+      try { return Api.savedLoginSync(); } catch (e) { return null; }
+    })();
+    const knownDevice = !!(prevCreds && prevCreds.phone === phone);
     try {
       const session = await Api.login(phone, name);
       if (session.role === 'teacher') {
@@ -878,9 +888,7 @@ const App = {
         restoreBtn();
       } else {
         this.state.role = 'user';
-        // Register student and check approval（registerStudent 进 App 前
-        // 会把按钮文字换成「正在核对…」，进 App 后恢复）
-        this.registerStudent(phone, name);
+        this.registerStudent(phone, name, knownDevice);
       }
     } catch (e) {
       console.warn('login failed:', e);
@@ -892,38 +900,50 @@ const App = {
   // Register student - goes straight in, no approval needed.
   // EXCEPT when the teacher removed them: then the server-side gate holds
   // them on the removed page until a re-join request is approved.
-  async registerStudent(phone, name) {
-    // 门禁核对期间按钮保持有内容 —— 学生看得到"系统在动"（v140）
+  // 学生登录。v142（家长 2026-10-18）：「登录界面花的时间太久，学生在这儿
+  // 等很久都没有登进去」——根子是**进 App 之前必等一次网络核对**
+  // （/api/class/status）。那个请求在 Worker 冷启动时能挂 20 秒（实测），
+  // 再叠上 3 次重试，孩子就在登录页干等。
+  //
+  // 现在的规矩分两档：
+  //   · 这台设备**以前登录过**（凭据还在 / 本机有这个学生）→ 立刻进 App，
+  //     核对挪到后台。老师删掉的人 1~2 秒后会被踢到「已被移出」页，结果一样，
+  //     只是不让孩子先等。
+  //   · **全新设备**（查不到任何本地痕迹）→ 仍然先核对（≤4 秒一次、只重试
+  //     一次）。查不到就按 v132 的规矩拦住，不给断网留口子。
+  //
+  // v132 的红线仍然守着：**核对没通过之前绝不把这个学生写进名单、绝不
+  // syncToCloud**。所以即使被删的人短暂进了界面，也不会把老师删掉的名单
+  // 滚回去。
+  async registerStudent(phone, name, fast) {
+    // 只有**明确**传 true 才走"不等网络"那条（login / 自动登录会传）。
+    // 默认 false：任何其它调用方（含测试）都走核对，别让缺省值悄悄绕过
+    // 老师的删除拦截。
+    const known = (fast === true);
     const gateBtn = document.getElementById('login-btn');
     if (gateBtn) gateBtn.innerHTML = '⏳ 正在核对…';
-    // ===== 拦截必须"查不到就拦住"（v132，老师 2026-10-16）=====
-    //
-    // 老师报：「删除了，就显示不在，说是那样说，但是仍然还在删除了」——
-    // 删完过一会儿又冒回来。根因就在这**一个 &&** 上：
-    //
-    //   旧写法  if (status && status.removed)  {...}
-    //
-    // classStatus() 在网络失败 / 超时 / 接口非 200 时**返回 null**。
-    // 那时 `status && status.removed` 是 false → **当场放行**，
-    // 被删掉的学生照样走完注册、被 push 进本机名单，再 syncToCloud() 推上云，
-    // 老师端于是又看到他 —— 名单回滚，删除白做。
-    //
-    // 这是个"fail-open"错误：**查不到就当成没被删**。方向正好反了。
-    // 老师要的规矩是「只要删除了，任何人再进来都需要老师同意」，
-    // 所以这里必须是 **fail-closed：查不到 = 先拦住**。
-    //
-    // 代价：极少数网络抖动时，一个**正常**学生会看到一个"正在核对"的页面，
-    // 过一两秒自动重试就放他进去（下面 _retryClassStatus）。这个代价值得——
-    // 反过来是"被删的人偷偷进来了"，老师完全看不见，那才是真出事。
-    let status = await Api.classStatus(phone);
-    if (status === null) {
-      // 第一次没查到：再试两次（共 3 次，间隔 800ms / 1600ms）。
-      // 绝大多数抖动在这三次内就恢复了，正常学生不会真的被卡住。
-      status = await this._retryClassStatus(phone, 2);
+
+    if (known) {
+      // ---- 1) 立刻进去，零等待 ----
+      this._enterAsStudent(phone, name);
+      const lb = document.getElementById('login-btn');
+      if (lb) { lb.classList.remove('logging-in'); lb.innerHTML = '登录'; }
+      // ---- 2) 后台核对：真被删了就把人请出去 ----
+      const self = this;
+      this._gateCheck(phone).then(function(status) {
+        if (!status) return;               // 查不到：保持现状，不写名单不上云
+        if (status.removed) { self.showRemovedPage(status); return; }
+        self._commitStudent(phone, name);  // 确认没被删 → 才写名单 + 上云
+      }).catch(function() {});
+      return;
     }
+
+    // ---- 全新设备：先核对，再进 ----
+    // 只多试一次，等待也从 800/1600ms 压到 400ms（v142）：这一支站在登录
+    // 路径上，孩子盯着屏幕数秒；而正常学生这条路一次就过。
+    let status = await Api.classStatus(phone);
+    if (status === null) status = await this._retryClassStatus(phone, 1);
     if (status === null) {
-      // 三次都查不到 —— 不放行。给一个明确的"核对中"页面 + 手动重试按钮，
-      // 而不是悄悄把他放进去。
       const lbtn = document.getElementById('login-btn');
       if (lbtn) { lbtn.classList.remove('logging-in'); lbtn.innerHTML = '登录'; }
       this.showGateCheckFailed(phone, name);
@@ -935,7 +955,23 @@ const App = {
       this.showRemovedPage(status);
       return;
     }
-    // Save locally
+    this._enterAsStudent(phone, name);
+    this._commitStudent(phone, name);
+    const lb2 = document.getElementById('login-btn');
+    if (lb2) { lb2.classList.remove('logging-in'); lb2.innerHTML = '登录'; }
+  },
+
+  // 核对一次删除状态。后台路径（v142）：一次重试就够，不在登录路径上叠
+  // 长重试 —— 每一跳都在花孩子的时间。
+  async _gateCheck(phone) {
+    return await this._retryClassStatus(phone, 1);
+  },
+
+  // 把学生放进来（纯本地，不碰网络）：切界面 + 本机登记一条记录。
+  // 注意这里**不**写云端名单、不 syncToCloud —— 那属于 _commitStudent，
+  // 要等核对通过才做（v132 的红线）。
+  _enterAsStudent(phone, name) {
+    this.state.parentStudents = this.state.parentStudents || {};
     this.state.parentStudents[phone] = { name: name, class: '', approved: false };
 
     let existing = this.state.students.find(s => s.phone === phone);
@@ -951,22 +987,21 @@ const App = {
       };
       this.state.students.push(existing);
     } else {
-      // Update existing record
       existing.name = name;
       existing.registeredAt = existing.registeredAt || new Date().toISOString();
     }
-    await Api.saveStudent(existing);   // 只写本机，瞬时
+    try { Api.saveStudent(existing); } catch (e) {}   // 只写本机，瞬时
 
-    // v140（家长 2026-10-18）：门禁过了就直接进做题 —— 报名上云、班级
-    // 分配查询这些网络收尾**全部挪到后台**。以前 fetchMyAssignment（一次
-    // 全量云下载）串在进 App 之前，网络一慢学生就盯着登录页干等十几秒，
-    // 家长描述的"点了登录没反应、好一会才跳"就是这里。
     this.showApp();
-    const lb = document.getElementById('login-btn');
-    if (lb) { lb.classList.remove('logging-in'); lb.innerHTML = '登录'; }
+  },
 
-    // ---- 后台收尾（不阻塞进 App）----
+  // 核对通过之后才做的收尾：本机名单上云 + 取班级分配（全部后台，不阻塞）。
+  _commitStudent(phone, name) {
     const self = this;
+    this.state.parentStudents = this.state.parentStudents || {};
+    if (!this.state.parentStudents[phone]) {
+      this.state.parentStudents[phone] = { name: name, class: '', approved: false };
+    }
     Api.saveParentStudent(phone, this.state.parentStudents[phone])
       .catch(function(e) { console.warn('saveParentStudent error:', e); });
     this.syncToCloud();
@@ -1073,7 +1108,9 @@ const App = {
   // 返回最后一次结果：拿到对象就返回它，三次都失败返回 null。
   async _retryClassStatus(phone, timesLeft) {
     if (timesLeft <= 0) return null;
-    const wait = timesLeft === 2 ? 800 : 1600;
+    // v142：等待从 800/1600ms 压到 400ms。这条重试只用在登录路径上，
+    // 目的是接住一次网络抖动，不是做长轮询 —— 每多等一秒都是孩子的等待。
+    const wait = 400;
     await new Promise(r => setTimeout(r, wait));
     const s = await Api.classStatus(phone);
     if (s !== null) return s;
@@ -1190,7 +1227,16 @@ const App = {
     document.getElementById('invite-btn-header').style.display = this.isTeacher() ? '' : 'none';
     document.getElementById('settings-btn-header').style.display = this.isTeacher() ? '' : 'none';
     this.renderTabs();
-    this.renderContent();
+    // v142（家长 2026-10-18）：「点了登录要等好一会才跳转」。点下之后这
+    // 一大段是**同步**跑的：老师端的周报一次要渲染几十个学生，主线程被
+    // 占住的这几百毫秒里，界面还停在登录页 —— 看起来就是"点了没反应"。
+    // 现在先把界面切过去（头部、tab 立刻可见），内容挪到下一帧再画。
+    var self = this;
+    if (typeof requestAnimationFrame === 'function') {
+      requestAnimationFrame(function() { self.renderContent(); });
+    } else {
+      setTimeout(function() { self.renderContent(); }, 0);
+    }
     // Cloud sync + auto-polling for BOTH roles:
     // - Teacher: download student registrations, merge & upload
     // - Student: download own class assignment (updates badge promptly
@@ -10506,25 +10552,39 @@ const App = {
   _renderOneQuestion(m, mi, qi, dayIdx) {
     const q = m.questions[qi];
     var qId = 'q-' + mi + '-' + qi;
+    // v142（家长 2026-10-18）：「阅读理解界面等系统先读句子的声音太久」。
+    // 两件事：
+    //   1) 阅读题的选项**不等题干读完**就能点 —— 一进屏就能选，题干朗读
+    //      照旧在旁边读，孩子想听可以点「重新听」。以前要灰着等朗读
+    //      （最长 6 秒），感觉就是"半天转不出来"。
+    //   2) 点选项要读的**整句（问句+答句）**在渲染这一刻就预取音频，
+    //      点下去直接播本地缓存，不再现场请求 TTS。
+    var isReading = (m.type === 'reading');
+    var qHasAudio = !!this._questionSpeechText(m, q);
+    if (isReading) {
+      var say = this._buildReadSentence(m, q);
+      if (say) this.prefetchTts(say, (this.state && typeof this.state.stepIdx === 'number') ? this.state.stepIdx : 0);
+    }
     let html = '<div class="q-item" id="' + qId + '">';
     html += '<div class="q-num">第' + (qi+1) + '题</div>';
     // Add listen button if the question has audio content
     // (listening audio_text, an English stem, or the cloze sentence the
     // blank lives in — see _questionSpeechText)
-    var qHasAudio = !!this._questionSpeechText(m, q);
     if (qHasAudio) {
       html += '<div class="auto-read-badge" id="arb-' + mi + '-' + qi + '"><svg class="icon icon-sm speaking-anim"><use href="#i-sound"/></svg> 正在朗读…</div>';
       html += '<div class="flex gap-8 mb-8"><button class="btn btn-outline btn-sm" onclick="App.replayQuestion(\'' + qId + '\',' + mi + ',' + qi + ',\'' + dayIdx + '\')"><svg class="icon icon-sm"><use href="#i-sound"/></svg> 重新听</button></div>';
     }
     html += '<div class="q-text">' + this._stemHtml(q.question) + '</div>';
     if (q.options) {
-      // Options disabled until reading finishes
-      html += '<div class="q-options" id="qo-' + mi + '-' + qi + '" style="opacity:0.4;pointer-events:none">';
+      // Options disabled until reading finishes（阅读题例外：立即可点，见上）
+      html += '<div class="q-options" id="qo-' + mi + '-' + qi + '"' + (isReading ? '' : ' style="opacity:0.4;pointer-events:none"') + '>';
       q.options.forEach((o, oi) => {
         html += '<div class="q-option" onclick="App.selectAnswer(' + mi + ',' + qi + ',' + oi + ',' + dayIdx + ')">' + String.fromCharCode(65+oi) + '. ' + o + '</div>';
       });
       html += '</div>';
-      html += '<div class="listen-wait" id="qw-' + mi + '-' + qi + '" style="text-align:center;padding:8px;color:var(--text-sub);font-size:12px">⏳ 请先听完整朗读，再选择答案</div>';
+      if (!isReading) {
+        html += '<div class="listen-wait" id="qw-' + mi + '-' + qi + '" style="text-align:center;padding:8px;color:var(--text-sub);font-size:12px">⏳ 请先听完整朗读，再选择答案</div>';
+      }
     } else {
       html += '<input type="text" class="vocab-input" style="width:100%;letter-spacing:1px;border:1.5px solid #FFE0CC;margin-top:8px" id="fill-' + mi + '-' + qi + '" placeholder="填入答案" onkeyup="if(event.key===\'Enter\')App.submitFill(' + mi + ',' + qi + ',' + dayIdx + ')">';
       html += '<button class="btn btn-primary btn-sm mt-8" onclick="App.submitFill(' + mi + ',' + qi + ',' + dayIdx + ')">确认</button>';
@@ -10659,7 +10719,10 @@ const App = {
         const optsEl = document.getElementById('qo-' + mi + '-' + qi);
         if (optsEl) optsEl.style.pointerEvents = 'none';   // 朗读期间不许连点
         const self = this;
-        // 兜底：朗读万一卡住（TTS 网络超时），8 秒后照常结算，绝不把孩子锁死
+        // 兜底：朗读万一卡住（TTS 慢/超时），3.5 秒后照常结算，绝不把孩子
+        // 锁死（v142：原来 8 秒 —— 音频没起来时那就是干等 8 秒）。
+        // 另外 1.2 秒还没出声就直接结算：预取的音频命中时几乎立刻响，
+        // 迟迟不出声说明这一趟 TTS 不顺，没必要继续等。
         let settled = false;
         const decide = function() {
           if (settled) return;
@@ -10668,7 +10731,10 @@ const App = {
           self._readingDecide(m, mi, qi, oi, dayIdx);
         };
         this.speak(sayText, { onDone: decide });
-        setTimeout(decide, 8000);
+        setTimeout(function() {
+          if (!self._audioStarted) decide();
+        }, 1200);
+        setTimeout(decide, 3500);
         return;
       }
     }

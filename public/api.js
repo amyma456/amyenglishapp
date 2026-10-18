@@ -521,6 +521,11 @@ const CloudSync = {
 // Api — the public surface. app.js talks to this and nothing else.
 // ===========================================================================
 const Api = {
+  // v142：登录核对（/api/class/status）的硬超时。这个请求站在**进 App 的
+  // 必经路径**上，而 fetch 自己不会超时 —— Worker 冷启动时实测能挂 20 秒，
+  // 孩子就在登录页干等。4 秒足够一次正常往返（实测 1.6s），超时按"查不到"
+  // 处理，交给上层决定放行还是拦。
+  CLASS_TIMEOUT_MS: 4000,
 
   // -- session ------------------------------------------------------------
   // Role resolution lives here, not in app.js. Today it is a phone-number
@@ -529,6 +534,13 @@ const Api = {
   session: null,
 
   async getSavedLogin() {
+    return Store.readLogin();
+  },
+
+  // v142：同步读本机登录凭据（localStorage + 一年期 cookie 兜底）。
+  // 登录按钮要用它判断"这台设备以前登录过没有"——登录过就直接进，
+  // 不再等网络核对（见 App.registerStudent 的 fast 分支）。
+  savedLoginSync() {
     return Store.readLogin();
   },
 
@@ -975,13 +987,26 @@ const Api = {
   // 老师号在这里直接放行：白名单在客户端先挡一次，worker 再挡一次。
   async classStatus(phone) {
     if (isTeacherPhone(phone)) return { removed: false, removedAt: null, request: null, teacher: true };
+    // v142（家长 2026-10-18）：「登录界面花的时间太久，学生在这儿等很久都
+    // 没登进去」。实测就是这个请求 —— Worker 冷启动 / 手机弱网时 fetch 会
+    // **一直挂着**，量到过 20 秒才回来（重试还有 3 趟），孩子当然登不进。
+    // fetch 本身没有超时，必须自己掐表。
+    var ms = this.CLASS_TIMEOUT_MS;
+    var ctrl = null, timer = null;
+    var opts = {};
     try {
-      const res = await fetch(this._classUrl('/api/class/status?phone=' + encodeURIComponent(phone)));
+      if (typeof AbortController !== 'undefined') {
+        ctrl = new AbortController();
+        opts.signal = ctrl.signal;
+        timer = setTimeout(function() { try { ctrl.abort(); } catch (e) {} }, ms);
+      }
+      const res = await fetch(this._classUrl('/api/class/status?phone=' + encodeURIComponent(phone)), opts);
       if (!res.ok) return null;
       const data = await res.json();
       if (data && typeof data.removed === 'boolean') return data;
       return null;
     } catch (e) { console.warn('classStatus failed:', e); return null; }
+    finally { if (timer) clearTimeout(timer); }
   },
 
   // Teacher removed a student — record the gate server-side. Fire-and-forget
