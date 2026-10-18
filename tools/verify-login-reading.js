@@ -345,5 +345,16 @@ ok(src.indexOf('requestAnimationFrame(function() { self.renderContent(); })') >=
 ok(/setTimeout\(decide, 3500\)/.test(src), '点选项的兜底从 8 秒收到 3.5 秒');
 ok(/if \(!self\._audioStarted\) decide\(\)/.test(src), '1.2 秒还没出声就直接结算（不干等）');
 
+// (e) 脚本 defer 之后，登录页会先于 app.js 出现 —— 按钮必须能接住"还没就绪"
+//     的那一下点击，不能抛 ReferenceError（那看着就是"点了没反应"）。
+{
+  const h = fs.readFileSync(BASE + 'index.html', 'utf8');
+  ok(/defer src="app\.js\?v=142"/.test(h), '脚本改成 defer（登录页不再等 1MB JS 下载）');
+  ok(h.indexOf('window.__appReady = false') >= 0, '页面先立一个"未就绪"标记');
+  ok(/onclick="if\(window\.__appReady\)\{App\.login\(\)\}/.test(h),
+    '登录按钮先看标记再调 App.login（未就绪不会报错）');
+  ok(/window\.__appReady = true/.test(src), 'app.js 初始化后把标记置为就绪');
+}
+
 console.log('\n' + (fail ? '❌ ' + fail + ' 项未通过' : '✅ 全部通过'));
 process.exit(fail ? 1 : 0);

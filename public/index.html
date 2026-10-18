@@ -1159,7 +1159,7 @@ body.perf-on .content-area{padding-bottom:54vh}
       <input type="text" id="login-name" placeholder="如：马慧-Amy" oninput="App.checkNameFormat()" style="padding:9px 12px;font-size:14px">
       <div id="name-hint" style="font-size:10px;margin-top:2px;color:var(--text-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">格式：中文名(2-4字)-英文名(2-20字母)，如：马慧-Amy</div>
     </div>
-    <button class="login-btn" id="login-btn" style="padding:11px;font-size:15px;margin-top:4px" onclick="App.login()">登录</button>
+    <button class="login-btn" id="login-btn" style="padding:11px;font-size:15px;margin-top:4px" onclick="if(window.__appReady){App.login()}else{this.innerHTML='正在加载，请稍候…'}">登录</button>
     <p class="login-hint" style="color:var(--danger);display:none" id="name-error">⚠️ 备注名格式不正确！</p>
     <p class="login-hint" style="margin-top:2px;font-size:11px">登录后由老师分配班级</p>
     <div style="margin-top:10px;padding:8px 10px;background:var(--primary-light);border-radius:8px;font-size:11px;color:var(--text-sub);line-height:1.6">
@@ -1265,6 +1265,7 @@ body.perf-on .content-area{padding-bottom:54vh}
   <div class="modal" id="modal-box"></div>
 </div>
 
+<script>window.__appReady = false;</script>
 <script defer src="cloud.js?v=142"></script>
 <script defer src="data.js?v=142"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
