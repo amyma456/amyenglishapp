@@ -188,8 +188,14 @@ else {
   } else {
     spoken.length = 0;
     App.selectAnswer(qMi, 0, wrongOi, qDay);
-    ok(spoken.length === 1, '句子选项点错触发了一次 speak（' + spoken.length + ' 次）');
-    ok(spoken[0] === String(q.options[wrongOi]), '读的是所选错句："' + spoken[0] + '"');
+    if (m.type === 'reading') {
+      // v140：阅读理解点选项先读所选句，读完结算；答错再读「问句+答句」
+      ok(spoken.length === 2, '阅读点错读了 2 句：先所选错句，再「问句+答句」引导句（' + spoken.length + ' 句）');
+      ok(spoken[0] === String(q.options[wrongOi]), '第一句读的是所选错句："' + spoken[0] + '"');
+    } else {
+      ok(spoken.length === 1, '句子选项点错触发了一次 speak（' + spoken.length + ' 次）');
+      ok(spoken[0] === String(q.options[wrongOi]), '读的是所选错句："' + spoken[0] + '"');
+    }
   }
 }
 

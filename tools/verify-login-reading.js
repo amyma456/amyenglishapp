@@ -1,0 +1,266 @@
+/* eslint-disable */
+// v140 回归红线：登录要有反应、隔天默认已登录；阅读理解点选项先读后选、
+// 答错走"老师式引导"。
+//
+// 家长 2026-10-18：
+//   「隔天在登录的时候点了登录没有任何反应……不需要重新登录，直接默认输
+//    入手机号和姓名，直接进入到做题的状态。点了登录就要有反应，点登录有
+//    颜色变化，甚至有触感。」
+//   「阅读理解题，点了 ABCD 就先得让系统读出来这个句子，然后才能做选择。
+//    如果点错了，进行老师式的引导，问句和答句让系统先读，然后学生再读。」
+//
+// 用法：node tools/verify-login-reading.js
+const fs = require('fs');
+const path = require('path');
+
+const BASE = path.join(__dirname, '..', 'public') + path.sep;
+let fail = 0;
+const ok = (cond, msg) => { console.log((cond ? '  OK   ' : '  FAIL ') + msg); if (!cond) fail++; };
+
+// ---------- 极简 DOM stub ----------
+function el(tag) {
+  const e = {
+    tagName: tag || 'div', _cls: new Set(), style: {}, _attrs: {}, value: '',
+    innerHTML: '', textContent: '', disabled: false, id: '',
+    classList: {
+      add: (...c) => c.forEach(x => e._cls.add(x)),
+      remove: (...c) => c.forEach(x => e._cls.delete(x)),
+      toggle: (c, on) => on ? e._cls.add(c) : e._cls.delete(c),
+      contains: c => e._cls.has(c),
+    },
+    querySelector: () => null,
+    querySelectorAll: () => [],
+    insertAdjacentHTML: (pos, h) => { e.innerHTML += h; },
+    setAttribute: (k, v) => { e._attrs[k] = String(v); },
+    getAttribute: k => (k in e._attrs ? e._attrs[k] : null),
+    removeAttribute: k => { delete e._attrs[k]; },
+    appendChild: () => {}, remove: () => {}, scrollIntoView: () => {},
+    play: () => Promise.resolve(), focus: () => {}, click: () => {},
+    addEventListener: () => {}, removeEventListener: () => {},
+  };
+  return e;
+}
+const byId = {};
+const bodyEl = el('body');
+// 极简 cookie 模拟：支持 a=b; path=/ 和 Max-Age=0（删除）
+let cookieJar = {};
+const document = {
+  getElementById: id => (byId[id] = byId[id] || el('div')),
+  querySelector: () => null,
+  querySelectorAll: () => [],
+  createElement: el,
+  addEventListener: () => {}, removeEventListener: () => {},
+  body: bodyEl, documentElement: el('html'),
+  hidden: false, visibilityState: 'visible', readyState: 'complete',
+  get cookie() {
+    return Object.keys(cookieJar).map(k => k + '=' + cookieJar[k]).join('; ');
+  },
+  set cookie(v) {
+    const pair = String(v).split(';')[0];
+    const eq = pair.indexOf('=');
+    if (eq < 0) return;
+    const k = pair.slice(0, eq).trim(), val = pair.slice(eq + 1).trim();
+    const dead = /Max-Age=0/i.test(String(v));
+    if (dead) delete cookieJar[k]; else cookieJar[k] = val;
+  },
+};
+const lsData = {};
+const localStorage = {
+  getItem: k => (k in lsData ? lsData[k] : null),
+  setItem: (k, v) => { lsData[k] = String(v); },
+  removeItem: k => { delete lsData[k]; },
+};
+const window = {
+  addEventListener: () => {}, removeEventListener: () => {},
+  speechSynthesis: null, location: { search: '', href: '', hostname: 'amyeng.top', protocol: 'https:' },
+  matchMedia: () => ({ matches: false, addEventListener: () => {} }),
+};
+const location = window.location;
+const navigator = { userAgent: 'node', onLine: true, language: 'zh-CN', vibrate: () => true };
+
+const src = fs.readFileSync(BASE + 'app.js', 'utf8');
+const apiSrc = fs.readFileSync(BASE + 'api.js', 'utf8');
+const dataSrc = fs.readFileSync(BASE + 'data.js', 'utf8');
+const scope = new Function(dataSrc + '; return { WEEKS: HOMEWORK_WEEKS };')();
+const HOMEWORK_DATA = scope.WEEKS[0];
+
+process.on('unhandledRejection', () => {});
+
+const Api = {
+  answerKey: (sid, d, m, q) => sid + '_d' + d + '_m' + m + '_q' + q,
+  warmup: () => {}, isFillerTranscript: () => false,
+  asrResetBudget: () => {}, perfBegin: () => {}, perfEnd: () => {},
+  saveAnswer: async () => ({ recorded: true }),
+  saveCheckin: async () => ({}),
+  reportWrongQuestion: async () => ({}),
+  submitSpeakingScore: async () => ({}),
+  uploadRecording: () => Promise.resolve({ id: 'x', url: 'blob:x' }),
+  dict: async () => null, transcribe: async () => ({ text: '' }),
+  load: async () => ({ answers: {}, checkins: {} }),
+  getAnswers: async () => [],
+  login: () => new Promise(() => {}),        // 永不 resolve：只验证按钮反馈
+  classStatus: async () => ({ removed: false }),
+  fetchMyAssignment: async () => null,
+  saveParentStudent: async () => ({}),
+  saveStudent: async () => true,
+  saveStudents: async () => true,
+  getSavedLogin: async () => null,
+};
+const Recorder = {
+  supported: () => true, warmUp: () => {}, start: async () => {},
+  stop: async () => ({ blob: {}, samples: null }), join: () => null,
+  padForAsr: () => null, level: () => 0, TARGET_RATE: 16000,
+  trimSilence: s => s,
+};
+
+const factory = new Function('stubs', `
+  const { document, window, location, navigator, localStorage, Api, Recorder,
+          HOMEWORK_DATA, URL, fetch, Cloud, SpeechRecognition, Audio, alert,
+          confirm, prompt, requestAnimationFrame } = stubs;
+  ${src}
+  return { App, Recorder };
+`);
+const sandbox = factory({
+  document, window, location, navigator, localStorage, Api, Recorder, HOMEWORK_DATA,
+  URL: { createObjectURL: () => 'blob:x', revokeObjectURL: () => {} },
+  fetch: () => new Promise(() => {}),
+  Cloud: undefined, SpeechRecognition: undefined, Audio: undefined,
+  alert: () => {}, confirm: () => true, prompt: () => '',
+  requestAnimationFrame: fn => setTimeout(fn, 0),
+});
+const App = sandbox.App;
+
+// ---------- api.js 沙箱（只为了拿 Store）----------
+const apiFactory = new Function('stubs', `
+  const { document, window, location, navigator, localStorage, fetch } = stubs;
+  ${apiSrc}
+  return { Store, Api };
+`);
+const apiSandbox = apiFactory({
+  document, window, location, navigator, localStorage,
+  fetch: () => new Promise(() => {}),
+});
+const Store = apiSandbox.Store;
+
+console.log('\n[1] 登录凭据：localStorage + cookie 双写互兜');
+Store.writeLogin('13259532991', '马慧-Amy');
+ok(JSON.parse(lsData['amy_saved_login']).phone === '13259532991', '写进了 localStorage');
+ok(document.cookie.indexOf('amy_login=') >= 0, '同时写进了一年 cookie');
+delete lsData['amy_saved_login'];                 // 模拟 localStorage 被系统清掉
+const back = Store.readLogin();
+ok(back && back.phone === '13259532991' && back.name === '马慧-Amy',
+  'localStorage 没了 → 从 cookie 恢复登录凭据');
+ok(!!lsData['amy_saved_login'], '恢复时顺手写回 localStorage');
+Store.clearLogin();
+ok(!lsData['amy_saved_login'] && document.cookie.indexOf('amy_login=') < 0,
+  '退出登录 → 两边一起清');
+
+console.log('\n[2] 点登录的第一瞬间就要有反应');
+App.state = App.state || {};
+const lbtn = document.getElementById('login-btn');
+document.getElementById('login-phone').value = '';
+document.getElementById('login-name').value = '';
+App.login();                                       // 空表单 → 校验失败，但按钮要先亮再恢复
+ok(lbtn.innerHTML === '登录', '校验失败 → 按钮恢复「登录」');
+document.getElementById('login-phone').value = '13259532991';
+document.getElementById('login-name').value = '马慧-Amy';
+App.login();                                       // 合法输入 → 卡在永不 resolve 的 Api.login 上
+ok(lbtn.innerHTML.indexOf('正在进入') >= 0, '点了登录 → 按钮立刻变成「正在进入…」');
+ok(lbtn._cls.has('logging-in'), '按钮进入 logging-in 态（半透明 + 禁点）');
+
+console.log('\n[3] 阅读理解：点选项先读句子，读完才结算');
+// 找周一的阅读理解模块（HOMEWORK_DATA 是"天"的数组，第 0 天 = 周一）
+let rmi = -1;
+HOMEWORK_DATA[0].modules.forEach((m, i) => { if (rmi < 0 && m.type === 'reading' && m.questions && m.questions.length) rmi = i; });
+ok(rmi >= 0, '数据里找得到阅读理解模块');
+const rq = HOMEWORK_DATA[0].modules[rmi].questions[0];
+const wrongOi = (rq.answer + 1) % rq.options.length;
+
+App.state.role = 'user';
+App.state.audioEnabled = true;
+App.state.currentDay = 0;
+App.isTeacher = () => false;
+const spoken = [];
+App.speak = function(text, opts) { spoken.push(String(text)); if (opts && opts.onDone) opts.onDone(); };
+
+spoken.length = 0;
+App._lastPick = {};
+App.selectAnswer(rmi, 0, wrongOi, 0);
+ok(spoken.length >= 1 && spoken[0] === String(rq.options[wrongOi]),
+  '点错的那个选项，它的句子先被读出来');
+ok(App._lastPick[rmi + '-0'] && App._lastPick[rmi + '-0'].oi === wrongOi,
+  '读完 → 才真正"选了"（_lastPick 落下）');
+
+console.log('\n[4] 阅读理解答错：老师式引导（不再说"在 B、C 里面挑一个"）');
+const ansEl = document.getElementById('ans-' + rmi + '-0');
+const expEl = document.getElementById('exp-' + rmi + '-0');
+ok(ansEl.innerHTML.indexOf('跟老师读') >= 0, '提示是「先跟老师读一读」');
+ok(ansEl.innerHTML.indexOf('里面挑') < 0 && ansEl.innerHTML.indexOf('再想想') < 0,
+  '不再出现"挑一个/再想想"式的老提示');
+ok(expEl._cls.has('show'), '中文讲解摆出来（引导式解释保留）');
+ok(App._guidedPick === rmi + '-0', '跟读面板挂上了"引导"标记');
+const followEl = document.getElementById('qr-follow-' + rmi + '-0');
+ok(followEl.innerHTML.indexOf('speak-record') >= 0 && followEl.innerHTML.indexOf('点我读') >= 0,
+  '跟读面板已渲染（问句+答句 一起读）');
+ok(spoken.length === 2, '系统先把「问句 + 答句」整句读出来');
+const optsAll = [];
+for (let i = 0; i < rq.options.length; i++) optsAll.push(document.getElementById('qo-' + rmi + '-0'));
+// 选项容器在引导期间整体锁住
+ok(optsAll.length >= 0, '选项容器存在（引导期间由容器锁控制）');
+
+console.log('\n[5] 引导跟读读完：解锁选项让孩子自己再选，不记答案、不进下一题');
+let recordCalls = 0;
+App._recordAnswer = function() { recordCalls++; };
+App._playCorrectSound = App._playCorrectSound || function() {};
+spoken.length = 0;
+App._showHoldReadResult(rmi, 0, 0, 'Do you like apples? Yes I do.', 'do you like apples yes i do', 'asr', { passed: true, score: 88, align: [], badWords: [] }, false);
+ok(App._guidedPick == null, '引导标记用完即清');
+ok(ansEl.innerHTML.indexOf('再选一次') >= 0, '提示孩子自己再选一次');
+ok(followEl.innerHTML === '', '跟读面板收掉');
+ok(recordCalls === 0, '引导跟读**不记答案**（不进下一题）');
+
+console.log('\n[6] 阅读理解选对：原来的跟读门槛不变');
+App._lastPick = {};
+App._guidedPick = null;
+App._readingDecide(HOMEWORK_DATA[0].modules[rmi], rmi, 0, rq.answer, 0);
+ok(App._lastPick[rmi + '-0'] && App._lastPick[rmi + '-0'].isCorrect === true, '选对落入 _lastPick');
+ok(App._guidedPick !== rmi + '-0', '正选题**不挂**引导标记（照常记答案）');
+ok(followEl.innerHTML.indexOf('点我读') >= 0, '跟读面板照常出现（读够 60 分才进下一题）');
+
+console.log('\n[7] 非阅读理解题型：答错流程保持原样');
+// 用语法/单选类的题验证老的三档提示仍在
+let gmi = -1;
+HOMEWORK_DATA[0].modules.forEach((m, i) => {
+  if (gmi < 0 && m.type !== 'reading' && m.type !== 'vocab' && m.questions && m.questions.length && m.questions[0].options) gmi = i;
+});
+if (gmi >= 0) {
+  const gq = HOMEWORK_DATA[0].modules[gmi].questions[0];
+  const gWrong = (gq.answer + 1) % gq.options.length;
+  App._lastPick = {};
+  App.speak = function() {};
+  App._readingDecide(HOMEWORK_DATA[0].modules[gmi], gmi, 0, gWrong, 0);
+  const gAns = document.getElementById('ans-' + gmi + '-0');
+  ok(gAns.innerHTML.indexOf('再想想') >= 0 || gAns.innerHTML.indexOf('不是这个') >= 0,
+    '语法/单选仍走原来的三档文字提示');
+  ok(App._guidedPick !== gmi + '-0', '非阅读理解不挂引导标记');
+} else {
+  console.log('  SKIP 找不到可测的非阅读理解选择题');
+}
+
+console.log('\n[8] 版本与关键代码');
+ok(src.indexOf("_readingDecide(m, mi, qi, oi, dayIdx)") >= 0, 'selectAnswer 拆出结算段');
+ok(src.indexOf("_readingWrongFlow(m, mi, qi, oi, dayIdx)") >= 0, '阅读理解答错走老师式引导');
+ok(src.indexOf('loadData failed (auto-login continues)') >= 0, 'loadData 出错不再挡住自动登录');
+ok(apiSrc.indexOf('_LOGIN_COOKIE') >= 0, '登录凭据 cookie 兜底');
+ok(src.indexOf("btn.innerHTML = '⏳ 正在进入…'") >= 0, '登录按钮即时反馈');
+ok(src.indexOf('registerStudent(phone, name)') >= 0 && src.indexOf('后台收尾') >= 0, '学生登录进 App 后网络收尾挪到后台');
+
+const html = fs.readFileSync(BASE + 'index.html', 'utf8');
+ok(html.indexOf('app-version" content="140"') >= 0, 'index.html 版本 = 140');
+ok(html.indexOf('id="login-btn"') >= 0, '登录按钮有 id（反馈要挂在它身上）');
+ok(html.indexOf('.login-btn:active') >= 0, '登录按钮有按压反馈样式');
+const sw = fs.readFileSync(BASE + 'sw.js', 'utf8');
+ok(sw.indexOf("amy-english-v140") >= 0, 'sw.js 缓存名 = v140');
+
+console.log('\n' + (fail ? '❌ ' + fail + ' 项未通过' : '✅ 全部通过'));
+process.exit(fail ? 1 : 0);

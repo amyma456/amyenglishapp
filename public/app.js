@@ -57,7 +57,11 @@ const App = {
   },
 
   async init() {
-    await this.loadData();
+    // v140：loadData 绝不能拦住自动登录。以前它要是抛了错，tryAutoLogin
+    // 根本不会执行 —— 孩子隔天打开就直接看到空登录页，像"没账号"一样。
+    try {
+      await this.loadData();
+    } catch (e) { console.warn('loadData failed (auto-login continues):', e); }
     this.loadVoices();
     // v129：长按朗读时不许浏览器弹「复制 / 选中」把录音抢走（家长 2026-10-16）
     this._bindNoCopy();
@@ -802,14 +806,30 @@ const App = {
   },
 
   async login() {
+    const btn = document.getElementById('login-btn');
+    // v140（家长 2026-10-18）：点登录的第一瞬间就要有反应 —— 按压变色 +
+    // 震动 + 按钮立刻变成"正在进入…"。以前要等好几秒网络才跳页面，学生
+    // 以为没点上，又连点好几下。
+    if (btn) {
+      btn.classList.add('logging-in');
+      btn.innerHTML = '⏳ 正在进入…';
+    }
+    try { if (navigator.vibrate) navigator.vibrate(35); } catch (e) {}
+
     const phone = document.getElementById('login-phone').value.trim();
     const name = document.getElementById('login-name').value.trim();
-    if (!phone || phone.length < 11) { alert('请输入正确的11位手机号'); return; }
-    if (!name) { alert('请输入备注名'); return; }
+    const restoreBtn = function() {
+      if (!btn) return;
+      btn.classList.remove('logging-in');
+      btn.innerHTML = '登录';
+    };
+    if (!phone || phone.length < 11) { restoreBtn(); alert('请输入正确的11位手机号'); return; }
+    if (!name) { restoreBtn(); alert('请输入备注名'); return; }
 
     // Validate name format: must be 中文名-英文名
     const nameRegex = /^[\u4e00-\u9fa5]{2,4}-[A-Za-z]{2,20}$/;
     if (!nameRegex.test(name)) {
+      restoreBtn();
       var errEl = document.getElementById('name-error');
       if (errEl) {
         errEl.style.display = 'block';
@@ -849,15 +869,23 @@ const App = {
 
     // Everything above ran synchronously inside the click so the audio
     // element is unlocked. Only now is it safe to await.
-    const session = await Api.login(phone, name);
-    if (session.role === 'teacher') {
-      this.state.role = 'teacher';
-      this.state.className = '';
-      this.showApp();
-    } else {
-      this.state.role = 'user';
-      // Register student and check approval
-      this.registerStudent(phone, name);
+    try {
+      const session = await Api.login(phone, name);
+      if (session.role === 'teacher') {
+        this.state.role = 'teacher';
+        this.state.className = '';
+        this.showApp();
+        restoreBtn();
+      } else {
+        this.state.role = 'user';
+        // Register student and check approval（registerStudent 进 App 前
+        // 会把按钮文字换成「正在核对…」，进 App 后恢复）
+        this.registerStudent(phone, name);
+      }
+    } catch (e) {
+      console.warn('login failed:', e);
+      restoreBtn();
+      alert('登录出了点问题，请再点一次「登录」');
     }
   },
 
@@ -865,6 +893,9 @@ const App = {
   // EXCEPT when the teacher removed them: then the server-side gate holds
   // them on the removed page until a re-join request is approved.
   async registerStudent(phone, name) {
+    // 门禁核对期间按钮保持有内容 —— 学生看得到"系统在动"（v140）
+    const gateBtn = document.getElementById('login-btn');
+    if (gateBtn) gateBtn.innerHTML = '⏳ 正在核对…';
     // ===== 拦截必须"查不到就拦住"（v132，老师 2026-10-16）=====
     //
     // 老师报：「删除了，就显示不在，说是那样说，但是仍然还在删除了」——
@@ -893,16 +924,19 @@ const App = {
     if (status === null) {
       // 三次都查不到 —— 不放行。给一个明确的"核对中"页面 + 手动重试按钮，
       // 而不是悄悄把他放进去。
+      const lbtn = document.getElementById('login-btn');
+      if (lbtn) { lbtn.classList.remove('logging-in'); lbtn.innerHTML = '登录'; }
       this.showGateCheckFailed(phone, name);
       return;
     }
     if (status.removed) {
+      const lbtn = document.getElementById('login-btn');
+      if (lbtn) { lbtn.classList.remove('logging-in'); lbtn.innerHTML = '登录'; }
       this.showRemovedPage(status);
       return;
     }
     // Save locally
     this.state.parentStudents[phone] = { name: name, class: '', approved: false };
-    await Api.saveParentStudent(phone, this.state.parentStudents[phone]);
 
     let existing = this.state.students.find(s => s.phone === phone);
     if (!existing) {
@@ -921,24 +955,31 @@ const App = {
       existing.name = name;
       existing.registeredAt = existing.registeredAt || new Date().toISOString();
     }
-    await Api.saveStudent(existing);
+    await Api.saveStudent(existing);   // 只写本机，瞬时
 
-    // Upload to cloud (non-blocking)
-    this.syncToCloud();
-
-    // Check cloud for class assignment (teacher may have pre-assigned)
-    const mine = await Api.fetchMyAssignment(phone);
-    if (mine) {
-      this.state.className = mine.className;
-      // Update local record
-      this.state.students = this.state.students.map(s =>
-        s.phone === phone ? { ...s, approved: true, class: mine.className } : s
-      );
-      await Api.saveStudents(this.state.students);
-    }
-
-    // Go straight into the app - no waiting page!
+    // v140（家长 2026-10-18）：门禁过了就直接进做题 —— 报名上云、班级
+    // 分配查询这些网络收尾**全部挪到后台**。以前 fetchMyAssignment（一次
+    // 全量云下载）串在进 App 之前，网络一慢学生就盯着登录页干等十几秒，
+    // 家长描述的"点了登录没反应、好一会才跳"就是这里。
     this.showApp();
+    const lb = document.getElementById('login-btn');
+    if (lb) { lb.classList.remove('logging-in'); lb.innerHTML = '登录'; }
+
+    // ---- 后台收尾（不阻塞进 App）----
+    const self = this;
+    Api.saveParentStudent(phone, this.state.parentStudents[phone])
+      .catch(function(e) { console.warn('saveParentStudent error:', e); });
+    this.syncToCloud();
+    // 班级分配后台取，取到了再刷新角标（不做全屏重渲染，别打断做题）
+    Api.fetchMyAssignment(phone).then(function(mine) {
+      if (!mine || !mine.className) return;
+      self.state.className = mine.className;
+      self.state.students = self.state.students.map(s =>
+        s.phone === phone ? Object.assign({}, s, { approved: true, class: mine.className }) : s);
+      Api.saveStudents(self.state.students);
+      const badge = document.getElementById('class-badge');
+      if (badge && !self.isTeacher()) badge.textContent = mine.className;
+    }).catch(function() {});
   },
 
   showWaitingPage() {
@@ -10579,6 +10620,43 @@ const App = {
     //   - Correct pick (first try OR after one or more wrongs): lock the
     //     whole row and require a HOLD-to-read of the question sentence
     //     with score >= 60 before the answer is recorded.
+    // v140（家长 2026-10-18）：阅读理解点选项，**先把这句读出来，读完才
+    // 算"选了"** —— 孩子要靠耳朵核对自己选的到底是哪句。别的题型保持
+    // 原样（点错即时结算 + 朗读所选句）。
+    if (m.type === 'reading' && this.state.audioEnabled) {
+      const pickedText = (q.options && q.options[oi] != null) ? String(q.options[oi]) : '';
+      if (pickedText && this._ttsText(pickedText)) {
+        const optsEl = document.getElementById('qo-' + mi + '-' + qi);
+        if (optsEl) optsEl.style.pointerEvents = 'none';   // 朗读期间不许连点
+        const ansEl0 = document.getElementById('ans-' + mi + '-' + qi);
+        if (ansEl0 && !ansEl0.textContent) {
+          ansEl0.style.display = 'block';
+          ansEl0.innerHTML = '🔊 先听听你选的这句…';
+        }
+        const self = this;
+        // 兜底：朗读万一卡住（TTS 网络超时），8 秒后照常结算，绝不把孩子锁死
+        let settled = false;
+        const decide = function() {
+          if (settled) return;
+          settled = true;
+          if (optsEl) optsEl.style.pointerEvents = 'auto';
+          self._readingDecide(m, mi, qi, oi, dayIdx);
+        };
+        this.speak(pickedText, { onDone: decide });
+        setTimeout(decide, 8000);
+        return;
+      }
+    }
+    this._readingDecide(m, mi, qi, oi, dayIdx);
+  },
+
+  // selectAnswer 的结算段（v140 拆出来的）：走到这里才算真正"选了"。
+  // 阅读理解的答错走 _readingWrongFlow（老师式引导），其余题型走原来的
+  // 三档文字提示。
+  _readingDecide(m, mi, qi, oi, dayIdx) {
+    const q = m.questions[qi];
+    const isCorrect = oi === q.answer;
+
     this._lastPick = this._lastPick || {};
     this._lastPick[mi + '-' + qi] = { oi: oi, isCorrect: isCorrect };
 
@@ -10586,6 +10664,10 @@ const App = {
     const ansEl = document.getElementById('ans-' + mi + '-' + qi);
 
     if (!isCorrect) {
+      if (m.type === 'reading') {
+        this._readingWrongFlow(m, mi, qi, oi, dayIdx);
+        return;
+      }
       // 答错不点答案（v104）：只划掉他点错的那一项、给一句中文提示，
       // 正确项一律不亮绿 —— 孩子得自己把它找出来。
       const tryKey = 'q-' + mi + '-' + qi;
@@ -10654,6 +10736,60 @@ const App = {
       // 用 _buildReadSentence：剥指令词、剥中文、横杠处用正确答案补全
       const sentence = this._buildReadSentence(m, q);
       this._renderHoldReadPanel(followEl, mi, qi, dayIdx, sentence);
+    }
+  },
+
+  // v140（家长 2026-10-18）：阅读理解答错 —— 不再说"在 B、C 里面挑一个"，
+  // 改成老师式的引导，一套固定顺序：
+  //   1. 系统把「问句 + 答句」（_buildReadSentence 拼好的整句）先读出来；
+  //   2. 孩子按住跟读这一句（同一个跟读面板）；
+  //   3. 读完后中文讲解已经摆出来，选项解锁，孩子自己再选一遍。
+  // 正确答案自始至终不亮绿 —— 最后那一下仍然要孩子自己找、自己点。
+  _readingWrongFlow(m, mi, qi, oi, dayIdx) {
+    const q = m.questions[qi];
+    const opts = document.querySelectorAll('#q-' + mi + '-' + qi + ' .q-option');
+    const ansEl = document.getElementById('ans-' + mi + '-' + qi);
+    this._playWrongSound();
+    // 点错的就地划掉、锁住（越选范围越小）；其余项引导期间全部锁住，
+    // 等跟读完再放 —— 引导做完才有资格再选。
+    opts.forEach((el, i) => {
+      el.classList.remove('correct', 'selected');
+      if (i === oi || el.classList.contains('wrong')) {
+        el.classList.add('wrong');
+      }
+      el.style.pointerEvents = 'none';
+    });
+    if (ansEl) {
+      ansEl.style.display = 'block';
+      this._clearWrongHint(ansEl);
+      ansEl.innerHTML = '🔔 先跟老师读一读，读完再选一次。';
+    }
+    // 中文讲解摆出来（引导式解释结构保留）
+    const expEl = document.getElementById('exp-' + mi + '-' + qi);
+    if (expEl) expEl.classList.add('show');
+
+    const sentence = this._buildReadSentence(m, q);
+    const followEl = document.getElementById('qr-follow-' + mi + '-' + qi);
+    if (!sentence || !followEl) {
+      // 没有可跟读的句子：解锁没划掉的选项，让孩子直接再选
+      opts.forEach(el => { if (!el.classList.contains('wrong')) el.style.pointerEvents = 'auto'; });
+      if (ansEl) ansEl.innerHTML = '🔔 再想一想，选一次。';
+      return;
+    }
+    this._renderHoldReadPanel(followEl, mi, qi, dayIdx, sentence);
+    // 结算标记：这个面板是"引导跟读"，不是正选题 —— 跟读完不记答案、
+    // 不进下一题，只解锁选项让孩子再选一次（见 _showHoldReadResult）。
+    this._guidedPick = mi + '-' + qi;
+    // 1) 系统先把这句读出来（问句 + 答句）。读完了解锁跟读按钮（gate）；
+    //    语音不可用就直接解锁，别把人锁死。
+    const self = this;
+    const gid = this._gid('hrg', mi, qi);
+    if (this.state.audioEnabled && this._ttsText(sentence)) {
+      this.speak(sentence, { onDone: function() { self._gateUnlock(gid); } });
+      // 兜底：示范朗读万一卡住，8 秒后照样解锁
+      setTimeout(function() { self._gateUnlock(gid); }, 8000);
+    } else {
+      this._gateUnlock(gid);
     }
   },
 
@@ -11453,6 +11589,24 @@ const App = {
   _showHoldReadResult(mi, qi, dayIdx, sentence, spoken, source, verdict, voiceOk) {
     const m = HOMEWORK_DATA[dayIdx].modules[mi];
     const q = m.questions[qi];
+    // v140：阅读理解答错后的「引导跟读」面板 —— 结算不走正选题的那套
+    // （不记答案、不进下一题）。只要这一遍有内容（识别出字，或确实出了
+    // 声），就解锁没划掉的选项让孩子自己再选一次；引导不是考试，没录到
+    // 声音也照样解锁，只不给音效。
+    if (this._guidedPick === (mi + '-' + qi)) {
+      this._guidedPick = null;
+      this._clearReadMarks(mi, qi);
+      const gOpts = document.querySelectorAll('#q-' + mi + '-' + qi + ' .q-option');
+      gOpts.forEach(function(el) {
+        if (!el.classList.contains('wrong')) el.style.pointerEvents = 'auto';
+      });
+      const gAns = document.getElementById('ans-' + mi + '-' + qi);
+      if (gAns) gAns.innerHTML = '👍 读完了。想一想刚才读的那句，再选一次。';
+      const gFollow = document.getElementById('qr-follow-' + mi + '-' + qi);
+      if (gFollow) gFollow.innerHTML = '';
+      if (spoken || voiceOk) this._playCorrectSound();
+      return;
+    }
     const lastPick = this._lastPick && this._lastPick[mi + '-' + qi];
     if (!lastPick) return;
     const { oi, isCorrect } = lastPick;

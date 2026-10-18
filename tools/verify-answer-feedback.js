@@ -419,6 +419,9 @@ console.log('（切后台回来、来电、语音朗读抢走音频会话，都�
 const realAdd = document.addEventListener;
 const bound = [];
 document.addEventListener = (t, fn, cap) => { bound.push({ t, fn, cap }); realAdd(t, fn, cap); };
+// v140：app.js 加载时 init() 就会跑完（loadData 出错也不再中断），保活
+// 已经绑定过了。这里重置标记，专门验证"这个函数本身会绑四条监听"。
+App._audioKeeperBound = false;
 App._bindAudioKeeper();
 document.addEventListener = realAdd;
 ok(bound.some(b => b.t === 'pointerdown' && b.cap === true), '绑了 pointerdown（捕获阶段，任何控件都拦不住它）');
@@ -450,13 +453,19 @@ ok(/_bindAudioKeeper\(\)/.test(src) && /_bindAudioKeeper\(\);/.test(src.split('a
 
 // =====================================================================
 console.log('\n=== 6. 静态检查：所有点选入口都接了提示音 ===');
-for (const [name, fn] of [['口语 selectSpeakAnswer', 'selectSpeakAnswer'],
-                          ['听力/阅读 selectAnswer', 'selectAnswer'],
-                          ['词汇 checkVocabAnswer', 'checkVocabAnswer'],
-                          ['拼写 checkSpell', 'checkSpell']]) {
-  const body = new RegExp('^  ' + fn + '\\([\\s\\S]*?\\n  \\},', 'm').exec(src);
-  ok(!!body && /_playCorrectSound\(\)/.test(body[0]), name + ' 里调了 _playCorrectSound()');
-  ok(!!body && /_playWrongSound\(\)/.test(body[0]), name + ' 里调了 _playWrongSound()');
+// v140：selectAnswer 的结算段（含对错提示音）拆进了 _readingDecide，
+// 听力/阅读这条要把它俩拼在一起查。
+function fnBody(fn) {
+  const m = new RegExp('^  ' + fn + '\\([\\s\\S]*?\\n  \\},', 'm').exec(src);
+  return m ? m[0] : '';
+}
+for (const [name, fns] of [['口语 selectSpeakAnswer', ['selectSpeakAnswer']],
+                           ['听力/阅读 selectAnswer', ['selectAnswer', '_readingDecide']],
+                           ['词汇 checkVocabAnswer', ['checkVocabAnswer']],
+                           ['拼写 checkSpell', ['checkSpell']]]) {
+  const body = fns.map(fnBody).join('\n');
+  ok(!!body && /_playCorrectSound\(\)/.test(body), name + ' 里调了 _playCorrectSound()');
+  ok(!!body && /_playWrongSound\(\)/.test(body), name + ' 里调了 _playWrongSound()');
 }
 // 口语那条不许再把提示音塞进 onDone（就是这一处让回馈晚了好几秒）
 {

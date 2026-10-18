@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="139">
+<meta name="app-version" content="140">
 <link rel="manifest" href="manifest.json">
 <!-- v135：登录第一步就是调 api.amyeng.top 验手机号。提前把 DNS + TLS
      握手做掉，接口首调能省几百毫秒 —— 手机弱网下这几百毫秒很显眼。 -->
@@ -508,8 +508,11 @@ body.preview-mode .stage{height:calc(100dvh - var(--nav-h) - var(--pv-h) - var(-
 .form-group label{display:block;font-size:12px;color:var(--text-sub);margin-bottom:4px}
 .form-group input,.form-group select{width:100%;padding:10px 12px;border:1.5px solid #FFE0CC;border-radius:var(--radius-sm);font-size:14px}
 .form-group input:focus,.form-group select:focus{border-color:var(--primary)}
-.login-btn{width:100%;padding:12px;background:var(--primary);color:#fff;border-radius:var(--radius-sm);font-size:15px;font-weight:600;margin-top:8px}
+.login-btn{width:100%;padding:12px;background:var(--primary);color:#fff;border-radius:var(--radius-sm);font-size:15px;font-weight:600;margin-top:8px;transition:transform .12s ease,filter .12s ease,opacity .12s ease;-webkit-tap-highlight-color:transparent}
 .login-btn:hover{background:var(--primary-dark)}
+/* v140：点下去的第一瞬间就要有"手感"—— 按压缩放 + 变暗，学生知道点上了 */
+.login-btn:active{transform:scale(.96);filter:brightness(.88)}
+.login-btn.logging-in{opacity:.72;pointer-events:none}
 .login-hint{text-align:center;margin-top:12px;font-size:12px;color:var(--text-sub)}
 
 /* Layout — 导航与内容共用同一容器，左边缘对齐 */
@@ -1153,7 +1156,7 @@ body.perf-on .content-area{padding-bottom:54vh}
       <input type="text" id="login-name" placeholder="如：马慧-Amy" oninput="App.checkNameFormat()" style="padding:9px 12px;font-size:14px">
       <div id="name-hint" style="font-size:10px;margin-top:2px;color:var(--text-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">格式：中文名(2-4字)-英文名(2-20字母)，如：马慧-Amy</div>
     </div>
-    <button class="login-btn" style="padding:11px;font-size:15px;margin-top:4px" onclick="App.login()">登录</button>
+    <button class="login-btn" id="login-btn" style="padding:11px;font-size:15px;margin-top:4px" onclick="App.login()">登录</button>
     <p class="login-hint" style="color:var(--danger);display:none" id="name-error">⚠️ 备注名格式不正确！</p>
     <p class="login-hint" style="margin-top:2px;font-size:11px">登录后由老师分配班级</p>
     <div style="margin-top:10px;padding:8px 10px;background:var(--primary-light);border-radius:8px;font-size:11px;color:var(--text-sub);line-height:1.6">
@@ -1259,8 +1262,8 @@ body.perf-on .content-area{padding-bottom:54vh}
   <div class="modal" id="modal-box"></div>
 </div>
 
-<script src="cloud.js?v=139"></script>
-<script src="data.js?v=139"></script>
+<script src="cloud.js?v=140"></script>
+<script src="data.js?v=140"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
 <!--
   ?v= 必须跟着版本号走（v124 修正）。
@@ -1270,9 +1273,9 @@ body.perf-on .content-area{padding-bottom:54vh}
   这个坑很隐蔽：代码明明改了、也部署上去了，手机上跑的还是几个月前的逻辑。
   以后每次发版，这里跟着 app-version 一起改。
 -->
-<script src="recorder.js?v=139"></script>
-<script src="api.js?v=139"></script>
-<script src="app.js?v=139"></script>
+<script src="recorder.js?v=140"></script>
+<script src="api.js?v=140"></script>
+<script src="app.js?v=140"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {

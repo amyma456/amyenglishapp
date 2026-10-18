@@ -183,21 +183,55 @@ const Store = {
     } catch (e) { console.warn('Store.flush error:', e); return false; }
   },
 
+  // v140：localStorage 在一部分手机浏览器（微信内置、iOS 低内存、系统清理）
+  // 里会被整个清掉 —— 隔天再打开就变成"没账号"，家长被迫重新输手机号姓名。
+  // 现在登录凭据同时写一份一年期 cookie：cookie 和 localStorage 的清空时机
+  // 不一样，一边没了另一边还在，互相兜底。
+  _LOGIN_COOKIE: 'amy_login',
+
+  _cookieWrite(phone, name) {
+    try {
+      document.cookie = this._LOGIN_COOKIE + '=' +
+        encodeURIComponent(JSON.stringify({ phone: phone, name: name })) +
+        '; Max-Age=31536000; path=/; SameSite=Lax';
+    } catch (e) {}
+  },
+
+  _cookieRead() {
+    try {
+      const m = document.cookie.match(new RegExp('(?:^|;\\s*)' + this._LOGIN_COOKIE + '=([^;]*)'));
+      if (!m) return null;
+      const c = JSON.parse(decodeURIComponent(m[1]));
+      return (c && c.phone && c.name) ? c : null;
+    } catch (e) { return null; }
+  },
+
+  _cookieClear() {
+    try { document.cookie = this._LOGIN_COOKIE + '=; Max-Age=0; path=/; SameSite=Lax'; } catch (e) {}
+  },
+
   readLogin() {
     try {
       const raw = localStorage.getItem(this.LOGIN_KEY);
-      if (!raw) return null;
-      const creds = JSON.parse(raw);
-      return (creds && creds.phone && creds.name) ? creds : null;
-    } catch (e) { return null; }
+      if (raw) {
+        const creds = JSON.parse(raw);
+        if (creds && creds.phone && creds.name) return creds;
+      }
+    } catch (e) {}
+    // localStorage 里没了 → 从 cookie 兜底恢复，并顺手写回 localStorage
+    const c = this._cookieRead();
+    if (c) this.writeLogin(c.phone, c.name);
+    return c;
   },
 
   writeLogin(phone, name) {
     try { localStorage.setItem(this.LOGIN_KEY, JSON.stringify({ phone: phone, name: name })); } catch (e) {}
+    this._cookieWrite(phone, name);
   },
 
   clearLogin() {
     try { localStorage.removeItem(this.LOGIN_KEY); } catch (e) {}
+    this._cookieClear();
   },
 
   readWords() {

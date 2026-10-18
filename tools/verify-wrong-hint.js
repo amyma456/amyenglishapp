@@ -248,70 +248,109 @@ console.log('（v107：第 1 次错就给"围绕意思"的提示，不再念"划
 }
 
 // ===========================================================================
-console.log('\n=== 2. 听力/阅读 ABCD：答错只划错项 + 中文提示，绝不亮绿 ===');
+console.log('\n=== 2. ABCD 答错：阅读走老师式引导（v140），其余题型走三档中文提示 ===');
 
-let d2 = -1, m2 = -1, q2 = null;
-for (let d = 0; d < HOMEWORK_DATA.length && d2 < 0; d++) {
+let rD = -1, rM = -1, rQ = null;      // 阅读理解（v140 老师式引导）
+let oD = -1, oM = -1, oQ = null;      // 其余 ABCD（听力/语法：三档提示）
+for (let d = 0; d < HOMEWORK_DATA.length; d++) {
   const mods = HOMEWORK_DATA[d].modules || [];
   for (let i = 0; i < mods.length; i++) {
     const mm = mods[i];
-    if (mm.questions && mm.questions.length && mm.questions[0].options
-        && typeof mm.questions[0].answer === 'number' && mm.type !== 'speaking') {
-      d2 = d; m2 = i; q2 = mm.questions[0]; break;
-    }
+    if (!(mm.questions && mm.questions.length && mm.questions[0].options
+        && typeof mm.questions[0].answer === 'number' && mm.type !== 'speaking')) continue;
+    if (mm.type === 'reading') { if (rD < 0) { rD = d; rM = i; rQ = mm.questions[0]; } }
+    else if (oD < 0) { oD = d; oM = i; oQ = mm.questions[0]; }
   }
 }
 
-if (d2 < 0) { console.log('  跳过：题库里找不到 ABCD 型题目'); }
+if (rD < 0) { console.log('  跳过：题库里找不到阅读理解题'); }
 else {
-  App.state.currentDay = d2;
+  App.state.currentDay = rD;
   const optEls = [];
-  for (let i = 0; i < q2.options.length; i++) optEls.push(mkEl('div', {}, ['q-option']));
+  for (let i = 0; i < rQ.options.length; i++) optEls.push(mkEl('div', {}, ['q-option']));
+  const realQSA = document.querySelectorAll;
+  document.querySelectorAll = sel => (/\.q-option$/.test(sel) ? optEls : realQSA(sel));
+  const ansEl = getEl('ans-' + rM + '-0');
+  const expEl = getEl('exp-' + rM + '-0');
+  const wrongIdx = (rQ.answer + 1) % rQ.options.length;
+
+  App._lastPick = {};
+  App._guidedPick = null;
+  App.selectAnswer(rM, 0, wrongIdx, rD);
+  ok(!optEls[rQ.answer]._cls.has('correct'), '阅读答错：正确选项不亮绿（一次都不亮）');
+  ok(optEls[wrongIdx]._cls.has('wrong'), '阅读答错：点错的那项当场标红');
+  ok(/跟老师读/.test(ansEl.innerHTML), '阅读答错：提示是「先跟老师读一读」');
+  ok(!/不是这个|快对了|里面挑/.test(ansEl.innerHTML), '阅读答错：不再出现"再想想/挑一个"式的三档老提示');
+  ok(expEl._cls.has('show'), '阅读答错：中文讲解摆出来（引导式解释保留）');
+  ok(App._guidedPick === rM + '-0', '阅读答错：挂上引导跟读面板（问句+答句 系统先读、学生再读）');
+
+  // 引导跟读读完 → 解锁没划掉的选项让孩子自己再选；不记答案、不进下一题
+  let recorded = 0;
+  const realRecord = App._recordAnswer;
+  App._recordAnswer = function() { recorded++; };
+  App._showHoldReadResult(rM, 0, rD, 'x', null, null, null, false);
+  App._recordAnswer = realRecord;
+  ok(App._guidedPick == null, '引导跟读结算：引导标记用完即清');
+  ok(optEls[rQ.answer].style.pointerEvents === 'auto', '引导读完：没划掉的选项解锁，孩子自己再选');
+  ok(recorded === 0, '引导跟读不记答案、不进下一题');
+
+  // 再点对：照常亮绿
+  App.selectAnswer(rM, 0, rQ.answer, rD);
+  ok(optEls[rQ.answer]._cls.has('correct'), '阅读点对了才亮绿');
+  document.querySelectorAll = realQSA;
+}
+
+if (oD < 0) { console.log('  跳过：题库里找不到非阅读的 ABCD 题'); }
+else {
+  App.state.currentDay = oD;
+  const optEls = [];
+  for (let i = 0; i < oQ.options.length; i++) optEls.push(mkEl('div', {}, ['q-option']));
   const realQSA = document.querySelectorAll;
   document.querySelectorAll = sel => (/\.q-option$/.test(sel) ? optEls : realQSA(sel));
 
-  const ansEl = getEl('ans-' + m2 + '-0');
-  const qText = String(q2.options[q2.answer]);
-  const wrongIdx = (q2.answer + 1) % q2.options.length;
+  const ansEl = getEl('ans-' + oM + '-0');
+  const qText = String(oQ.options[oQ.answer]);
+  const wrongIdx = (oQ.answer + 1) % oQ.options.length;
+  if (App._wrongTryClear) App._wrongTryClear('q-' + oM + '-0');
 
   // --- 第 1 次错 ---
-  App.selectAnswer(m2, 0, wrongIdx, d2);
-  ok(!optEls[q2.answer]._cls.has('correct'), '答错时正确选项不亮绿（这就是被取消的那个功能）');
-  ok(optEls[wrongIdx]._cls.has('wrong'), '点错的那一项当场标红');
-  ok(optEls[wrongIdx].style.pointerEvents === 'none', '点错的那一项就地划掉（不再让它重复点）');
-  ok(optEls[q2.answer].style.pointerEvents === 'auto', '没点过的选项还能再点（他要自己选出来）');
-  ok(ansEl._cls.has('q-hint') && /不是这个/.test(ansEl.innerHTML), '页面上的提示容器换成了提示样式，并写出中文提示');
-  ok(ansEl.innerHTML.indexOf(qText) < 0, '第 1 次错的现场提示里没有正确答案的内容');
-  ok(!/点绿色/.test(ansEl.innerHTML), '不再出现"点绿色的正确选项"这句话');
+  App.selectAnswer(oM, 0, wrongIdx, oD);
+  ok(!optEls[oQ.answer]._cls.has('correct'), '其余题型答错：正确选项不亮绿（这就是被取消的那个功能）');
+  ok(optEls[wrongIdx]._cls.has('wrong'), '其余题型答错：点错的那一项当场标红');
+  ok(optEls[wrongIdx].style.pointerEvents === 'none', '其余题型答错：点错的那一项就地划掉（不再让它重复点）');
+  ok(optEls[oQ.answer].style.pointerEvents === 'auto', '其余题型答错：没点过的选项还能再点（他要自己选出来）');
+  ok(ansEl._cls.has('q-hint') && /不是这个/.test(ansEl.innerHTML), '其余题型答错：页面上的提示容器换成了提示样式，并写出中文提示');
+  ok(ansEl.innerHTML.indexOf(qText) < 0, '其余题型第 1 次错的现场提示里没有正确答案的内容');
+  ok(!/点绿色/.test(ansEl.innerHTML), '其余题型不再出现"点绿色的正确选项"这句话');
 
   // --- 第 2 次错：换一个错项 ---
-  const wrongIdx2 = (q2.answer + 2) % q2.options.length;
-  App.selectAnswer(m2, 0, wrongIdx2, d2);
+  const wrongIdx2 = (oQ.answer + 2) % oQ.options.length;
+  App.selectAnswer(oM, 0, wrongIdx2, oD);
   ok(ansEl.innerHTML.indexOf('第一个字母是') >= 0 || /正确答案/.test(ansEl.innerHTML),
-     '第 2 次错的现场提示升级为"正确答案长什么样"');
-  ok(ansEl.innerHTML.indexOf(qText) < 0, '第 2 次错的现场提示里仍然没有完整答案');
+     '其余题型第 2 次错的现场提示升级为"正确答案长什么样"');
+  ok(ansEl.innerHTML.indexOf(qText) < 0, '其余题型第 2 次错的现场提示里仍然没有完整答案');
   {
-    const exp = String(q2.explanation_cn || '');
+    const exp = String(oQ.explanation_cn || '');
     ok(!exp || ansEl.innerHTML.indexOf(exp.slice(0, 12)) < 0,
-       '第 2 次错的现场提示里没有解析原文（解析里常常就写着答案）');
+       '其余题型第 2 次错的现场提示里没有解析原文（解析里常常就写着答案）');
   }
 
   // --- 第 3 次错：点名，但不代点 ---
-  const wrongIdx3 = (q2.answer + 3) % q2.options.length;
-  App.selectAnswer(m2, 0, wrongIdx3, d2);
-  ok(ansEl.innerHTML.indexOf(qText) >= 0, '第 3 次错才把答案内容说出来');
-  ok(!optEls[q2.answer]._cls.has('correct'),
+  const wrongIdx3 = (oQ.answer + 3) % oQ.options.length;
+  App.selectAnswer(oM, 0, wrongIdx3, oD);
+  ok(ansEl.innerHTML.indexOf(qText) >= 0, '其余题型第 3 次错才把答案内容说出来');
+  ok(!optEls[oQ.answer]._cls.has('correct'),
      '就算提示里点名了，正确项也没有被脚本点亮 —— 仍然要孩子自己点（"直到点对为止"）');
 
   // --- 点对：这时才亮绿，且计数归零 ---
-  App.selectAnswer(m2, 0, q2.answer, d2);
-  ok(optEls[q2.answer]._cls.has('correct'), '点对了才亮绿');
+  App.selectAnswer(oM, 0, oQ.answer, oD);
+  ok(optEls[oQ.answer]._cls.has('correct'), '点对了才亮绿');
   ok(!ansEl._cls.has('q-hint'), '点对后提示样式撤掉（不再显示黄色提示）');
   ok(/✅/.test(ansEl.innerHTML), '点对后给的是成功反馈');
-  ok(App._wrongTries('q-' + m2 + '-0') === 0, '点对后连错计数归零（这题不再背着前面的错）');
+  ok(App._wrongTries('q-' + oM + '-0') === 0, '点对后连错计数归零（这题不再背着前面的错）');
 
   // --- 再错一次：又从"缩范围"开始（不会一上来就报答案）---
-  App.selectAnswer(m2, 0, wrongIdx, d2);
+  App.selectAnswer(oM, 0, wrongIdx, oD);
   ok(/不是这个/.test(ansEl.innerHTML) && ansEl.innerHTML.indexOf(qText) < 0,
      '计数归零后重新答错，提示又从第 1 级开始（不会直接甩答案）');
 
@@ -582,11 +621,13 @@ console.log('\n=== 6. 静态检查：那套"点绿框过关"的代码真的删�
        'checkVocabAnswer 的答错分支里没有 add(correct)');
   }
   {
-    const body = grab('selectAnswer');
+    // v140：selectAnswer 的结算段（含答错分支）拆进了 _readingDecide，
+    // 两段拼在一起查。
+    const body = grab('selectAnswer') + '\n' + grab('_readingDecide');
     const i = body.indexOf('if (!isCorrect) {');
     const j = body.indexOf('// Correct pick', i);
     const wrong = (i >= 0 && j > i) ? body.slice(i, j) : '';
-    ok(!!wrong, 'selectAnswer 里找得到答错分支');
+    ok(!!wrong, 'selectAnswer/_readingDecide 里找得到答错分支');
     ok(wrong.indexOf("add('correct'") < 0, 'selectAnswer 的答错分支里没有 add(correct)');
     ok(wrong.indexOf('_wrongHintHtml') >= 0, 'selectAnswer 的答错分支走的是中文提示');
     ok(wrong.indexOf('_wrongTryBump') >= 0, 'selectAnswer 的答错分支记了连错次数');
@@ -612,13 +653,14 @@ console.log('\n=== 6. 静态检查：那套"点绿框过关"的代码真的删�
   }
 
   // 提示文本必须都是中文提示词（不给孩子甩英文解释）
-  for (const [name, fn] of [['selectAnswer', 'selectAnswer'], ['selectSpeakAnswer', 'selectSpeakAnswer'],
-                            ['checkVocabAnswer', 'checkVocabAnswer'], ['submitFill', 'submitFill']]) {
-    const body = grab(fn);
+  for (const [name, fns] of [['selectAnswer', ['selectAnswer', '_readingDecide']],
+                             ['selectSpeakAnswer', ['selectSpeakAnswer']],
+                             ['checkVocabAnswer', ['checkVocabAnswer']], ['submitFill', ['submitFill']]]) {
+    const body = fns.map(grab).join('\n');
     // selectSpeakAnswer 从 v137 起不再带 retryTip —— 它整段换成了
     // 「问句什么意思 → 你选的那句什么意思 → 答句该说什么」的引导，
     // "该怎么办"就写在引导里（再听一遍、一句一句翻成中文再选）。
-    ok(/_retryTip|retryTip:|_speakWrongHintHtml/.test(body) || fn === 'checkVocabAnswer',
+    ok(/_retryTip|retryTip:|_speakWrongHintHtml/.test(body) || name === 'checkVocabAnswer',
        name + ' 的提示里带了一句"该怎么办"的中文提醒');
   }
 
