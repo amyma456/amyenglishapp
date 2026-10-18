@@ -269,12 +269,13 @@ console.log('\n=== 6. 选择题不受影响：选对也要跟读 ≥60 分才解
   ok(html.indexOf('qr-follow-' + GMI + '-' + CQI) >= 0, '选择题有跟读区（有地方可通过）');
   ok(App._lockNextOnRender === true, '选择题仍然先锁住，跟读过了才放行（老门槛没动）');
 
-  // 选对了、但孩子没跟读 → 还是不让走
+  // 选对了 → 不再锁（v141 家长 2026-10-18：「做对了……下一题仍然是灰色的」。
+  // 做对过的题切走再切回不得重新锁死，孩子不用把读过的话再读一遍）。
   App.state.answers[Api.answerKey(SID, DAY, GMI, CQI)] = { value: 1, correct: true };
   App._lockNextOnRender = false;
   App.renderStage(DAY);
-  ok(App._lockNextOnRender === true,
-     '选择题即使选对了也要先跟读（这是原本的设计，本次只修填空题那条死路）');
+  ok(App._lockNextOnRender === false,
+     '选择题做对过 → 重渲染不再锁下一题（v141：老行为"做对了也锁"是家长报的 bug）');
 }
 
 // ===========================================================================
@@ -298,9 +299,9 @@ console.log('\n=== 7. 老师端预览也走同一套门槛（v138 起）+ 有跳
 // ===========================================================================
 console.log('\n=== 8. 静态检查：新写法在位 ===');
 {
-  ok(/\(blanked \? !solved : qHasRead\)\)? this\._lockNextOnRender = true;/.test(src) &&
+  ok(/\(blanked \? !solved : \(qHasRead && !solvedChoice\)\)\)? this\._lockNextOnRender = true;/.test(src) &&
      /const blanked = !q\.options;/.test(src),
-     '填空题按"写对"、选择题按"可跟读"分流判断（blanked ? !solved : qHasRead）');
+     '填空按"写对"、选择题按"可跟读且没做过"分流（v141：做对过不再重锁）');
   ok(/const blanked = !q\.options;/.test(src), '用"有没有 options"认填空题');
   ok(/_questionSolved\(mi, qi, dayIdx\) \{/.test(src), '_questionSolved 有定义');
   ok(/this\._unlockStep\(\);/.test(src.replace(/\s+/g, ' ').replace(/ /g, ' ')) || /_unlockStep\(\)/.test(src),
@@ -315,8 +316,8 @@ console.log('\n=== 8. 静态检查：新写法在位 ===');
   ok(studentPath.indexOf("ansEl.innerHTML = '✅ 正确！';") < 0,
      '学生路径上不再有"只显示正确、不给下一步"的写法（老师端预览保留原样）');
 
-  ok(/name="app-version" content="140"/.test(htmlSrc), '版本号升到 140');
-  ok(/amy-english-v140/.test(swSrc), 'Service Worker 缓存名同步到 v140（不然手机上还是旧版）');
+  ok(/name="app-version" content="141"/.test(htmlSrc), '版本号升到 141');
+  ok(/amy-english-v141/.test(swSrc), 'Service Worker 缓存名同步到 v141（不然手机上还是旧版）');
 }
 
 console.log('\n' + (fail ? '❌ ' + fail + ' 项未通过' : '✅ 全部通过'));

@@ -279,7 +279,7 @@ else {
   App.selectAnswer(rM, 0, wrongIdx, rD);
   ok(!optEls[rQ.answer]._cls.has('correct'), '阅读答错：正确选项不亮绿（一次都不亮）');
   ok(optEls[wrongIdx]._cls.has('wrong'), '阅读答错：点错的那项当场标红');
-  ok(/跟老师读/.test(ansEl.innerHTML), '阅读答错：提示是「先跟老师读一读」');
+  ok(/跟着读/.test(ansEl.innerHTML), '阅读答错：提示是「点下方按钮跟着读，读完再选一次」（v141）');
   ok(!/不是这个|快对了|里面挑/.test(ansEl.innerHTML), '阅读答错：不再出现"再想想/挑一个"式的三档老提示');
   ok(expEl._cls.has('show'), '阅读答错：中文讲解摆出来（引导式解释保留）');
   ok(App._guidedPick === rM + '-0', '阅读答错：挂上引导跟读面板（问句+答句 系统先读、学生再读）');

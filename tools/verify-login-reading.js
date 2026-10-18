@@ -185,16 +185,28 @@ App.speak = function(text, opts) { spoken.push(String(text)); if (opts && opts.o
 
 spoken.length = 0;
 App._lastPick = {};
+// v141：给「点下弹动」准备真实的选项元素桩（harness 的 querySelectorAll 默认空）
+const optStubs = rq.options.map(() => {
+  const e = el('div'); e._cls.add('q-option'); return e;
+});
+const realQSA = document.querySelectorAll;
+document.querySelectorAll = sel => (sel === '#q-' + rmi + '-0 .q-option' ? optStubs : realQSA(sel));
 App.selectAnswer(rmi, 0, wrongOi, 0);
-ok(spoken.length >= 1 && spoken[0] === String(rq.options[wrongOi]),
-  '点错的那个选项，它的句子先被读出来');
+const joinedSent = App._buildReadSentence(HOMEWORK_DATA[0].modules[rmi], rq);
+ok(spoken.length >= 1 && spoken[0] === joinedSent,
+  '点选项 → 系统先读「问句 + 答句」连起来的整句（不是只读选项）');
 ok(App._lastPick[rmi + '-0'] && App._lastPick[rmi + '-0'].oi === wrongOi,
   '读完 → 才真正"选了"（_lastPick 落下）');
+// v141：点下的第一瞬间就要有"弹动"反馈
+const wrongOptEl = optStubs[wrongOi];
+ok(wrongOptEl && wrongOptEl._cls.has('picking'), '点下的选项立刻挂上弹动动画（picking）');
+if (wrongOptEl) wrongOptEl.classList.remove('picking');
+document.querySelectorAll = realQSA;
 
 console.log('\n[4] 阅读理解答错：老师式引导（不再说"在 B、C 里面挑一个"）');
 const ansEl = document.getElementById('ans-' + rmi + '-0');
 const expEl = document.getElementById('exp-' + rmi + '-0');
-ok(ansEl.innerHTML.indexOf('跟老师读') >= 0, '提示是「先跟老师读一读」');
+ok(ansEl.innerHTML.indexOf('跟着读') >= 0, '提示是「点下方按钮跟着读，读完再选一次」');
 ok(ansEl.innerHTML.indexOf('里面挑') < 0 && ansEl.innerHTML.indexOf('再想想') < 0,
   '不再出现"挑一个/再想想"式的老提示');
 ok(expEl._cls.has('show'), '中文讲解摆出来（引导式解释保留）');
@@ -202,7 +214,12 @@ ok(App._guidedPick === rmi + '-0', '跟读面板挂上了"引导"标记');
 const followEl = document.getElementById('qr-follow-' + rmi + '-0');
 ok(followEl.innerHTML.indexOf('speak-record') >= 0 && followEl.innerHTML.indexOf('点我读') >= 0,
   '跟读面板已渲染（问句+答句 一起读）');
-ok(spoken.length === 2, '系统先把「问句 + 答句」整句读出来');
+ok(spoken.length === 1, '示范只放一遍（点选时已整句读过，引导里不再重复朗读）');
+// v141 关键：引导面板的门禁必须当场打开，否则「点我读」灰着点不动
+const gGid = App._gid('hrg', rmi, 0);
+ok(App._gateOpen(gGid), '引导面板的门禁当场解锁（点我读不灰）');
+const gBtn = document.getElementById('hr-' + rmi + '-0');
+ok(gBtn && !gBtn._cls.has('gate-locked'), '「点我读」按钮不带 gate-locked');
 const optsAll = [];
 for (let i = 0; i < rq.options.length; i++) optsAll.push(document.getElementById('qo-' + rmi + '-0'));
 // 选项容器在引导期间整体锁住
@@ -219,13 +236,33 @@ ok(ansEl.innerHTML.indexOf('再选一次') >= 0, '提示孩子自己再选一次
 ok(followEl.innerHTML === '', '跟读面板收掉');
 ok(recordCalls === 0, '引导跟读**不记答案**（不进下一题）');
 
-console.log('\n[6] 阅读理解选对：原来的跟读门槛不变');
+console.log('\n[6] 阅读理解选对：跟读门槛不变，但门必须当场打开');
 App._lastPick = {};
 App._guidedPick = null;
 App._readingDecide(HOMEWORK_DATA[0].modules[rmi], rmi, 0, rq.answer, 0);
 ok(App._lastPick[rmi + '-0'] && App._lastPick[rmi + '-0'].isCorrect === true, '选对落入 _lastPick');
 ok(App._guidedPick !== rmi + '-0', '正选题**不挂**引导标记（照常记答案）');
 ok(followEl.innerHTML.indexOf('点我读') >= 0, '跟读面板照常出现（读够 60 分才进下一题）');
+// v141 关键：第一次就选对时（前面没有引导流程开过门），跟读门禁也必须开
+const okGid = App._gid('hrg', rmi, 0);
+ok(App._gateOpen(okGid), '选对后跟读门禁当场解锁（示范在点选时已放过）');
+const okBtn = document.getElementById('hr-' + rmi + '-0');
+ok(okBtn && !okBtn._cls.has('gate-locked'), '「点我读」不灰 —— 孩子不会卡死在这屏');
+const okAns = document.getElementById('ans-' + rmi + '-0');
+ok(okAns.innerHTML.indexOf('解锁下一题') >= 0, '提示里写清楚：读完就解锁下一题');
+
+console.log('\n[6b] 做对过的题：重进/重渲染不得再把下一题锁灰');
+App._recordAnswer = function() {};   // 恢复桩不落记录，手工落一条 correct
+App.state.answers = App.state.answers || {};
+App.state.answers[Api.answerKey(App._myStudentId(), 0, rmi, 0)] = { correct: true, value: rq.answer };
+ok(App._questionSolved(rmi, 0, 0), '答案记录里 correct → _questionSolved');
+{
+  const blanked = !rq.options;
+  const qHasRead = !!App._buildReadSentence(HOMEWORK_DATA[0].modules[rmi], rq);
+  const willLock = blanked ? !App._questionSolved(rmi, 0, 0)
+                           : (qHasRead && !App._questionSolved(rmi, 0, 0));
+  ok(!willLock, '切走再切回 / 隔天重进：下一题不再变灰（v141 渲染锁判据）');
+}
 
 console.log('\n[7] 非阅读理解题型：答错流程保持原样');
 // 用语法/单选类的题验证老的三档提示仍在
@@ -256,11 +293,11 @@ ok(src.indexOf("btn.innerHTML = '⏳ 正在进入…'") >= 0, '登录按钮即�
 ok(src.indexOf('registerStudent(phone, name)') >= 0 && src.indexOf('后台收尾') >= 0, '学生登录进 App 后网络收尾挪到后台');
 
 const html = fs.readFileSync(BASE + 'index.html', 'utf8');
-ok(html.indexOf('app-version" content="140"') >= 0, 'index.html 版本 = 140');
+ok(html.indexOf('app-version" content="141"') >= 0, 'index.html 版本 = 141');
 ok(html.indexOf('id="login-btn"') >= 0, '登录按钮有 id（反馈要挂在它身上）');
 ok(html.indexOf('.login-btn:active') >= 0, '登录按钮有按压反馈样式');
 const sw = fs.readFileSync(BASE + 'sw.js', 'utf8');
-ok(sw.indexOf("amy-english-v140") >= 0, 'sw.js 缓存名 = v140');
+ok(sw.indexOf("amy-english-v141") >= 0, 'sw.js 缓存名 = v140');
 
 console.log('\n' + (fail ? '❌ ' + fail + ' 项未通过' : '✅ 全部通过'));
 process.exit(fail ? 1 : 0);

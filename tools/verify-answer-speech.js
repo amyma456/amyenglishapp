@@ -189,9 +189,12 @@ else {
     spoken.length = 0;
     App.selectAnswer(qMi, 0, wrongOi, qDay);
     if (m.type === 'reading') {
-      // v140：阅读理解点选项先读所选句，读完结算；答错再读「问句+答句」
-      ok(spoken.length === 2, '阅读点错读了 2 句：先所选错句，再「问句+答句」引导句（' + spoken.length + ' 句）');
-      ok(spoken[0] === String(q.options[wrongOi]), '第一句读的是所选错句："' + spoken[0] + '"');
+      // v141：阅读理解点选项直接读「问句 + 答句」整句（_buildReadSentence 拼好
+      // 的同一句，跟读面板读的也是它）—— 家长实测打回「没有将问句和答句连到
+      // 到一起」后，v140 的"先读所选句"那一步并掉了。
+      const joined = App._buildReadSentence(m, q);
+      ok(spoken.length === 1, '阅读点错读 1 句：「问句+答句」整句（' + spoken.length + ' 句）');
+      ok(spoken[0] === joined, '读的是问句+答句整句："' + spoken[0] + '"');
     } else {
       ok(spoken.length === 1, '句子选项点错触发了一次 speak（' + spoken.length + ' 次）');
       ok(spoken[0] === String(q.options[wrongOi]), '读的是所选错句："' + spoken[0] + '"');

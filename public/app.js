@@ -10239,8 +10239,13 @@ const App = {
       const blanked = !q.options;
       const qHasRead = !!this._buildReadSentence(m, q);
       const solved = blanked && this._questionSolved(step.mi, step.qi, dayIdx);
+      // v141：选择题（含阅读理解）做对过的也不许再锁 —— 以前只要题目能跟读
+      // 就一律锁死，孩子做完一题切走再切回来（或隔天重进），下一题又变灰，
+      // 得把已经读过的话再读一遍才能走（家长 2026-10-18：「做对了……下一题
+      // 仍然是灰色的」）。做对过 = 答案记录里 correct，直接放行。
+      const solvedChoice = !blanked && this._questionSolved(step.mi, step.qi, dayIdx);
       // v138：老师预览同样照锁（见 _applyStepLock 的说明）。
-      if (blanked ? !solved : qHasRead) this._lockNextOnRender = true;
+      if (blanked ? !solved : (qHasRead && !solvedChoice)) this._lockNextOnRender = true;
       const self = this;
       setTimeout(function(){ self._autoSpeakQuestion(m, step.mi, step.qi, dayIdx); }, 250);
     } else if (step.kind === 'speaking') {
@@ -10555,7 +10560,14 @@ const App = {
     if (!speakText) { unlock(); return; }
     // Only the English stem is read. Chinese meanings and the answer
     // explanation are never spoken; speak() filters once more as a net.
-    this.autoSpeak(speakText, unlock);
+    // v141：朗读卡住时的兜底 —— 最多等 6 秒就解锁选项，不让「⏳ 请先听完整
+    // 朗读」把孩子锁在屏幕外（speak() 自己的绝对超时是 12 秒，家长反馈
+    // 「点了没反应」的一大来源就是这段等待）。音频还在放也不影响：选项
+    // 解锁只是允许他提前选，选完还有一整句示范要听。
+    var done = false;
+    var open = function() { if (!done) { done = true; unlock(); } };
+    this.autoSpeak(speakText, open);
+    setTimeout(open, 6000);
   },
 
   replayQuestion(qId, mi, qi, dayIdx) {
@@ -10620,19 +10632,32 @@ const App = {
     //   - Correct pick (first try OR after one or more wrongs): lock the
     //     whole row and require a HOLD-to-read of the question sentence
     //     with score >= 60 before the answer is recorded.
-    // v140（家长 2026-10-18）：阅读理解点选项，**先把这句读出来，读完才
-    // 算"选了"** —— 孩子要靠耳朵核对自己选的到底是哪句。别的题型保持
-    // 原样（点错即时结算 + 朗读所选句）。
+    // v140（家长 2026-10-18）：阅读理解点选项，**先把「问句 + 答句」整句
+    // 读出来，读完才算"选了"**。v140 第一版只读所选的那个选项 —— 家长实测
+    // 打回：「没有将问句和答句连到一起，像之前一样，系统先读，学生再读」。
+    // 现在点一下读的是 _buildReadSentence 拼好的完整一句（跟读面板同一句），
+    // 示范只放这一遍，后面两个分支直接用。
+    // v141：点下的**第一瞬间**就要有反馈 —— 选项按压缩动 + 手机震一下 +
+    // 高亮，然后才轮到朗读（家长：「没有弹动也没有任何提示」）。
     if (m.type === 'reading' && this.state.audioEnabled) {
       const pickedText = (q.options && q.options[oi] != null) ? String(q.options[oi]) : '';
-      if (pickedText && this._ttsText(pickedText)) {
+      // —— 即时反馈，不等任何网络 ——
+      const pickedEl = document.querySelectorAll('#q-' + mi + '-' + qi + ' .q-option')[oi];
+      if (pickedEl) {
+        pickedEl.classList.add('picking');
+        setTimeout(function() { pickedEl.classList.remove('picking'); }, 600);
+      }
+      try { if (navigator.vibrate) navigator.vibrate(18); } catch (e) {}
+      const ansEl0 = document.getElementById('ans-' + mi + '-' + qi);
+      if (ansEl0) {
+        ansEl0.style.display = 'block';
+        if (!ansEl0.textContent) ansEl0.innerHTML = '🔊 听一听这句话…';
+      }
+      const joined = this._buildReadSentence(m, q);
+      const sayText = (joined && this._ttsText(joined)) ? joined : pickedText;
+      if (sayText && this._ttsText(sayText)) {
         const optsEl = document.getElementById('qo-' + mi + '-' + qi);
         if (optsEl) optsEl.style.pointerEvents = 'none';   // 朗读期间不许连点
-        const ansEl0 = document.getElementById('ans-' + mi + '-' + qi);
-        if (ansEl0 && !ansEl0.textContent) {
-          ansEl0.style.display = 'block';
-          ansEl0.innerHTML = '🔊 先听听你选的这句…';
-        }
         const self = this;
         // 兜底：朗读万一卡住（TTS 网络超时），8 秒后照常结算，绝不把孩子锁死
         let settled = false;
@@ -10642,7 +10667,7 @@ const App = {
           if (optsEl) optsEl.style.pointerEvents = 'auto';
           self._readingDecide(m, mi, qi, oi, dayIdx);
         };
-        this.speak(pickedText, { onDone: decide });
+        this.speak(sayText, { onDone: decide });
         setTimeout(decide, 8000);
         return;
       }
@@ -10728,7 +10753,8 @@ const App = {
     if (ansEl) {
       ansEl.style.display = 'block';
       this._clearWrongHint(ansEl);
-      ansEl.innerHTML = '✅ 选对了！点下方按钮把问句和答案读出来（≥60 分通过）';
+      // v141：措辞改成孩子能照着做的两步 —— 跟着读一遍，读完就能点下一题。
+      ansEl.innerHTML = '✅ 选对了！点下方按钮跟着读这句话（读够 60 分就解锁下一题）';
     }
 
     const followEl = document.getElementById('qr-follow-' + mi + '-' + qi);
@@ -10736,6 +10762,12 @@ const App = {
       // 用 _buildReadSentence：剥指令词、剥中文、横杠处用正确答案补全
       const sentence = this._buildReadSentence(m, q);
       this._renderHoldReadPanel(followEl, mi, qi, dayIdx, sentence);
+      // v141 关键修复：示范在孩子点选项的那一刻已经整句放过一遍了（见
+      // selectAnswer 的 reading 分支），跟读面板不能再锁 —— 以前这里既不
+      // 自动放示范也不解锁，「🎤 点我读」灰着点不动，孩子做完题卡在这一屏，
+      // 下一题永远灰的（家长 2026-10-18 报的就是这个）。现在直接开门，
+      // 门上的「先听一遍」按钮保留，想再听随时点。
+      this._gateUnlock(this._gid('hrg', mi, qi));
     }
   },
 
@@ -10762,7 +10794,7 @@ const App = {
     if (ansEl) {
       ansEl.style.display = 'block';
       this._clearWrongHint(ansEl);
-      ansEl.innerHTML = '🔔 先跟老师读一读，读完再选一次。';
+      ansEl.innerHTML = '🔔 听完了吧？点下方按钮跟着读，读完再选一次。';
     }
     // 中文讲解摆出来（引导式解释结构保留）
     const expEl = document.getElementById('exp-' + mi + '-' + qi);
@@ -10780,17 +10812,11 @@ const App = {
     // 结算标记：这个面板是"引导跟读"，不是正选题 —— 跟读完不记答案、
     // 不进下一题，只解锁选项让孩子再选一次（见 _showHoldReadResult）。
     this._guidedPick = mi + '-' + qi;
-    // 1) 系统先把这句读出来（问句 + 答句）。读完了解锁跟读按钮（gate）；
-    //    语音不可用就直接解锁，别把人锁死。
-    const self = this;
-    const gid = this._gid('hrg', mi, qi);
-    if (this.state.audioEnabled && this._ttsText(sentence)) {
-      this.speak(sentence, { onDone: function() { self._gateUnlock(gid); } });
-      // 兜底：示范朗读万一卡住，8 秒后照样解锁
-      setTimeout(function() { self._gateUnlock(gid); }, 8000);
-    } else {
-      this._gateUnlock(gid);
-    }
+    // v141：示范不用再放第二遍 —— 孩子点选项的那一刻，「问句 + 答句」整句
+    // 已经读过一遍了（selectAnswer 的 reading 分支），直接开门。门上那颗
+    // 「先听一遍」保留，孩子想再听随时点。以前这里再 speak 一遍 + 8 秒兜底，
+    // 示范卡住时门迟迟不开，「点我读」灰着点不动，孩子就卡死在引导里。
+    this._gateUnlock(this._gid('hrg', mi, qi));
   },
 
   // Mandatory follow-read for ABCD-style questions. Records the child

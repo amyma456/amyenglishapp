@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="140">
+<meta name="app-version" content="141">
 <link rel="manifest" href="manifest.json">
 <!-- v135：登录第一步就是调 api.amyeng.top 验手机号。提前把 DNS + TLS
      握手做掉，接口首调能省几百毫秒 —— 手机弱网下这几百毫秒很显眼。 -->
@@ -556,6 +556,9 @@ body.preview-mode .stage{height:calc(100dvh - var(--nav-h) - var(--pv-h) - var(-
 .q-option.selected{background:var(--primary);color:#fff;border-color:var(--primary)}
 .q-option.correct{background:var(--success-light);border-color:var(--success);color:var(--success);animation:ackPop .42s ease}
 .q-option.wrong{background:var(--danger-light);border-color:var(--danger);color:var(--danger)}
+/* v141：点下的第一瞬间要有"弹动"——按压缩一下再弹回来，孩子知道点着了 */
+.q-option.picking{background:var(--primary-light);border-color:var(--primary);animation:pickPulse .45s ease}
+@keyframes pickPulse{0%{transform:scale(1)}35%{transform:scale(.955)}70%{transform:scale(1.02)}100%{transform:scale(1)}}
 .q-answer{font-size:12px;color:var(--success);margin-top:6px;font-weight:600}
 /* ===== 完形填空「同句多空合成一屏」（v126）=============================
    一句话里挖了两个空（今天的第 4、5 空）时，孩子在这一屏一次性做完：
@@ -1262,8 +1265,8 @@ body.perf-on .content-area{padding-bottom:54vh}
   <div class="modal" id="modal-box"></div>
 </div>
 
-<script src="cloud.js?v=140"></script>
-<script src="data.js?v=140"></script>
+<script src="cloud.js?v=141"></script>
+<script src="data.js?v=141"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
 <!--
   ?v= 必须跟着版本号走（v124 修正）。
@@ -1273,9 +1276,9 @@ body.perf-on .content-area{padding-bottom:54vh}
   这个坑很隐蔽：代码明明改了、也部署上去了，手机上跑的还是几个月前的逻辑。
   以后每次发版，这里跟着 app-version 一起改。
 -->
-<script src="recorder.js?v=140"></script>
-<script src="api.js?v=140"></script>
-<script src="app.js?v=140"></script>
+<script src="recorder.js?v=141"></script>
+<script src="api.js?v=141"></script>
+<script src="app.js?v=141"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {
