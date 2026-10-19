@@ -268,6 +268,12 @@ const Store = {
     try {
       d = JSON.parse(localStorage.getItem(this.DRAFT_KEY) || 'null');
     } catch (e) {}
+    // v145：sessionStorage 兜底。有些手机内核（夸克/UC 极速模式）退出时会
+    // 清 localStorage，但**刷新**不会动 sessionStorage —— 而家长抱怨的正是
+    // "一刷新就没了"这一下，所以多存这一份最划算。
+    if (!d || (!d.phone && !d.name)) {
+      try { d = JSON.parse(sessionStorage.getItem(this.DRAFT_KEY) || 'null'); } catch (e) {}
+    }
     if (!d || (!d.phone && !d.name)) d = this._draftCookieRead();   // localStorage 被清 → cookie 兜底
     if (!d || (!d.phone && !d.name)) {
       // 最后兜底：正式凭据里的就是上次登录成功的那一组
@@ -282,6 +288,7 @@ const Store = {
     const rec = { phone: phone || '', name: name || '', known: !!known, ts: Date.now() };
     if (!rec.phone && !rec.name) { this.clearLoginDraft(); return rec; }
     try { localStorage.setItem(this.DRAFT_KEY, JSON.stringify(rec)); } catch (e) {}
+    try { sessionStorage.setItem(this.DRAFT_KEY, JSON.stringify(rec)); } catch (e) {}
     try {
       document.cookie = this._DRAFT_COOKIE + '=' + encodeURIComponent(JSON.stringify(rec)) +
         '; Max-Age=31536000; path=/; SameSite=Lax';
@@ -291,6 +298,7 @@ const Store = {
 
   clearLoginDraft() {
     try { localStorage.removeItem(this.DRAFT_KEY); } catch (e) {}
+    try { sessionStorage.removeItem(this.DRAFT_KEY); } catch (e) {}
     try { document.cookie = this._DRAFT_COOKIE + '=; Max-Age=0; path=/; SameSite=Lax'; } catch (e) {}
   },
 

@@ -120,9 +120,15 @@ console.log('\n== ⑤ 轮询那条路也要兜住（人在里面、老师中途�
   const idx = appCode.indexOf('const st = await Api.classStatus(this.state.phone);');
   ok(idx > 0, '找到轮询里的 classStatus 调用');
   const near = appCode.slice(idx, idx + 1200);
+  // v145：中途查不到**绝不再踢人**（家长 2026-10-19 投诉"登进去没多久就被
+  // 请到已被移出页"）。只挂非阻塞横幅；只有服务器明确说 removed 才请出去。
   ok(/st\s*!==\s*null/.test(near), '★ 轮询里先处理"查得到"的情况');
-  ok(/_retryClassStatus/.test(near), '★ 轮询里也会重试');
-  ok(/showGateCheckFailed/.test(near), '★ 轮询兜底也会请到核对页');
+  ok(/st\.removed[\s\S]{0,80}showRemovedPage|showRemovedPage\(st\)/.test(near),
+     '★ 服务器明确说 removed 才请到移出页');
+  ok(/_netBanner\(true\)/.test(near), '★ v145：查不到只挂"网络不稳"横幅，不再踢人');
+  ok(!/_gateMissStreak/.test(near), '★ 连败计数踢人逻辑已删除');
+  ok(!/_retryClassStatus[\s\S]{0,200}showGateCheckFailed/.test(near),
+     '★ 中途不再把孩子请到核对页');
 }
 
 // ===========================================================================

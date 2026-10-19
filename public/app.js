@@ -1178,6 +1178,12 @@ const App = {
     if (wp) wp.classList.add('hidden');
     const rp = document.getElementById('removed-page');
     if (rp) rp.classList.remove('hidden');
+    // v145：标题复位。showGateCheckFailed 会把它改成"连不上服务器"，
+    // 真被移出时必须改回来 —— 只有这里才允许出现"被移出"三个字。
+    const tEl = document.getElementById('removed-title');
+    const sEl = document.getElementById('removed-subtitle');
+    if (tEl) tEl.textContent = '暂时无法进入';
+    if (sEl) sEl.textContent = '你已被移出班级';
     this.state.removedStatus = status || { removed: true, request: null };
     this.renderRemovedCard();
     this.startRemovedPolling();
@@ -1239,7 +1245,8 @@ const App = {
         clearInterval(this._removedTimer);
         this._removedTimer = null;
         this.showToast('🎉 老师已同意，正在进入…');
-        this.registerStudent(this.state.phone, this.state.userName);
+        // v145：能坐在这个页上，说明这台设备早先核对通过过 → 秒进，不再等网络。
+        this.registerStudent(this.state.phone, this.state.userName, true);
         return;
       }
       // Keep the request state fresh (pending/denied changes the card).
@@ -1261,9 +1268,13 @@ const App = {
     return this._retryClassStatus(phone, timesLeft - 1);
   },
 
-  // 三次都查不到拦截状态时显示。**不放行**，也不假装"你被删了"——
-  // 只说"正在核对"，给一个重试按钮。老师看到的后果是：
-  // 没有任何人能靠断网绕过删除。
+  // 三次都查不到拦截状态时显示。**不放行**，也不假装"你被删了"。
+  // v145 大改（家长 2026-10-19 投诉「重新核对很久也登不进去」）：
+  //   1. 标题不再是"你已被移出班级"——核对失败跟移出**没有关系**，以前
+  //      复用移出页把静态标题一起带出来了，家长孩子都以为被老师踢了；
+  //   2. **自动重试**：每 3 秒一次、最多 6 次，不用孩子一遍遍手点；
+  //   3. 这台设备以前核对通过过（名单/草稿里有这个号）→ 重试时直接走
+  //      "不等网络"那条路秒回 App，核对放后台。
   showGateCheckFailed(phone, name) {
     document.getElementById('login-page').classList.add('hidden');
     document.getElementById('main-app').classList.add('hidden');
@@ -1272,6 +1283,11 @@ const App = {
     const rp = document.getElementById('removed-page');
     if (rp) rp.classList.remove('hidden');
     this.state.removedStatus = { checkFailed: true, request: null };
+    // 标题动态改：核对失败 ≠ 被移出。
+    const tEl = document.getElementById('removed-title');
+    const sEl = document.getElementById('removed-subtitle');
+    if (tEl) tEl.textContent = '连不上服务器';
+    if (sEl) sEl.textContent = '别担心，这不是被移出班级';
     const card = document.getElementById('removed-card');
     const btn = document.getElementById('removed-btn');
     if (card) {
@@ -1279,18 +1295,72 @@ const App = {
         '<div style="font-size:48px;margin-bottom:8px">📡</div>'
         + '<p style="font-size:15px;color:var(--warning);font-weight:600">正在核对你的身份</p>'
         + '<p class="text-sub fs-12 mt-8">网络不太稳定，暂时联系不上服务器。'
-        + '请确认网络通畅后点下面的按钮重试。</p>';
+        + '会自动重试，也可以点下面的按钮。</p>';
     }
     if (btn) {
-      btn.textContent = '🔄 重新核对';
+      btn.textContent = '🔄 立即重试';
       btn.disabled = false;
       btn.style.opacity = '1';
-      btn.onclick = () => { btn.textContent = '⏳ 核对中…'; this.registerStudent(phone, name); };
+      btn.onclick = () => {
+        btn.textContent = '⏳ 核对中…';
+        // 设备认识这个号 → 秒回 App（后台再核对）；否则走完整核对。
+        if (this._deviceKnows(phone)) this.registerStudent(phone, name, true);
+        else this.registerStudent(phone, name);
+      };
+    }
+    this._gateAutoRetry(phone, name, 6);
+  },
+
+  // 核对失败页的自动重试。3 秒一次、最多 left 次；页面被别的路径接走就停。
+  _gateAutoRetry(phone, name, left) {
+    clearTimeout(this._gateRetryTimer);
+    if (left <= 0) return;
+    const self = this;
+    this._gateRetryTimer = setTimeout(async function () {
+      const rp = document.getElementById('removed-page');
+      if (!rp || rp.classList.contains('hidden')) return;   // 已经进 App / 换页了
+      if (self._deviceKnows(phone)) { self.registerStudent(phone, name, true); return; }
+      const s = await Api.classStatus(phone);
+      if (s !== null && !s.removed) { self.registerStudent(phone, name, true); return; }
+      if (s !== null && s.removed) { self.showRemovedPage(s); return; }
+      self._gateAutoRetry(phone, name, left - 1);
+    }, 3000);
+  },
+
+  // 这台设备是否"认识"这个号：草稿标了 known，或本机名单里已有这条记录。
+  // 只有认识才允许走"不等网络"的重试 —— 新设备仍然要核对（v132 红线）。
+  _deviceKnows(phone) {
+    try {
+      const d = (typeof Api.readLoginDraft === 'function') ? Api.readLoginDraft() : null;
+      if (d && d.known && d.phone === phone) return true;
+    } catch (e) {}
+    if ((this.state.parentStudents || {})[phone]) return true;
+    return (this.state.students || []).some(function (s) { return s.phone === phone; });
+  },
+
+  // v145：做题中途网络查不到时挂一条非阻塞横幅（不再把人踢出 App）。
+  _netBanner(show) {
+    let b = document.getElementById('net-status-banner');
+    if (show) {
+      if (!b) {
+        b = document.createElement('div');
+        b.id = 'net-status-banner';
+        b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9000;'
+          + 'background:#FFF7E6;color:#AD6800;border-bottom:1px solid #FFE58F;'
+          + 'padding:8px 14px;font-size:13px;text-align:center;';
+        b.textContent = '📶 网络不太稳定，正在后台重试……做题不受影响，不用管它';
+        (document.body || document.documentElement).appendChild(b);
+      }
+      b.style.display = 'block';
+    } else if (b) {
+      b.style.display = 'none';
     }
   },
 
   async logout() {
     clearTimeout(this._advanceTimer);
+    clearTimeout(this._gateRetryTimer);   // v145：停掉核对失败页的自动重试
+    this._netBanner(false);
     if (this._removedTimer) { clearInterval(this._removedTimer); this._removedTimer = null; }
     this.state.stepIdx = 0;
     // Clear saved login so auto-login doesn't re-login
@@ -3071,25 +3141,21 @@ const App = {
         const alreadyRemoved = rp && !rp.classList.contains('hidden');
         if (!alreadyRemoved) {
           const st = await Api.classStatus(this.state.phone);
-          // v132：先处理"查得到"的情况。注意不再用 `st && st.removed`
-          // 那种写法 —— 它会把 null 混进"没被删"里（fail-open）。
           if (st !== null) {
-            this._gateMissStreak = 0;
+            // 网络回来了 → 摘掉"网络不稳定"横幅
+            this._netBanner(false);
             if (st.removed) {
               this.showRemovedPage(st);
               return;
             }
           } else {
-            // 查不到（null）时**不当作没事**。登录那一刻的 fail-closed
-            // 已经拦住绝大多数情况；这里只是"人在里面了、老师中途把他删了"
-            // 这条路的兜底 —— 连续两次查不到就把他请到核对页，别让他继续做题。
-            this._gateMissStreak = (this._gateMissStreak || 0) + 1;
-            if (this._gateMissStreak >= 2) {
-              this._gateMissStreak = 0;
-              const again = await this._retryClassStatus(this.state.phone, 2);
-              if (again === null) { this.showGateCheckFailed(this.state.phone, this.state.userName); return; }
-              if (again.removed) { this.showRemovedPage(again); return; }
-            }
+            // v145：中途查不到**绝不再踢人**。以前（v132 的防绕过兜底）连续
+            // 2 次查不到就把孩子请到"已被移出"页 —— 但手机网络抖两下就会
+            // 误伤正在做题的孩子，家长 2026-10-19 投诉的就是这个：
+            // 「登进去没多久，一会就显示暂时无法进入/你已被移出班级」。
+            // 现在只挂一条**非阻塞**横幅提示网络不稳，网络恢复自动消失；
+            // 只有服务器**明确**返回 removed 才请出去（上一行）。
+            this._netBanner(true);
           }
         }
       }
