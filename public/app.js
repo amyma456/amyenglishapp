@@ -67,6 +67,9 @@ const App = {
     // 注意它是 async 的：真正的 showApp 要等这一轮同步初始化跑完之后才会执行
     // （第一个 await 让出主线程），所以下面那些绑定不用抢在它前面。
     if (/[?&]ttstest=1/.test(location.search)) { this.runTtsTest(); return; }
+    // v144：先把上次填的手机号/姓名放回输入框，并把输入框的变化记下来。
+    // 必须在 tryAutoLogin 之前 —— 自动登录那条路也可能要回退到登录页。
+    this._hydrateLoginForm();
     this.tryAutoLogin();
     this.loadVoices();
     // v129：长按朗读时不许浏览器弹「复制 / 选中」把录音抢走（家长 2026-10-16）
@@ -94,6 +97,77 @@ const App = {
     if (this.isWeChat()) {
       const notice = document.getElementById('wechat-notice');
       if (notice) notice.style.display = 'flex';
+    }
+    // v144：登录按钮在脚本还没就绪时被点过 → 现在补上这一次登录，孩子不用
+    // 再点第二下（以前那一下只是把按钮改成"正在加载，请稍候…"，然后就没下文了）。
+    if (typeof window !== 'undefined' && window.__pendingLogin) {
+      window.__pendingLogin = false;
+      const pEl = document.getElementById('login-phone');
+      const nEl = document.getElementById('login-name');
+      const pv = pEl ? pEl.value.trim() : '';
+      const nv = nEl ? nEl.value.trim() : '';
+      const b = document.getElementById('login-btn');
+      if (!this.state.phone && pv.length >= 11 && nv) {
+        this.login();
+      } else if (b) {
+        b.classList.remove('logging-in');
+        b.innerHTML = '登录';
+      }
+    }
+  },
+
+  // v144（家长 2026-10-19）：刷新之后不许再把手机号和姓名弄丢。
+  //   ① 开屏脚本已经在首帧前回填过一遍，这里再保一遍（老页面/老缓存兜底）；
+  //   ② 输入框每变一个字就写进草稿（localStorage + 一年 cookie）；
+  //   ③ `_loginDraftKnown` 记住"这个手机号在这台设备上登录成功过" ——
+  //      登录时据此走"不等网络直接进"那条路。
+  _hydrateLoginForm() {
+    const phoneEl = document.getElementById('login-phone');
+    const nameEl = document.getElementById('login-name');
+    if (!phoneEl || !nameEl) return;
+
+    let d = (typeof window !== 'undefined' && window.__bootDraft) ? window.__bootDraft : null;
+    if (!d && typeof Api.readLoginDraft === 'function') {
+      try { d = Api.readLoginDraft(); } catch (e) { d = null; }
+    }
+    this._draft = d || null;
+
+    if (d) {
+      if (d.phone && !phoneEl.value) phoneEl.value = d.phone;
+      if (d.name && !nameEl.value) nameEl.value = d.name;
+    }
+    if (nameEl.value) { try { this.checkNameFormat(); } catch (e) {} }
+    // 页面刚打开、孩子一个字都没改就点登录时，也要认得出这是老设备。
+    this._loginDraftKnown = !!(d && d.known && d.phone && d.phone === phoneEl.value.trim());
+    this._draftPhone = phoneEl.value.trim();
+
+    const self = this;
+    const save = function () {
+      const p = phoneEl.value.trim();
+      const n = nameEl.value.trim();
+      // 只有"本机登录过的那个号"才算老设备；改了号就重新走核对（v132 红线）。
+      self._loginDraftKnown = !!(d && d.known && d.phone && d.phone === p);
+      self._draftPhone = p;
+      const hint = document.getElementById('login-remember-hint');
+      if (hint) hint.style.display = (p.length >= 11 && n) ? 'block' : 'none';
+      if (typeof Api.writeLoginDraft !== 'function') return;
+      try { Api.writeLoginDraft(p, n, self._loginDraftKnown); } catch (e) {}
+    };
+    this._saveLoginDraft = save;
+    phoneEl.addEventListener('input', save);
+    nameEl.addEventListener('input', save);
+    phoneEl.addEventListener('change', save);
+    nameEl.addEventListener('change', save);
+    // 关页面 / 切后台再补一次 —— 最后几个字有时还没触发 input 就切走了。
+    window.addEventListener('pagehide', save);
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'hidden') save();
+    });
+
+    // 填好了就明说一句，孩子不用猜"是不是还要再输一遍"
+    const hint = document.getElementById('login-remember-hint');
+    if (hint) {
+      hint.style.display = (phoneEl.value.trim().length >= 11 && nameEl.value.trim()) ? 'block' : 'none';
     }
   },
 
@@ -169,6 +243,13 @@ const App = {
           const nameInput = document.getElementById('login-name');
           if (phoneInput) phoneInput.value = creds.phone;
           if (nameInput) nameInput.value = creds.name;
+          // v144：草稿同步成"这台设备认识这个号" —— 万一凭据之后被系统清掉，
+          // 登录页上仍是填好的，点一下就走。
+          try {
+            if (typeof Api.writeLoginDraft === 'function') Api.writeLoginDraft(creds.phone, creds.name, true);
+            this._loginDraftKnown = true;
+            this._draftPhone = creds.phone;
+          } catch (e) {}
           // Auto-login
           this.state.phone = creds.phone;
           this.state.userName = creds.name;
@@ -919,7 +1000,10 @@ const App = {
         return null;
       } catch (e) { return null; }
     })();
-    const knownDevice = !!(prevCreds && prevCreds.phone === phone);
+    const knownDevice = !!(prevCreds && prevCreds.phone === phone)
+      // v144：凭据被系统清掉、但草稿里存着"这台设备登录过这个号" → 同样
+      // 算老设备，点下去直接进（后台照样核对删除状态，被删的人 1~2 秒后出局）。
+      || !!(this._loginDraftKnown && this._draftPhone === phone);
     try {
       // v143：同步拿会话（只比手机号），点下去这一帧就能切界面。
       // Api.login 的函数体会在第一个 await 之前就把 session 设好，所以这里
@@ -981,6 +1065,7 @@ const App = {
       this._gateCheck(phone).then(function(status) {
         if (!status) return;               // 查不到：保持现状，不写名单不上云
         if (status.removed) { self.showRemovedPage(status); return; }
+        self._markDeviceKnown(phone, name);   // v144：核对通过 = 这台设备认识这个号
         self._commitStudent(phone, name);  // 确认没被删 → 才写名单 + 上云
       }).catch(function() {});
       return;
@@ -1004,6 +1089,7 @@ const App = {
       return;
     }
     this._enterAsStudent(phone, name);
+    this._markDeviceKnown(phone, name);   // v144：核对通过 → 下次一点就进
     this._commitStudent(phone, name);
     const lb2 = document.getElementById('login-btn');
     if (lb2) { lb2.classList.remove('logging-in'); lb2.innerHTML = '登录'; }
@@ -1063,6 +1149,16 @@ const App = {
       const badge = document.getElementById('class-badge');
       if (badge && !self.isTeacher()) badge.textContent = mine.className;
     }).catch(function() {});
+  },
+
+  // v144：把"这台设备认识这个号"记进草稿。之后即使正式凭据被系统清掉，
+  // 孩子刷新/重开时登录页也是填好的，一点就走"不等网络"那条路。
+  _markDeviceKnown(phone, name) {
+    try {
+      if (typeof Api.writeLoginDraft === 'function') Api.writeLoginDraft(phone, name, true);
+      this._loginDraftKnown = true;
+      this._draftPhone = phone;
+    } catch (e) {}
   },
 
   showWaitingPage() {
@@ -1206,8 +1302,23 @@ const App = {
     const rp = document.getElementById('removed-page');
     if (rp) rp.classList.add('hidden');
     this.state.removedStatus = null;
-    document.getElementById('login-phone').value = '';
-    document.getElementById('login-name').value = '';
+    // v144：退出登录**不清空**输入框 —— 草稿还在，返回登录页时手机号和
+    // 姓名已经填好，孩子点一下「登录」就能回去（家长 2026-10-19）。
+    try {
+      const d = (typeof Api.readLoginDraft === 'function') ? Api.readLoginDraft() : null;
+      const pEl = document.getElementById('login-phone');
+      const nEl = document.getElementById('login-name');
+      if (d) {
+        if (pEl) pEl.value = d.phone || '';
+        if (nEl) nEl.value = d.name || '';
+        this._draftPhone = d.phone || '';
+        this._loginDraftKnown = !!d.known;
+      }
+      const hint = document.getElementById('login-remember-hint');
+      if (hint && pEl && nEl) {
+        hint.style.display = (pEl.value.trim().length >= 11 && nEl.value.trim()) ? 'block' : 'none';
+      }
+    } catch (e) {}
     this.state.currentTab = 'weekly';
     this.state.audioEnabled = false;
     this.state.phone = '';

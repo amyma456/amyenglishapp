@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="143">
+<meta name="app-version" content="144">
 <link rel="manifest" href="manifest.json">
 <!-- v135：登录第一步就是调 api.amyeng.top 验手机号。提前把 DNS + TLS
      握手做掉，接口首调能省几百毫秒 —— 手机弱网下这几百毫秒很显眼。 -->
@@ -1189,7 +1189,8 @@ body.perf-on .content-area{padding-bottom:54vh}
       <input type="text" id="login-name" placeholder="如：马慧-Amy" oninput="App.checkNameFormat()" style="padding:9px 12px;font-size:14px">
       <div id="name-hint" style="font-size:10px;margin-top:2px;color:var(--text-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">格式：中文名(2-4字)-英文名(2-20字母)，如：马慧-Amy</div>
     </div>
-    <button class="login-btn" id="login-btn" style="padding:11px;font-size:15px;margin-top:4px" onclick="if(window.__appReady){App.login()}else{this.innerHTML='正在加载，请稍候…'}">登录</button>
+    <button class="login-btn" id="login-btn" style="padding:11px;font-size:15px;margin-top:4px" onclick="if(window.__appReady){App.login()}else{window.__pendingLogin=true;this.innerHTML='正在加载，马上进入…'}">登录</button>
+    <p class="login-hint" id="login-remember-hint" style="display:none;margin-top:2px;font-size:11px;color:var(--success)">✅ 已记住上次填的手机号和姓名，直接点「登录」</p>
     <p class="login-hint" style="color:var(--danger);display:none" id="name-error">⚠️ 备注名格式不正确！</p>
     <p class="login-hint" style="margin-top:2px;font-size:11px">登录后由老师分配班级</p>
     <div style="margin-top:10px;padding:8px 10px;background:var(--primary-light);border-radius:8px;font-size:11px;color:var(--text-sub);line-height:1.6">
@@ -1201,7 +1202,9 @@ body.perf-on .content-area{padding-bottom:54vh}
 </div>
 
 <!-- v143：开屏决策。解析期同步执行，一定赶在首帧之前 —— 有本机凭据就把
-     登录页藏起来（孩子永远看不到账号输入框），没有就立刻摘掉开屏。 -->
+     登录页藏起来（孩子永远看不到账号输入框），没有就立刻摘掉开屏。
+     v144：顺手把「上次填过什么」回填进两个输入框。孩子刷新、或者凭据被
+     系统清掉而停在登录页时，手机号和姓名已经在里面了，点一下「登录」就走。 -->
 <script>
 (function () {
   var creds = null, ok = false;
@@ -1215,6 +1218,30 @@ body.perf-on .content-area{padding-bottom:54vh}
   }
   if (creds && creds.phone && creds.name) ok = true;
   window.__bootSavedLogin = ok ? creds : null;
+
+  // v144：草稿（可能只有一半，也可能只是"这台设备认识这个号"）
+  var draft = null;
+  try { draft = JSON.parse(localStorage.getItem('amy_login_draft') || 'null'); } catch (e) {}
+  if (!draft || (!draft.phone && !draft.name)) {
+    try {
+      var dm = document.cookie.match(/(?:^|;\s*)amy_login_draft=([^;]+)/);
+      if (dm) draft = JSON.parse(decodeURIComponent(dm[1]));
+    } catch (e) {}
+  }
+  if ((!draft || (!draft.phone && !draft.name)) && ok) {
+    draft = { phone: creds.phone, name: creds.name, known: true };
+  }
+  window.__bootDraft = (draft && (draft.phone || draft.name)) ? draft : null;
+
+  // 回填输入框 —— 在解析期做，页面第一次画出来就是填好的，不闪。
+  try {
+    if (window.__bootDraft) {
+      var pi = document.getElementById('login-phone');
+      var ni = document.getElementById('login-name');
+      if (pi && !pi.value) pi.value = window.__bootDraft.phone || '';
+      if (ni && !ni.value) ni.value = window.__bootDraft.name || '';
+    }
+  } catch (e) {}
   var splash = document.getElementById('boot-splash');
   var lp = document.getElementById('login-page');
   if (!ok) {
@@ -1332,8 +1359,8 @@ body.perf-on .content-area{padding-bottom:54vh}
 </div>
 
 <script>window.__appReady = false;</script>
-<script defer src="cloud.js?v=143"></script>
-<script defer src="data.js?v=143"></script>
+<script defer src="cloud.js?v=144"></script>
+<script defer src="data.js?v=144"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
 <!--
   ?v= 必须跟着版本号走（v124 修正）。
@@ -1343,9 +1370,9 @@ body.perf-on .content-area{padding-bottom:54vh}
   这个坑很隐蔽：代码明明改了、也部署上去了，手机上跑的还是几个月前的逻辑。
   以后每次发版，这里跟着 app-version 一起改。
 -->
-<script defer src="recorder.js?v=143"></script>
-<script defer src="api.js?v=143"></script>
-<script defer src="app.js?v=143"></script>
+<script defer src="recorder.js?v=144"></script>
+<script defer src="api.js?v=144"></script>
+<script defer src="app.js?v=144"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {

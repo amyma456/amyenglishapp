@@ -57,6 +57,9 @@ const Store = {
   LEGACY: ['eng_hw_v5', 'eng_hw_v4'],
   LOGIN_KEY: 'amy_saved_login',
   WORDS_KEY: 'amy_learned_words',
+  // v144：登录表单草稿（手机号 + 备注名）。和"正式凭据"分开存 ——
+  // 孩子刚敲了半截手机号也得记住，但那时还不能算登录过。
+  DRAFT_KEY: 'amy_login_draft',
 
   // The canonical document. Api holds this; App.state is a view onto it.
   _doc: null,
@@ -224,14 +227,71 @@ const Store = {
     return c;
   },
 
-  writeLogin(phone, name) {
+  writeLogin(phone, name, known) {
     try { localStorage.setItem(this.LOGIN_KEY, JSON.stringify({ phone: phone, name: name })); } catch (e) {}
     this._cookieWrite(phone, name);
+    // v144：草稿同步更新。known 只在"这台设备确实核对/登录成功过这个号"时
+    // 才为 true —— 新设备第一次登录仍要走核对（v132 红线）。
+    this.writeLoginDraft(phone, name, known === true);
   },
 
   clearLogin() {
     try { localStorage.removeItem(this.LOGIN_KEY); } catch (e) {}
     this._cookieClear();
+    // 注意：**不清草稿**。退出登录/返回登录之后，孩子再点一次就能回去，
+    // 不用重新敲一遍手机号和姓名（家长 2026-10-19 的要求）。
+  },
+
+  // =========================================================================
+  // v144：登录表单草稿
+  //   家长 2026-10-19：「刷新之后他需要输入手机号和孩子的姓名……即使刷新了，
+  //   也不要丢失这两个部分的东西，继续保留。哪怕停留在登录界面，孩子一点
+  //   登录有反应、快速进去就可以。」
+  //   所以：输入框里有什么就记什么（含只敲了一半的情况），存 localStorage +
+  //   一年期 cookie 双份；刷新时 index.html 的内联脚本在首帧前就回填好。
+  //   known 是"这台设备用这个号登录成功过"的标记 —— 只有 known 的草稿才允许
+  //   走"不等网络直接进"那条路（新设备第一次登录仍然要核对，v132 的红线）。
+  // =========================================================================
+  _DRAFT_COOKIE: 'amy_login_draft',
+
+  _draftCookieRead() {
+    try {
+      const m = document.cookie.match(new RegExp('(?:^|;\\s*)' + this._DRAFT_COOKIE + '=([^;]*)'));
+      if (!m) return null;
+      const d = JSON.parse(decodeURIComponent(m[1]));
+      return (d && (d.phone || d.name)) ? d : null;
+    } catch (e) { return null; }
+  },
+
+  readLoginDraft() {
+    let d = null;
+    try {
+      d = JSON.parse(localStorage.getItem(this.DRAFT_KEY) || 'null');
+    } catch (e) {}
+    if (!d || (!d.phone && !d.name)) d = this._draftCookieRead();   // localStorage 被清 → cookie 兜底
+    if (!d || (!d.phone && !d.name)) {
+      // 最后兜底：正式凭据里的就是上次登录成功的那一组
+      const c = this.readLogin();
+      if (c) d = { phone: c.phone, name: c.name, known: true };
+    }
+    if (!d) return null;
+    return { phone: d.phone || '', name: d.name || '', known: !!d.known };
+  },
+
+  writeLoginDraft(phone, name, known) {
+    const rec = { phone: phone || '', name: name || '', known: !!known, ts: Date.now() };
+    if (!rec.phone && !rec.name) { this.clearLoginDraft(); return rec; }
+    try { localStorage.setItem(this.DRAFT_KEY, JSON.stringify(rec)); } catch (e) {}
+    try {
+      document.cookie = this._DRAFT_COOKIE + '=' + encodeURIComponent(JSON.stringify(rec)) +
+        '; Max-Age=31536000; path=/; SameSite=Lax';
+    } catch (e) {}
+    return rec;
+  },
+
+  clearLoginDraft() {
+    try { localStorage.removeItem(this.DRAFT_KEY); } catch (e) {}
+    try { document.cookie = this._DRAFT_COOKIE + '=; Max-Age=0; path=/; SameSite=Lax'; } catch (e) {}
   },
 
   readWords() {
@@ -969,7 +1029,14 @@ const Api = {
   },
 
   async login(phone, name) {
-    Store.writeLogin(phone, name);
+    // v144：这个号以前在这台设备上登录过 → 草稿标 known，下次凭据被系统
+    // 清掉时也能"一点就进"。第一次登录（本机没痕迹）仍然是 false。
+    let known = false;
+    try {
+      const prev = Store.readLogin();
+      known = !!(prev && prev.phone === phone);
+    } catch (e) {}
+    Store.writeLogin(phone, name, known);
     return this.resolveSession(phone, name);
   },
 
@@ -990,6 +1057,15 @@ const Api = {
   // 同步读凭据（不返回 Promise）。自动登录路径用它，避免多一次让出。
   getSavedLoginSync() {
     return Store.readLogin();
+  },
+
+  // v144：登录表单草稿（手机号 + 姓名）—— 刷新、重开都不丢。
+  readLoginDraft() {
+    return Store.readLoginDraft();
+  },
+
+  writeLoginDraft(phone, name, known) {
+    return Store.writeLoginDraft(phone, name, known);
   },
 
   async resolveSession(phone, name) {
