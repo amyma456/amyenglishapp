@@ -57,11 +57,17 @@ const App = {
   },
 
   async init() {
-    // v140：loadData 绝不能拦住自动登录。以前它要是抛了错，tryAutoLogin
-    // 根本不会执行 —— 孩子隔天打开就直接看到空登录页，像"没账号"一样。
+    // v143：本机数据是同步的（localStorage），先同步读进来，**读词表
+    // （IndexedDB）挪到最后**。以前 loadData 里 await 了 IndexedDB，自动登录
+    // 排在它后面，孩子就得先等这一下 —— 家长 2026-10-19：「登录时间还是太久」。
     try {
-      await this.loadData();
+      this.loadDataSync();
     } catch (e) { console.warn('loadData failed (auto-login continues):', e); }
+    // v143：自动登录立刻发起 —— 它只做同步的凭据读取，不等任何网络。
+    // 注意它是 async 的：真正的 showApp 要等这一轮同步初始化跑完之后才会执行
+    // （第一个 await 让出主线程），所以下面那些绑定不用抢在它前面。
+    if (/[?&]ttstest=1/.test(location.search)) { this.runTtsTest(); return; }
+    this.tryAutoLogin();
     this.loadVoices();
     // v129：长按朗读时不许浏览器弹「复制 / 选中」把录音抢走（家长 2026-10-16）
     this._bindNoCopy();
@@ -89,9 +95,34 @@ const App = {
       const notice = document.getElementById('wechat-notice');
       if (notice) notice.style.display = 'flex';
     }
-    if (/[?&]ttstest=1/.test(location.search)) { this.runTtsTest(); return; }
-    // Auto-login if saved credentials exist
-    this.tryAutoLogin();
+  },
+
+  // v143：同步版数据装载。localStorage 是同步的，没有理由 await ——
+  // 自动登录排在它后面就多等一个微任务 + 一次 IndexedDB 开启（几十到几百
+  // 毫秒）。词表另开一条路在后台补（见 loadLearnedWords）。
+  loadDataSync() {
+    // Api.loadStateSync 是 v143 新加的同步读；老调用方（测试桩）可能只有
+    // 异步的 loadState —— 那种情况下退回到"空文档"，绝不拦住登录。
+    let d = null;
+    try {
+      if (typeof Api.loadStateSync === 'function') d = Api.loadStateSync();
+    } catch (e) { console.warn('loadStateSync failed:', e); }
+    if (!d) d = { answers: {}, checkins: {}, errorBook: [], students: [], parentStudents: {}, classes: [] };
+    this.state.answers = d.answers || {};
+    this.state.checkins = d.checkins || {};
+    this.state.errorBook = d.errorBook || [];
+    this.state.students = d.students || [];
+    this.state.parentStudents = d.parentStudents || {};
+    this.state.classes = d.classes || [];
+    this.loadLearnedWords();
+  },
+
+  loadLearnedWords() {
+    const self = this;
+    Promise.resolve(typeof Api.getLearnedWords === 'function' ? Api.getLearnedWords() : {})
+      .then(function (w) {
+        self.state.learnedWords = w || {};
+      }).catch(function (e) { console.warn('learnedWords load failed:', e); });
   },
 
   // Unlock the audio element when WeixinJSBridge becomes available
@@ -120,9 +151,17 @@ const App = {
   },
 
   // Auto-login from saved credentials
+  // v143：整条路都不等网络，也不等 Promise —— 凭据本机同步读得到，就直接
+  // showApp。index.html 的开屏脚本已经把登录页藏好了，所以孩子看到的是
+  // 「正在进入…」一闪 → 直接是作业界面。
   async tryAutoLogin() {
     try {
-      const creds = await Api.getSavedLogin();
+      // 开屏脚本在解析期已经同步读过一次，直接复用，省掉一次 JSON 解析 + 一次让出。
+      const creds = (typeof window !== 'undefined' && window.__bootSavedLogin)
+        ? window.__bootSavedLogin
+        : (typeof Api.getSavedLoginSync === 'function'
+            ? Api.getSavedLoginSync()
+            : (typeof Api.savedLoginSync === 'function' ? Api.savedLoginSync() : null));
       if (creds) {
         {
           // Fill in the form fields (in case auto-login needs to show them)
@@ -143,7 +182,10 @@ const App = {
           this.loadVoices();
           // Add one-time listener to unlock audio on first interaction
           this._setupAudioUnlock();
-          const session = await Api.resolveSession(creds.phone, creds.name);
+          // resolveSession 是纯本机判断（老师端看手机号），不碰网络。
+          const session = (typeof Api.sessionSync === 'function')
+            ? Api.sessionSync(creds.phone, creds.name)
+            : { phone: creds.phone, name: creds.name, role: 'student' };
           if (session.role === 'teacher') {
             this.state.role = 'teacher';
             this.state.className = '';
@@ -227,14 +269,9 @@ const App = {
   // One read at startup. Api owns the storage format and the v5/v4 migration;
   // the collections come back by reference, so App.state stays the in-memory
   // source of truth for rendering while Api persists behind it.
+  // 保留给测试 / 旧调用点：等价于同步读 + 后台补词表。
   async loadData() {
-    const d = await Api.loadState();
-    this.state.answers = d.answers;
-    this.state.checkins = d.checkins;
-    this.state.errorBook = d.errorBook;
-    this.state.students = d.students;
-    this.state.parentStudents = d.parentStudents;
-    this.state.classes = d.classes;
+    this.loadDataSync();
     this.state.learnedWords = await Api.getLearnedWords();
   },
 
@@ -876,11 +913,21 @@ const App = {
     // 或一年期 cookie 里）就**直接进**，不再站在登录页等删除状态的网络
     // 核对 —— 那是"等很久都登不进去"的唯一原因。新设备才核对。
     const prevCreds = (function() {
-      try { return Api.savedLoginSync(); } catch (e) { return null; }
+      try {
+        if (typeof Api.savedLoginSync === 'function') return Api.savedLoginSync();
+        if (typeof Api.getSavedLoginSync === 'function') return Api.getSavedLoginSync();
+        return null;
+      } catch (e) { return null; }
     })();
     const knownDevice = !!(prevCreds && prevCreds.phone === phone);
     try {
-      const session = await Api.login(phone, name);
+      // v143：同步拿会话（只比手机号），点下去这一帧就能切界面。
+      // Api.login 的函数体会在第一个 await 之前就把 session 设好，所以这里
+      // 直接读 Api.session，不用等它返回的 Promise。
+      if (typeof Api.sessionSync === 'function') {
+        Api.login(phone, name);
+      }
+      const session = Api.session || { phone: phone, name: name, role: 'student' };
       if (session.role === 'teacher') {
         this.state.role = 'teacher';
         this.state.className = '';
@@ -920,9 +967,10 @@ const App = {
     // 默认 false：任何其它调用方（含测试）都走核对，别让缺省值悄悄绕过
     // 老师的删除拦截。
     const known = (fast === true);
-    const gateBtn = document.getElementById('login-btn');
-    if (gateBtn) gateBtn.innerHTML = '⏳ 正在核对…';
 
+    // v143：按钮上**不再写「正在核对…」**。家长看到的正是这四个字，以为一直
+    // 在核对。登录那一刻按钮已经变成「正在进入…」（见 App.login），核对再慢
+    // 也不该改口。
     if (known) {
       // ---- 1) 立刻进去，零等待 ----
       this._enterAsStudent(phone, name);
@@ -1172,6 +1220,9 @@ const App = {
 
   showApp() {
     document.getElementById('login-page').classList.add('hidden');
+    // v143：开屏层到这里才算完成任务 —— 它盖着的是"正在进入…"。
+    var splash = document.getElementById('boot-splash');
+    if (splash && splash.parentNode) splash.parentNode.removeChild(splash);
     const wp = document.getElementById('waiting-page');
     if (wp) wp.classList.add('hidden');
     const rp = document.getElementById('removed-page');
@@ -5604,6 +5655,8 @@ const App = {
     btn.addEventListener('touchstart', onTap, { passive: false });
     btn.addEventListener('mousedown', onTap);
     btn.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+    // v143：刷新后把上次读错的词还原回去（台账里的错词只增不减）。
+    this.restoreReadMarks(mi, qi, dayIdx, 'sp-status-' + mi + '-' + qi);
   },
 
   // 问句 + 正确答句拼成整句。跟读面板和"听示范"都用这一句，
@@ -5683,17 +5736,19 @@ const App = {
       // 两路择优（v98）：A 路（手机自带识别）判过就立即出分，判不过才等
       // B 路（云端）复核 —— 见 _bestTranscript 的注释。
       const best = await self._bestTranscript(ctx.sentence, res[0], res[1], self._spClipSamples);
+      // v143：兜底放行必须"真的像读了一整句"—— 门槛按词数算，哼一声过不了。
+      const vMin = self._minVoiceSec(ctx.sentence);
       self._spShowResult(mi, qi, dayIdx, ctx,
         best ? best.spoken : null,
         best ? best.source : null,
         best ? best.verdict : null,
-        !best && self._lastClipVoiceOk());
+        !best && self._lastClipVoiceOk(vMin));
       // v131：收口 —— 只记"耗时/趟数/结果档位"，不记文本内容。
-      Api.perfEnd({ kind: (!best && !self._lastClipVoiceOk()) ? 'fail'
+      Api.perfEnd({ kind: (!best && !self._lastClipVoiceOk(vMin)) ? 'fail'
         : (!best ? 'voice' : (best.verdict && best.verdict.passed ? 'pass' : 'low')) });
     }).catch(function(e) {
       console.warn('Speaking read capture failed:', e);
-      self._spShowResult(mi, qi, dayIdx, ctx, null, null, null, self._lastClipVoiceOk());
+      self._spShowResult(mi, qi, dayIdx, ctx, null, null, null, self._lastClipVoiceOk(self._minVoiceSec(ctx.sentence)));
       Api.perfEnd({ kind: 'fail' });
     });
   },
@@ -5727,6 +5782,11 @@ const App = {
     // 通过 = 分数够 60 且没有读错的词。红色波浪线的词要原处重读对了
     // 才能进下一题（见 _startWordRepair）。
     const passed = v.passed;
+    // v143：判分结果落台账。刷新页面不会再把这一遍的错词抹掉。
+    this.readLedgerSave(mi, qi, dayIdx, {
+      pass: passed, score: score,
+      bad: badWords.map(function (x) { return x.expected; }),
+    });
     if (passed) {
       this._playCorrectSound();
       this._spReadUI(mi, qi, dayIdx, 'passed', score);
@@ -7159,37 +7219,52 @@ const App = {
   // 放行，录音留给老师听。真正没出声（误触、麦克风没开）才提示再来一次。
   //
   // 阈值取的是"有人声"的量级：麦克风开了 AGC，正常说话峰值 0.1~0.5，
-  // 安静房间底噪在 0.01 上下，0.02 正好卡在两者之间。
-  VOICE_MIN_PEAK: 0.02,
-  VOICE_MIN_SEC: 0.2,
+  // 安静房间底噪在 0.01 上下。v143 把门槛从 0.02/0.2 秒抬到 0.05/0.35 秒，
+  // 并要求"有声帧占一定比例"—— 家长 2026-10-19：「孩子什么都没做，只是偷了
+  // 个懒」也能过。以前一声咳嗽、一阵风声（0.2 秒超过 0.02）就算读过。
+  VOICE_MIN_PEAK: 0.05,
+  VOICE_MIN_SEC: 0.35,
+  // 有声帧至少占全段这么一点。零星咔嗒声占比极低，正常说话远高于它。
+  VOICE_MIN_RATIO: 0.18,
 
-  _voiceOk(out) {
+  // minSec：这一段至少要"真出声"多久。整句跟读按词数算（见 _minVoiceSec），
+  // 单词朗读给固定的小值。不传就用默认 0.45 秒。
+  _voiceOk(out, minSec) {
     if (!out) return false;
-    const s = out.samples;
+    const need = (typeof minSec === 'number' && minSec > 0) ? minSec : this.VOICE_MIN_SEC;
     const th = this.VOICE_MIN_PEAK;
+    const s = out.samples;
     if (s && s.length) {
-      let peak = 0, first = -1, last = -1;
+      let peak = 0, voiced = 0;
       for (let i = 0; i < s.length; i++) {
         const v = s[i] < 0 ? -s[i] : s[i];
         if (v > peak) peak = v;
-        if (v > th) { if (first < 0) first = i; last = i; }
+        if (v > th) voiced++;
       }
-      if (peak < th || first < 0) return false;
-      return (last - first + 1) / (Recorder.TARGET_RATE || 16000) >= this.VOICE_MIN_SEC;
+      if (peak < th || !voiced) return false;
+      if (voiced / s.length < this.VOICE_MIN_RATIO) return false;   // 太稀疏 → 不是说话
+      return voiced / (Recorder.TARGET_RATE || 16000) >= need;
     }
     // 只留了 meta 的路径（片段已经被收走）：退化成 peak + 时长两个数。
     const peak = Number(out.peak) || 0;
     const dur = Number(out.duration) || 0;
-    return peak >= th && dur >= this.VOICE_MIN_SEC;
+    return peak >= th && dur >= need;
+  },
+
+  // 一整句要读多久才算"读过了"？0.16 秒/词，夹在 0.5~2.5 秒之间。
+  // 孩子整句读下来通常远超这个数；随便哼一声远不到。
+  _minVoiceSec(sentence) {
+    const words = (this._tokens ? this._tokens(String(sentence || '')) : []).length || 1;
+    return Math.max(0.5, Math.min(2.5, 0.16 * words));
   },
 
   // 整句跟读/口语那两条路只在 _spClipSamples / _spClipMeta 里留着这一段。
-  _lastClipVoiceOk() {
+  _lastClipVoiceOk(minSec) {
     if (this._spClipSamples && this._spClipSamples.length) {
-      return this._voiceOk({ samples: this._spClipSamples, peak: (this._spClipMeta || {}).peak });
+      return this._voiceOk({ samples: this._spClipSamples, peak: (this._spClipMeta || {}).peak }, minSec);
     }
     const meta = this._spClipMeta || {};
-    return this._voiceOk({ peak: meta.peak, duration: meta.duration });
+    return this._voiceOk({ peak: meta.peak, duration: meta.duration }, minSec);
   },
 
   // 出声了但识别端没给文本 —— 这一条统一的说法。**不再出现"没听清"。**
@@ -10963,6 +11038,8 @@ const App = {
     btn.addEventListener('touchstart', onTap, { passive: false });
     btn.addEventListener('mousedown', onTap);
     btn.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+    // v143：同上 —— 刷新后红词还在。
+    this.restoreReadMarks(mi, qi, dayIdx, stid);
   },
 
   // ===== 跟读：逐词标记 =====
@@ -11016,14 +11093,52 @@ const App = {
     return { display: display, words: words, wordCount: wi };
   },
 
+  // v143：一句话里哪些位置开始有固定搭配。
+  // 传进来的是"纯单词"数组（不含标点），返回 { 起始下标: {len, en, zh, surface} }。
+  // 贪心最长匹配，所以 look forward to 不会被拆成 look 和 forward。
+  _phraseMask(words) {
+    const mask = {};
+    if (typeof WordHelp === 'undefined' || !words || !words.length) return mask;
+    let i = 0;
+    while (i < words.length) {
+      const p = WordHelp.phraseAt(words, i);
+      if (p) { mask[i] = p; i += p.len; } else { i++; }
+    }
+    return mask;
+  },
+
   _readSentenceHtml(sentence) {
     const t = this._readTokens(sentence);
     const esc = this._escHtml;
+    // 先把每个"词片段"在 display 里的下标列出来，短语合并才找得到范围。
+    const pos = [];
+    t.display.forEach(function (d, k) { if (d.word) pos.push(k); });
+    const mask = this._phraseMask(t.display.filter(d => d.word)
+      .map(d => String(d.text).replace(/[^A-Za-z'\-]/g, '')));
     let html = '';
-    t.display.forEach(function(d) {
-      if (!d.word) { html += esc(d.text); return; }
+    let wi = 0;                       // 第几个词片段（不是 display 下标）
+    while (wi < pos.length) {
+      const p = mask[wi];
+      if (p && pos[wi + p.len - 1] !== undefined) {
+        // giving up 这种：两个词（连同它们中间的空格）合成一个盒子，
+        // 孩子点哪一半都是查这一整个短语。
+        const from = pos[wi], to = pos[wi + p.len - 1];
+        let text = '', n = 0;
+        for (let k = from; k <= to; k++) {
+          text += t.display[k].text;
+          // 只数"词"：中间的空格/标点没有读音，不能算进 data-n，
+          // 否则逐词判分会整体错位（gave up 会被当成 3 个词）。
+          if (t.display[k].word) n += (t.display[k].n || 1);
+        }
+        html += '<span class="rd-w lk-word lk-phrase" data-w="' + t.display[from].wi
+             + '" data-n="' + n + '" data-phrase="' + esc(p.en) + '">' + esc(text) + '</span>';
+        wi += p.len;
+        continue;
+      }
+      const d = t.display[pos[wi]];
       html += '<span class="rd-w" data-w="' + d.wi + '" data-n="' + d.n + '">' + esc(d.text) + '</span>';
-    });
+      wi++;
+    }
     return html;
   },
 
@@ -11033,6 +11148,98 @@ const App = {
     panel.querySelectorAll('.rd-w').forEach(function(el) {
       el.classList.remove('rd-ok', 'rd-bad', 'rd-cur');
     });
+  },
+
+  // ===== v143：逐句判分台账 ===============================================
+  //
+  // 家长 2026-10-19：「有读错的单词，多刷新几次，错的单词就会被冲掉，显示读成
+  // 了 100 分。但其实孩子什么都没做，只是偷了个懒。」
+  //
+  // 根子：红词只活在 DOM 上。刷新一下页面，句子重新渲染成干干净净的一行，
+  // 孩子/家长看到的就像"没读错过"，再读一遍随手过了就变成满分。
+  //
+  // 台账 = 这一句**至今为止**的判分结果，记在本机（跟着学生 + 周次 + 天 +
+  // 模块 + 题号），规则只有一条：**错词只增不减**。
+  //   · 新一遍读错了 → 并进旧错词里；分数取两遍里低的那个（成绩不会因为
+  //     刷新而变好）；
+  //   · 新一遍真的全读对了 → 清空。这是唯一的清零方式，靠"读对"，不靠刷新。
+  _READ_LEDGER_KEY: 'amy_read_ledger_v1',
+
+  _readLedgerAll() {
+    try { return JSON.parse(localStorage.getItem(this._READ_LEDGER_KEY) || '{}') || {}; }
+    catch (e) { return {}; }
+  },
+
+  _readKey(mi, qi, dayIdx) {
+    let wk = '';
+    try { wk = (typeof Api !== 'undefined' && Api._weekTag) ? Api._weekTag() : ''; } catch (e) {}
+    return this._myStudentId() + wk + '|d' + dayIdx + '|' + mi + '|' + qi;
+  },
+
+  readLedgerGet(mi, qi, dayIdx) {
+    const all = this._readLedgerAll();
+    return all[this._readKey(mi, qi, dayIdx)] || null;
+  },
+
+  readLedgerSave(mi, qi, dayIdx, rec) {
+    try {
+      const all = this._readLedgerAll();
+      const key = this._readKey(mi, qi, dayIdx);
+      const prev = all[key] || null;
+      let out;
+      if (rec && rec.pass) {
+        out = { pass: true, score: Number(rec.score) || 0, bad: [], at: Date.now() };
+      } else {
+        const bad = [];
+        ((prev && prev.bad) || []).concat((rec && rec.bad) || []).forEach(function (w) {
+          if (w && bad.indexOf(w) < 0) bad.push(w);
+        });
+        const prevScore = (prev && typeof prev.score === 'number') ? prev.score : null;
+        const nowScore = (rec && typeof rec.score === 'number') ? rec.score : null;
+        let score = nowScore;
+        if (prevScore !== null && nowScore !== null) score = Math.min(prevScore, nowScore);
+        else if (prevScore !== null) score = prevScore;
+        out = { pass: false, score: score, bad: bad, at: Date.now() };
+      }
+      all[key] = out;
+      // 只留最近 300 条，别把 localStorage 撑爆
+      const keys = Object.keys(all);
+      if (keys.length > 300) {
+        keys.sort(function (a, b) { return (all[a].at || 0) - (all[b].at || 0); });
+        keys.slice(0, keys.length - 300).forEach(function (k) { delete all[k]; });
+      }
+      localStorage.setItem(this._READ_LEDGER_KEY, JSON.stringify(all));
+    } catch (e) {}
+  },
+
+  // 把台账里的红词重新画回句子上，并在状态区说明"上次错在哪"。
+  // 刷新之后孩子看到的仍然是那几个红词，不会以为自己做完了。
+  restoreReadMarks(mi, qi, dayIdx, statusElId) {
+    const rec = this.readLedgerGet(mi, qi, dayIdx);
+    if (!rec || rec.pass) return;
+    const panel = document.getElementById('rd-sent-' + mi + '-' + qi);
+    if (!panel) return;
+    const bad = rec.bad || [];
+    if (bad.length) {
+      const lower = bad.map(function (w) { return String(w).toLowerCase(); });
+      panel.querySelectorAll('.rd-w').forEach(function (el) {
+        const w = String(el.textContent || '').toLowerCase().replace(/[^a-z'\-]/g, '');
+        if (!w) return;
+        // 短语盒子按整块比，单词按词比
+        if (lower.indexOf(w) >= 0) el.classList.add('rd-bad');
+        else if (w.split(/\s+/).some(function (x) { return lower.indexOf(x) >= 0; })) el.classList.add('rd-bad');
+      });
+    }
+    const statusEl = statusElId ? document.getElementById(statusElId) : null;
+    if (statusEl) {
+      const scoreTxt = (typeof rec.score === 'number') ? (' ' + rec.score + ' 分') : '';
+      statusEl.innerHTML = '<span style="color:var(--danger);font-weight:600">还没读对' + scoreTxt + '</span>'
+        + (bad.length
+          ? '<div class="fs-12 text-sub">上次读错的词：' + bad.slice(0, 6).map(function (w) {
+              return '<b>' + this._escHtml(w) + '</b>';
+            }, this).join('、') + '（刷新不会把它们清掉，读对了才会消失）</div>'
+          : '<div class="fs-12 text-sub">这一句还没读对，再读一遍。</div>');
+    }
   },
 
   // ===== 实时逐词高亮：只回答一个问题 ——「他现在读到第几个词」===========
@@ -11277,7 +11484,11 @@ const App = {
     }
     const cur = bads[0];
     cur.classList.add('rd-cur');
-    const word = (cur.textContent || '').replace(/[^A-Za-z'\-]/g, '');
+    // v143：短语盒子（giving up）要连着读，别把空格也删掉变成 "givingup"。
+    const word = (cur.getAttribute && cur.getAttribute('data-phrase')
+      ? cur.getAttribute('data-phrase')
+      : (cur.textContent || ''))
+      .replace(/[^A-Za-z'\- ]/g, '').replace(/\s+/g, ' ').trim();
     R.word = word;
     // 每个词单独一道门禁：换词就重新要求先听一遍（id 里带上词本身）
     const wgid = this._gid('wrep', R.mi, R.qi, word);
@@ -11297,13 +11508,20 @@ const App = {
       const self = this;
       // 词旁边带上最常见的中文意思——只留最短的那一个，两三个字，
       // 方便孩子扫一眼就知道这个词是什么，不用读一长串释义。
-      Api.dict(word).then(function(info) {
-        if (R !== self._wordRepair || R.word !== word) return;   // 已经换词了
+      // v143：短语（giving up）先问本地表 —— 词典接口不收带空格的词。
+      const phInfo = (typeof WordHelp !== 'undefined') ? WordHelp.phraseInfo(word) : null;
+      if (phInfo) {
         const zhEl = document.getElementById('wrep-zh');
-        if (!zhEl) return;
-        const zh = self._shortZh(info && info.zh);
-        if (zh) zhEl.textContent = zh;
-      });
+        if (zhEl) zhEl.textContent = phInfo.zh;
+      } else {
+        Api.dict(word).then(function(info) {
+          if (R !== self._wordRepair || R.word !== word) return;   // 已经换词了
+          const zhEl = document.getElementById('wrep-zh');
+          if (!zhEl) return;
+          const zh = self._shortZh(info && info.zh);
+          if (zh) zhEl.textContent = zh;
+        });
+      }
       const rbtn = document.getElementById('wrep-btn');
       if (rbtn) {
         const onRtap = function(e) {
@@ -11568,17 +11786,19 @@ const App = {
     Promise.all([liveP, clipP]).then(async function(res) {
       // 两路择优（v98）：A 路判过就立即出分，判不过才等 B 路复核。
       const best = await self._bestTranscript(ctx.sentence, res[0], res[1], self._spClipSamples);
+      // v143：兜底放行按"这句有多少词"设时长门槛（见 _minVoiceSec）。
+      const hMin = self._minVoiceSec(ctx.sentence);
       self._showHoldReadResult(mi, qi, dayIdx, ctx.sentence,
         best ? best.spoken : null,
         best ? best.source : null,
         best ? best.verdict : null,
-        !best && self._lastClipVoiceOk());
-      Api.perfEnd({ kind: (!best && !self._lastClipVoiceOk()) ? 'fail'
+        !best && self._lastClipVoiceOk(hMin));
+      Api.perfEnd({ kind: (!best && !self._lastClipVoiceOk(hMin)) ? 'fail'
         : (!best ? 'voice' : (best.verdict && best.verdict.passed ? 'pass' : 'low')) });
     }).catch(function(e) {
       console.warn('Hold-read capture failed:', e);
       self._showHoldReadResult(mi, qi, dayIdx, ctx.sentence, null, null, null,
-        self._lastClipVoiceOk());
+        self._lastClipVoiceOk(self._minVoiceSec(ctx.sentence)));
       Api.perfEnd({ kind: 'fail' });
     });
   },
@@ -11744,6 +11964,12 @@ const App = {
     // 才能进下一题（见 _startWordRepair）。
     const passed = v.passed;
 
+    // v143：落台账 —— 错词只增不减，刷新冲不掉；只有真读对才清零。
+    this.readLedgerSave(mi, qi, dayIdx, {
+      pass: passed, score: score,
+      bad: badWords.map(function (x) { return x.expected; }),
+    });
+
     if (this._debugRead) console.log('[read] source=' + source + ' score=' + score + ' spoken=' + spoken);
 
     if (passed) {
@@ -11807,6 +12033,8 @@ const App = {
   _holdRepairDone(mi, qi, dayIdx, score) {
     const m = HOMEWORK_DATA[dayIdx].modules[mi];
     const q = m.questions[qi];
+    // v143：这一句真的读对了 —— 台账清零（这是唯一的清零路径）。
+    this.readLedgerSave(mi, qi, dayIdx, { pass: true, score: score, bad: [] });
     const lastPick = this._lastPick && this._lastPick[mi + '-' + qi];
     if (lastPick) this._recordAnswer(dayIdx, mi, qi, lastPick.oi, lastPick.isCorrect);
     const opts = document.querySelectorAll('#q-' + mi + '-' + qi + ' .q-option');
@@ -12115,15 +12343,52 @@ const App = {
   // "park." 去查，查不到。
   _wordSpans(text) {
     const self = this;
-    return String(text == null ? '' : text).split(/(\s+)/).map(function(tok) {
-      if (!tok) return '';
-      if (/^\s+$/.test(tok)) return ' ';
+    const raw = String(text == null ? '' : text);
+    const toks = raw.split(/(\s+)/);
+    // 先看有没有固定搭配：把词单独抽出来判一次，命中的那两个（三个）词在
+    // 排版上合成一个盒子 —— 家长要的「giving up 连起来」就是这一步。
+    const info = [];        // 每个 tok 是词的话给出词本身，否则 null
+    const words = [];
+    toks.forEach(function (tok) {
+      const mm = /^([^A-Za-z]*)([A-Za-z][A-Za-z'\-]*)([^A-Za-z]*)$/.exec(tok || '');
+      info.push(mm ? mm[2] : null);
+      if (mm) words.push(mm[2]);
+    });
+    const mask = this._phraseMask(words);
+    let out = '', wi = 0;
+    for (let i = 0; i < toks.length; i++) {
+      const tok = toks[i];
+      if (!tok) continue;
+      if (!info[i]) { out += /^\s+$/.test(tok) ? ' ' : self._escHtml(tok); continue; }
+      const p = mask[wi];
+      if (p) {
+        let phrase = info[i], got = 1, j = i + 1, last = i;
+        while (got < p.len && j < toks.length) {
+          if (!info[j]) {
+            if (!/^\s+$/.test(toks[j] || '')) break;   // 中间夹了标点 → 不算一个短语
+            j++;
+            continue;
+          }
+          phrase += ' ' + info[j];
+          got++;
+          last = j;
+          j++;
+        }
+        if (got >= p.len) {
+          out += '<span class="lk-word lk-phrase" data-phrase="' + self._escHtml(p.en) + '">'
+               + self._escHtml(phrase) + '</span>';
+          wi += p.len;
+          i = last;
+          continue;
+        }
+      }
       const mm = /^([^A-Za-z]*)([A-Za-z][A-Za-z'\-]*)([^A-Za-z]*)$/.exec(tok);
-      if (!mm) return self._escHtml(tok);
-      return self._escHtml(mm[1])
+      out += self._escHtml(mm[1])
            + '<span class="lk-word">' + self._escHtml(mm[2]) + '</span>'
            + self._escHtml(mm[3]);
-    }).join('');
+      wi++;
+    }
+    return out;
   },
 
   // ===== Tap-a-word lookup =====
@@ -12160,8 +12425,11 @@ const App = {
       const t = ev.target;
       const span = (t && t.closest) ? t.closest('.lk-word') : null;
       if (span) {
-        const w = String(span.textContent || '').trim();
-        if (/^[A-Za-z][A-Za-z'\-]*$/.test(w)) {
+        // v143：短语盒子（giving up）里带空格，也要能点 —— 以前这里只认
+        // 单个单词，整块短语反而点不开。
+        const ph = span.getAttribute && span.getAttribute('data-phrase');
+        const w = ph || String(span.textContent || '').trim();
+        if (ph || /^[A-Za-z][A-Za-z'\-]*$/.test(w)) {
           ev.preventDefault();
           ev.stopPropagation();
           self._openWordSheet(w);
@@ -12235,8 +12503,40 @@ const App = {
     let word = text.slice(a, b + 1).replace(/^['\-]+|['\-]+$/g, '');
 
     if (word.length < 2 || !/^[A-Za-z][A-Za-z'\-]*$/.test(word)) return null;
+    // v143：这个位置落在固定搭配里吗？（giving up / look after…）
+    // 落在里面就把整串短语交给弹层，别只给一个 giving 或一个 give。
+    const ph = this._phraseAround(text, a, b);
+    if (ph) return ph;
     // 全大写的缩写（OK、USA）查出来没意义，但保留，孩子可能真想查。
     return word;
+  },
+
+  // 同一个文本节点里，[a,b] 这段落在哪个固定搭配上 → 返回整串短语（含中间空格）
+  _phraseAround(text, a, b) {
+    if (typeof WordHelp === 'undefined') return null;
+    // 把这个文本节点切成词，同时记住每个词的位置
+    const toks = [];
+    const re = /[A-Za-z][A-Za-z'\-]*/g;
+    let m;
+    while ((m = re.exec(text))) toks.push({ w: m[0], a: m.index, b: m.index + m[0].length - 1 });
+    if (!toks.length) return null;
+    let idx = -1;
+    for (let k = 0; k < toks.length; k++) {
+      if (a >= toks[k].a && b <= toks[k].b) { idx = k; break; }
+    }
+    if (idx < 0) return null;
+    // 短语可能从当前词往前一两个词开始
+    for (let back = 2; back >= 0; back--) {
+      const start = idx - back;
+      if (start < 0) continue;
+      const p = WordHelp.phraseAt(toks.map(t => t.w), start);
+      if (!p) continue;
+      if (idx >= start && idx < start + p.len) {
+        const from = toks[start].a, to = toks[start + p.len - 1].b;
+        return text.slice(from, to + 1).replace(/\s+/g, ' ');
+      }
+    }
+    return null;
   },
 
   _wordSheetEl() {
@@ -12255,6 +12555,8 @@ const App = {
       +     '<button class="ws-close" id="ws-close" title="关闭">×</button>'
       +   '</div>'
       +   '<div class="ws-zh" id="ws-zh"></div>'
+      +   '<div class="ws-note" id="ws-note"></div>'
+      +   '<div class="ws-forms" id="ws-forms"></div>'
       + '</div>';
     document.body.appendChild(wrap);
     const self = this;
@@ -12277,7 +12579,38 @@ const App = {
     el.querySelector('#ws-word').textContent = word;
     el.querySelector('#ws-phon').textContent = '';
     el.querySelector('#ws-zh').innerHTML = '<span class="ws-loading">正在查…</span>';
+    const noteEl = el.querySelector('#ws-note');
+    const formsEl = el.querySelector('#ws-forms');
+    if (noteEl) { noteEl.className = 'ws-note'; noteEl.innerHTML = ''; }
+    if (formsEl) { formsEl.className = 'ws-forms'; formsEl.innerHTML = ''; }
     el.classList.add('show');
+
+    // ===== v143：先问本地那两张表 =====
+    // ① 整个词是不是固定搭配（giving up / gave up / look after…）
+    const ph = (typeof WordHelp !== 'undefined') ? WordHelp.phraseInfo(word) : null;
+    if (ph) {
+      // 短语整体读、整体解释。孩子点 giving 也拿到 give up —— 不再只给 "give"
+      // 或半截 "giving"，那样他根本看不出这是一个搭配。
+      this._lookupWord = ph.en.toLowerCase();
+      el.querySelector('#ws-word').textContent = ph.en;
+      if (noteEl) {
+        noteEl.className = 'ws-note show';
+        noteEl.innerHTML = '🔗 <b>固定搭配（短语）</b>'
+          + (ph.surface && ph.surface.toLowerCase() !== ph.en.toLowerCase()
+              ? '：这里是 <b>' + this._escHtml(ph.surface) + '</b>，来自 <b>' + this._escHtml(ph.en) + '</b>' : '');
+      }
+      el.querySelector('#ws-zh').textContent = ph.zh;
+      this.speak(ph.en, { prefer: 'cf' });
+      const binfo0 = await Api.dict(ph.en.split(' ')[0]).catch(function () { return null; });
+      if (this._lookupWord !== ph.en.toLowerCase()) return;
+      if (binfo0 && binfo0.phon) el.querySelector('#ws-phon').textContent = '/' + binfo0.phon + '/';
+      return;
+    }
+
+    // ② 点的是变形（felt / went / children / better）→ 先说清它是谁的什么形
+    const inf = (typeof WordHelp !== 'undefined') ? WordHelp.inflectionOf(word) : null;
+    // ③ 点的是原型 → 顺手把它的各种变形列出来
+    const forms = (typeof WordHelp !== 'undefined') ? WordHelp.formsOf(word) : [];
 
     // 点词即读：孩子点这个词多半就是不认识，先让他听见怎么念。
     // 走 CF 的母语音色（v98）：查词是任意单词，不在静态朗读表里 —— 表内那些
@@ -12286,15 +12619,50 @@ const App = {
 
     const info = await Api.dict(word);
     if (this._lookupWord !== word.toLowerCase()) return;   // 已经点了别的词
-    if (!info) {
-      el.querySelector('#ws-zh').innerHTML = '<span class="ws-none">查不到这个词</span>';
+
+    // 变形词：同时把原型的意思也取回来。felt 这种词，词典只给"毛毡"，
+    // 孩子要的其实是 feel（感觉）—— 原型的意思才是他真正要找的。
+    let baseInfo = null;
+    if (inf) {
+      baseInfo = await Api.dict(inf.base).catch(function () { return null; });
+      if (this._lookupWord !== word.toLowerCase()) return;
+    }
+
+    if (info && info.phon) el.querySelector('#ws-phon').textContent = '/' + info.phon + '/';
+    else if (baseInfo && baseInfo.phon) el.querySelector('#ws-phon').textContent = '/' + baseInfo.phon + '/';
+
+    if (inf) {
+      if (noteEl) {
+        noteEl.className = 'ws-note show';
+        noteEl.innerHTML = '📌 这是 <b>' + this._escHtml(inf.base) + '</b> 的'
+          + inf.labels.join(' / ') + '，意思是「'
+          + this._escHtml(this._shortZh((baseInfo && baseInfo.zh) || '')) + '」';
+      }
+      // 释义优先给原型的意思；词典对变形词的解释里常夹着一堆无关义项。
+      const baseZh = (baseInfo && baseInfo.zh) ? baseInfo.zh : '';
+      el.querySelector('#ws-zh').textContent = baseZh || (info && info.zh) || '';
+      // 原型还有别的变形，一并列出来（felt 的现在分词 feeling 之类）
+      const baseForms = (typeof WordHelp !== 'undefined') ? WordHelp.formsOf(inf.base) : [];
+      if (baseForms.length && formsEl) {
+        formsEl.className = 'ws-forms show';
+        formsEl.innerHTML = '<b style="color:var(--text)">' + this._escHtml(inf.base) + '</b> 的变化：'
+          + baseForms.map(f => '<span class="ws-form-tag">' + f.label + ' <em>' + this._escHtml(f.word) + '</em></span>').join('');
+      }
+      if (!baseZh && !(info && info.zh)) {
+        el.querySelector('#ws-zh').innerHTML = '<span class="ws-none">暂时查不到中文意思，点 🔊 听读音</span>';
+      }
       return;
     }
-    el.querySelector('#ws-phon').textContent = info.phon ? '/' + info.phon + '/' : '';
-    if (info.zh) {
+
+    if (info && info.zh) {
       el.querySelector('#ws-zh').textContent = info.zh;
     } else {
       el.querySelector('#ws-zh').innerHTML = '<span class="ws-none">暂时查不到中文意思，点 🔊 听读音</span>';
+    }
+    if (forms.length && formsEl) {
+      formsEl.className = 'ws-forms show';
+      formsEl.innerHTML = '这个词的变化：'
+        + forms.map(f => '<span class="ws-form-tag">' + f.label + ' <em>' + this._escHtml(f.word) + '</em></span>').join('');
     }
   },
 

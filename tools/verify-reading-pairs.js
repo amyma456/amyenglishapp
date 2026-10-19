@@ -59,7 +59,10 @@ D.W.forEach((week, wi) => {
     });
   });
 });
-ok(total >= 20, '课文总数符合预期（≥20 篇）', '实际 ' + total + ' 篇');
+// v143：周日的阅读理解去掉了（一天只留完形填空，见 data.js 顶部的
+// slimHeavyReadingModules），所以 4 周从 20 篇变成 16 篇。这里只保证
+// "还有足够多的课文"，不再钉死 20。
+ok(total >= 16, '课文总数符合预期（≥16 篇，v143 去掉周日那 4 篇）', '实际 ' + total + ' 篇');
 ok(pairOk === total, '★ 全部课文都能逐句配对（不再退化成全文翻译）',
    pairOk + '/' + total + (failures.length ? '，配不上：' + failures.join('、') : ''));
 ok(fns._pairSentences(D.W[2][5].modules.find(m => m.type === 'reading')),

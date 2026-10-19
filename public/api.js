@@ -518,6 +518,430 @@ const CloudSync = {
 };
 
 // ===========================================================================
+// WordHelp — 点词查义要用的两块本地知识（v143）
+//
+// 家长 2026-10-19 提了两件事：
+//   ① 「felt 是 feel 的过去式，表示感觉，但是这个最基本的都没有显示出来；
+//      好多只要有过去式的、谁谁谁的将来时都没有写出来」——线上词典对 felt
+//      只回了「n. 毛毡；v. （使）毡合」，孩子点开一头雾水。
+//   ② 「giving up 这种能组成短语的，要把 giving up 连起来，告诉孩子这是一
+//      个固定搭配，不要单个松开，孩子识别不了短语」。
+//
+// 所以这里放两张本地表：**词形变化**（不规则动词 / 名词复数 / 形容词比较级）
+// 和 **常见固定搭配**。查词时先问它，命中就把「谁谁谁的过去式」和短语整体
+// 摆到最前面，再补词典释义 —— 词典不全也不会漏掉最基本的那个意思。
+//
+// 表只影响"怎么解释"，不影响判分；加词、改词随时可以，不动线上接口。
+// ===========================================================================
+const WordHelp = {
+  // 不规则动词：base -> [过去式, 过去分词, 现在分词, 第三人称单数]
+  V: {
+    be: ['was/were', 'been', 'being', 'is/are'],
+    have: ['had', 'had', 'having', 'has'],
+    do: ['did', 'done', 'doing', 'does'],
+    say: ['said', 'said', 'saying', 'says'],
+    go: ['went', 'gone', 'going', 'goes'],
+    get: ['got', 'got/gotten', 'getting', 'gets'],
+    make: ['made', 'made', 'making', 'makes'],
+    know: ['knew', 'known', 'knowing', 'knows'],
+    think: ['thought', 'thought', 'thinking', 'thinks'],
+    take: ['took', 'taken', 'taking', 'takes'],
+    see: ['saw', 'seen', 'seeing', 'sees'],
+    come: ['came', 'come', 'coming', 'comes'],
+    give: ['gave', 'given', 'giving', 'gives'],
+    find: ['found', 'found', 'finding', 'finds'],
+    tell: ['told', 'told', 'telling', 'tells'],
+    become: ['became', 'become', 'becoming', 'becomes'],
+    show: ['showed', 'shown', 'showing', 'shows'],
+    leave: ['left', 'left', 'leaving', 'leaves'],
+    feel: ['felt', 'felt', 'feeling', 'feels'],
+    put: ['put', 'put', 'putting', 'puts'],
+    bring: ['brought', 'brought', 'bringing', 'brings'],
+    begin: ['began', 'begun', 'beginning', 'begins'],
+    keep: ['kept', 'kept', 'keeping', 'keeps'],
+    hold: ['held', 'held', 'holding', 'holds'],
+    write: ['wrote', 'written', 'writing', 'writes'],
+    stand: ['stood', 'stood', 'standing', 'stands'],
+    hear: ['heard', 'heard', 'hearing', 'hears'],
+    let: ['let', 'let', 'letting', 'lets'],
+    mean: ['meant', 'meant', 'meaning', 'means'],
+    set: ['set', 'set', 'setting', 'sets'],
+    meet: ['met', 'met', 'meeting', 'meets'],
+    run: ['ran', 'run', 'running', 'runs'],
+    pay: ['paid', 'paid', 'paying', 'pays'],
+    sit: ['sat', 'sat', 'sitting', 'sits'],
+    speak: ['spoke', 'spoken', 'speaking', 'speaks'],
+    lie: ['lay', 'lain', 'lying', 'lies'],
+    lead: ['led', 'led', 'leading', 'leads'],
+    read: ['read', 'read', 'reading', 'reads'],
+    grow: ['grew', 'grown', 'growing', 'grows'],
+    lose: ['lost', 'lost', 'losing', 'loses'],
+    fall: ['fell', 'fallen', 'falling', 'falls'],
+    send: ['sent', 'sent', 'sending', 'sends'],
+    build: ['built', 'built', 'building', 'builds'],
+    understand: ['understood', 'understood', 'understanding', 'understands'],
+    draw: ['drew', 'drawn', 'drawing', 'draws'],
+    break: ['broke', 'broken', 'breaking', 'breaks'],
+    spend: ['spent', 'spent', 'spending', 'spends'],
+    cut: ['cut', 'cut', 'cutting', 'cuts'],
+    rise: ['rose', 'risen', 'rising', 'rises'],
+    drive: ['drove', 'driven', 'driving', 'drives'],
+    buy: ['bought', 'bought', 'buying', 'buys'],
+    wear: ['wore', 'worn', 'wearing', 'wears'],
+    choose: ['chose', 'chosen', 'choosing', 'chooses'],
+    eat: ['ate', 'eaten', 'eating', 'eats'],
+    drink: ['drank', 'drunk', 'drinking', 'drinks'],
+    sing: ['sang', 'sung', 'singing', 'sings'],
+    swim: ['swam', 'swum', 'swimming', 'swims'],
+    fly: ['flew', 'flown', 'flying', 'flies'],
+    teach: ['taught', 'taught', 'teaching', 'teaches'],
+    catch: ['caught', 'caught', 'catching', 'catches'],
+    throw: ['threw', 'thrown', 'throwing', 'throws'],
+    win: ['won', 'won', 'winning', 'wins'],
+    forget: ['forgot', 'forgotten', 'forgetting', 'forgets'],
+    forgive: ['forgave', 'forgiven', 'forgiving', 'forgives'],
+    freeze: ['froze', 'frozen', 'freezing', 'freezes'],
+    wake: ['woke', 'woken', 'waking', 'wakes'],
+    ride: ['rode', 'ridden', 'riding', 'rides'],
+    hide: ['hid', 'hidden', 'hiding', 'hides'],
+    fight: ['fought', 'fought', 'fighting', 'fights'],
+    seek: ['sought', 'sought', 'seeking', 'seeks'],
+    sell: ['sold', 'sold', 'selling', 'sells'],
+    sleep: ['slept', 'slept', 'sleeping', 'sleeps'],
+    smell: ['smelt', 'smelt', 'smelling', 'smells'],
+    cost: ['cost', 'cost', 'costing', 'costs'],
+    hurt: ['hurt', 'hurt', 'hurting', 'hurts'],
+    hit: ['hit', 'hit', 'hitting', 'hits'],
+    shut: ['shut', 'shut', 'shutting', 'shuts'],
+    spread: ['spread', 'spread', 'spreading', 'spreads'],
+    feed: ['fed', 'fed', 'feeding', 'feeds'],
+    deal: ['dealt', 'dealt', 'dealing', 'deals'],
+    dig: ['dug', 'dug', 'digging', 'digs'],
+    hang: ['hung', 'hung', 'hanging', 'hangs'],
+    lend: ['lent', 'lent', 'lending', 'lends'],
+    ring: ['rang', 'rung', 'ringing', 'rings'],
+    shake: ['shook', 'shaken', 'shaking', 'shakes'],
+    shine: ['shone', 'shone', 'shining', 'shines'],
+    shoot: ['shot', 'shot', 'shooting', 'shoots'],
+    steal: ['stole', 'stolen', 'stealing', 'steals'],
+    stick: ['stuck', 'stuck', 'sticking', 'sticks'],
+    strike: ['struck', 'struck', 'striking', 'strikes'],
+    sweep: ['swept', 'swept', 'sweeping', 'sweeps'],
+    tear: ['tore', 'torn', 'tearing', 'tears'],
+  },
+
+  // 规则动词（用来确认"play 确实是动词"，才能说 played 是它的过去式）。
+  // 只放课内高频、孩子真会去点的那些。
+  REG_V: ('want look play help work study watch like live love need use open close '
+    + 'start finish learn talk walk listen call ask answer clean cook dance jump '
+    + 'kick laugh move paint pick plant pull push rain relax remember rest shop '
+    + 'smile snow stay stop swim talk travel try turn visit wait wash watch '
+    + 'wish worry climb cook count cover cry decide enjoy explain follow hope '
+    + 'invite join jump kiss knock land lift lock mark match miss mix move '
+    + 'notice offer order pack pass phone place plan point practice prepare '
+    + 'promise protect provide read relax repair reply report rest return save '
+    + 'search share shout sign sound spell start study talk taste thank touch '
+    + 'train try tidy travel treat trust turn type use walk want warm waste '
+    + 'watch water wave weigh welcome wish wonder wrap').split(/\s+/),
+
+  // 不规则名词复数
+  IRREG_N: {
+    child: 'children', man: 'men', woman: 'women', foot: 'feet', tooth: 'teeth',
+    mouse: 'mice', goose: 'geese', person: 'people', sheep: 'sheep', fish: 'fish',
+    deer: 'deer', knife: 'knives', leaf: 'leaves', wife: 'wives', life: 'lives',
+    half: 'halves', wolf: 'wolves', thief: 'thieves', potato: 'potatoes',
+    tomato: 'tomatoes', hero: 'heroes', photo: 'photos', piano: 'pianos',
+  },
+
+  // 形容词比较级 / 最高级
+  IRREG_A: {
+    good: ['better', 'best'], bad: ['worse', 'worst'], well: ['better', 'best'],
+    many: ['more', 'most'], much: ['more', 'most'],
+    little: ['less', 'least'], far: ['farther', 'farthest'],
+    big: ['bigger', 'biggest'], small: ['smaller', 'smallest'],
+    tall: ['taller', 'tallest'], short: ['shorter', 'shortest'],
+    long: ['longer', 'longest'], old: ['older', 'oldest'],
+    young: ['younger', 'youngest'], fast: ['faster', 'fastest'],
+    slow: ['slower', 'slowest'], easy: ['easier', 'easiest'],
+    happy: ['happier', 'happiest'], busy: ['busier', 'busiest'],
+    early: ['earlier', 'earliest'], late: ['later', 'latest'],
+    hot: ['hotter', 'hottest'], cold: ['colder', 'coldest'],
+    warm: ['warmer', 'warmest'], cool: ['cooler', 'coolest'],
+    nice: ['nicer', 'nicest'], kind: ['kinder', 'kindest'],
+    clean: ['cleaner', 'cleanest'], dirty: ['dirtier', 'dirtiest'],
+    cheap: ['cheaper', 'cheapest'], high: ['higher', 'highest'],
+    low: ['lower', 'lowest'], heavy: ['heavier', 'heaviest'],
+    light: ['lighter', 'lightest'], strong: ['stronger', 'strongest'],
+    weak: ['weaker', 'weakest'], thin: ['thinner', 'thinnest'],
+    fat: ['fatter', 'fattest'], large: ['larger', 'largest'],
+    safe: ['safer', 'safest'], funny: ['funnier', 'funniest'],
+    angry: ['angrier', 'angriest'], hungry: ['hungrier', 'hungriest'],
+    thirsty: ['thirstier', 'thirstiest'], pretty: ['prettier', 'prettiest'],
+    quiet: ['quieter', 'quietest'], deep: ['deeper', 'deepest'],
+    wide: ['wider', 'widest'], cute: ['cuter', 'cutest'],
+  },
+
+  // 常见固定搭配。第一列是"原型"，第二列是给孩子看的中文。
+  // 变形（giving up / gave up / gives up）由动词表自动生成，不用手写。
+  PHRASES: [
+    ['give up', '放弃'], ['give back', '归还'], ['give away', '送出，赠送'],
+    ['give in', '让步，屈服'],
+    ['look after', '照顾'], ['look for', '寻找'], ['look at', '看着'],
+    ['look up', '查阅；抬头看'], ['look out', '当心'], ['look like', '看起来像'],
+    ['look forward to', '盼望'],
+    ['take care of', '照顾'], ['take part in', '参加'], ['take off', '脱下；起飞'],
+    ['take out', '拿出'], ['take away', '拿走'], ['take up', '开始从事；占地方'],
+    ['get up', '起床'], ['get on', '上车'], ['get off', '下车'],
+    ['get back', '回来；取回'], ['get ready for', '为…做准备'],
+    ['get along with', '与…相处'],
+    ['go on', '继续'], ['go out', '出去'], ['go back', '回去'],
+    ['go over', '复习'], ['go home', '回家'], ['go shopping', '去购物'],
+    ['go swimming', '去游泳'], ['go fishing', '去钓鱼'],
+    ['come back', '回来'], ['come in', '进来'], ['come from', '来自'],
+    ['come on', '快点；加油'], ['come true', '实现'],
+    ['turn on', '打开（电器）'], ['turn off', '关掉（电器）'],
+    ['turn up', '调大声；出现'], ['turn down', '调小声；拒绝'],
+    ['turn left', '向左转'], ['turn right', '向右转'],
+    ['put on', '穿上'], ['put off', '推迟'], ['put away', '收起来'],
+    ['put up', '举起；张贴'], ['put down', '放下'],
+    ['pick up', '捡起；接人'], ['wake up', '醒来'], ['hurry up', '快点'],
+    ['grow up', '长大'], ['stand up', '站起来'], ['sit down', '坐下'],
+    ['write down', '写下来'], ['find out', '查明，弄清楚'],
+    ['run out of', '用完'], ['keep on', '继续'], ['carry on', '继续进行'],
+    ['set up', '建立，创办'], ['clean up', '打扫干净'], ['cheer up', '振作起来'],
+    ['fix up', '修理好'], ['eat up', '吃光'], ['use up', '用完'],
+    ['dress up', '穿上盛装'], ['make up', '编造；组成'],
+    ['make friends with', '与…交朋友'],
+    ['be good at', '擅长'], ['be interested in', '对…感兴趣'],
+    ['be proud of', '为…自豪'], ['be afraid of', '害怕'],
+    ['be full of', '充满'], ['be made of', '由…制成'],
+    ['be different from', '与…不同'], ['be late for', '迟到'],
+    ['depend on', '依靠'], ['wait for', '等待'], ['listen to', '听'],
+    ['talk to', '和…说话'], ['talk about', '谈论'], ['think about', '考虑'],
+    ['think of', '想起；认为'], ['worry about', '担心'], ['care about', '关心'],
+    ['belong to', '属于'], ['arrive at', '到达（小地方）'],
+    ['arrive in', '到达（大地方）'], ['laugh at', '嘲笑'],
+    ['shout at', '冲…喊'], ['agree with', '同意'], ['play with', '和…玩'],
+    ['help with', '帮助做'], ['fill in', '填写'], ['hand in', '上交'],
+    ['hand out', '分发'], ['check in', '登记入住'], ['check out', '结账离开'],
+    ['at last', '最后'], ['in the end', '最后'], ['of course', '当然'],
+    ['as well', '也'], ['too much', '太多'], ['a lot of', '许多'],
+    ['lots of', '许多'], ['a bit', '一点儿'], ['in front of', '在…前面'],
+    ['next to', '紧挨着'], ['because of', '因为'], ['instead of', '代替'],
+    ['such as', '例如'], ['as soon as', '一…就…'], ['right away', '立刻'],
+    ['all the time', '一直'], ['from now on', '从今以后'],
+    ['on time', '准时'], ['in time', '及时'], ['at once', '立刻'],
+    ['have fun', '玩得开心'], ['have a good time', '玩得愉快'],
+    ['do homework', '做作业'], ['watch TV', '看电视'],
+    ['play football', '踢足球'], ['play basketball', '打篮球'],
+    ['play the piano', '弹钢琴'], ['play the guitar', '弹吉他'],
+  ],
+
+  _formIdx: null,
+  _phraseIdx: null,
+
+  _esc(s) { return String(s || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); },
+
+  // 需要双写末尾辅音的短动词。只认这一张白名单 —— 用规则猜（CVC）会把
+  // look 变成 lookked、visit 变成 visitted，宁可少写几个也不要教错。
+  DBL_V: ('stop plan run get sit put cut dig shop drop chat swim win hit set '
+    + 'let clap skip hug nod jog tap mop pop').split(/\s+/),
+
+  // 规则动词的四形。
+  _regularVerb(base) {
+    const b = String(base || '').toLowerCase();
+    if (!b) return null;
+    const isE = /e$/.test(b) && !/ee$/.test(b);
+    const isY = /[^aeiou]y$/.test(b);
+    const dbl = this.DBL_V.indexOf(b) >= 0;
+    const ing = /ie$/.test(b) ? b.slice(0, -2) + 'ying'
+      : isE ? b.slice(0, -1) + 'ing'
+      : dbl ? b + b.slice(-1) + 'ing' : b + 'ing';
+    const past = isE ? b + 'd'
+      : isY ? b.slice(0, -1) + 'ied'
+      : dbl ? b + b.slice(-1) + 'ed' : b + 'ed';
+    const s = /(s|x|ch|sh|o)$/.test(b) ? b + 'es'
+      : isY ? b.slice(0, -1) + 'ies' : b + 's';
+    return { past: past, pp: past, ing: ing, s: s };
+  },
+
+  // 一个动词 base 的全部形态（不规则表优先，规则表兜底）。
+  verbForms(base) {
+    const b = String(base || '').toLowerCase();
+    if (!b) return null;
+    const irr = this.V[b];
+    if (irr) return { past: irr[0], pp: irr[1], ing: irr[2], s: irr[3] };
+    if (this.REG_V.indexOf(b) >= 0) return this._regularVerb(b);
+    return null;
+  },
+
+  isVerb(base) {
+    const b = String(base || '').toLowerCase();
+    return !!this.V[b] || this.REG_V.indexOf(b) >= 0;
+  },
+
+  // 反查表：任何形态 -> [{base, label}]
+  _buildFormIdx() {
+    if (this._formIdx) return this._formIdx;
+    const idx = {};
+    const add = (form, base, label) => {
+      String(form || '').split('/').forEach(function (f) {
+        f = f.trim().toLowerCase();
+        if (!f) return;
+        (idx[f] = idx[f] || []);
+        if (!idx[f].some(x => x.base === base && x.label === label)) {
+          idx[f].push({ base: base, label: label });
+        }
+      });
+    };
+    Object.keys(this.V).forEach((base) => {
+      if (/2$/.test(base)) return;                 // 表里的重复项
+      const f = this.V[base];
+      add(f[0], base, '过去式');
+      add(f[1], base, '过去分词');
+      add(f[2], base, '现在分词');
+      add(f[3], base, '第三人称单数');
+    });
+    this.REG_V.forEach((base) => {
+      const f = this._regularVerb(base);
+      if (!f) return;
+      add(f.past, base, '过去式');
+      add(f.ing, base, '现在分词');
+      add(f.s, base, '第三人称单数');
+    });
+    Object.keys(this.IRREG_N).forEach((base) => {
+      add(this.IRREG_N[base], base, '复数');
+    });
+    Object.keys(this.IRREG_A).forEach((base) => {
+      const f = this.IRREG_A[base];
+      add(f[0], base, '比较级');
+      add(f[1], base, '最高级');
+    });
+    this._formIdx = idx;
+    return idx;
+  },
+
+  // word 是某个词的变形吗？→ {base, labels:['过去式','过去分词']} / null
+  inflectionOf(word) {
+    const w = String(word || '').toLowerCase().replace(/[^a-z'\-]/g, '');
+    if (!w || w.length < 2) return null;
+    const idx = this._buildFormIdx();
+    const hits = idx[w];
+    if (hits && hits.length) {
+      const labels = [];
+      hits.forEach(h => { if (labels.indexOf(h.label) < 0) labels.push(h.label); });
+      return { base: hits[0].base, labels: labels };
+    }
+    // 规则变形兜底：查不到就按规则拆一次，拆出来的 base 必须是我们认得的词。
+    const tries = [];
+    if (/ied$/.test(w)) tries.push(w.slice(0, -3) + 'y');
+    if (/ed$/.test(w)) { tries.push(w.slice(0, -2)); tries.push(w.slice(0, -1)); }
+    if (/ying$/.test(w)) tries.push(w.slice(0, -4) + 'ie');
+    if (/ing$/.test(w)) { tries.push(w.slice(0, -3)); tries.push(w.slice(0, -3) + 'e'); }
+    if (/ies$/.test(w)) tries.push(w.slice(0, -3) + 'y');
+    if (/es$/.test(w)) tries.push(w.slice(0, -2));
+    if (/s$/.test(w)) tries.push(w.slice(0, -1));
+    for (let i = 0; i < tries.length; i++) {
+      const b = tries[i];
+      if (b.length < 2 || !this.isVerb(b)) continue;
+      const f = this.verbForms(b);
+      if (!f) continue;
+      if (f.past === w || f.pp === w) return { base: b, labels: ['过去式'] };
+      if (f.ing === w) return { base: b, labels: ['现在分词'] };
+      if (f.s === w) return { base: b, labels: ['第三人称单数'] };
+    }
+    return null;
+  },
+
+  // base 的全部形态，给"点 base 也能看到它的变形"用。
+  formsOf(word) {
+    const w = String(word || '').toLowerCase();
+    const out = [];
+    const v = this.verbForms(w);
+    if (v) {
+      const push = (label, form) => {
+        String(form || '').split('/').forEach(function (f) {
+          f = f.trim();
+          if (!f) return;
+          if (!out.some(x => x.label === label && x.word === f)) out.push({ label: label, word: f });
+        });
+      };
+      push('过去式', v.past);
+      push('过去分词', v.pp);
+      push('现在分词', v.ing);
+      push('第三人称单数', v.s);
+      out.push({ label: '将来时', word: 'will ' + w });
+    }
+    if (this.IRREG_N[w]) out.push({ label: '复数', word: this.IRREG_N[w] });
+    if (this.IRREG_A[w]) {
+      out.push({ label: '比较级', word: this.IRREG_A[w][0] });
+      out.push({ label: '最高级', word: this.IRREG_A[w][1] });
+    }
+    return out;
+  },
+
+  // ===== 短语 =====
+  _buildPhraseIdx() {
+    if (this._phraseIdx) return this._phraseIdx;
+    const idx = {};
+    const self = this;
+    this.PHRASES.forEach(function (p) {
+      const en = p[0], zh = p[1];
+      const words = en.split(' ');
+      const head = words[0];
+      const rest = words.slice(1).join(' ');
+      const forms = [];
+      if (head === 'be') {
+        ['be', 'is', 'am', 'are', 'was', 'were', 'been', 'being'].forEach(function (f) {
+          forms.push(rest ? f + ' ' + rest : f);
+        });
+      } else {
+        const vf = self.verbForms(head);
+        if (vf) {
+          [head, vf.past, vf.pp, vf.ing, vf.s].forEach(function (f) {
+            String(f || '').split('/').forEach(function (one) {
+              one = one.trim();
+              if (one) forms.push(rest ? one + ' ' + rest : one);
+            });
+          });
+        } else {
+          forms.push(en);
+        }
+      }
+      forms.forEach(function (f) {
+        const k = f.toLowerCase().replace(/\s+/g, ' ');
+        if (!idx[k]) idx[k] = { en: en, zh: zh, surface: f };
+      });
+    });
+    this._phraseIdx = idx;
+    return idx;
+  },
+
+  // 一串词里从第 i 个位置开始，最长能匹配到哪个短语。
+  // tokens: 已经拆好的单词数组（不含标点）
+  phraseAt(tokens, i) {
+    const idx = this._buildPhraseIdx();
+    const maxLen = 4;
+    for (let len = maxLen; len >= 2; len--) {
+      if (i + len > tokens.length) continue;
+      const joined = tokens.slice(i, i + len).join(' ').toLowerCase();
+      const hit = idx[joined];
+      if (hit) return { len: len, en: hit.en, zh: hit.zh, surface: tokens.slice(i, i + len).join(' ') };
+    }
+    return null;
+  },
+
+  // 整串是不是一个（或含有一个）固定搭配？给点词弹层用。
+  phraseInfo(text) {
+    const norm = String(text || '').toLowerCase().replace(/[^a-z'\- ]/g, ' ').replace(/\s+/g, ' ').trim();
+    if (!norm) return null;
+    const idx = this._buildPhraseIdx();
+    if (idx[norm]) return { en: idx[norm].en, zh: idx[norm].zh, surface: text };
+    return null;
+  },
+};
+
+// ===========================================================================
 // Api — the public surface. app.js talks to this and nothing else.
 // ===========================================================================
 const Api = {
@@ -547,6 +971,25 @@ const Api = {
   async login(phone, name) {
     Store.writeLogin(phone, name);
     return this.resolveSession(phone, name);
+  },
+
+  // v143：同步版。角色判断只比手机号，本来就不需要 await。
+  sessionSync(phone, name) {
+    if (!this.session || this.session.phone !== phone || this.session.name !== name) {
+      this.session = {
+        phone: phone,
+        name: name,
+        role: isTeacherPhone(phone) ? 'teacher' : 'student',
+        token: null,
+        className: '',
+      };
+    }
+    return this.session;
+  },
+
+  // 同步读凭据（不返回 Promise）。自动登录路径用它，避免多一次让出。
+  getSavedLoginSync() {
+    return Store.readLogin();
   },
 
   async resolveSession(phone, name) {
@@ -581,6 +1024,12 @@ const Api = {
   // keeps this refactor behaviour-identical; the write methods below are what
   // carry the real intent across to the backend.
   async loadState() {
+    return Store.read();
+  },
+
+  // v143：同步版本。localStorage 本来就是同步的，`loadState()` 那层 async
+  // 只是历史包袱 —— 而它站在登录路径上，多一个微任务就多一次让出主线程。
+  loadStateSync() {
     return Store.read();
   },
 

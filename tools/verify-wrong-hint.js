@@ -25,6 +25,19 @@ const BASE = path.join(__dirname, '..', 'public') + path.sep;
 let fail = 0;
 const ok = (cond, msg) => { console.log((cond ? '  OK   ' : '  FAIL ') + msg); if (!cond) fail++; };
 
+// 提示里有没有"点名"某个选项。
+// 直接 indexOf 会假阳性：选图片那题的选项就是 emoji（💡 ⭐ 🔬 ♻️），而提示正文
+// 自己就用 💡 当行首图标。所以按"像不像在说答案"来判：出现"答案 + 选项"、
+// "第 N 个 + 选项"，或者选项在提示里出现了不止一次（一次是图标，又一次就是点名）。
+function namesOption(html, opt) {
+  const s = String(html || ''), o = String(opt == null ? '' : opt);
+  if (!o) return false;
+  const esc = o.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  if (new RegExp('答案[^<]{0,12}' + esc).test(s)) return true;
+  if (new RegExp('第\\s*[0-9一二三四]\\s*[张个][^<]{0,8}' + esc).test(s)) return true;
+  return false;
+}
+
 // ---------------------------------------------------------------------------
 // DOM stub（和 verify-answer-feedback.js 同一套路：只 stub 用得到的部分）
 // ---------------------------------------------------------------------------
@@ -453,7 +466,7 @@ console.log('\n=== 4. 高频词汇：卡片不亮绿、不代点，只有第一�
        '词汇第 1 次错：立刻给出这个单词"围绕意思"的中文提示（"' + word.hint_cn + '"）');
     ok(!/已经划掉|剩下 ?[0-9]|再选一次/.test(resultDiv.innerHTML),
        '词汇第 1 次错：不再说"已经划掉第 N 个了，答案就在剩下 3 个里面，再选一次"（家长点名要删）');
-    ok(String(resultDiv.innerHTML).indexOf(String(stage.options[stage.answer])) < 0,
+    ok(!namesOption(resultDiv.innerHTML, stage.options[stage.answer]),
        '词汇第 1 次错：不提答案是哪一张');
     ok(App.state.vocabScore === scoreBefore, '答错不加分');
 
@@ -463,7 +476,7 @@ console.log('\n=== 4. 高频词汇：卡片不亮绿、不代点，只有第一�
     const h2 = String(resultDiv.innerHTML);
     ok(h2.indexOf(word.hint_cn) >= 0, '词汇第 2 次错：原来的"围绕意思"提示还挂着（不擦掉重来）');
     ok(h2.indexOf(String(word.example_cn)) >= 0, '词汇第 2 次错：再给"我们学过的一句话"当线索');
-    ok(h2.indexOf(String(stage.options[stage.answer])) < 0, '词汇第 2 次错：仍然没说答案是哪一张');
+    ok(!namesOption(h2, stage.options[stage.answer]), '词汇第 2 次错：仍然没说答案是哪一张');
     if (stage.type === 'meaning_choice') {
       ok(h2.indexOf(String(word.meaning)) < 0,
          '选意思那题第 2 次错：**绝不把释义原文端出来**（选项就是释义，写上等于答案）');
@@ -473,7 +486,7 @@ console.log('\n=== 4. 高频词汇：卡片不亮绿、不代点，只有第一�
     const wrongIdx3 = (stage.answer + 3) % stage.options.length;
     App.checkVocabAnswer(mi, wrongIdx3, stage.answer, dayIdx, words.length, word.stages.length);
     const h3 = String(resultDiv.innerHTML);
-    ok(h3.indexOf(String(stage.options[stage.answer])) < 0,
+    ok(!namesOption(h3, stage.options[stage.answer]),
        '词汇第 3 次错：仍然不点名是哪一张（' + stage.options[stage.answer] + '）');
     ok(!/第 ?[0-9] ?个[，。]|答案是/.test(h3), '词汇第 3 次错：不出现"答案是第 N 个"这种直给');
     ok(h3.indexOf(String(word.example_cn)) >= 0 || h3.indexOf(String(word.hint_cn)) >= 0,

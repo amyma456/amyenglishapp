@@ -6388,6 +6388,38 @@ const WEEK4 = [
 
 const HOMEWORK_WEEKS = [WEEK1, WEEK2, WEEK3, WEEK4];
 
+// ===== v143：一天只留一个「重阅读」模块 =================================
+//
+// 家长 2026-10-19：「完形和阅读理解每天只出现一次……周天的时候出现了这两个
+// 题型一起，孩子们压力太大了，因为每个都要做选择，还要进行中英文翻译」。
+//
+// 周日的题组原来是 reading + vocabulary_game + cloze 三件，阅读和完形正好
+// 撞在一起 —— 两个都要选、都要逐句翻译。现在统一按一条规矩收口：
+//   · 同一天里 reading / cloze 只能出现一个；
+//   · 两个都在时**留完形填空**（家长 2026-10-19 选的那条）。
+//
+// 这里是就地改 day.modules（数组元素是同一个对象），所以后面
+// `HOMEWORK_DATA = HOMEWORK_WEEKS[idx]` 拿到的就是收口之后的题组，
+// 78 处读取点一处都不用动，老师下周预览也自动是收口后的样子。
+(function slimHeavyReadingModules() {
+  const HEAVY = ['reading', 'cloze'];
+  HOMEWORK_WEEKS.forEach(function (week) {
+    (week || []).forEach(function (day) {
+      if (!day || !Array.isArray(day.modules)) return;
+      const hasCloze = day.modules.some(function (m) { return m.type === 'cloze'; });
+      let seen = {};
+      day.modules = day.modules.filter(function (m) {
+        if (HEAVY.indexOf(m.type) < 0) return true;
+        // 同一天阅读 + 完形并存 → 丢掉阅读
+        if (hasCloze && m.type === 'reading') return false;
+        if (seen[m.type]) return false;      // 同一种题型也不许出现两次
+        seen[m.type] = true;
+        return true;
+      });
+    });
+  });
+})();
+
 // 周锚点：第 1 周从 2026-09-28（周一）开始。日期用本地时区。
 const HOMEWORK_EPOCH = new Date(2026, 8, 28);
 const HOMEWORK_WEEK_IDX = (function () {

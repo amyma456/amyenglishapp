@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="142">
+<meta name="app-version" content="143">
 <link rel="manifest" href="manifest.json">
 <!-- v135：登录第一步就是调 api.amyeng.top 验手机号。提前把 DNS + TLS
      握手做掉，接口首调能省几百毫秒 —— 手机弱网下这几百毫秒很显眼。 -->
@@ -838,6 +838,22 @@ button.gate-locked::before{content:'🔒 '}
   border:0;line-height:1;cursor:pointer}
 .ws-zh{margin-top:10px;font-size:15px;line-height:1.7;color:var(--text);word-break:break-word}
 .ws-loading,.ws-none{color:var(--text-sub);font-size:13px}
+/* v143：词形 / 固定搭配那一行。孩子要先看懂"felt 是 feel 的过去式"，
+   再往下才是中文意思，所以放在两行之间、用一条浅色底衬出来。 */
+.ws-note{margin-top:8px;font-size:13px;line-height:1.6;color:var(--text-sub);
+  background:var(--bg);border-radius:8px;padding:7px 10px;display:none}
+.ws-note.show{display:block}
+.ws-note b{color:var(--primary);font-weight:700}
+.ws-forms{margin-top:8px;font-size:13px;color:var(--text-sub);line-height:1.8;display:none}
+.ws-forms.show{display:block}
+.ws-forms .ws-form-tag{display:inline-block;background:var(--bg);border-radius:6px;padding:1px 6px;
+  margin:2px 6px 2px 0;color:var(--text)}
+.ws-forms .ws-form-tag em{font-style:normal;color:var(--primary);font-weight:600}
+/* 短语：两个词被连成一个盒子，虚线从中间连过去 —— 孩子一眼看出这是一个整体 */
+.lk-phrase{border-bottom:1.5px dotted var(--primary)!important;background:var(--orange-wash);
+  border-radius:6px;padding:0 4px!important}
+.lk-phrase::after{content:'短语';font-size:9px;color:var(--primary);vertical-align:super;
+  margin-left:2px;opacity:.85}
 
 /* Check-in table */
 .checkin-table{overflow-x:auto}
@@ -1130,6 +1146,20 @@ body.perf-on .content-area{padding-bottom:54vh}
 </head>
 <body>
 
+<!-- v143：登录过的设备直接进，**不再闪一下账号输入框**。
+     家长 2026-10-19：「登录过一次以后都不用再输入这个账号，直接就登进去」。
+     以前登录页是 HTML 里默认显示的第一屏，脚本解析完（defer，1MB+）才切走，
+     孩子看到的就是"又让我输账号"+"点了要等好久"。
+     这一层白底开屏在图一出现时就盖住一切，下面的内联脚本同步读本机凭据：
+       · 有凭据 → 登录页立刻隐藏，开屏一直留到 App.showApp() 把它摘掉；
+       · 没有   → 开屏当场摘掉，登录页正常显示（和以前一样）。
+     内联脚本在解析期执行、首帧绘制之前，所以两种情况都不会闪。 -->
+<div id="boot-splash" style="position:fixed;inset:0;z-index:99999;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px">
+  <img src="photo.jpeg?v=65" alt="Amy老师英语打卡" width="72" height="72" style="border-radius:50%;box-shadow:0 6px 18px rgba(255,140,66,.28)">
+  <div style="font-size:16px;font-weight:700;color:#333">Amy老师英语打卡</div>
+  <div style="font-size:13px;color:#8E8E9A" id="boot-splash-hint">正在进入…</div>
+</div>
+
 <!-- PWA Install Banner -->
 <div id="pwa-install-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;background:var(--primary);color:#fff;padding:10px 12px;align-items:center;gap:10px;z-index:9999;box-shadow:0 -2px 8px rgba(0,0,0,.15)">
   <span style="font-size:20px">📱</span>
@@ -1169,6 +1199,42 @@ body.perf-on .content-area{padding-bottom:54vh}
     </div>
   </div>
 </div>
+
+<!-- v143：开屏决策。解析期同步执行，一定赶在首帧之前 —— 有本机凭据就把
+     登录页藏起来（孩子永远看不到账号输入框），没有就立刻摘掉开屏。 -->
+<script>
+(function () {
+  var creds = null, ok = false;
+  try { creds = JSON.parse(localStorage.getItem('amy_saved_login') || 'null'); } catch (e) {}
+  if (!(creds && creds.phone && creds.name)) {
+    creds = null;
+    try {
+      var m = document.cookie.match(/(?:^|;\s*)amy_login=([^;]+)/);
+      if (m) creds = JSON.parse(decodeURIComponent(m[1]));
+    } catch (e) {}
+  }
+  if (creds && creds.phone && creds.name) ok = true;
+  window.__bootSavedLogin = ok ? creds : null;
+  var splash = document.getElementById('boot-splash');
+  var lp = document.getElementById('login-page');
+  if (!ok) {
+    if (splash && splash.parentNode) splash.parentNode.removeChild(splash);
+  } else {
+    if (lp) lp.classList.add('hidden');
+    // 兜底：脚本万一中途出错，8 秒后也必须把开屏摘掉，绝不能白屏卡死。
+    setTimeout(function () {
+      var s2 = document.getElementById('boot-splash');
+      var main = document.getElementById('main-app');
+      if (main && !main.classList.contains('hidden')) {
+        if (s2 && s2.parentNode) s2.parentNode.removeChild(s2);
+      } else if (lp) {
+        if (s2 && s2.parentNode) s2.parentNode.removeChild(s2);
+        lp.classList.remove('hidden');
+      }
+    }, 8000);
+  }
+})();
+</script>
 
 <!-- Waiting Page (for unapproved students) -->
 <div id="waiting-page" class="login-page hidden">
@@ -1266,8 +1332,8 @@ body.perf-on .content-area{padding-bottom:54vh}
 </div>
 
 <script>window.__appReady = false;</script>
-<script defer src="cloud.js?v=142"></script>
-<script defer src="data.js?v=142"></script>
+<script defer src="cloud.js?v=143"></script>
+<script defer src="data.js?v=143"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
 <!--
   ?v= 必须跟着版本号走（v124 修正）。
@@ -1277,9 +1343,9 @@ body.perf-on .content-area{padding-bottom:54vh}
   这个坑很隐蔽：代码明明改了、也部署上去了，手机上跑的还是几个月前的逻辑。
   以后每次发版，这里跟着 app-version 一起改。
 -->
-<script defer src="recorder.js?v=142"></script>
-<script defer src="api.js?v=142"></script>
-<script defer src="app.js?v=142"></script>
+<script defer src="recorder.js?v=143"></script>
+<script defer src="api.js?v=143"></script>
+<script defer src="app.js?v=143"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {

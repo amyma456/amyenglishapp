@@ -123,7 +123,12 @@ console.log('\n== ③ 换入 / 换出：切到下周，再切回来必须一模�
 
   const swapped = D.hwSetActiveWeek(1);
   ok(swapped === D.getData(), '★ hwSetActiveWeek(1) 之后读到的就是下周数据');
-  ok(D.getData() !== week0, '★ 确实换过去了（不是原地没动）');
+  // 已经在最后一周时，"下周"会被夹取回本周 —— 那时数据本来就该是同一份。
+  // 这条以前只在非最后一周成立，跑到第 4 周就会假报警（2026-10-19 起就是）。
+  const atLastWeek = D.hwWeekData(1) === D.hwWeekData(0);
+  ok(atLastWeek ? D.getData() === week0 : D.getData() !== week0,
+     atLastWeek ? '★ 最后一周 → 下周夹回本周（本来就是同一份）'
+                : '★ 确实换过去了（不是原地没动）');
 
   const back = D.hwSetActiveWeek(0);
   ok(back === D.getData(), '★★ 切回 0 之后恢复成本周');

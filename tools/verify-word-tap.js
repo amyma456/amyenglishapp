@@ -208,7 +208,8 @@ console.log('\n=== 4. 逐词判分结果里的词也可点（红色那个尤其�
   const caretAt = look.indexOf('_wordAtPoint(pt.x, pt.y)');
   ok(lkAt > 0, '点词查义先认 .lk-word 词盒（明确目标）');
   ok(lkAt > 0 && caretAt > lkAt, '词盒没命中才退回按落点取词（两条路并存）');
-  ok(/closest\('\.lk-word'\)[\s\S]{0,300}?_openWordSheet\(w\)/.test(look), '命中词盒 → 直接开查词弹层');
+  // v143：中间多了一段"是不是短语盒子（giving up）"的判断，窗口放宽到 700 字。
+  ok(/closest\('\.lk-word'\)[\s\S]{0,700}?_openWordSheet\(w\)/.test(look), '命中词盒 → 直接开查词弹层');
 
   // 家长："读错的单词点出错的单词来读" —— 点红词要能直接找到下面那颗芯片
   ok((src.match(/data-repair-word=/g) || []).length >= 2, '逐词判分里读错/漏读的词带 data-repair-word（阅读 + 写作两处）');
