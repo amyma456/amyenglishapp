@@ -90,11 +90,11 @@ console.log('== 5. 草稿三重存储（localStorage + sessionStorage + cookie�
      [i1, i2, i3, i4].join(','));
 }
 
-console.log('== 6. 版本号 146 三处同步 ==');
+console.log('== 6. 版本号 147 三处同步 ==');
 {
-  ok(/app-version" content="146"/.test(htmlSrc), 'index.html meta = 145');
-  ok((htmlSrc.match(/\?v=146/g) || []).length >= 5, '脚本引用 ?v=146（' + (htmlSrc.match(/\?v=146/g) || []).length + ' 处）');
-  ok(/amy-english-v146/.test(swSrc) && /var V = 146;/.test(swSrc), 'sw.js 缓存名与 V = 145');
+  ok(/app-version" content="147"/.test(htmlSrc), 'index.html meta = 145');
+  ok((htmlSrc.match(/\?v=147/g) || []).length >= 5, '脚本引用 ?v=147（' + (htmlSrc.match(/\?v=147/g) || []).length + ' 处）');
+  ok(/amy-english-v147/.test(swSrc) && /var V = 147;/.test(swSrc), 'sw.js 缓存名与 V = 145');
 }
 
 console.log(fail === 0 ? '\n全部通过 ✅' : '\n有 ' + fail + ' 项失败 ❌');

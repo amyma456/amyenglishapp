@@ -7391,7 +7391,13 @@ const App = {
   VOICE_MIN_PEAK: 0.05,
   VOICE_MIN_SEC: 0.35,
   // 有声帧至少占全段这么一点。零星咔嗒声占比极低，正常说话远高于它。
-  VOICE_MIN_RATIO: 0.18,
+  //
+  // v147（家长 2026-10-20）：原来卡 18%，手机上误杀太多 —— 手机麦克风增益
+  // 差异极大，华为/UC 里同一句话的峰值可能只有 0.06～0.09，落在阈值之上
+  // 的帧本来就少，加上起手那几百毫秒没录到（v147 之前的真问题），占比一算
+  // 就掉到 10% 以下，孩子读得再对也被判"没录到声音"。现在只降到 8%：
+  // 仍能挡住"一下咔嗒声 + 长静音"，但正常朗读不会再被冤枉。
+  VOICE_MIN_RATIO: 0.08,
 
   // minSec：这一段至少要"真出声"多久。整句跟读按词数算（见 _minVoiceSec），
   // 单词朗读给固定的小值。不传就用默认 0.45 秒。
@@ -9151,6 +9157,10 @@ const App = {
     this._holdPrefer = asrPrefer || '';
     this._holdStatusEl = statusEl;
     this._holdStartedAt = Date.now();
+    // v147：手指一按就把录音管道热起来。手机上建管道要 150～500ms，
+    // 孩子是按下去就开口的 —— 不预热，第一个音（甚至整句）录不进去，
+    // 于是"明明读了还显示没录到声音"。Recorder.start 里会复用这条管道。
+    try { if (Recorder.prime) Recorder.prime(); } catch (e) {}
 
     // 自动收尾的看门狗（v106）。只看音量，不看时长：孩子说完了就收，
     // 不逼他一直按着。松手那条路（_holdEnd）不受影响 —— 它先到就先算，
@@ -9175,22 +9185,33 @@ const App = {
       return;
     }
 
-    Recorder.start({
-      onLevel: function(v) {
-        var bar = document.getElementById('tap-wave');
-        if (bar) bar.style.width = Math.min(100, Math.round(v * 140)) + '%';
-        if (!stopOn) return;
-        var now = Date.now();
-        if (v >= self.AUTO_STOP_LEVEL) { spoke = true; lastLoudAt = now; return; }
-        if (spoke && now - lastLoudAt >= silMs && now - t0 >= self.AUTO_STOP_MIN_MS) {
-          stopOn = false;                      // 只收一次
-          self._holdEnd();
+    // v147：先接上预热管道（手指按下那一刻已经开录），不等 getUserMedia。
+    // 预热还没建好的话 prime() 会把这条 start 一起做掉，不会重复开麦。
+    var begin = function () {
+      return Recorder.start({
+        onLevel: function(v) {
+          var bar = document.getElementById('tap-wave');
+          if (bar) bar.style.width = Math.min(100, Math.round(v * 140)) + '%';
+          if (!stopOn) return;
+          var now = Date.now();
+          if (v >= self.AUTO_STOP_LEVEL) { spoke = true; lastLoudAt = now; return; }
+          if (spoke && now - lastLoudAt >= silMs && now - t0 >= self.AUTO_STOP_MIN_MS) {
+            stopOn = false;                      // 只收一次
+            self._holdEnd();
+          }
         }
-      }
-    }).catch(function() {
-      setStatus('<div class="tap-result bad">无法访问麦克风，请允许权限</div>');
-      self._holdKey = null;
-    });
+      });
+    };
+    var started = false;
+    var primeP = (typeof Recorder.prime === 'function') ? Recorder.prime() : Promise.resolve(false);
+    primeP
+      .then(function () { started = true; return begin(); })
+      .catch(function () { started = true; return begin(); })
+      .catch(function() {
+        setStatus('<div class="tap-result bad">无法访问麦克风，请允许权限</div>');
+        self._holdKey = null;
+      });
+    void started;
 
     clearTimeout(this._holdCap);
     this._holdCap = setTimeout(function() { self._holdEnd(); }, capMs);

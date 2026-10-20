@@ -62,9 +62,53 @@ const Recorder = {
 
   // Start capturing. Returns a handle; call stop() to get the WAV blob.
   // onLevel(0..1) fires continuously for the UI meter.
+  //
+  // v147（家长 2026-10-20）：「孩子明明读得很对，读了四五遍了，仍然显示
+  // 这次没录到声音」。手机上的真凶是**起得太晚**：getUserMedia → 建
+  // AudioContext → 编译 worklet → 接节点，这一串在手机上要 150～500ms，
+  // 而 start() 是异步的 —— 孩子按下去就开口，等他读完松手，录音才刚刚接上，
+  // 于是整段被判成"没录到声音"。
+  //
+  // 两个改动：
+  //   1. start() 一进来就同步发起 getUserMedia（没有任何前置 await）；
+  //   2. prime()：手指按下那一刻就开录，多出来的头几百毫秒只当"提前量"，
+  //      正式 start() 直接接管这段流，孩子开口的第一个音一定是录进去的。
+  prime() {
+    if (this._primeP) return this._primeP;
+    const self = this;
+    this._primeP = Promise.resolve()
+      .then(function () { return self.start({ pre: true }); })
+      .then(function () {
+        // 只留 6 秒的提前量：孩子按下后迟迟没开口（或者只是摸了一下按钮），
+        // 不能一直占着麦克风 —— 超时就收掉，下一次按下再重新预热。
+        clearTimeout(self._primeT);
+        self._primeT = setTimeout(function () {
+          if (self._active && self._active.startedAt && !self._hotTaken) {
+            self._primeP = null;
+            try { self.stop(); } catch (e) {}
+          }
+        }, 6000);
+      })
+      .catch(function () { self._primeP = null; return false; });
+    return this._primeP;
+  },
+
   async start(opts) {
     const options = opts || {};
-    const stream = await navigator.mediaDevices.getUserMedia({
+    this._primeP = null;          // 走过一次 start，预热标记就作废
+
+    // 已经有"预热中"的采集在跑 → 直接接管它（那段音频就是孩子的起手音）。
+    const hot = this._active;
+    if (hot && options.pre !== true) {
+      hot.startedAt = Date.now();          // 计时从现在算（预热那段只当提前量）
+      if (hot.levelRef) hot.levelRef.fn = options.onLevel || null;
+      this._hotTaken = true;
+      clearTimeout(this._primeT);
+      return hot;
+    }
+
+    // 关键：不要在这一行之前 await 任何东西（见上面的 v147 说明）。
+    const streamP = navigator.mediaDevices.getUserMedia({
       audio: {
         channelCount: 1,
         echoCancellation: true,
@@ -72,6 +116,7 @@ const Recorder = {
         autoGainControl: true,
       },
     });
+    const stream = await streamP;
 
     // Reuse one AudioContext across takes. Building it and compiling the
     // worklet each time cost ~95ms, and a child who starts speaking the
@@ -89,6 +134,9 @@ const Recorder = {
     const source = ctx.createMediaStreamSource(stream);
     const chunks = [];
     let peak = 0;
+    // v147：预热阶段不挂 onLevel，正式 start() 接管后再挂上 —— 所以走一层
+    // 可替换的引用，而不是把回调闭包死在 onFrame 里。
+    const levelRef = { fn: options.onLevel || null };
 
     const onFrame = (frame) => {
       chunks.push(frame);
@@ -98,7 +146,7 @@ const Recorder = {
         if (v > localPeak) localPeak = v;
       }
       if (localPeak > peak) peak = localPeak;
-      if (options.onLevel) options.onLevel(localPeak);
+      if (levelRef.fn) levelRef.fn(localPeak);
     };
 
     let node = null, usingWorklet = false;
@@ -127,8 +175,11 @@ const Recorder = {
     node.connect(sink);
     sink.connect(ctx.destination);
 
+    // v147：不再有单独的"预录缓冲"—— 预热本身就是这个 start()，
+    // 接管时 chunks 里已经是孩子开口起的那一段。
     this._active = { stream, ctx, source, node, sink, chunks, usingWorklet,
-                     startedAt: Date.now(), peak: () => peak };
+                     startedAt: Date.now(), peak: () => peak,
+                     levelRef: levelRef };
     return this._active;
   },
 
@@ -139,6 +190,10 @@ const Recorder = {
   async stop() {
     const a = this._active;
     this._active = null;
+    // v147：一次录音结束，预热标记一起作废；下次按下重新预热。
+    this._primeP = null;
+    this._hotTaken = false;
+    clearTimeout(this._primeT);
     if (!a) return null;
 
     try { a.node.disconnect(); } catch (e) {}
