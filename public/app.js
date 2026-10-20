@@ -1294,7 +1294,7 @@ const App = {
       card.innerHTML =
         '<div style="font-size:48px;margin-bottom:8px">📡</div>'
         + '<p style="font-size:15px;color:var(--warning);font-weight:600">正在核对你的身份</p>'
-        + '<p class="text-sub fs-12 mt-8">网络不太稳定，暂时联系不上服务器。'
+        + '<p class="text-sub fs-12 mt-8">正在重新连接，稍等几秒会自动进入。'
         + '会自动重试，也可以点下面的按钮。</p>';
     }
     if (btn) {
@@ -1338,23 +1338,14 @@ const App = {
     return (this.state.students || []).some(function (s) { return s.phone === phone; });
   },
 
-  // v145：做题中途网络查不到时挂一条非阻塞横幅（不再把人踢出 App）。
+  // v145：中途网络查不到时的横幅 —— **v146 已停用**。
+  // 家长明确要求不要出现这类提示文字（2026-10-20）。
+  // 保留这个函数只是为了让旧代码调用不报错：不管传什么，都只会把可能残留的
+  // 横幅摘掉，绝不再新建。
   _netBanner(show) {
-    let b = document.getElementById('net-status-banner');
-    if (show) {
-      if (!b) {
-        b = document.createElement('div');
-        b.id = 'net-status-banner';
-        b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9000;'
-          + 'background:#FFF7E6;color:#AD6800;border-bottom:1px solid #FFE58F;'
-          + 'padding:8px 14px;font-size:13px;text-align:center;';
-        b.textContent = '📶 网络不太稳定，正在后台重试……做题不受影响，不用管它';
-        (document.body || document.documentElement).appendChild(b);
-      }
-      b.style.display = 'block';
-    } else if (b) {
-      b.style.display = 'none';
-    }
+    const b = document.getElementById('net-status-banner');
+    if (b) b.style.display = 'none';
+    void show;
   },
 
   async logout() {
@@ -3149,13 +3140,11 @@ const App = {
               return;
             }
           } else {
-            // v145：中途查不到**绝不再踢人**。以前（v132 的防绕过兜底）连续
-            // 2 次查不到就把孩子请到"已被移出"页 —— 但手机网络抖两下就会
-            // 误伤正在做题的孩子，家长 2026-10-19 投诉的就是这个：
-            // 「登进去没多久，一会就显示暂时无法进入/你已被移出班级」。
-            // 现在只挂一条**非阻塞**横幅提示网络不稳，网络恢复自动消失；
+            // v146（家长 2026-10-20）：不要任何"网络提示"字样。
+            // 孩子/家长看到这类提示只会以为又出故障了。
+            // 所以这里**什么都不显示**：静默重试（下一个 15 秒周期再来一次），
+            // 网络恢复自然就好，做题完全不受影响。
             // 只有服务器**明确**返回 removed 才请出去（上一行）。
-            this._netBanner(true);
           }
         }
       }

@@ -125,7 +125,7 @@ console.log('\n== ⑤ 轮询那条路也要兜住（人在里面、老师中途�
   ok(/st\s*!==\s*null/.test(near), '★ 轮询里先处理"查得到"的情况');
   ok(/st\.removed[\s\S]{0,80}showRemovedPage|showRemovedPage\(st\)/.test(near),
      '★ 服务器明确说 removed 才请到移出页');
-  ok(/_netBanner\(true\)/.test(near), '★ v145：查不到只挂"网络不稳"横幅，不再踢人');
+  ok(!/_netBanner\(true\)/.test(near), '★ v146：查不到时什么都不显示，也不踢人');
   ok(!/_gateMissStreak/.test(near), '★ 连败计数踢人逻辑已删除');
   ok(!/_retryClassStatus[\s\S]{0,200}showGateCheckFailed/.test(near),
      '★ 中途不再把孩子请到核对页');

@@ -24,7 +24,8 @@ console.log('== 1. 中途网络查不到：只挂横幅，绝不踢人 ==');
   const idx = appCode.indexOf('const st = await Api.classStatus(this.state.phone);');
   ok(idx > 0, '找到周期核对调用');
   const near = appCode.slice(idx, idx + 900);
-  ok(/_netBanner\(true\)/.test(near), '查不到 → 挂"网络不稳"非阻塞横幅');
+  ok(!/_netBanner\(true\)/.test(near),
+     'v146：查不到时**什么都不显示**（家长不要"网络不太稳定"那句话）');
   ok(!/showGateCheckFailed/.test(near), '不再把孩子请到核对页');
   ok(!/_gateMissStreak/.test(appCode), '连败计数踢人逻辑已整体删除');
   ok(/st\.removed\)\s*\{\s*this\.showRemovedPage\(st\)/.test(near),
@@ -62,12 +63,16 @@ console.log('== 3. 自动重试的安全边界（v132 红线仍守着） ==');
      '页面被接走就停止重试');
 }
 
-console.log('== 4. 网络恢复后横幅自动消失 ==');
+console.log('== 4. 横幅彻底消失（v146） ==');
 {
-  const idx = appCode.indexOf('const st = await Api.classStatus(this.state.phone);');
-  ok(/_netBanner\(false\)/.test(appCode.slice(idx, idx + 400)), '查到了 → 摘横幅');
+  ok(appSrc.indexOf('网络不太稳定') < 0 && appSrc.indexOf('不用管它') < 0,
+     '★ app.js 里已经没有"网络不太稳定…不用管它"字样');
+  const fn = appCode.slice(appCode.indexOf('_netBanner(show) {'),
+                            appCode.indexOf('_netBanner(show) {') + 320);
+  ok(!/appendChild/.test(fn) && !/createElement/.test(fn),
+     '★ _netBanner 不再新建任何横幅元素');
   ok(appCode.indexOf('_netBanner(false)') !== -1 && /logout\(\)[\s\S]{0,200}_netBanner\(false\)/.test(appSrc),
-     '退出登录也摘横幅');
+     '退出登录仍会摘掉可能残留的横幅');
 }
 
 console.log('== 5. 草稿三重存储（localStorage + sessionStorage + cookie） ==');
@@ -85,11 +90,11 @@ console.log('== 5. 草稿三重存储（localStorage + sessionStorage + cookie�
      [i1, i2, i3, i4].join(','));
 }
 
-console.log('== 6. 版本号 145 三处同步 ==');
+console.log('== 6. 版本号 146 三处同步 ==');
 {
-  ok(/app-version" content="145"/.test(htmlSrc), 'index.html meta = 145');
-  ok((htmlSrc.match(/\?v=145/g) || []).length >= 5, '脚本引用 ?v=145（' + (htmlSrc.match(/\?v=145/g) || []).length + ' 处）');
-  ok(/amy-english-v145/.test(swSrc) && /var V = 145;/.test(swSrc), 'sw.js 缓存名与 V = 145');
+  ok(/app-version" content="146"/.test(htmlSrc), 'index.html meta = 145');
+  ok((htmlSrc.match(/\?v=146/g) || []).length >= 5, '脚本引用 ?v=146（' + (htmlSrc.match(/\?v=146/g) || []).length + ' 处）');
+  ok(/amy-english-v146/.test(swSrc) && /var V = 146;/.test(swSrc), 'sw.js 缓存名与 V = 145');
 }
 
 console.log(fail === 0 ? '\n全部通过 ✅' : '\n有 ' + fail + ' 项失败 ❌');
