@@ -67,6 +67,9 @@ const App = {
     // 注意它是 async 的：真正的 showApp 要等这一轮同步初始化跑完之后才会执行
     // （第一个 await 让出主线程），所以下面那些绑定不用抢在它前面。
     if (/[?&]ttstest=1/.test(location.search)) { this.runTtsTest(); return; }
+    // v148：手机录音自检页（?micdiag=1）。家长说"就这个红米有问题"，
+    // 让她在这台手机上打开一次，页面直接告诉她这台机器是不是降采样/爆音。
+    if (/[?&]micdiag=1/.test(location.search)) { this.runMicDiag(); return; }
     // v144：先把上次填的手机号/姓名放回输入框，并把输入框的变化记下来。
     // 必须在 tryAutoLogin 之前 —— 自动登录那条路也可能要回退到登录页。
     this._hydrateLoginForm();
@@ -6203,9 +6206,11 @@ const App = {
     this._spClipPending = Recorder.stop()
       .then(out => {
         this._spClipBlob = out ? out.blob : null;
-        this._spClipMeta = out ? { duration: out.duration, sampleRate: out.sampleRate, peak: out.peak } : null;
+        this._spClipMeta = out ? { duration: out.duration, sampleRate: out.sampleRate,
+                                   peak: out.peak, health: out.health || null } : null;
         this._spClipSamples = out ? out.samples : null;
         this._spClipPending = null;
+        if (out) this._micNote(out, 'sp');
         return this._spClipBlob;
       })
       .catch(e => { console.warn('Recorder.stop failed:', e); this._spClipPending = null; return null; });
@@ -7328,7 +7333,8 @@ const App = {
       if (!out) return;
       const heard = text ? self._toSimplified(text) : '';
       // v139：出声了就算数。识别端没回话（晚高峰吐空）不再让孩子重说。
-      const voiceOk = !heard && self._voiceOk(out);
+      self._micNote(out, 'v148');
+      const voiceOk = !heard && self._judgeSilence(out).voiceOk;
       const r = self.scoreTranslation(pair.cn, heard);
 
       let html = '<div class="spell-summary">';
@@ -7401,10 +7407,21 @@ const App = {
 
   // minSec：这一段至少要"真出声"多久。整句跟读按词数算（见 _minVoiceSec），
   // 单词朗读给固定的小值。不传就用默认 0.45 秒。
+  //
+  // v148（家长 2026-10-20：红米 note 9 5G 特别容易判"没录到声音"）：
+  // 有些机型（千元机居多）会把 AudioContext 要的 16k 直接降成 8k —— 4kHz 以上
+  // 的频带全丢，孩子读的 /s/ /f/ /θ/ 全靠那一段，能量整体小一截，于是同一句
+  // 在小米 11/13 上能过、在红米上过不了。录音器现在会量出这段的"体质"
+  // （out.health.lowRate），**只在设备确实降采样时才放宽**，不搞全局降标准。
   _voiceOk(out, minSec) {
     if (!out) return false;
     const need = (typeof minSec === 'number' && minSec > 0) ? minSec : this.VOICE_MIN_SEC;
-    const th = this.VOICE_MIN_PEAK;
+    const health = out.health || null;
+    const lowRate = !!(health && health.lowRate);
+    // 削波（波形顶到天花板）的录音峰值恒为 ~1、且大量采样都"够响"，
+    // 但它恰恰是最脏的一段 —— 不能因为响就放行，反而要更严。
+    const th = lowRate ? this.VOICE_MIN_PEAK * 0.5 : this.VOICE_MIN_PEAK;
+    const ratioNeed = lowRate ? this.VOICE_MIN_RATIO * 0.6 : this.VOICE_MIN_RATIO;
     const s = out.samples;
     if (s && s.length) {
       let peak = 0, voiced = 0;
@@ -7414,7 +7431,7 @@ const App = {
         if (v > th) voiced++;
       }
       if (peak < th || !voiced) return false;
-      if (voiced / s.length < this.VOICE_MIN_RATIO) return false;   // 太稀疏 → 不是说话
+      if (voiced / s.length < ratioNeed) return false;   // 太稀疏 → 不是说话
       return voiced / (Recorder.TARGET_RATE || 16000) >= need;
     }
     // 只留了 meta 的路径（片段已经被收走）：退化成 peak + 时长两个数。
@@ -7436,11 +7453,84 @@ const App = {
       return this._voiceOk({ samples: this._spClipSamples, peak: (this._spClipMeta || {}).peak }, minSec);
     }
     const meta = this._spClipMeta || {};
-    return this._voiceOk({ peak: meta.peak, duration: meta.duration }, minSec);
+    return this._voiceOk({ peak: meta.peak, duration: meta.duration, health: meta.health }, minSec);
   },
 
   // 出声了但识别端没给文本 —— 这一条统一的说法。**不再出现"没听清"。**
   VOICE_PASS_LABEL: '✅ 过（这段朗读已经存下来了）',
+
+  // ==========================================================================
+  // v148：录音"体质"上报 + 兜底判定的共享逻辑
+  // ==========================================================================
+  //
+  // 家长 2026-10-20 的原话值得抄在这里，因为它定义了什么叫"修好了"：
+  //   「说改了，结果还是没有太大的改善，我很生气！…孩子已经很用心在读了，
+  //     每字每句都在卡着，然后过不去。并且有时候录出来的声音是很渣的、
+  //     很嘈杂的，这是为什么？」
+  //
+  // 前几版治的是"门槛"，这一版治的是**设备**：红米 note 9 5G 这一档机器会把
+  // 16k 采样降成 8k、会掉帧、会削波。这三个都能从样本里量出来（recorder.js
+  // 的 _micHealth），量出来之后就有两件事可做：
+  //
+  //   ① 判定用设备自己的基准，而不是全系统一把尺（见 _voiceOk 的 lowRate 分支）；
+  //   ② 确实录到人声就放行，不再让孩子为"识别端空手"重读 —— 这一条以前只散落
+  //      在各个页面里各写一遍，现在收成一个函数，谁漏了都看得见。
+  //
+  // 顺带把每次录音的体质记进 Api.perfEnd，以后家长再说"就这个手机有问题"，
+  // 直接查后台就知道是 8k 还是削波，不用再猜。
+
+  // 这一段的设备是否"先天吃亏"（降采样）。
+  _micLowRate(out) {
+    return !!(out && out.health && out.health.lowRate);
+  },
+
+  // 削波严重：波形顶到天花板。这种录音"听着响"，其实是最脏的一段 ——
+  // 识别模型在这种波形上最容易吐空。提示孩子离远一点比让他重读有用。
+  _micClipping(out) {
+    return !!(out && out.health && out.health.clipRatio > 0.02);
+  },
+
+  // 录完一按的统一体检：把体质记进性能样本（只记数值，不记内容）。
+  _micNote(out, where) {
+    if (!out || !out.health) return;
+    try {
+      Api.perfEnd({
+        kind: 'mic',
+        at: where || '',
+        rate: out.health.srcRate,
+        clip: Math.round(out.health.clipRatio * 1000) / 1000,
+        drop: out.health.dropouts,
+        voiced: Math.round(out.health.voicedRatio * 100),
+      });
+    } catch (e) {}
+  },
+
+  // 削波时的提示语：不说"你没读清"，说"设备这边太响了"。
+  _clipHintHtml() {
+    return '<div class="rf-tip">🎤 这次录音有点"爆音"（离嘴太近了），稍微离远一点点再读，会更清楚。</div>';
+  },
+
+  // --------------------------------------------------------------------------
+  // 唯一一个"要不要判孩子重读"的出口。
+  //
+  // 以前每个页面各写一行 `const voiceOk = !text && self._voiceOk(out)`，
+  // 于是一个页面补了兜底、另一个页面忘了补，家长就会觉得"这里好了那里没好"。
+  // 现在全部走这一个函数，判定口径只有一处：
+  //
+  //   · 有识别文本          → 交给逐词打分（不在这里管）
+  //   · 没文本，但确实有人声 → **放行**（孩子读得对不对不该由识别端的空结果决定）
+  //   · 没文本，也没人声     → 才让孩子重读
+  //
+  // 第三档才允许提示"再读一次"，而且提示语要说清是"没听到声音"而不是
+  // "你没读清" —— 家长最生气的就是被系统倒打一耙。
+  _judgeSilence(out, minSec) {
+    const heard = this._voiceOk(out, minSec);
+    return {
+      voiceOk: heard,
+      clipping: heard && this._micClipping(out),
+      lowRate: this._micLowRate(out),
+    };
+  },
 
   // 翻译三档（v126，家长定的松紧）：
   //   ≥60        过（跟阅读理解同一把尺）
@@ -7538,7 +7628,8 @@ const App = {
       //   这里的 refCn 为空导致的）。没参考 = 只要说了就算过。
       const canScore = !!refCn;
       // v139：确实出声了但识别端没回话 → 直接放行，不让孩子重说。
-      const voiceOk = !heard && self._voiceOk(out);
+      self._micNote(out, 'v148');
+      const voiceOk = !heard && self._judgeSilence(out).voiceOk;   // v148
       const r = canScore ? self.scoreTranslation(refCn, heard)
                          : { score: 0, covered: 0, total: 0 };
       const band = canScore ? self._transBand(heard ? r.score : 0, !!heard)
@@ -7928,7 +8019,8 @@ const App = {
       const a = self.alignSpeech(sent, text || '');
       const slot = document.getElementById('sent-result-' + mi + '-' + si);
       // v139：识别端没回话，但录音里确实有人声 → 算过，不让孩子重读。
-      const voiceOk = !text && self._voiceOk(out);
+      self._micNote(out, 'v148');
+      const voiceOk = !text && self._judgeSilence(out).voiceOk;   // v148
 
       let html = '<div class="spell-summary">';
       html += '<div class="ss-head"><span class="ss-score">'
@@ -8100,7 +8192,8 @@ const App = {
       // v139：识别端没回话，但录音里确实有人声 —— 这一格算过。
       // 以前这里直接判"没听清"让孩子再读，是"重复四五遍"的主要来源之一：
       // 整句里每个红词都要走这一关，卡一格就过不去。
-      const voiceOk = !text && self._voiceOk(out);
+      self._micNote(out, 'v148');
+      const voiceOk = !text && self._judgeSilence(out).voiceOk;   // v148
       if (!text && !voiceOk) {
         if (status) status.textContent = '这次没录到声音，点一下单词听读音，再按住读一次';
         return;
@@ -8186,7 +8279,8 @@ const App = {
       const res = await Api.transcribe(forAsr, null, { fast: true, lang: 'zh', budgeted: true });
       const heard = res && res.text && !Api.isFillerTranscript(res.text) ? res.text : '';
       // v139：出声了就给过 —— 识别端没回话不算孩子没说。
-      const voiceOk = !heard && this._voiceOk(out);
+      this._micNote(out, 'v148');
+      const voiceOk = !heard && this._judgeSilence(out).voiceOk;   // v148
       const r = this.scoreTranslation(m.passage_cn, heard);
       // v131：中文口述的"结果档位"只看有没有真的说出内容 —— 不做分数档判断，
       // 因为它本来就不判对错（意思覆盖而已）。
@@ -8333,6 +8427,123 @@ const App = {
       score: Math.round(lcs / a.length * 100),
       covered: lcs, total: a.length, spoken: spoken,
     };
+  },
+
+  // ===== 手机录音自检（v148）=====
+  // Open ?micdiag=1 on the phone.
+  //
+  // 家长 2026-10-20：「红米 note 9 5G 用自带浏览器容易出问题，小米 11 / 13 就还好」。
+  // 这类"就这个机型不行"的问题，靠改代码反复猜是最慢的路 —— 先让那台手机自己
+  // 说出它到底哪一项不达标（采样率被降？爆音？掉帧？），再对症下药。
+  //
+  // 用法：让孩子在那台手机上打开 https://amyeng.top/?micdiag=1
+  //   1. 点「开始检测」，允许麦克风；
+  //   2. 正常读一句书上的英文（页面会显示实时音量条和峰值）；
+  //   3. 松手后看报告 —— 把整段截图发给老师即可。
+  runMicDiag() {
+    const self = this;
+    document.body.innerHTML = '';
+    const box = document.createElement('div');
+    box.style.cssText = 'position:fixed;inset:0;background:#fff;z-index:99999;overflow:auto;'
+      + 'padding:18px 16px 60px;font:15px/1.75 -apple-system,"PingFang SC",sans-serif;color:#222';
+    box.innerHTML = '<h2 style="font-size:19px;margin:0 0 6px">🎤 手机录音自检</h2>'
+      + '<p style="color:#666;margin:0 0 14px;font-size:13px">老师排查用。孩子读一句英文就好，'
+      + '读完把这一页截图发出来。</p>'
+      + '<div id="md-status" style="min-height:52px;padding:12px;border-radius:10px;'
+      + 'background:#f4f6fa;font-size:14px">点下面的按钮开始</div>'
+      + '<div id="md-meter" style="height:12px;border-radius:6px;background:#e6eaf2;margin:12px 0;overflow:hidden">'
+      + '<div id="md-bar" style="height:100%;width:0%;background:#2ecc71;transition:width .05s"></div></div>'
+      + '<button id="md-go" style="width:100%;padding:16px;border:0;border-radius:12px;'
+      + 'background:#2b6cff;color:#fff;font-size:17px;font-weight:600">按住这里，读一句英文</button>'
+      + '<div id="md-report" style="margin-top:18px"></div>';
+    document.body.appendChild(box);
+
+    const statusEl = box.querySelector('#md-status');
+    const bar = box.querySelector('#md-bar');
+    const btn = box.querySelector('#md-go');
+    const rep = box.querySelector('#md-report');
+
+    let holding = false;
+    const start = function (ev) {
+      if (ev) ev.preventDefault();
+      if (holding) return;
+      holding = true;
+      statusEl.textContent = '正在录音…请正常读一句英文（读完松手）';
+      Promise.resolve(Recorder.prime()).then(function () {
+        return Recorder.start({
+          onLevel: function (v) {
+            const pct = Math.min(100, Math.round(v * 140));
+            bar.style.width = pct + '%';
+            bar.style.background = v > 0.9 ? '#e74c3c' : (v > 0.02 ? '#2ecc71' : '#e6eaf2');
+          },
+        });
+      }).catch(function (e) {
+        holding = false;
+        statusEl.textContent = '打不开麦克风：' + (e && e.message ? e.message : e)
+          + '\n请检查浏览器是否允许了麦克风权限。';
+      });
+    };
+    const end = function (ev) {
+      if (ev && ev.preventDefault) ev.preventDefault();
+      if (!holding) return;
+      holding = false;
+      statusEl.textContent = '分析中…';
+      Recorder.stop().then(function (out) {
+        if (!out) { statusEl.textContent = '这一段什么都没录到（麦克风没出数据），再试一次。'; return; }
+        statusEl.textContent = '✅ 录到了 ' + out.duration.toFixed(2) + ' 秒。报告在下面。';
+        bar.style.width = '0%';
+        const h = out.health || {};
+        const rows = [
+          ['录音采样率', (h.srcRate || 0) + ' Hz',
+            h.lowRate ? '⚠️ 偏低（正常 16000）—— 高频丢失，声音会发闷' : '✅ 正常'],
+          ['峰值', (h.peak || 0).toFixed(3),
+            (h.peak || 0) < 0.03 ? '⚠️ 太小 —— 可能离太远 / 麦克风被挡' : '✅ 正常'],
+          ['爆音占比', ((h.clipRatio || 0) * 100).toFixed(2) + '%',
+            (h.clipRatio || 0) > 0.02 ? '⚠️ 偏高 —— 离嘴太近，声音会嘈杂' : '✅ 正常'],
+          ['掉帧', (h.dropouts || 0) + ' 处',
+            (h.dropouts || 0) > 0 ? '⚠️ 有空洞 —— 声音会断续' : '✅ 正常'],
+          ['人声占比', ((h.voicedRatio || 0) * 100).toFixed(0) + '%',
+            (h.voicedRatio || 0) < 0.05 ? '⚠️ 很少 —— 几乎没说话' : '✅ 正常'],
+          ['录音时长', out.duration.toFixed(2) + ' 秒', ''],
+        ];
+        let html = '<div style="font-weight:600;margin-bottom:8px">报告</div>'
+          + '<table style="width:100%;border-collapse:collapse;font-size:13px">';
+        rows.forEach(function (r) {
+          html += '<tr>'
+            + '<td style="padding:7px 4px;border-bottom:1px solid #eef1f6;color:#666;white-space:nowrap">' + r[0] + '</td>'
+            + '<td style="padding:7px 4px;border-bottom:1px solid #eef1f6;font-weight:600;white-space:nowrap">' + r[1] + '</td>'
+            + '<td style="padding:7px 4px;border-bottom:1px solid #eef1f6">' + r[2] + '</td>'
+            + '</tr>';
+        });
+        html += '</table>';
+        html += '<div style="margin-top:12px;font-size:12px;color:#888">'
+          + '设备：' + ((navigator.userAgent || '').slice(0, 120)) + '</div>';
+        html += '<div style="margin-top:6px;font-size:12px;color:#888">'
+          + '判定：' + (out.healthLabel || '—') + '</div>';
+        // 回放：家长自己也听一遍，比任何数字都直观
+        try {
+          const url = URL.createObjectURL(out.blob);
+          html += '<div style="margin-top:14px"><div style="font-size:13px;color:#666;margin-bottom:6px">'
+            + '听一下刚才的录音（这一条就是要发出去的那份）：</div>'
+            + '<audio controls src="' + url + '" style="width:100%;height:40px"></audio></div>';
+        } catch (e) {}
+        html += '<div style="margin-top:18px;padding:12px;border-radius:10px;background:#f4f6fa;font-size:13px;line-height:1.8">'
+          + '<b>怎么读这一页：</b><br>'
+          + '· 采样率偏低 + 爆音偏高 → 这台机器的音频通路有问题，请先试试<b>关掉其他正在用麦克风的 App</b>，'
+          + '或在系统设置里把"录音"权限重新授予浏览器；<br>'
+          + '· 只有爆音偏高 → 让孩子离手机 10~15 厘米说话，不要贴着嘴；<br>'
+          + '· 只有峰值太小 → 离远了一点，稍微靠近些；<br>'
+          + '· 全部正常 → 这台机器的录音没问题，问题在识别端，把截图发出来。</div>';
+        rep.innerHTML = html;
+      }).catch(function (e) {
+        statusEl.textContent = '收尾失败：' + (e && e.message ? e.message : e);
+      });
+    };
+
+    btn.addEventListener('pointerdown', start);
+    btn.addEventListener('pointerup', end);
+    btn.addEventListener('pointercancel', end);
+    btn.addEventListener('pointerleave', function (e) { if (holding) end(e); });
   },
 
   // ===== TTS self-test =====
@@ -8809,7 +9020,8 @@ const App = {
       var a = self.alignSpeech(wordText, text || '');
       // v139：识别端没回话但确实出了声 → 算读过。分数按及格给，不判 0 分 ——
       // 判 0 分会让「连续读」那一格一直灰着，孩子只能反复重读整词。
-      var voiceOk = !text && self._voiceOk(out);
+      self._micNote(out, 'v148');
+      var voiceOk = !text && self._judgeSilence(out).voiceOk;   // v148
       var score = voiceOk ? self.PASS_SCORE : self._wordTakeScore(wordText, text || '', a);
       self._spell.wordTake = out.samples || null;
       self._spell.score = score;
@@ -8983,7 +9195,8 @@ const App = {
       if (btn) btn.classList.remove('reading');
       if (!out) return;
       // v139：识别端没回话但确实出了声 → 连读成立，不让孩子重复整串。
-      var voiceOk = !text && self._voiceOk(out);
+      self._micNote(out, 'v148');
+      var voiceOk = !text && self._judgeSilence(out).voiceOk;   // v148
       var res = self._scoreSequence(seq, text);
       sp.contScore = voiceOk ? self.PASS_SCORE : res.score;
       sp.contHeard = text;
@@ -9767,7 +9980,8 @@ const App = {
       const a = self.alignSpeech(sent, text || '');
       const slot = document.getElementById('wr-result-' + mi + '-' + si);
       // v139：出了声就算过 —— 识别端没回话不让孩子重读。
-      const voiceOk = !text && self._voiceOk(out);
+      self._micNote(out, 'v148');
+      const voiceOk = !text && self._judgeSilence(out).voiceOk;   // v148
 
       let html = '<div class="spell-summary">';
       html += '<div class="ss-head"><span class="ss-score">'
@@ -10114,7 +10328,10 @@ const App = {
     this._holdStart(ev, 'review-' + word, word, status, function(out, text) {
       // v139：识别端没回话但确实出了声 → 按读对算（孤立单词本来就是识别
       // 最不稳的一类，不能让孩子为识别端的空结果买单）。
-      const voiceOk = !text && self._voiceOk(out);
+      // v148：判定口径统一收进 _judgeSilence，并把设备录音体质记进样本。
+      self._micNote(out, 'review');
+      const judge = self._judgeSilence(out);
+      const voiceOk = !text && judge.voiceOk;
       if (!text && !voiceOk) {
         if (status) status.innerHTML = '<div class="review-fix">'
           + '<div class="rf-head">这次没录到声音</div>'

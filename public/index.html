@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="147">
+<meta name="app-version" content="148">
 <link rel="manifest" href="manifest.json">
 <!-- v135：登录第一步就是调 api.amyeng.top 验手机号。提前把 DNS + TLS
      握手做掉，接口首调能省几百毫秒 —— 手机弱网下这几百毫秒很显眼。 -->
@@ -1359,8 +1359,8 @@ body.perf-on .content-area{padding-bottom:54vh}
 </div>
 
 <script>window.__appReady = false;</script>
-<script defer src="cloud.js?v=147"></script>
-<script defer src="data.js?v=147"></script>
+<script defer src="cloud.js?v=148"></script>
+<script defer src="data.js?v=148"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
 <!--
   ?v= 必须跟着版本号走（v124 修正）。
@@ -1370,9 +1370,9 @@ body.perf-on .content-area{padding-bottom:54vh}
   这个坑很隐蔽：代码明明改了、也部署上去了，手机上跑的还是几个月前的逻辑。
   以后每次发版，这里跟着 app-version 一起改。
 -->
-<script defer src="recorder.js?v=147"></script>
-<script defer src="api.js?v=147"></script>
-<script defer src="app.js?v=147"></script>
+<script defer src="recorder.js?v=148"></script>
+<script defer src="api.js?v=148"></script>
+<script defer src="app.js?v=148"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {

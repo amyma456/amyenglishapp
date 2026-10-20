@@ -175,12 +175,30 @@ const Recorder = {
     node.connect(sink);
     sink.connect(ctx.destination);
 
+    // v148：记下这一台设备的"录音体质"，出问题时能一句话定位。
+    this._diag = {
+      ctxRate: ctx.sampleRate,        // 实际采样率（红米会偷偷降到 8000，见 _micHealth）
+      trackRate: this._trackRate(stream),
+      usingWorklet: usingWorklet,
+      ua: (navigator.userAgent || '').slice(0, 160),
+      startedAt: Date.now(),
+    };
+
     // v147：不再有单独的"预录缓冲"—— 预热本身就是这个 start()，
     // 接管时 chunks 里已经是孩子开口起的那一段。
     this._active = { stream, ctx, source, node, sink, chunks, usingWorklet,
                      startedAt: Date.now(), peak: () => peak,
                      levelRef: levelRef };
     return this._active;
+  },
+
+  // 这条流的真实采样率（有些机型 getSettings 不给，那就返回 0 = 不知道）。
+  _trackRate(stream) {
+    try {
+      const t = stream.getAudioTracks()[0];
+      const s = t && t.getSettings ? t.getSettings() : null;
+      return (s && s.sampleRate) || 0;
+    } catch (e) { return 0; }
   },
 
   recording() { return !!this._active; },
@@ -213,6 +231,10 @@ const Recorder = {
     a.chunks.forEach(c => { flat.set(c, off); off += c.length; });
 
     const pcm = srcRate === this.TARGET_RATE ? flat : this._resample(flat, srcRate, this.TARGET_RATE);
+    // v148：把这一段录音的"体质"一并交出去 —— 上层据此判断是"真没读"
+    // 还是"这段录坏了"，不再靠猜。
+    const health = this._micHealth(flat, srcRate);
+    this._diag = null;
     return {
       blob: this._encodeWav(pcm, this.TARGET_RATE),
       // Raw samples come back too so several takes can be stitched into one
@@ -222,7 +244,104 @@ const Recorder = {
       duration: pcm.length / this.TARGET_RATE,
       sampleRate: this.TARGET_RATE,
       peak: a.peak(),
+      health: health,
+      healthLabel: this._healthLabel(health),
     };
+  },
+
+  // ---------------------------------------------------------------------------
+  // v148：这一段录音到底"录得好不好"。
+  //
+  // 家长 2026-10-20：「手机用的是红米 note 9 5G，发现就这个手机容易出问题…
+  // 有时候录出来的声音是很渣的、很嘈杂的，这是为什么？」
+  //
+  // 原因是这类千元机（天玑 800U 这一档）的音频通路有三件事经常不同时成立：
+  //   1. **降采样**：AudioContext 要 16k，机器直接给 8k —— 4kHz 以上的频带
+  //      全部消失，而孩子读的 /s/ /f/ /θ/ /ʃ/ 恰好全靠这一段。听起来"发闷、
+  //      沙沙响"，Whisper 也最容易在这几个音上判错。
+  //   2. **掉帧**：采集线程被系统省电策略压住，帧不连续 → 音频里一段一段
+  //      的空洞，听起来"卡、断续、像机器人"。
+  //   3. **限幅**（削波）：麦克风增益开太大或离嘴太近，波形顶到 ±1 被削平 →
+  //      "嘈杂、刺啦"。这一条很多家长以为是"离得远所以录音不好"，正相反。
+  //
+  // 这三个都能从样本本身量出来，不需要听得见。量出来之后：
+  //   · 采样率低 → 上层放宽"有没有出声"的门槛（低采样率的能量本来就小）；
+  //   · 削波严重 → 提示孩子"稍微离远一点"，而不是让他一遍遍重读；
+  //   · 掉帧 → 记进诊断，不当场打扰孩子。
+  //
+  // 返回的都是 0~1 的数或布尔，直接可读，不藏。
+  _micHealth(flat, srcRate) {
+    const h = {
+      srcRate: srcRate || 0,
+      lowRate: !!(srcRate && srcRate < 16000 * 0.9),   // 8k 之类
+      clipRatio: 0,                                     // 削波采样占比
+      silenceRatio: 1,                                  // 接近静音的占比
+      dropouts: 0,                                      // 中间的空洞数
+      voicedRatio: 0,                                   // 人声（相对本段峰值）占比
+      peak: 0,
+      rms: 0,
+    };
+    if (!flat || !flat.length) return h;
+    h.silenceRatio = 1;
+    h.voicedRatio = 0;
+
+    // ① 峰值 / 均方根 / 削波率
+    let peak = 0, sum2 = 0, clipped = 0;
+    for (let i = 0; i < flat.length; i++) {
+      const v = flat[i];
+      const av = v < 0 ? -v : v;
+      if (av > peak) peak = av;
+      sum2 += v * v;
+      if (av >= 0.985) clipped++;      // 顶到天花板
+    }
+    h.peak = peak;
+    h.rms = Math.sqrt(sum2 / flat.length);
+    h.clipRatio = clipped / flat.length;
+
+    // ② 人声占比：以本段峰值为参照。削波的录音峰值恒为 1，参照会失准，
+    //    所以参照最高取 0.5（正常朗读的峰值区间），见下。
+    const ref = Math.min(peak, 0.5);
+    const th = Math.max(ref * 0.12, 0.004);
+    let voiced = 0;
+    for (let i = 0; i < flat.length; i++) {
+      const av = flat[i] < 0 ? -flat[i] : flat[i];
+      if (av > th) voiced++;
+    }
+    h.voicedRatio = voiced / flat.length;
+    h.silenceRatio = 1 - h.voicedRatio;
+
+    // ③ 掉帧：按 20ms 一格看能量，连续 4 格以上"全零"才算空洞。
+    //
+    // 为什么是 4 格而不是 3 格：正常的词间停顿、气口、句尾收音落在
+    // 0.0005 以下的概率并不低（尤其是 8k 降采样的机器），3 格（约 60ms）
+    // 会把正常的换气误报成掉帧 —— 判定要"宁可漏报，不可误报"，
+    // 误报会让家长以为手机坏了。
+    const step = Math.max(16, Math.round(srcRate * 0.02));   // 20ms 一格
+    const needRun = 4;                                        // 连着 80ms 全零
+    let run = 0;
+    for (let i = 0; i < flat.length; i += step) {
+      const end = Math.min(i + step, flat.length);
+      let segPeak = 0;
+      for (let j = i; j < end; j++) {
+        const av = flat[j] < 0 ? -flat[j] : flat[j];
+        if (av > segPeak) segPeak = av;
+      }
+      if (segPeak < 0.0002) { run++; }
+      else { if (run >= needRun) h.dropouts++; run = 0; }
+    }
+    if (run >= needRun) h.dropouts++;
+    return h;
+  },
+
+  // 一句话说清这段录音有什么毛病（给诊断页 / 控制台看，不给孩子看）。
+  _healthLabel(h) {
+    if (!h) return '无数据';
+    const bits = [];
+    if (h.lowRate) bits.push('采样率只有 ' + Math.round(h.srcRate / 1000) + 'k（高频丢失，"发闷"）');
+    if (h.clipRatio > 0.01) bits.push('削波 ' + (h.clipRatio * 100).toFixed(1) + '%（太响/离嘴太近，"嘈杂"）');
+    if (h.dropouts > 0) bits.push('掉帧 ' + h.dropouts + ' 处（"断续"）');
+    if (h.voicedRatio < 0.02) bits.push('几乎没有人声');
+    return bits.length ? bits.join('；') : '正常';
   },
 
   // Whisper hallucinates on very short audio — a 0.21s "beautiful" came back

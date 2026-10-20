@@ -19,9 +19,9 @@
 //      会把带 ?v= 的新脚本**预存**进缓存 —— 更新后的第一次启动也是秒开；
 //   3. skipWaiting + clients.claim 保证新 SW 立即接管。
 
-var CACHE_NAME = 'amy-english-v147';
+var CACHE_NAME = 'amy-english-v148';
 // 与 index.html 里 script src 的 ?v= 保持一致（发版时一起改这一个数字）。
-var V = 147;
+var V = 148;
 
 self.addEventListener('install', function(event) {
   event.waitUntil(
