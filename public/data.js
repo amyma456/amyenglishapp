@@ -5939,7 +5939,7 @@ const WEEK4 = [
     "day_cn": "周五",
     "day_en": "Friday",
     "is_speaking_day": false,
-    "total_duration": 30,
+    "total_duration": 40,
     "theme_cn": "模板写作 + KET/PET题型 + 语法复习",
     "modules": [
       {
@@ -6033,31 +6033,374 @@ const WEEK4 = [
         "name_cn": "语法复习",
         "type": "grammar",
         "duration": 5,
+        "id": "w4-fri-grammar",
+        "name_cn": "语法复习",
+        "type": "grammar",
+        "duration": 15,
         "questions": [
           {
             "id": "w4-fri-gr1",
             "type": "fill",
-            "question": "The window ___ (break) by the naughty boy yesterday. [填入正确形式]",
-            "answer": "was broken",
-            "explanation_cn": "窗户是被打破的，by 引出动作执行者，用被动语态 was broken。break-broke-broken。",
-            "explanation_en": "The window was broken by the boy ('by' shows who did it), so the passive 'was broken' is used. Note: break-broke-broken."
+            "question": "School café menu: b__rg__（汉堡）",
+            "answer": "burger",
+            "explanation_cn": "burger：u 发 /ɜː/，注意别写成 burgur。b-u-r-g-e-r，6 个字母。",
+            "explanation_en": "Burger: the vowel is u, spelled b-u-r-g-e-r."
           },
           {
             "id": "w4-fri-gr2",
-            "type": "choice",
-            "question": "I remember ___ the door when I left, but it was open when I came back.",
-            "options": ["lock", "locking", "to lock", "locked"],
-            "answer": 1,
-            "explanation_cn": "remember doing 意为记得做过某事（已做）；remember to do 意为记得要去做（还没做）。这里记得锁过门，用 locking。",
-            "explanation_en": "'Remember doing' means you remember an action you already did; 'remember to do' means remember to do it later. Here the locking already happened: 'locking'."
+            "type": "fill",
+            "question": "School café menu: ch__ps（薯条）",
+            "answer": "chips",
+            "explanation_cn": "chips 是 chip 的复数，直接加 s。注意和 French fries 是同一种东西的不同说法。",
+            "explanation_en": "Chips is the plural of chip: just add -s."
           },
           {
             "id": "w4-fri-gr3",
             "type": "fill",
-            "question": "Neither of the twins ___ (be) good at singing. [填入正确形式]",
-            "answer": "is",
-            "explanation_cn": "neither of + 复数名词作主语，谓语用单数：is。neither 意为两者都不。",
-            "explanation_en": "'Neither of + plural noun' takes a singular verb: 'is'. Note: 'neither' means not either of the two."
+            "question": "School café menu: s__dw__ch__s（三明治（复数））",
+            "answer": "sandwiches",
+            "explanation_cn": "sandwich 以 ch 结尾，复数要加 -es：sandwiches。注意中间是 d-w-i。",
+            "explanation_en": "Sandwich ends in -ch, so the plural adds -es: sandwiches."
+          },
+          {
+            "id": "w4-fri-gr4",
+            "type": "fill",
+            "question": "School café menu: f_sh __nd ch__ps（炸鱼薯条）",
+            "answer": "fish and chips",
+            "explanation_cn": "英国名菜「炸鱼薯条」：fish and chips，三个词中间用 and 连接。",
+            "explanation_en": "Fish and chips: a famous British dish, three words joined by \"and\"."
+          },
+          {
+            "id": "w4-fri-gr5",
+            "type": "fill",
+            "question": "School café menu: ch_ck_n s_l_d（鸡肉沙拉）",
+            "answer": "chicken salad",
+            "explanation_cn": "chicken 的 ck 在中间别漏；salad 的第二个 a 发 /ə/。",
+            "explanation_en": "Chicken salad: don't miss the -ck- in chicken."
+          },
+          {
+            "id": "w4-fri-gr6",
+            "type": "fill",
+            "question": "School café menu: __pl_s（苹果（复数））",
+            "answer": "apples",
+            "explanation_cn": "apple 复数加 s：apples。开头是两个 p：a-p-p-l-e-s。",
+            "explanation_en": "Apples: apple with two p's, plural adds -s."
+          },
+          {
+            "id": "w4-fri-gr7",
+            "type": "fill",
+            "question": "School café menu: b_n_n_s（香蕉（复数））",
+            "answer": "bananas",
+            "explanation_cn": "banana 有三个 a，复数直接加 s：bananas。",
+            "explanation_en": "Bananas: banana has three a's; plural just adds -s."
+          },
+          {
+            "id": "w4-fri-gr8",
+            "type": "fill",
+            "question": "School café menu: __c__ cr__m（冰淇淋）",
+            "answer": "ice cream",
+            "explanation_cn": "ice cream 是两个词，中间有空格：i-c-e c-r-e-a-m。",
+            "explanation_en": "Ice cream is two words: ice + cream."
+          },
+          {
+            "id": "w4-fri-gr9",
+            "type": "fill",
+            "question": "School café menu: __r_ng_ j__c_（橙汁）",
+            "answer": "orange juice",
+            "explanation_cn": "orange 和 juice 都是常见词，合起来是橙汁，中间空格。",
+            "explanation_en": "Orange juice: two words, orange + juice."
+          },
+          {
+            "id": "w4-fri-gr10",
+            "type": "fill",
+            "question": "School café menu: l_m_n_d_（柠檬水）",
+            "answer": "lemonade",
+            "explanation_cn": "lemonade 结尾是 -ade，重音在最后一个音节 /ˌleməˈneɪd/。",
+            "explanation_en": "Lemonade ends in -ade, stress on the last syllable."
+          },
+          {
+            "id": "w4-fri-gr11",
+            "type": "fill",
+            "question": "Pass me a ___ of bread.（一条面包）",
+            "answer": "loaf",
+            "explanation_cn": "一条（条状的）面包用 a loaf of bread。复数 loaves：two loaves of bread。",
+            "explanation_en": "A loaf of bread. Plural: loaves (f → ves)."
+          },
+          {
+            "id": "w4-fri-gr12",
+            "type": "fill",
+            "question": "She put a ___ of chocolate into her pocket.（一块巧克力）",
+            "answer": "bar",
+            "explanation_cn": "一块（条状）巧克力用 a bar of chocolate，也可以 a bar of soap（一块肥皂）。",
+            "explanation_en": "A bar of chocolate."
+          },
+          {
+            "id": "w4-fri-gr13",
+            "type": "fill",
+            "question": "Please bring a ___ of water.（一瓶水）",
+            "answer": "bottle",
+            "explanation_cn": "一瓶水 a bottle of water。瓶装水也叫 bottled water。",
+            "explanation_en": "A bottle of water."
+          },
+          {
+            "id": "w4-fri-gr14",
+            "type": "fill",
+            "question": "Cut a ___ of ham first.（一片火腿）",
+            "answer": "slice",
+            "explanation_cn": "切下来的一片用 a slice of...：a slice of ham / bread / pizza。",
+            "explanation_en": "A slice of ham."
+          },
+          {
+            "id": "w4-fri-gr15",
+            "type": "fill",
+            "question": "Do you need two ___ of honey?（两罐蜂蜜）",
+            "answer": "jars",
+            "explanation_cn": "蜂蜜是罐装的：a jar of honey，两罐 two jars of honey。蜂蜜不可数，变复数的是 jar。",
+            "explanation_en": "Honey is uncountable; the jar is countable: two jars of honey."
+          },
+          {
+            "id": "w4-fri-gr16",
+            "type": "fill",
+            "question": "There are two ___ of paper on the desk.（两张纸）",
+            "answer": "sheets",
+            "explanation_cn": "纸不可数，一张纸 a sheet of paper，两张 two sheets of paper。",
+            "explanation_en": "Paper is uncountable: two sheets of paper."
+          },
+          {
+            "id": "w4-fri-gr17",
+            "type": "fill",
+            "question": "She used to drink two ___ of beer in the evening.（两罐啤酒）",
+            "answer": "cans",
+            "explanation_cn": "罐装啤酒 a can of beer，两罐 two cans of beer。啤酒本身不可数。",
+            "explanation_en": "Beer is uncountable; two cans of beer."
+          },
+          {
+            "id": "w4-fri-gr18",
+            "type": "choice",
+            "question": "Look at the picture. Three ___ are on the floor.（玩具）",
+            "options": [
+              "toy",
+              "toies",
+              "toys",
+              "toyies"
+            ],
+            "answer": 2,
+            "explanation_cn": "toy 直接加 s：toys。以「元音+y」结尾的词复数直接加 s，不变 ies。",
+            "explanation_en": "Toy ends in vowel + y, so the plural is just toys."
+          },
+          {
+            "id": "w4-fri-gr19",
+            "type": "choice",
+            "question": "The painter needs two ___ .（刷子）",
+            "options": [
+              "brush",
+              "brushs",
+              "brushes",
+              "brushies"
+            ],
+            "answer": 2,
+            "explanation_cn": "brush 以 sh 结尾，复数加 -es：brushes。s/x/ch/sh 结尾都加 -es。",
+            "explanation_en": "Brush ends in -sh, so the plural is brushes."
+          },
+          {
+            "id": "w4-fri-gr20",
+            "type": "choice",
+            "question": "There are many ___ in the world.（国家）",
+            "options": [
+              "countrys",
+              "country",
+              "countryes",
+              "countries"
+            ],
+            "answer": 3,
+            "explanation_cn": "country 是「辅音+y」结尾，变 y 为 i 加 es：countries。同类的还有 city→cities。",
+            "explanation_en": "Country: consonant + y becomes countries (y → i, add -es)."
+          },
+          {
+            "id": "w4-fri-gr21",
+            "type": "choice",
+            "question": "Look! Two ___ are playing in the garden.（狐狸）",
+            "options": [
+              "fox",
+              "foxes",
+              "foxs",
+              "foxies"
+            ],
+            "answer": 1,
+            "explanation_cn": "fox 以 x 结尾，复数加 -es：foxes。x 结尾的词都要加 es，不能只加 s。",
+            "explanation_en": "Fox ends in -x, so the plural is foxes."
+          },
+          {
+            "id": "w4-fri-gr22",
+            "type": "choice",
+            "question": "The story is about two ___ .（女巫）",
+            "options": [
+              "witch",
+              "witchs",
+              "witchies",
+              "witches"
+            ],
+            "answer": 3,
+            "explanation_cn": "witch 以 tch 结尾，复数加 -es：witches。",
+            "explanation_en": "Witch ends in -tch, so the plural is witches."
+          },
+          {
+            "id": "w4-fri-gr23",
+            "type": "choice",
+            "question": "Put the toys into two ___ .（箱子）",
+            "options": [
+              "boxs",
+              "boxes",
+              "box",
+              "boxies"
+            ],
+            "answer": 1,
+            "explanation_cn": "box 以 x 结尾，复数加 -es：boxes。和 fox 一样。",
+            "explanation_en": "Box ends in -x, so the plural is boxes."
+          },
+          {
+            "id": "w4-fri-gr24",
+            "type": "choice",
+            "question": "I can't find the ___ to my bike.（钥匙）",
+            "options": [
+              "keyes",
+              "keys",
+              "keies",
+              "keyies"
+            ],
+            "answer": 1,
+            "explanation_cn": "key 是「元音+y」结尾，复数直接加 s：keys。不是 keyes 也不是 keies。",
+            "explanation_en": "Key ends in vowel + y: plural is keys."
+          },
+          {
+            "id": "w4-fri-gr25",
+            "type": "choice",
+            "question": "The forest is home to ___ .（狼）",
+            "options": [
+              "wolfs",
+              "wolves",
+              "wolfes",
+              "wolfies"
+            ],
+            "answer": 1,
+            "explanation_cn": "wolf 是「f/fe」结尾，变 f 为 ves：wolves。同类：leaf→leaves，knife→knives。",
+            "explanation_en": "Wolf becomes wolves (f → ves). Same pattern: leaf → leaves."
+          },
+          {
+            "id": "w4-fri-gr26",
+            "type": "choice",
+            "question": "We grew two ___ in the garden.（土豆）",
+            "options": [
+              "potatos",
+              "potato",
+              "potatoes",
+              "potatoies"
+            ],
+            "answer": 2,
+            "explanation_cn": "potato 复数加 -es：potatoes。注意：这是少数要加 es 的 o 结尾词，同类的还有 tomato→tomatoes。",
+            "explanation_en": "Potato becomes potatoes (add -es). Same as tomato → tomatoes."
+          },
+          {
+            "id": "w4-fri-gr27",
+            "type": "choice",
+            "question": "Pandas eat ___ every day.（竹子）",
+            "options": [
+              "bamboos",
+              "bambooes",
+              "bamboo",
+              "bambools"
+            ],
+            "answer": 2,
+            "explanation_cn": "bamboo（竹子）是不可数名词，没有复数形式，就用 bamboo。",
+            "explanation_en": "Bamboo is uncountable — no plural form, just bamboo."
+          },
+          {
+            "id": "w4-fri-gr28",
+            "type": "choice",
+            "question": "The cake is made with ___ .（草莓）",
+            "options": [
+              "strawberrys",
+              "strawberries",
+              "strawberryes",
+              "strawberry"
+            ],
+            "answer": 1,
+            "explanation_cn": "strawberry 是「辅音+y」结尾，变 y 为 i 加 es：strawberries。",
+            "explanation_en": "Strawberry: consonant + y becomes strawberries."
+          },
+          {
+            "id": "w4-fri-gr29",
+            "type": "choice",
+            "question": "Two ___ passed on the road.（卡车）",
+            "options": [
+              "lorrys",
+              "lorry",
+              "lorries",
+              "lorryes"
+            ],
+            "answer": 2,
+            "explanation_cn": "lorry 是「辅音+y」结尾，变 y 为 i 加 es：lorries。英式英语的卡车。",
+            "explanation_en": "Lorry: consonant + y becomes lorries."
+          },
+          {
+            "id": "w4-fri-gr30",
+            "type": "choice",
+            "question": "In the story, two ___ helped the boy.（精灵）",
+            "options": [
+              "elfs",
+              "elfes",
+              "elf",
+              "elves"
+            ],
+            "answer": 3,
+            "explanation_cn": "elf 变 f 为 ves：elves。和 wolf→wolves 同一类。",
+            "explanation_en": "Elf becomes elves (f → ves)."
+          },
+          {
+            "id": "w4-fri-gr31",
+            "type": "choice",
+            "question": "The library has many ___ .（词典）",
+            "options": [
+              "dictionarys",
+              "dictionaries",
+              "dictionaryes",
+              "dictionary"
+            ],
+            "answer": 1,
+            "explanation_cn": "dictionary 是「辅音+y」结尾，变 y 为 i 加 es：dictionaries。",
+            "explanation_en": "Dictionary: consonant + y becomes dictionaries."
+          },
+          {
+            "id": "w4-fri-gr32",
+            "type": "fill",
+            "question": "Write the plural form: child → ___（孩子们）",
+            "answer": "children",
+            "explanation_cn": "child 的复数是不规则的：children。不加 s，也不能写 childs。",
+            "explanation_en": "Child has the irregular plural children — never childs."
+          },
+          {
+            "id": "w4-fri-gr33",
+            "type": "fill",
+            "question": "Write the plural form: foot → ___（脚（复数））",
+            "answer": "feet",
+            "explanation_cn": "foot 的复数是 feet（元音变化）：one foot, two feet。",
+            "explanation_en": "Foot becomes feet (vowel change)."
+          },
+          {
+            "id": "w4-fri-gr34",
+            "type": "fill",
+            "question": "Write the plural form: mouse → ___（老鼠（复数））",
+            "answer": "mice",
+            "explanation_cn": "mouse 的复数是 mice，不规则的，不能写 mouses。",
+            "explanation_en": "Mouse becomes mice — irregular."
+          },
+          {
+            "id": "w4-fri-gr35",
+            "type": "fill",
+            "question": "Write the plural form: sheep → ___（绵羊（单复数同形））",
+            "answer": "sheep",
+            "explanation_cn": "sheep 的单数和复数长得一样：one sheep, two sheep。千万不要写 sheeps！",
+            "explanation_en": "Sheep is the same in singular and plural — never sheeps."
           }
         ]
       }

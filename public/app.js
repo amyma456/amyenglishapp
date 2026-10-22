@@ -514,6 +514,8 @@ const App = {
     if (this.isTeacher() || !this.state.phone) return 0;
     const sid = this._myStudentId();
     const who = this._myWho();
+    // v149：先把上次没发出去的补发一轮（持久队列）。
+    try { Api.flushCheckinQueue(); } catch (e) {}
     // 先把答案汇总成打卡（补回第 2 周起一直没写下来的那几天）。
     if (typeof Api.repairCheckins === 'function') {
       try { Api.repairCheckins(sid, this._dayTotals(), who); }
@@ -582,6 +584,19 @@ const App = {
     document.addEventListener('visibilitychange', again);
     window.addEventListener('focus', again);
     window.addEventListener('pageshow', again);
+    // v149：上报失败的打卡进的是 localStorage 持久队列（Api._queueCheckin），
+    // 这里负责把它发出去 —— 页面可见时每 60 秒重发一轮；网络恢复立即重发。
+    // 服务器确认 ok 才出队，所以弱网/锁屏杀死的上报最迟几分钟后也会补上，
+    // 不再依赖"孩子哪天再打开 App"。
+    setInterval(() => {
+      try {
+        if (document.visibilityState !== 'visible') return;
+        Api.flushCheckinQueue();
+      } catch (e) {}
+    }, 60000);
+    window.addEventListener('online', () => {
+      try { Api.flushCheckinQueue(); } catch (e) {}
+    });
   },
 
   // 进「孩子打卡 / 完成率对比」之前拉一次后台。失败保持本机数据不动 ——
@@ -1570,6 +1585,10 @@ const App = {
       //  2) 要求至少 3 个词，进一步避开感叹开头。
       rest = rest.replace(/^\s*(?:please\s+)?(?:choose|select|complete|fill|listen|circle|match|tick|write|read|look|answer|put|pick)\b[^.。:：!?？！]*[.。:：]\s*(?:[—–-]\s*)?/i, function(mm) {
         if ((mm.match(/[^.\s]+/g) || []).length < 3) return mm;   // 太短，不是指令句
+        // v149：带空位（___）的句子是题目本体，不是指令 —— "Put the toys
+        // into two ___ ." 整句会被当指令吞掉，孩子看不到题、TTS 不读、
+        // 门禁也不锁。有横杠就绝不进指令区。
+        if (/_{2,}/.test(mm)) return mm;
         instr += (instr ? ' ' : '') + mm.trim(); return ' ';
       });
     }

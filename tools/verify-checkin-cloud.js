@@ -90,8 +90,8 @@ ok(/reportCheckin\(rec, who\) \{/.test(apiSrc), 'reportCheckin 存在');
   ok(new RegExp('\\b' + f + ':').test(apiSrc), '上报字段 ' + f + ' 带上');
 });
 ok(/\/api\/checkins\/report/.test(apiSrc), '打到 /api/checkins/report');
-ok(/catch\(e => \{ console\.warn\('reportCheckin failed:', e\); return null; \}\)/.test(apiSrc),
-  '上报失败吞掉 —— 打卡上报不能影响孩子答题');
+ok(/catch\(e => fail\(\(e && e\.message\) \|\| 'network'\)\)/.test(apiSrc) && /_queueCheckin\(body\)/.test(apiSrc),
+  '上报失败进持久重试队列（v149：仍然返回 null，不影响孩子答题，稍后自动重发）');
 // fetchCheckins：失败必须返回 null，不能返回 []（"没读到"≠"没打卡"）
 ok(/async fetchCheckins\(opts\)/.test(apiSrc), 'fetchCheckins 存在');
 ok(/else return null;/.test(apiSrc) && /if \(!res\.ok\) return null;/.test(apiSrc),

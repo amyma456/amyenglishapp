@@ -195,6 +195,13 @@ console.log('\n=== 5. 整张卷子跑一遍：卷面上再没有三个下划线�
   const byLen = picks.slice().sort((a, b) => aLen(b) - aLen(a));
   const sample = [byLen[0], byLen[Math.floor(byLen.length / 2)], byLen[byLen.length - 1]]
     .filter((p, i, arr) => arr.indexOf(p) === i);
+  // v149：题库新增 35 道填空后，最长/中位/最短可能全是填空题，卷面上就没
+  // 有 A/B/C/D 选项了。这条断言盯的是"选项照旧打印"，所以样本里强制保证
+  // 有一道**当前周**（genErrorSheet 只扫 HOMEWORK_DATA = 最后一周）的选择题。
+  if (!sample.some(p => Array.isArray(p.q.options) && p.wi === weeks.length - 1)) {
+    const ch = byLen.find(p => Array.isArray(p.q.options) && p.wi === weeks.length - 1);
+    if (ch) sample.push(ch);
+  }
 
   App.state.students = [{ id: 's1', name: '测试同学', phone: '13000000000' }];
   App.state.answers = {};
@@ -299,8 +306,8 @@ console.log('\n=== 5. 整张卷子跑一遍：卷面上再没有三个下划线�
       const css = /.a4-sheet \.a4-blank\{[^}]*\}/.exec(htmlSrc);
       ok(css && /border-bottom:/.test(css[0]), '横线是画出来的下划线（border-bottom）');
       ok(css && /display:inline-block/.test(css[0]), '横线是行内元素，能跟在句子中间');
-      ok(/name="app-version" content="148"/.test(htmlSrc), '版本号升到 144');
-      ok(/amy-english-v148/.test(swSrc), 'Service Worker 缓存名同步到 v144（不然手机上还是旧版）');
+      ok(/name="app-version" content="149"/.test(htmlSrc), '版本号升到 144');
+      ok(/amy-english-v149/.test(swSrc), 'Service Worker 缓存名同步到 v144（不然手机上还是旧版）');
     }
 
     console.log('\n' + (fail ? '❌ ' + fail + ' 项未通过' : '✅ 全部通过'));

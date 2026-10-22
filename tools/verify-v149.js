@@ -1,0 +1,90 @@
+// v149 验证：
+//  1) W4 周五语法复习 = 35 道新题（选择+填空），写作练习保留，total 40
+//  2) 打卡上报持久重试队列（失败入队、flush 出队、keepalive）
+//  3) 重发触发器（每分钟 / online / 打开 App）
+const fs = require('fs');
+let pass = 0, failN = 0;
+function ok(cond, name, extra) {
+  if (cond) { pass++; console.log('  PASS ' + name); }
+  else { failN++; console.log('  FAIL ' + name + (extra ? ' —— ' + extra : '')); }
+}
+
+console.log('== 1. 周五语法复习 35 道新题 ==');
+{
+  const src = fs.readFileSync('public/data.js', 'utf8');
+  const d = new Function(src + ';return WEEK4;')();
+  const fri = d[4];
+  ok(fri.day_cn === '周五', '取到的是周五');
+  ok(fri.total_duration === 40, '周五 total_duration = 40', String(fri.total_duration));
+  const w = fri.modules.find(m => m.id === 'w4-fri-writing');
+  ok(!!w, '写作练习模块保留');
+  ok(w && w.title === 'Protecting Our Earth', '写作题目未变');
+  const k = fri.modules.find(m => m.id === 'w4-fri-ket');
+  ok(!!k && k.questions.length === 5, 'KET/PET 模块保留 5 题');
+  const g = fri.modules.find(m => m.id === 'w4-fri-grammar');
+  ok(!!g && g.type === 'grammar', '语法复习模块存在');
+  ok(g.questions.length === 35, '语法复习 = 35 道题', String(g.questions.length));
+  const fills = g.questions.filter(q => q.type === 'fill').length;
+  const choices = g.questions.filter(q => q.type === 'choice').length;
+  ok(fills + choices === 35, '题型只有 fill/choice：填 ' + fills + ' + 选 ' + choices);
+  // 每题结构
+  let bad = 0, noCn = 0, dup = 0;
+  const ids = {};
+  g.questions.forEach(q => {
+    if (ids[q.id]) dup++;
+    ids[q.id] = 1;
+    if (q.type === 'choice') {
+      if (!Array.isArray(q.options) || q.options.length < 3) bad++;
+      else if (typeof q.answer !== 'number' || q.answer < 0 || q.answer >= q.options.length) bad++;
+    } else if (q.type === 'fill') {
+      if (!String(q.answer || '').trim()) bad++;
+    } else bad++;
+    if (!q.explanation_cn) noCn++;
+  });
+  ok(bad === 0, '每题答案/选项结构完整', bad + ' 题');
+  ok(noCn === 0, '每题都有中文解析', noCn + ' 题缺');
+  ok(dup === 0, '题目 ID 无重复');
+  // 知识点抽查：量词 7 题、复数选择 14 题、不规则 4 题、菜单 10 题
+  const ansOf = q => (q.type === 'choice' ? q.options[q.answer] : q.answer);
+  ok(/loaf/.test(ansOf(g.questions[10])), '第 11 题量词 loaf');
+  ok(ansOf(g.questions[16]) === 'cans', '第 17 题量词 cans');
+  ok(ansOf(g.questions[26]) === 'bamboo', 'bamboo 不可数（选 bamboo）');
+  ok(ansOf(g.questions[34]) === 'sheep', 'sheep 单复数同形');
+  const plurals = g.questions.slice(17, 31);
+  const ansIdx = plurals.map(q => q.answer);
+  ok(new Set(ansIdx).size >= 3, '选择题正确位置不扎堆', JSON.stringify(ansIdx));
+  // 家长的红线：所有答案小写
+  const upper = g.questions.filter(q => /[A-Z]/.test(String(q.answer)));
+  ok(upper.length === 0, '所有答案都是小写', upper.map(q => q.id).join(','));
+}
+
+console.log('== 2. 打卡上报持久重试队列 ==');
+{
+  const api = fs.readFileSync('public/api.js', 'utf8');
+  ok(/_ckQueueKey\(\)\s*\{\s*return 'amy_checkin_retry_v1'/.test(api), '队列持久化 key');
+  ok(/_queueCheckin\(body\)/.test(api), '失败入队 _queueCheckin');
+  ok(/async flushCheckinQueue\(\)/.test(api), 'flushCheckinQueue 重发');
+  ok(/q\.slice\(-200\)/.test(api), '队列封顶 200 条');
+  ok(/_flushingCheckins/.test(api), '防并发重入');
+  const rcAt = api.indexOf('\n  reportCheckin(rec, who) {');
+  const rc = api.slice(rcAt, rcAt + 1800);
+  ok(/keepalive:\s*true/.test(rc), '上报请求带 keepalive（答完锁屏也能发出去）');
+  ok(/fail\('http '/.test(rc), '非 200 也入队');
+  ok(/\.catch\(e => fail\(/.test(rc), '网络错误入队');
+  ok(/_ckQueueId\(body\)/.test(api) && /student_id, body\.week_idx, body\.day_idx/.test(api), '队列按 学生/周/天 去重');
+}
+
+console.log('== 3. 重发触发器 ==');
+{
+  const app = fs.readFileSync('public/app.js', 'utf8');
+  const b = app.slice(app.indexOf('_bindCheckinUpload() {'), app.indexOf('_bindCheckinUpload() {') + 1400);
+  ok(/setInterval/.test(b) && /60000/.test(b), '页面可见时每 60 秒重发');
+  ok(/addEventListener\('online'/.test(b), '网络恢复立即重发');
+  ok(/Api\.flushCheckinQueue\(\)/.test(b), '触发器调用 flush');
+  const bf = app.slice(app.indexOf('_backfillCheckins() {'), app.indexOf('_backfillCheckins() {') + 500);
+  ok(/Api\.flushCheckinQueue\(\)/.test(bf), '打开 App 先补发一轮队列');
+}
+
+console.log('');
+console.log(failN === 0 ? '全部 ' + pass + ' 项通过 ✅' : '有 ' + failN + ' 项失败 ❌');
+process.exit(failN === 0 ? 0 : 1);

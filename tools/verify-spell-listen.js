@@ -424,8 +424,8 @@ console.log('\n== 8) 三处放行条件一致 + 版本号 ==');
   ok(/还有字母没读对，按住红色的格子再读一次/.test(appSrc), '还有错字母时另有一句');
   ok(!/this\._gateNudge\(this\._gid\('spellg'/.test(appSrc), '逐字母那套门禁已经拆掉，不再 nudge');
   ok(/按住每个格子读一遍，再按住整词读一遍/.test(appSrc), '这一屏的指令同步改了');
-  ok(/name="app-version" content="148"/.test(htmlSrc), '版本号升到 144');
-  ok(/amy-english-v148/.test(swSrc), 'Service Worker 缓存名同步到 v144（不然手机上还是旧版）');
+  ok(/name="app-version" content="149"/.test(htmlSrc), '版本号升到 144');
+  ok(/amy-english-v149/.test(swSrc), 'Service Worker 缓存名同步到 v144（不然手机上还是旧版）');
 }
 
 console.log('\n' + (fail ? ('有 ' + fail + ' 项失败 ❌') : '全部通过 ✅'));

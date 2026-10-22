@@ -1374,6 +1374,67 @@ const Api = {
   //
   // rec.weekIdx（可选）：**补报历史时必须给**。不给就盖当前周 —— 那会把
   // 上一条第 2 周的记录写到第 3 周去（v121 修）。
+  //
+  // ===== v149：失败不再丢，进持久重试队列 ==================================
+  // 家长 2026-10-22：「从周一过来之后的周二和周三，每个学生打卡的记录就没有
+  // 同步过来。」查 D1：数据最后都进来了，但普遍**迟到 1~3 天** —— 孩子当晚
+  // 答题时的上报，在手机弱网 / 锁屏 / 做完马上关页的情况下死在路上，而旧逻辑
+  // 是 fire-and-forget，失败就永远丢了，只能等孩子下一次打开 App 补录。老师
+  // 当晚检查，看到的就是一片"未打卡"。
+  //
+  // 现在：上报失败（网络错误 / 非 200）立即把 body 存进 localStorage 队列，
+  // 由 flushCheckinQueue() 在打开 App、回前台、每分钟、网络恢复时重发，
+  // 服务器确认 ok 才出队。请求本身加 keepalive —— 孩子答完最后一题就锁屏，
+  // 这条请求也要能活到发出去。
+  _ckQueueKey() { return 'amy_checkin_retry_v1'; },
+  _loadCkQueue() {
+    try { return JSON.parse(localStorage.getItem(this._ckQueueKey()) || '[]'); }
+    catch (e) { return []; }
+  },
+  _saveCkQueue(q) {
+    try { localStorage.setItem(this._ckQueueKey(), JSON.stringify(q.slice(-200))); }
+    catch (e) { /* 存储满就算了：打卡上报绝不能把孩子卡住 */ }
+  },
+  _ckQueueId(body) {
+    return [body.student_id, body.week_idx, body.day_idx].join('|');
+  },
+  _queueCheckin(body) {
+    if (!body || !body.student_id) return;
+    const q = this._loadCkQueue();
+    const id = this._ckQueueId(body);
+    // 同一条打卡（学生/周/天）只留最新的一份 —— 越晚的 body 答题数越多。
+    const idx = q.findIndex(item => item && item.id === id);
+    const entry = { id: id, body: body, at: new Date().toISOString() };
+    if (idx >= 0) q[idx] = entry; else q.push(entry);
+    this._saveCkQueue(q);
+  },
+  _flushingCheckins: false,
+  async flushCheckinQueue() {
+    if (this._flushingCheckins) return 0;
+    const q = this._loadCkQueue();
+    if (!q.length) return 0;
+    this._flushingCheckins = true;
+    let sent = 0;
+    const remain = [];
+    for (let i = 0; i < q.length; i++) {
+      const item = q[i];
+      if (!item || !item.body) continue;
+      let ok = false;
+      try {
+        const res = await fetch(this._classUrl('/api/checkins/report'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(item.body),
+          keepalive: true,
+        });
+        ok = res.ok;
+      } catch (e) { ok = false; }
+      if (ok) sent++; else remain.push(item);
+    }
+    this._saveCkQueue(remain);
+    this._flushingCheckins = false;
+    return sent;
+  },
   reportCheckin(rec, who) {
     if (!rec || !rec.studentId) return Promise.resolve(null);
     const w = who || {};
@@ -1394,12 +1455,18 @@ const Api = {
       wrong_count: rec.wrongCount,
       finish_time: rec.time,
     };
+    const fail = (why) => {
+      this._queueCheckin(body);
+      console.warn('reportCheckin failed (' + why + '), 已进重试队列');
+      return null;
+    };
     return fetch(this._classUrl('/api/checkins/report'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
-    }).then(res => (res.ok ? res.json() : null))
-      .catch(e => { console.warn('reportCheckin failed:', e); return null; });
+      keepalive: true,
+    }).then(res => (res.ok ? res.json() : fail('http ' + res.status)))
+      .catch(e => fail((e && e.message) || 'network'));
   },
 
   // 读后台打卡。一台设备上报、所有设备可见。
