@@ -4101,7 +4101,8 @@ const App = {
   // 下拉我才能收到」。这条就是那个"一个账号看全班"的入口。
   _checkinSyncStrip() {
     const tag = this._weekTag();
-    const students = this.state.students || [];
+    // 只点名本班学生（_classRoster），测试号/未分配号绝不进这个名单。
+    const students = this._classRoster();
     let cloudRows = 0, latest = '';
     const reported = {};
     students.forEach(s => {
@@ -4237,9 +4238,9 @@ const App = {
       html += '<div class="card mb-16">';
       html += '<div class="card-title">' + day.day_cn + '（' + this.getDayDateLabel(di, 0) + '）· ' + day.theme_cn + '</div>';
       day.modules.forEach(m => {
-        // Calculate demo scores
+        // Calculate demo scores（只统计本班学生）
         const scores = [];
-        this.state.students.forEach(s => {
+        this._classRoster().forEach(s => {
           const k = s.id + this._weekTag() + '_d' + di;
           const ck = this.state.checkins[k];
           if (ck && ck.done && ck.correctRate) scores.push(ck.correctRate);
@@ -4274,7 +4275,7 @@ const App = {
         if (m.questions) {
           m.questions.forEach((q, qi) => {
             const wrongStudents = [];
-            this.state.students.forEach(s => {
+            this._classRoster().forEach(s => {
               const a = this._lookupWrongAnswer(s.id, di, mi, qi);
               if (a && !a.correct) wrongStudents.push(s.name);
             });

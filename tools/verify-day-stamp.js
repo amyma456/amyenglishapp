@@ -211,7 +211,10 @@ console.log('\n=== 3. 整张错题卷跑一遍：每道题都带具体日期 ===
     console.log('\n=== 4. 老师端班级错题本 / 学生端我的错题本，也都带上日期 ===');
     {
       const a = loadApp(2);
-      a.state.students = [{ id: 's1', name: '测试同学', phone: '13000000000' }];
+      // v151 起错题本只认本班学生（_classRoster），测试学生必须带班级
+      a.state.classes = ['测试班'];
+      a.state.className = '测试班';
+      a.state.students = [{ id: 's1', name: '测试同学', phone: '13000000000', class: '测试班' }];
       a.state.answers = {};
       a.state.cloudWrongCache = {};
       a._loadCloudWrongCache = async () => {};
@@ -256,8 +259,8 @@ console.log('\n=== 3. 整张错题卷跑一遍：每道题都带具体日期 ===
         ok(/HOMEWORK_EPOCH/.test(src) && /HOMEWORK_EPOCH/.test(dataSrc),
            'app.js 推算日期用的是 data.js 里的周锚点，不是另写一份');
 
-        ok(/name="app-version" content="150"/.test(htmlSrc), '版本号升到 144');
-        ok(/amy-english-v150/.test(swSrc), 'Service Worker 缓存名同步到 v144（不然手机上还是旧版）');
+        ok(/name="app-version" content="151"/.test(htmlSrc), '版本号升到 144');
+        ok(/amy-english-v151/.test(swSrc), 'Service Worker 缓存名同步到 v144（不然手机上还是旧版）');
       }
 
       console.log('\n' + (fail ? '❌ ' + fail + ' 项未通过' : '✅ 全部通过'));
