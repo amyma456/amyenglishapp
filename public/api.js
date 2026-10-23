@@ -1425,16 +1425,67 @@ const Api = {
     this._saveCkQueue(q);
   },
   _flushingCheckins: false,
-  async flushCheckinQueue() {
-    if (this._flushingCheckins) return 0;
+  // ===== v152：荣耀 / 华为自带浏览器上「打卡迟到」的根治 ====================
+  // 家长 2026-10-23：有位同学用荣耀 70 自带浏览器，打卡记录总是"才更新上来"，
+  // 老师当晚看就是"没打卡"，第二天才冒出来 —— 典型的误判。
+  //
+  // 原因：这类浏览器（尤其开了省流 / 极速模式）在页面切后台、锁屏、被划掉时
+  // 会**直接掐掉还在飞的 fetch**，`keepalive` 请求头它们并不遵守；后台定时器
+  // 又被节流到几乎不跑。于是那次上报死在路上，只能等孩子下次打开 App 由
+  // 持久队列补发 —— 表现就是"迟到一天"。
+  //
+  // sendBeacon 是浏览器自己持有的请求：页面已经关了、被冻结了，它也照发。
+  // 服务端是 UPSERT（同一条打卡重复写不会坏），所以 beacon 和 fetch 可以
+  // 同时用，宁可发两遍也不能漏。
+  _ckBeacon(body) {
+    try {
+      if (!body) return false;
+      if (typeof navigator === 'undefined' || typeof navigator.sendBeacon !== 'function') return false;
+      const payload = JSON.stringify(body);
+      let data = payload;
+      // text/plain 属于「简单请求」，跨域也不触发预检；worker 那边用
+      // request.json() 解析，不看 Content-Type，所以照样能读。
+      try { data = new Blob([payload], { type: 'text/plain;charset=UTF-8' }); } catch (e) {}
+      const sent = navigator.sendBeacon(this._classUrl('/api/checkins/report'), data);
+      return sent === true;
+    } catch (e) { return false; }
+  },
+  // 孩子还停在页面上时，隔几秒自己再试 —— 弱网抖一下本来几秒就能补上，
+  // 不该拖到"下次打开 App"。队列里已经没有这条了就提前收工。
+  _ckRetryLater(body, delays) {
+    if (!body || !delays || !delays.length) return;
+    const id = this._ckQueueId(body);
+    const next = delays.slice(1);
+    const run = () => {
+      try {
+        const still = this._loadCkQueue().some(it => it && it.body && this._ckQueueId(it.body) === id);
+        if (!still) return;
+        Promise.resolve(this.flushCheckinQueue()).then(() => {
+          if (next.length) this._ckRetryLater(body, next);
+        });
+      } catch (e) { /* 重试本身绝不能影响孩子用 App */ }
+    };
+    try { setTimeout(run, delays[0]); } catch (e) {}
+  },
+  // opts.beacon = true：页面正在离场（切后台 / 关闭 / 被冻结），只能走 beacon。
+  // beacon 拿不到回执，所以这种情况下**不**把条目从队列里删掉 —— 下次打开
+  // App 再发一遍（UPSERT 幂等），宁可多一条重复请求，也不能少一条打卡。
+  async flushCheckinQueue(opts) {
+    const beaconOnly = !!(opts && opts.beacon);
+    if (this._flushingCheckins && !beaconOnly) return 0;
     const q = this._loadCkQueue();
     if (!q.length) return 0;
-    this._flushingCheckins = true;
+    if (!beaconOnly) this._flushingCheckins = true;
     let sent = 0;
     const remain = [];
     for (let i = 0; i < q.length; i++) {
       const item = q[i];
       if (!item || !item.body) continue;
+      if (beaconOnly) {
+        this._ckBeacon(item.body);
+        remain.push(item);          // 没有回执，保留到下次确认成功再删
+        continue;
+      }
       let ok = false;
       try {
         const res = await fetch(this._classUrl('/api/checkins/report'), {
@@ -1448,7 +1499,7 @@ const Api = {
       if (ok) sent++; else remain.push(item);
     }
     this._saveCkQueue(remain);
-    this._flushingCheckins = false;
+    if (!beaconOnly) this._flushingCheckins = false;
     return sent;
   },
   reportCheckin(rec, who) {
@@ -1473,7 +1524,13 @@ const Api = {
     };
     const fail = (why) => {
       this._queueCheckin(body);
-      console.warn('reportCheckin failed (' + why + '), 已进重试队列');
+      // v152：fetch 死在路上（荣耀 / 华为自带浏览器切后台就掐）时立刻补一发
+      // beacon —— 这是页面即将被关掉时唯一还能送出去的通道。
+      this._ckBeacon(body);
+      // 孩子还停在页面上：2s / 6s / 15s / 40s 自己再试几轮，当场补上，
+      // 不拖到"下次打开 App"。
+      this._ckRetryLater(body, [2000, 6000, 15000, 40000]);
+      console.warn('reportCheckin failed (' + why + '), 已 beacon + 进重试队列');
       return null;
     };
     return fetch(this._classUrl('/api/checkins/report'), {

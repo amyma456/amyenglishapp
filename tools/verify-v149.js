@@ -63,7 +63,7 @@ console.log('== 2. 打卡上报持久重试队列 ==');
   const api = fs.readFileSync('public/api.js', 'utf8');
   ok(/_ckQueueKey\(\)\s*\{\s*return 'amy_checkin_retry_v1'/.test(api), '队列持久化 key');
   ok(/_queueCheckin\(body\)/.test(api), '失败入队 _queueCheckin');
-  ok(/async flushCheckinQueue\(\)/.test(api), 'flushCheckinQueue 重发');
+  ok(/async flushCheckinQueue\(opts\)/.test(api), 'flushCheckinQueue 重发（opts.beacon 支持离场 beacon）');
   ok(/q\.slice\(-200\)/.test(api), '队列封顶 200 条');
   ok(/_flushingCheckins/.test(api), '防并发重入');
   const rcAt = api.indexOf('\n  reportCheckin(rec, who) {');
@@ -77,7 +77,9 @@ console.log('== 2. 打卡上报持久重试队列 ==');
 console.log('== 3. 重发触发器 ==');
 {
   const app = fs.readFileSync('public/app.js', 'utf8');
-  const b = app.slice(app.indexOf('_bindCheckinUpload() {'), app.indexOf('_bindCheckinUpload() {') + 1400);
+  const _bs = app.indexOf('_bindCheckinUpload() {');
+  // v152 起函数变长（beacon + pagehide），取窗按下一个函数边界算，别写死长度
+  const b = app.slice(_bs, app.indexOf('// 进「孩子打卡 / 完成率对比」之前拉一次后台', _bs));
   ok(/setInterval/.test(b) && /60000/.test(b), '页面可见时每 60 秒重发');
   ok(/addEventListener\('online'/.test(b), '网络恢复立即重发');
   ok(/Api\.flushCheckinQueue\(\)/.test(b), '触发器调用 flush');

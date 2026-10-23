@@ -574,7 +574,14 @@ const App = {
     let last = 0;
     const again = () => {
       try {
-        if (document.visibilityState === 'hidden') return;
+        // v152：页面切到后台 / 即将被关掉时，**也要**把没发出去的打卡 beacon 出去。
+        // 荣耀 70 自带浏览器会把后台页面的 fetch 直接掐掉（keepalive 也不认），
+        // 孩子答完就锁屏，那次上报就死在路上，只能等下次打开 App 补 ——
+        // 老师当晚看到的就是"没打卡"，正是家长说的误判。
+        if (document.visibilityState === 'hidden') {
+          Api.flushCheckinQueue({ beacon: true });
+          return;
+        }
         if (Date.now() - last < 60000) return;
         last = Date.now();
         this._backfilled = false;
@@ -584,6 +591,17 @@ const App = {
     document.addEventListener('visibilitychange', again);
     window.addEventListener('focus', again);
     window.addEventListener('pageshow', again);
+    // pagehide 是页面真正离场前最后一次机会（iOS / 安卓自带浏览器都认）。
+    // 只 beacon，不 fetch —— 这时候起 fetch 基本必死。
+    window.addEventListener('pagehide', () => {
+      try { Api.flushCheckinQueue({ beacon: true }); } catch (e) {}
+    });
+    // 回到前台：队列为空时是空转（立刻返回），有货就当场补发，不用等 60 秒。
+    document.addEventListener('visibilitychange', () => {
+      try {
+        if (document.visibilityState === 'visible') Api.flushCheckinQueue();
+      } catch (e) {}
+    });
     // v149：上报失败的打卡进的是 localStorage 持久队列（Api._queueCheckin），
     // 这里负责把它发出去 —— 页面可见时每 60 秒重发一轮；网络恢复立即重发。
     // 服务器确认 ok 才出队，所以弱网/锁屏杀死的上报最迟几分钟后也会补上，
