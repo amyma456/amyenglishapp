@@ -116,6 +116,22 @@ const Store = {
         doc.deletedClasses = d.deletedClasses || [];
         doc.revivedPhones = d.revivedPhones || [];
         doc.revivedClasses = d.revivedClasses || [];
+        // ===== v150：一次性清掉历史遗留的「复活名单」=====
+        // 老师 2026-10-23：「删除了之后下次显示还会再进来……顽固性的存在」。
+        // 云端 blob 的 revivedPhones 里攒了五十多个号码（含 test 的
+        // 13800138000、MATT 的 11840843943）—— 每清一次拦截名单，
+        // `_dropGates` 就把「已删除」翻成「复活」，墓碑当场失效，人又回来。
+        //
+        // 真正的放行走的是另一条路：untombstonePhone 会把号码从 deletedPhones
+        // 里摘掉，云端 deletedPhones 里本来就没有他，所以**清空这个列表不会
+        // 影响任何在读学生**。这里只做一次（带版本标记），之后按新逻辑走。
+        try {
+          if (localStorage.getItem('amy_revived_reset_v150') !== '1') {
+            doc.revivedPhones = [];
+            doc.revivedClasses = [];
+            localStorage.setItem('amy_revived_reset_v150', '1');
+          }
+        } catch (e) {}
       }
       // Migrate from an older version only when v6 produced no students.
       // Same order and same fields as the original loadData().

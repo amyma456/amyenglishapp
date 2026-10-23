@@ -1408,6 +1408,27 @@ const App = {
     this.state.className = '';
   },
 
+  // v150：记住「刷新前停在哪一屏」（老师 2026-10-23：「在打卡监控页面想要
+  // 刷新一下，下拉刷新之后它还是要在这个打卡监控页面，并且是刷新之后的」）。
+  //
+  // 存的是 tab id；恢复时按角色校验一遍 —— 老师存了 'checkin'、换个学生号
+  // 登录不会跑到不存在的页；反过来也一样。'preview' / 'print' 不恢复：
+  // 那两个是"带着当前选中对象进去"的临时页面，单独刷新回来只会是空壳。
+  _tabMemoryKey() { return 'amy_last_tab'; },
+  _saveTab(tab) {
+    try { localStorage.setItem(this._tabMemoryKey(), String(tab || '')); } catch (e) {}
+  },
+  _restoreTab() {
+    var t = '';
+    try { t = String(localStorage.getItem(this._tabMemoryKey()) || ''); } catch (e) {}
+    var teacher = this.isTeacher();
+    var allowed = teacher
+      ? ['weekly', 'daily', 'edit', 'checkin', 'scores', 'errors', 'speaking', 'students', 'classmgmt']
+      : ['today', 'myprogress', 'compare', 'myerrors'];
+    if (allowed.indexOf(t) >= 0) return t;
+    return teacher ? 'weekly' : 'today';
+  },
+
   showApp() {
     document.getElementById('login-page').classList.add('hidden');
     // v143：开屏层到这里才算完成任务 —— 它盖着的是"正在进入…"。
@@ -1421,7 +1442,10 @@ const App = {
     if (this._removedTimer) { clearInterval(this._removedTimer); this._removedTimer = null; }
     document.getElementById('main-app').classList.remove('hidden');
     // Default to the real today (teacher can still switch days for preview)
-    this.state.currentTab = this.isTeacher() ? 'weekly' : 'today';
+    // v150：**刷新后回到刷新前那一屏**（老师 2026-10-23：「在打卡监控页面
+    // 想要刷新一下，下拉刷新之后它还是要在这个打卡监控页面」）。以前这里
+    // 写死回 'weekly'，手机下拉刷新 / 电脑 F5 都会把人踢回首页。
+    this.state.currentTab = this._restoreTab();
     this.state.currentDay = this.getTodayWeekdayIdx();
     // 学生：接着上次做到的地方继续，不从第一题重来（重新登录、更新
     // 自动刷新后同样生效）。老师保持第 0 步。
@@ -1491,6 +1515,14 @@ const App = {
       this.syncFromCloud();
     }
     this.startAutoSync();
+    // v150：恢复到「打卡监控」这类数据页时，先拉一次云端再补画 —— 刷新出来
+    // 的必须是**刷新之后**的数据，而不是上一屏的旧快照。
+    if (['checkin', 'daily', 'scores', 'compare', 'myprogress'].indexOf(this.state.currentTab) >= 0) {
+      const wantTab = this.state.currentTab;
+      this._pullCloudCheckins(wantTab === 'myprogress' ? 'me' : 'class').then(changed => {
+        if (changed && this.state.currentTab === wantTab) this.renderContent();
+      }).catch(() => {});
+    }
   },
 
   // ===== TTS / Voice =====
@@ -3571,6 +3603,7 @@ const App = {
     this._tabPainted = true;
 
     this.state.currentTab = tab;
+    this._saveTab(tab);          // v150：刷新 / 下拉刷新后回到这一屏
     this.renderTabs();
 
     // 「口语记录」例外：它读的是 IndexedDB，渲染函数是同步的、没法 await，
@@ -4132,14 +4165,30 @@ const App = {
     }
   },
 
+  // 打卡监控里该出现的学生：**只认分过班的**，并且优先只取老师自己那个班。
+  // 没配班级（极少数）时退回"所有分过班的学生"，绝不把未分配的测试号铺进表。
+  _classRoster() {
+    const all = (this.state.students || []).filter(s => s && s.class);
+    const classes = (this.state.classes || []).filter(Boolean);
+    const target = this.state.className || (classes.length === 1 ? classes[0] : '');
+    if (!target) return all;
+    const inCls = all.filter(s => s.class === target);
+    return inCls.length ? inCls : all;
+  },
+
   renderCheckin() {
     let html = '<h2 style="color:var(--primary-dark);margin-bottom:12px">📊 打卡监控</h2>';
     html += this._checkinSyncStrip();
+    // v150：只显示**本班在册**的学生（老师 2026-10-23：「除了少儿英语A班的
+    // 几个学生以外，那些测试的多余的学生名字，小舟、Zoe 这些全部不要再出现
+    // 在这里了。只出现现有分配班级的学生」）。以前这里遍历全部 students，
+    // 五六十个测试号（小舟-Zoe 一堆）全铺在表里，真正的班级被淹掉。
+    const roster = this._classRoster();
     // Note: no auto-generated demo data - show real data only
     // Summary
     html += '<div class="stat-row mb-16">';
     let totalDone = 0, totalUndone = 0;
-    this.state.students.forEach(s => {
+    roster.forEach(s => {
       HOMEWORK_DATA.forEach((d, di) => {
         const k = s.id + this._weekTag() + '_d' + di;
         if (this.state.checkins[k] && this.state.checkins[k].done) totalDone++;
@@ -4155,7 +4204,7 @@ const App = {
     html += '<div class="card"><div class="checkin-table"><table class="data-table"><thead><tr><th>学生</th>';
     HOMEWORK_DATA.forEach((d, di) => html += '<th>' + d.day_cn + '<br><span style="font-weight:400;font-size:10px;color:var(--text-sub,#888)">' + this.getDayDateLabel(di, 0) + '</span></th>');
     html += '<th>总完成</th><th>平均正确率</th></tr></thead><tbody>';
-    this.state.students.forEach(s => {
+    roster.forEach(s => {
       html += '<tr><td>' + s.name + '</td>';
       let doneCount = 0, totalCorrect = 0, correctCount = 0;
       HOMEWORK_DATA.forEach((d, di) => {
@@ -4333,7 +4382,9 @@ const App = {
     let html = '<h2 style="color:var(--primary-dark);margin-bottom:12px">🖨️ 错题卷打印</h2>';
     html += '<p class="text-sub mb-16">选择学生生成个性化A4错题卷，答案默认隐藏，可切换显示</p>';
     html += '<div class="flex gap-8 mb-16" style="flex-wrap:wrap">';
-    this.state.students.forEach(s => {
+    // v150：错题卷只给本班学生出（和打卡监控同一套名单，见 _classRoster）。
+    // 以前把五六十个测试号（小舟-Zoe 一堆）全铺成按钮，老师的班级被淹掉。
+    this._classRoster().forEach(s => {
       html += '<button class="btn btn-outline btn-sm" onclick="App.genErrorSheet(\'' + s.id + '\')">' + s.name + '</button>';
     });
     html += '</div>';
@@ -5063,7 +5114,17 @@ const App = {
       for (const p of list) { if (await Api.classUnblock(p)) n++; }
     }
     // 本机也把痕迹清掉：墓碑（否则下次合并又把他藏起来）和「已收起」
-    for (const p of list) await Api.untombstonePhone(p);
+    //
+    // v150：**只清拦截，不复活删除**。这里原来无脑 untombstonePhone，把
+    // 「已删除学生」的墓碑直接翻成"复活"——于是老师删掉的 test / MATT，
+    // 每清一次拦截名单就被放回来一次（老师 2026-10-23：「删除了之后下次
+    // 显示还会再进来……顽固性的存在」）。云端 blob 里 revivedPhones 攒了
+    // 五十多个号码，就是这条路径写进去的。
+    // 门开不开（拦截）与人在不在名单里（墓碑）是两件事，不能混。
+    for (const p of list) {
+      if (Api.hasTombstonePhone(p)) continue;
+      await Api.untombstonePhone(p);
+    }
     const hid = this._hiddenGated();
     const left = hid.filter(p => list.indexOf(p) < 0);
     if (left.length !== hid.length) this._saveHiddenGated(left);
