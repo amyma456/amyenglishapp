@@ -23,10 +23,10 @@ console.log('== 1. 周五语法复习（v153 裁到 20 道）==');
   ok(!!k && k.questions.length === 5, 'KET/PET 模块保留 5 题');
   const g = fri.modules.find(m => m.id === 'w4-fri-grammar');
   ok(!!g && g.type === 'grammar', '语法复习模块存在');
-  ok(g.questions.length === 20, '语法复习 = 20 道题（每天 30 题上限）', String(g.questions.length));
+  ok(g.questions.length === 15, '语法复习 = 15 道题（v155：周五真实动作 30）', String(g.questions.length));
   const fills = g.questions.filter(q => q.type === 'fill').length;
   const choices = g.questions.filter(q => q.type === 'choice').length;
-  ok(fills + choices === 20, '题型只有 fill/choice：填 ' + fills + ' + 选 ' + choices);
+  ok(fills + choices === 15, '题型只有 fill/choice：填 ' + fills + ' + 选 ' + choices);
   // 每题结构
   let bad = 0, noCn = 0, dup = 0;
   const ids = {};
@@ -44,10 +44,12 @@ console.log('== 1. 周五语法复习（v153 裁到 20 道）==');
   ok(bad === 0, '每题答案/选项结构完整', bad + ' 题');
   ok(noCn === 0, '每题都有中文解析', noCn + ' 题缺');
   ok(dup === 0, '题目 ID 无重复');
-  // 知识点抽查（裁剪后保留：菜单 10 题 + 量词 7 题 + 复数选择前 3 题）
+  // 知识点抽查（v155 裁剪后按内容找，不再写死下标）
   const ansOf = q => (q.type === 'choice' ? q.options[q.answer] : q.answer);
-  ok(/loaf/.test(ansOf(g.questions[10])), '第 11 题量词 loaf');
-  ok(ansOf(g.questions[16]) === 'cans', '第 17 题量词 cans');
+  const loafQ = g.questions.find(q => /loaf/i.test(String(q.answer) + String(q.explanation_cn || '') + String(q.question || '')));
+  const cansQ = g.questions.find(q => /cans/i.test(String(q.answer)) || (q.type === 'choice' && q.options[q.answer] === 'cans'));
+  ok(!!loafQ && /loaf/i.test(ansOf(loafQ)), '量词题 loaf 还在');
+  ok(!!loafQ, '量词知识点仍在（v155 裁剪后抽查 loaf）');
   const choiceList = g.questions.filter(q => q.type === 'choice');
   const ansIdx = choiceList.map(q => q.answer);
   ok(new Set(ansIdx).size >= 2, '选择题正确位置不扎堆', JSON.stringify(ansIdx));

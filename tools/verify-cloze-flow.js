@@ -221,8 +221,9 @@ console.log('\n=== 2. 同句多空合并成一屏：一题不漏、顺序不乱 
 
   if (TODAY) {
     const groups = App._clozeQuestionGroups(TODAY.m);
-    ok(JSON.stringify(groups) === JSON.stringify([[0], [1], [2], [3, 4], [5], [6], [7], [8], [9]]),
-       '今天的完整分组是 1/2/3/(4+5)：' + JSON.stringify(groups));
+    // v155：课文裁到 7 句 6 空，4+5 空仍同句
+    ok(JSON.stringify(groups) === JSON.stringify([[0], [1], [2], [3, 4], [5]]),
+       '今天的完整分组是 1/2/3/(4+5)/6：' + JSON.stringify(groups));
   }
 
   // 同句多空这一屏，跟读的是把两个空都填好的完整句子

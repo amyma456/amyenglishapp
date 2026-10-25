@@ -387,13 +387,13 @@ const App = {
     return n;
   },
 
-  // ===== v154：按"题"计数的进度（家长：所有题加单词加起来 30 道）=====
+  // ===== v155：按"真实动作"计数的进度（家长 2026-10-25：每天30道是
+  // 真正的30道 —— 中文翻译每个是真正的一道题，读英语也是真正的一道题）=====
   //
-  // 做题界面右上角的计数以前直接用步骤下标（_buildSteps 里阅读逐句翻译、
-  // 完形逐句翻译每句各占一步），家长看到的是"第 3 / 51 步"，以为题量是
-  // 四五十道。现在改成按**单元**计数：一道题 = 1 个单元、一个词汇词 = 1
-  // 个单元、写作 5 个空 = 5 个单元；逐句翻译/跟读这些"过程屏"占 0 个单元。
-  // 每天恰好 30（题库已按 25 题 + 5 词 / 30 题 裁好），错题巩固不占 30。
+  // 口径：跟读一句英语 = 1、翻译一句中文 = 1、答一道题 = 1、
+  // 一个词汇词 = 1、写作一个空 = 1、朗读作文一句 = 1。
+  // 题库已按此口径裁好（tools/apply-v155-slim.js），每天恰好 30，
+  // 错题巩固不占 30。孩子 30 分钟左右能做完。
   _dayUnits(dayIdx) {
     const day = HOMEWORK_DATA[dayIdx];
     if (!day || !day.modules) return 0;
@@ -402,19 +402,25 @@ const App = {
       if (m.words) n += m.words.length;
       if (m.questions) n += m.questions.length;
       if (m.blanks) n += m.blanks.length;
+      if (m.passage) n += 2 * this._splitSentences(m.passage).length;   // 逐句读 + 逐句译
+      if (m.type === 'writing_template') n += this._writingSentences(m).length; // 朗读全文逐句
     });
     return n;
   },
 
-  // 一个步骤代表几个单元（0 = 过程屏，不占题数）。
+  // 一个步骤代表几个单元（0 = 巩固/过程，不占题数）。
   _unitsOfStep(step, day) {
     if (!step || step.mi === undefined) return 0;   // retry / review 巩固步
     const m = day && day.modules && day.modules[step.mi];
     if (!m) return 0;
     if (step.kind === 'vocab') return (m.words || []).length;
     if (step.kind === 'writing') return (m.blanks || []).length;
+    if (step.kind === 'writingread') return this._writingSentences(m).length;
     if (step.kind === 'clozegroup') return (step.qis || [step.qi]).length;
     if (step.kind === 'speaking' || step.kind === 'question') return 1;
+    // 读一句 / 译一句 / 整篇翻译兜底屏，都是真实的一道题
+    if (step.kind === 'sentence' || step.kind === 'translate'
+      || step.kind === 'cqtrans' || step.kind === 'passage') return 1;
     return 0;
   },
 

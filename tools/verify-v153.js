@@ -71,21 +71,31 @@ console.log('\n== 2. _raceTimeout 行为级：挂着不回来的 promise 会被�
 }
 
 function part2() {
-  console.log('\n== 3. 每天恰好 30（v154 起口径 = 题 + 词）==');
+  console.log('\n== 3. 每天恰好 30（v155 起口径 = 真实动作）==');
   {
     const fn = new Function(dataSrc + '; return { W: HOMEWORK_WEEKS };');
     const W = fn().W;
+    const sentsEN = t => String(t).replace(/\s+/g, ' ').match(/[^.!?]+[.!?]+["']?(?=\s|$)/g) || [String(t)];
+    const sentsCN = t => String(t).replace(/\s+/g, '').split(/(?<=[。！？])/).filter(x => x.length > 1);
     let allOk = true, detail = [];
     W.forEach((week, wi) => week.forEach(d => {
       let n = 0;
       (d.modules || []).forEach(m => {
         if (m.questions) n += m.questions.length;
         if (m.blanks) n += m.blanks.length;
-        if (m.words) n += m.words.length;   // v154：词汇的词也算一个单元
+        if (m.words) n += m.words.length;
+        if (m.passage) n += 2 * sentsEN(m.passage).length;   // 读一句 + 译一句
+        if (m.type === 'writing_template') n += sentsEN(m.full_text).length; // 朗读作文逐句
       });
       if (n !== 30) { allOk = false; detail.push('W' + (wi + 1) + d.day_cn + '=' + n); }
     }));
-    ok(allOk, '28 天每天（题 + 词）都是 30', detail.join(' '));
+    ok(allOk, '28 天每天真实动作（读/译/题/词）都是 30', detail.join(' '));
+    // 阅读中英句数必须一致（裁剪是同下标裁的）
+    let pairOk = true;
+    W.forEach(week => week.forEach(d => (d.modules || []).forEach(m => {
+      if (m.type === 'reading' && sentsEN(m.passage).length !== sentsCN(m.passage_cn).length) pairOk = false;
+    })));
+    ok(pairOk, '16 篇阅读课文裁剪后中英句数仍逐句对齐');
     // 时长也写回去了
     let durOk = true;
     W.forEach(week => week.forEach(d => {
@@ -146,9 +156,10 @@ function part2() {
     })));
     ok(mcCount >= 16, '各天新增了单项选择模块（共 ' + mcCount + ' 个）');
     function find(w, day, suf) { return W[w][day].modules.find(m => m.id === suf || m.id.endsWith(suf)); }
-    ok(!!find(0, 0, 'mon-tense2'), '周一/周三/周六新增了时态小模块（补齐 30 题）');
-    ok(!!find(0, 6, 'sun-tense') && !!find(0, 6, 'sun-grammar') && !!find(0, 6, 'sun-listening'),
-       '周日新增时态/语法/听力模块');
+    // v155：周一/三/六的时态模块、周日的时态+语法模块已删除（真实动作=30）
+    ok(!find(0, 0, 'mon-tense2') && !find(0, 6, 'sun-tense') && !find(0, 6, 'sun-grammar'),
+       'v155 已删掉补量的时态/语法模块（周一三六 + 周日）');
+    ok(!!find(0, 6, 'sun-listening'), '周日保留听力模块');
     // 每个 choice 4 选项、每个题有解析、听力有原文（抽查 W1-W2 全部）
     let badOpt = 0, noCn = 0, noAudio = 0, dupId = 0;
     const ids = {};
@@ -176,9 +187,9 @@ function part2() {
 
   console.log('\n== 6. 版本号 = 153 ==');
   {
-    ok(/app-version" content="154"/.test(htmlSrc), 'index.html meta = 153');
-    ok((htmlSrc.match(/\?v=154/g) || []).length >= 5, '脚本引用 ?v=154（' + (htmlSrc.match(/\?v=154/g) || []).length + ' 处）');
-    ok(/amy-english-v154/.test(swSrc) && /var V = 154;/.test(swSrc), 'sw.js 缓存名与 V = 153');
+    ok(/app-version" content="155"/.test(htmlSrc), 'index.html meta = 153');
+    ok((htmlSrc.match(/\?v=155/g) || []).length >= 5, '脚本引用 ?v=155（' + (htmlSrc.match(/\?v=155/g) || []).length + ' 处）');
+    ok(/amy-english-v155/.test(swSrc) && /var V = 155;/.test(swSrc), 'sw.js 缓存名与 V = 153');
   }
 
   console.log('');

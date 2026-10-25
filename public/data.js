@@ -1,14 +1,15 @@
-// 题库数据 —— v153 由 tools/apply-v153-content.js 生成，v154 由 tools/apply-v154-trim.js 裁量。
-// 每天 30 个单元：带词汇的日子 25 题 + 5 词，不带词汇的日子 30 题（家长：所有题加单词加起来 30 道）。
+// 题库数据 —— v153 生成主题，v154/v155 裁量（tools/apply-v154-trim.js / apply-v155-slim.js）。
+// v155 口径：每天恰好 30 个真实动作 —— 读一句英语算一道、翻译一句算一道、
+// 答一道题算一道、一个词算一道（家长 2026-10-25：让孩子 30 分钟左右做完）。
 // 阅读/完形/写作主题 = 中国文化 · 科学技术 · 现代热点。
-// 改题库：改 tools/v153-content-*.js 重跑 v153 脚本，再跑本脚本，最后 node tools/verify-weeks.js。
+// 改题库：改 tools/v153-content-*.js 重跑 v153 脚本，再依次跑 v154/v155 脚本，最后 node tools/verify-weeks.js。
 
 const WEEK1 = [
   {
     "day_cn": "周一",
     "day_en": "Monday",
     "is_speaking_day": true,
-    "total_duration": 55,
+    "total_duration": 50,
     "theme_cn": "AI口语 + 高频词汇 + 阅读理解",
     "modules": [
       {
@@ -605,32 +606,6 @@ const WEEK1 = [
             "explanation_cn": "第二句：usually comes in January or February（一月或二月）。"
           },
           {
-            "id": "mon-rd3",
-            "type": "choice",
-            "question": "What do people do before the festival?",
-            "options": [
-              "They go swimming in the sea.",
-              "They clean their houses and buy new clothes.",
-              "They plant many trees.",
-              "They sleep at home all day."
-            ],
-            "answer": 1,
-            "explanation_cn": "第三句：clean their houses and buy new clothes（打扫房子、买新衣服）。"
-          },
-          {
-            "id": "mon-rd4",
-            "type": "choice",
-            "question": "When does the whole family enjoy a big dinner?",
-            "options": [
-              "On Monday morning",
-              "After the festival",
-              "At noon every day",
-              "On New Year's Eve"
-            ],
-            "answer": 3,
-            "explanation_cn": "除夕夜（New Year's Eve）全家人聚在一起吃年夜饭。"
-          },
-          {
             "id": "mon-rd5",
             "type": "choice",
             "question": "Why do children love the Spring Festival best?",
@@ -642,58 +617,6 @@ const WEEK1 = [
             ],
             "answer": 0,
             "explanation_cn": "孩子们最喜欢春节，因为可以收到压岁钱（lucky money）。"
-          },
-          {
-            "id": "mon-rd6",
-            "type": "choice",
-            "question": "Where is the lucky money put?",
-            "options": [
-              "In blue boxes",
-              "In white bags",
-              "In red envelopes",
-              "In school bags"
-            ],
-            "answer": 2,
-            "explanation_cn": "压岁钱装在红包（red envelopes）里。"
-          },
-          {
-            "id": "mon-rd7",
-            "type": "choice",
-            "question": "What do people say to each other during the festival?",
-            "options": [
-              "\"Good night\"",
-              "\"Happy New Year\"",
-              "\"Happy birthday\"",
-              "\"See you tomorrow\""
-            ],
-            "answer": 1,
-            "explanation_cn": "人们见面互相说「Happy New Year（新年快乐）」。"
-          },
-          {
-            "id": "mon-rd8",
-            "type": "choice",
-            "question": "\"Get together\" in the passage means ___.",
-            "options": [
-              "meet and stay with family",
-              "have a fight",
-              "go to school",
-              "take a trip"
-            ],
-            "answer": 0,
-            "explanation_cn": "get together 意思是「聚在一起」，除夕夜全家人团聚吃年夜饭。"
-          },
-          {
-            "id": "mon-rd9",
-            "type": "choice",
-            "question": "Which of the following is NOT in the passage?",
-            "options": [
-              "People go swimming in the sea.",
-              "People clean their houses.",
-              "People buy new clothes.",
-              "People visit relatives and friends."
-            ],
-            "answer": 0,
-            "explanation_cn": "文章没有说人们去海边游泳，其余三项都在文中。"
           },
           {
             "id": "mon-rd10",
@@ -767,62 +690,6 @@ const WEEK1 = [
             ],
             "answer": 0,
             "explanation_cn": "「在红包里」用 in red envelopes。"
-          },
-          {
-            "id": "mon-mc5",
-            "type": "choice",
-            "question": "We ___ our relatives during the Spring Festival every year.",
-            "options": [
-              "visit",
-              "visits",
-              "visited",
-              "visiting"
-            ],
-            "answer": 0,
-            "explanation_cn": "every year 表示经常性动作，主语 we 是复数，动词用原形 visit。"
-          }
-        ]
-      },
-      {
-        "id": "mon-tense2",
-        "name_cn": "时态练习",
-        "type": "tense",
-        "duration": 5,
-        "questions": [
-          {
-            "id": "mon-tn21",
-            "type": "fill",
-            "question": "The Spring Festival usually ___ (come) in January or February. [填入正确形式]",
-            "answer": "comes",
-            "explanation_cn": "usually 表示习惯，主语三单，动词加 es。"
-          },
-          {
-            "id": "mon-tn22",
-            "type": "fill",
-            "question": "We ___ (clean) our house before the festival next week. [填入正确形式]",
-            "answer": "will clean",
-            "explanation_cn": "next week 将来时间，用 will clean。"
-          },
-          {
-            "id": "mon-tn23",
-            "type": "fill",
-            "question": "Last year, I ___ (get) lucky money from my grandma. [填入正确形式]",
-            "answer": "got",
-            "explanation_cn": "last year 过去时间，get 的过去式是 got。"
-          },
-          {
-            "id": "mon-tn24",
-            "type": "fill",
-            "question": "Look! Mom ___ (cook) the big dinner now. [填入正确形式]",
-            "answer": "is cooking",
-            "explanation_cn": "Look! 提示正在进行，用 is cooking。"
-          },
-          {
-            "id": "mon-tn25",
-            "type": "fill",
-            "question": "Children ___ (love) the festival very much. [填入正确形式]",
-            "answer": "love",
-            "explanation_cn": "主语 children 复数，一般现在时用原形。"
           }
         ]
       }
@@ -840,8 +707,8 @@ const WEEK1 = [
         "name_cn": "阅读理解",
         "type": "reading",
         "duration": 10,
-        "passage": "The Great Wall is one of the greatest wonders in the world. It is in the north of China. It is more than 20000 kilometres long, like a huge dragon on the mountains. People started to build it over 2000 years ago. In old times, soldiers stood on the wall and watched for enemies. Today, many visitors from all over the world come to climb the Great Wall every year. When you stand on it, you can see beautiful mountains all around.",
-        "passage_cn": "长城是世界上最伟大的奇迹之一。它在中国的北方。它有两万多公里长，像一条卧在群山上的巨龙。人们两千多年前就开始修建它了。古时候，士兵们站在城墙上瞭望敌人。如今，每年都有来自世界各地的游客来爬长城。当你站在长城上，四周能看到美丽的群山。",
+        "passage": "The Great Wall is one of the greatest wonders in the world. It is in the north of China. It is more than 20000 kilometres long, like a huge dragon on the mountains. People started to build it over 2000 years ago. In old times, soldiers stood on the wall and watched for enemies. Today, many visitors from all over the world come to climb the Great Wall every year.",
+        "passage_cn": "长城是世界上最伟大的奇迹之一。它在中国的北方。它有两万多公里长，像一条卧在群山上的巨龙。人们两千多年前就开始修建它了。古时候，士兵们站在城墙上瞭望敌人。如今，每年都有来自世界各地的游客来爬长城。",
         "questions": [
           {
             "id": "tue-rd1",
@@ -870,19 +737,6 @@ const WEEK1 = [
             "explanation_cn": "第三句：more than 20000 kilometres long（两万多公里）。"
           },
           {
-            "id": "tue-rd3",
-            "type": "choice",
-            "question": "What does the Great Wall look like?",
-            "options": [
-              "A huge dragon on the mountains",
-              "A long river",
-              "A big house",
-              "A small bridge"
-            ],
-            "answer": 0,
-            "explanation_cn": "文中说它像一条卧在群山上的巨龙（a huge dragon）。"
-          },
-          {
             "id": "tue-rd4",
             "type": "choice",
             "question": "When did people start to build it?",
@@ -894,71 +748,6 @@ const WEEK1 = [
             ],
             "answer": 0,
             "explanation_cn": "第四句：over 2000 years ago（两千多年前）。"
-          },
-          {
-            "id": "tue-rd5",
-            "type": "choice",
-            "question": "What did soldiers do on the wall in old times?",
-            "options": [
-              "They watched for enemies.",
-              "They grew rice.",
-              "They sold tea.",
-              "They played football."
-            ],
-            "answer": 0,
-            "explanation_cn": "古时候士兵站在城墙上瞭望敌人（watched for enemies）。"
-          },
-          {
-            "id": "tue-rd6",
-            "type": "choice",
-            "question": "Who comes to climb the Great Wall today?",
-            "options": [
-              "Only Chinese students",
-              "Visitors from all over the world",
-              "Only old people",
-              "Only the soldiers"
-            ],
-            "answer": 1,
-            "explanation_cn": "如今每年有来自世界各地的游客来爬长城。"
-          },
-          {
-            "id": "tue-rd7",
-            "type": "choice",
-            "question": "What can you see when you stand on the wall?",
-            "options": [
-              "Beautiful mountains",
-              "A big sea",
-              "Long rivers only",
-              "Tall buildings only"
-            ],
-            "answer": 0,
-            "explanation_cn": "最后一句：可以看到四周美丽的群山。"
-          },
-          {
-            "id": "tue-rd8",
-            "type": "choice",
-            "question": "The word \"wonders\" here means ___.",
-            "options": [
-              "奇迹",
-              "窗户",
-              "问题",
-              "商品"
-            ],
-            "answer": 0,
-            "explanation_cn": "wonder 在这里是「奇迹」的意思，长城是世界奇迹之一。"
-          },
-          {
-            "id": "tue-rd9",
-            "type": "choice",
-            "question": "How many wonders does the passage say the Great Wall belongs to?",
-            "options": [
-              "One of the greatest",
-              "The second greatest",
-              "The last one",
-              "It doesn't say"
-            ],
-            "answer": 0,
-            "explanation_cn": "第一句：one of the greatest wonders（最伟大的奇迹之一）。"
           },
           {
             "id": "tue-rd10",
@@ -1058,58 +847,6 @@ const WEEK1 = [
             ],
             "answer": 0,
             "explanation_cn": "than 比较级：much longer（长得多）。"
-          },
-          {
-            "id": "tue-gr7",
-            "type": "choice",
-            "question": "It took ___ two hours to get there by bus.",
-            "options": [
-              "us",
-              "we",
-              "our",
-              "ours"
-            ],
-            "answer": 0,
-            "explanation_cn": "take 后面用宾格 us：took us two hours（花了我们两小时）。"
-          },
-          {
-            "id": "tue-gr8",
-            "type": "choice",
-            "question": "___ interesting the story about the wall is!",
-            "options": [
-              "How",
-              "What",
-              "What an",
-              "Where"
-            ],
-            "answer": 0,
-            "explanation_cn": "How + 形容词 + 主谓：How interesting…!"
-          },
-          {
-            "id": "tue-gr9",
-            "type": "choice",
-            "question": "The wall is famous ___ all over the world.",
-            "options": [
-              "to",
-              "with",
-              "in",
-              "at"
-            ],
-            "answer": 2,
-            "explanation_cn": "be famous in…：在全世界都有名，用 in。"
-          },
-          {
-            "id": "tue-gr10",
-            "type": "choice",
-            "question": "Don't ___ on the wall. It's dangerous.",
-            "options": [
-              "run",
-              "runs",
-              "running",
-              "ran"
-            ],
-            "answer": 0,
-            "explanation_cn": "Don't 后面用动词原形：Don't run（不要跑）。"
           }
         ]
       },
@@ -1222,32 +959,6 @@ const WEEK1 = [
             ],
             "answer": 0,
             "explanation_cn": "How + 形容词：How long the Great Wall is!（多长啊！）"
-          },
-          {
-            "id": "tue-mc9",
-            "type": "choice",
-            "question": "The wall is in the ___ of China.",
-            "options": [
-              "north",
-              "northern",
-              "northward",
-              "northerner"
-            ],
-            "answer": 0,
-            "explanation_cn": "in the north of China：在北方，用名词 north。"
-          },
-          {
-            "id": "tue-mc10",
-            "type": "choice",
-            "question": "When you stand on it, you ___ see beautiful mountains.",
-            "options": [
-              "can",
-              "cans",
-              "is",
-              "are"
-            ],
-            "answer": 0,
-            "explanation_cn": "情态动词 can 后面用动词原形 see。"
           }
         ]
       }
@@ -1257,7 +968,7 @@ const WEEK1 = [
     "day_cn": "周三",
     "day_en": "Wednesday",
     "is_speaking_day": true,
-    "total_duration": 55,
+    "total_duration": 50,
     "theme_cn": "AI口语 + 高频词汇 + 阅读理解",
     "modules": [
       {
@@ -1820,8 +1531,8 @@ const WEEK1 = [
         "name_cn": "阅读理解",
         "type": "reading",
         "duration": 10,
-        "passage": "Giant pandas are one of the most loved animals in China. They have black and white fur and look very cute. Pandas live in the bamboo forests of Sichuan. They spend most of their day eating bamboo — about twelve hours a day! A baby panda is very, very small. It is only about 100 grams at birth, lighter than a cup of water. Pandas are good at climbing trees and swimming. Now there are panda bases in Sichuan, and scientists there help baby pandas grow up well.",
-        "passage_cn": "大熊猫是中国最受喜爱的动物之一。它们长着黑白相间的毛，看起来非常可爱。大熊猫生活在四川的竹林里。它们一天中大部分时间都在吃竹子——每天大约要吃十二个小时！熊猫宝宝非常非常小。出生时只有大约100克，比一杯水还轻。大熊猫擅长爬树和游泳。现在四川建有大熊猫基地，那里的科学家帮助熊猫宝宝健康成长。",
+        "passage": "Giant pandas are one of the most loved animals in China. They have black and white fur and look very cute. Pandas live in the bamboo forests of Sichuan. A baby panda is very, very small. It is only about 100 grams at birth, lighter than a cup of water. Now there are panda bases in Sichuan, and scientists there help baby pandas grow up well.",
+        "passage_cn": "大熊猫是中国最受喜爱的动物之一。它们长着黑白相间的毛，看起来非常可爱。大熊猫生活在四川的竹林里。熊猫宝宝非常非常小。出生时只有大约100克，比一杯水还轻。现在四川建有大熊猫基地，那里的科学家帮助熊猫宝宝健康成长。",
         "questions": [
           {
             "id": "wed-rd1",
@@ -1850,19 +1561,6 @@ const WEEK1 = [
             "explanation_cn": "第二句：pandas live in the bamboo forests of Sichuan（四川竹林）。"
           },
           {
-            "id": "wed-rd3",
-            "type": "choice",
-            "question": "How long do pandas eat bamboo every day?",
-            "options": [
-              "About two hours",
-              "About five hours",
-              "About twelve hours",
-              "About twenty hours"
-            ],
-            "answer": 2,
-            "explanation_cn": "它们每天大约花十二个小时吃竹子。"
-          },
-          {
             "id": "wed-rd4",
             "type": "choice",
             "question": "How heavy is a baby panda at birth?",
@@ -1876,19 +1574,6 @@ const WEEK1 = [
             "explanation_cn": "出生时只有约 100 克，比一杯水还轻。"
           },
           {
-            "id": "wed-rd5",
-            "type": "choice",
-            "question": "What are pandas good at?",
-            "options": [
-              "Climbing trees and swimming",
-              "Running very fast",
-              "Jumping very high",
-              "Singing and dancing"
-            ],
-            "answer": 0,
-            "explanation_cn": "文中说熊猫擅长爬树（climbing trees）和游泳（swimming）。"
-          },
-          {
             "id": "wed-rd6",
             "type": "choice",
             "question": "Who helps baby pandas grow up well?",
@@ -1900,58 +1585,6 @@ const WEEK1 = [
             ],
             "answer": 0,
             "explanation_cn": "熊猫基地的科学家帮助熊猫宝宝长大。"
-          },
-          {
-            "id": "wed-rd7",
-            "type": "choice",
-            "question": "Why do people love pandas?",
-            "options": [
-              "They look very cute.",
-              "They can talk.",
-              "They are very big.",
-              "They can fly."
-            ],
-            "answer": 0,
-            "explanation_cn": "第一句说熊猫是最受喜爱的动物之一，因为长得可爱。"
-          },
-          {
-            "id": "wed-rd8",
-            "type": "choice",
-            "question": "What do pandas mostly eat?",
-            "options": [
-              "Bamboo",
-              "Meat",
-              "Fish",
-              "Rice"
-            ],
-            "answer": 0,
-            "explanation_cn": "它们大部分时间在吃竹子（bamboo）。"
-          },
-          {
-            "id": "wed-rd9",
-            "type": "choice",
-            "question": "A baby panda at birth is lighter than ___.",
-            "options": [
-              "a cup of water",
-              "a school bag",
-              "a big dog",
-              "an adult panda"
-            ],
-            "answer": 0,
-            "explanation_cn": "文中说它比一杯水还轻（lighter than a cup of water）。"
-          },
-          {
-            "id": "wed-rd10",
-            "type": "choice",
-            "question": "The best title for the panda passage is ___.",
-            "options": [
-              "Bamboo in Sichuan",
-              "Cute Giant Pandas",
-              "Animals in the Zoo",
-              "Scientists at Work"
-            ],
-            "answer": 1,
-            "explanation_cn": "全文介绍大熊猫的样子、食物、宝宝和熊猫基地。"
           }
         ]
       },
@@ -2012,62 +1645,6 @@ const WEEK1 = [
             ],
             "answer": 0,
             "explanation_cn": "spend time doing sth：spend 后面动词用 -ing 形式。"
-          },
-          {
-            "id": "wed-mc5",
-            "type": "choice",
-            "question": "Pandas are good at ___ trees.",
-            "options": [
-              "climbing",
-              "climb",
-              "climbed",
-              "climbs"
-            ],
-            "answer": 0,
-            "explanation_cn": "be good at doing sth：at 后面用动名词 climbing。"
-          }
-        ]
-      },
-      {
-        "id": "wed-tense2",
-        "name_cn": "时态练习",
-        "type": "tense",
-        "duration": 5,
-        "questions": [
-          {
-            "id": "wed-tn21",
-            "type": "fill",
-            "question": "The panda ___ (spend) twelve hours a day eating. [填入正确形式]",
-            "answer": "spends",
-            "explanation_cn": "主语三单，一般现在时动词加 s。"
-          },
-          {
-            "id": "wed-tn22",
-            "type": "fill",
-            "question": "We ___ (see) the baby panda at the base last May. [填入正确形式]",
-            "answer": "saw",
-            "explanation_cn": "last May 过去时间，see 的过去式是 saw。"
-          },
-          {
-            "id": "wed-tn23",
-            "type": "fill",
-            "question": "Scientists ___ (help) pandas since 1963. [填入正确形式]",
-            "answer": "have helped",
-            "explanation_cn": "since 1963 与现在完成时连用。"
-          },
-          {
-            "id": "wed-tn24",
-            "type": "fill",
-            "question": "Look! The panda ___ (climb) the tree. [填入正确形式]",
-            "answer": "is climbing",
-            "explanation_cn": "Look! 提示正在进行，用 is climbing。"
-          },
-          {
-            "id": "wed-tn25",
-            "type": "fill",
-            "question": "Pandas ___ (not eat) meat often. [填入正确形式]",
-            "answer": "don't eat",
-            "explanation_cn": "主语复数，否定用 don't + 动词原形。"
           }
         ]
       }
@@ -2155,76 +1732,6 @@ const WEEK1 = [
             ],
             "answer": 0,
             "explanation_cn": "主语是 visitors（游客），动词是 climb（爬），时间是 every year。"
-          },
-          {
-            "id": "thu-ls6",
-            "type": "choice",
-            "question": "听到的句子是什么？",
-            "audio_text": "When you stand on it, you can see beautiful mountains.",
-            "options": [
-              "When you stand on it, you can see beautiful mountains.",
-              "When you stand on it, you can see a long river.",
-              "When you sit on it, you can see beautiful flowers.",
-              "When you stand under it, you can see tall buildings."
-            ],
-            "answer": 0,
-            "explanation_cn": "stand（站）和 sit（坐）要分清；看到的是 mountains（山）。"
-          },
-          {
-            "id": "thu-ls7",
-            "type": "choice",
-            "question": "听到的句子是什么？",
-            "audio_text": "The wall looks like a huge dragon.",
-            "options": [
-              "The wall looks like a huge dragon.",
-              "The wall looks like a long snake.",
-              "The wall sounds like a big drum.",
-              "The wall looks like a small bridge."
-            ],
-            "answer": 0,
-            "explanation_cn": "looks like（看起来像）a huge dragon（巨龙）。"
-          },
-          {
-            "id": "thu-ls8",
-            "type": "choice",
-            "question": "听到的句子是什么？",
-            "audio_text": "We took a bus to the Great Wall last Sunday.",
-            "options": [
-              "We took a bus to the Great Wall last Sunday.",
-              "We took a train to the Great Wall last Sunday.",
-              "We took a bus to the Summer Palace last Sunday.",
-              "We walked to the Great Wall last Sunday."
-            ],
-            "answer": 0,
-            "explanation_cn": "交通工具是 took a bus（坐公交），地点是 the Great Wall。"
-          },
-          {
-            "id": "thu-ls9",
-            "type": "choice",
-            "question": "听到的句子是什么？",
-            "audio_text": "Climbing the Great Wall makes me feel proud.",
-            "options": [
-              "Climbing the Great Wall makes me feel proud.",
-              "Climbing the Great Wall makes me feel tired.",
-              "Climbing the mountain makes me feel proud.",
-              "Drawing the Great Wall makes me feel happy."
-            ],
-            "answer": 0,
-            "explanation_cn": "feel proud（感到自豪），别听成 tired（累）。"
-          },
-          {
-            "id": "thu-ls10",
-            "type": "choice",
-            "question": "听到的句子是什么？",
-            "audio_text": "The old wall tells us a long story.",
-            "options": [
-              "The old wall tells us a long story.",
-              "The old man tells us a long story.",
-              "The old wall tells us a short story.",
-              "The old book tells us a long story."
-            ],
-            "answer": 0,
-            "explanation_cn": "主语是 the old wall（古老的城墙），不是 the old man。"
           }
         ]
       },
@@ -2233,7 +1740,7 @@ const WEEK1 = [
         "name_cn": "完形填空",
         "type": "cloze",
         "duration": 10,
-        "passage": "China is the home 1___ tea. People in China started to drink tea long, long ago. In the past, people 2___ tea leaves to many countries along the old roads. That road is 3___ the Tea Road today. There are many 4___ of tea in China, like green tea and black tea. Green tea is 5___ in Hangzhou and other warm places. Most Chinese people like to 6___ hot tea, not cold tea. When guests come to a Chinese home, the host always 7___ them a cup of tea. It is a way to show welcome and 8___. People also say that drinking tea is good for 9___. Next time you visit a Chinese family, remember to 10___ the tea. It carries a long history and a warm heart.",
+        "passage": "China is the home 1___ tea. People in China started to drink tea long, long ago. In the past, people 2___ tea leaves to many countries along the old roads. There are many 3___ of tea in China, like green tea and black tea. Green tea is 4___ in Hangzhou and other warm places. When guests come to a Chinese home, the host always 5___ them a cup of tea. Next time you visit a Chinese family, remember to 6___ the tea.",
         "questions": [
           {
             "id": "thu-cz1",
@@ -2266,19 +1773,6 @@ const WEEK1 = [
             "type": "choice",
             "question": "3___",
             "options": [
-              "called",
-              "asked",
-              "told",
-              "sang"
-            ],
-            "answer": 0,
-            "explanation_cn": "那条路「被叫做」Tea Road，用 is called。"
-          },
-          {
-            "id": "thu-cz4",
-            "type": "choice",
-            "question": "4___",
-            "options": [
               "kinds",
               "pieces",
               "boxes",
@@ -2288,9 +1782,9 @@ const WEEK1 = [
             "explanation_cn": "many kinds of tea：许多种茶，kinds 意思是「种类」。"
           },
           {
-            "id": "thu-cz5",
+            "id": "thu-cz4",
             "type": "choice",
-            "question": "5___",
+            "question": "4___",
             "options": [
               "grown",
               "eaten",
@@ -2301,22 +1795,9 @@ const WEEK1 = [
             "explanation_cn": "茶「种植」在杭州等温暖的地方，用 grown（grow 的过去分词）。"
           },
           {
-            "id": "thu-cz6",
+            "id": "thu-cz5",
             "type": "choice",
-            "question": "6___",
-            "options": [
-              "drink",
-              "eat",
-              "cook",
-              "wash"
-            ],
-            "answer": 0,
-            "explanation_cn": "喝热茶用 drink hot tea。"
-          },
-          {
-            "id": "thu-cz7",
-            "type": "choice",
-            "question": "7___",
+            "question": "5___",
             "options": [
               "gives",
               "give",
@@ -2327,35 +1808,9 @@ const WEEK1 = [
             "explanation_cn": "主语 the host 是第三人称单数，一般现在时动词加 s：gives。"
           },
           {
-            "id": "thu-cz8",
+            "id": "thu-cz6",
             "type": "choice",
-            "question": "8___",
-            "options": [
-              "love",
-              "money",
-              "sleep",
-              "cold"
-            ],
-            "answer": 0,
-            "explanation_cn": "show welcome and love：表达欢迎和喜爱。"
-          },
-          {
-            "id": "thu-cz9",
-            "type": "choice",
-            "question": "9___",
-            "options": [
-              "health",
-              "homework",
-              "sports",
-              "music"
-            ],
-            "answer": 0,
-            "explanation_cn": "be good for health：对健康有好处。"
-          },
-          {
-            "id": "thu-cz10",
-            "type": "choice",
-            "question": "10___",
+            "question": "6___",
             "options": [
               "enjoy",
               "throw",
@@ -2407,41 +1862,6 @@ const WEEK1 = [
             "question": "People ___ (start) to grow tea in China long ago. [填入正确形式]",
             "answer": "started",
             "explanation_cn": "long ago 是过去时间，用过去式 started。"
-          },
-          {
-            "id": "thu-tn6",
-            "type": "fill",
-            "question": "We ___ (visit) a tea museum next Sunday. [填入正确形式]",
-            "answer": "will visit",
-            "explanation_cn": "next Sunday 是将来时间，用一般将来时 will visit。"
-          },
-          {
-            "id": "thu-tn7",
-            "type": "fill",
-            "question": "The host ___ (give) us some tea just now. [填入正确形式]",
-            "answer": "gave",
-            "explanation_cn": "just now 刚才，用过去式 gave（give 的过去式）。"
-          },
-          {
-            "id": "thu-tn8",
-            "type": "fill",
-            "question": "Tea ___ (grow) in warm places. [填入正确形式]",
-            "answer": "is grown",
-            "explanation_cn": "茶是被种植的，用一般现在时的被动语态 is grown。"
-          },
-          {
-            "id": "thu-tn9",
-            "type": "fill",
-            "question": "While mom ___ (boil) the water, I washed the cups. [填入正确形式]",
-            "answer": "was boiling",
-            "explanation_cn": "while 引导的过去进行：while + was boiling（正在烧水）。"
-          },
-          {
-            "id": "thu-tn10",
-            "type": "fill",
-            "question": "Remember ___ (bring) a teacup to school tomorrow. [填入正确形式]",
-            "answer": "to bring",
-            "explanation_cn": "remember to do sth：记得要带（还没做），用 to bring。"
           }
         ]
       }
@@ -2786,71 +2206,6 @@ const WEEK1 = [
             ],
             "answer": 0,
             "explanation_cn": "too…to… 结构：太烫了而不能喝。"
-          },
-          {
-            "id": "fri-gr9",
-            "type": "choice",
-            "question": "There ___ any milk in the tea.",
-            "options": [
-              "isn't",
-              "aren't",
-              "am not",
-              "be not"
-            ],
-            "answer": 0,
-            "explanation_cn": "milk 是不可数名词，be 动词用 isn't。"
-          },
-          {
-            "id": "fri-gr10",
-            "type": "choice",
-            "question": "How ___ water do you need for the tea?",
-            "options": [
-              "much",
-              "many",
-              "long",
-              "often"
-            ],
-            "answer": 0,
-            "explanation_cn": "water 不可数，用 How much。"
-          },
-          {
-            "id": "fri-gr11",
-            "type": "choice",
-            "question": "The tea ___ very popular in England now.",
-            "options": [
-              "is",
-              "was",
-              "were",
-              "be"
-            ],
-            "answer": 0,
-            "explanation_cn": "now 提示现在时，主语 the tea 单数，用 is。"
-          },
-          {
-            "id": "fri-gr12",
-            "type": "choice",
-            "question": "We ___ to a tea house and watched a show last night.",
-            "options": [
-              "went",
-              "go",
-              "goes",
-              "going"
-            ],
-            "answer": 0,
-            "explanation_cn": "last night 过去时间，go 的过去式是 went。"
-          },
-          {
-            "id": "fri-gr13",
-            "type": "choice",
-            "question": "It's kind ___ you to make tea for us.",
-            "options": [
-              "of",
-              "for",
-              "to",
-              "with"
-            ],
-            "answer": 0,
-            "explanation_cn": "It's kind of you：你真好心，形容人的品质用 of。"
           }
         ]
       }
@@ -2860,7 +2215,7 @@ const WEEK1 = [
     "day_cn": "周六",
     "day_en": "Saturday",
     "is_speaking_day": true,
-    "total_duration": 55,
+    "total_duration": 50,
     "theme_cn": "AI口语 + 高频词汇 + 阅读理解",
     "modules": [
       {
@@ -3443,19 +2798,6 @@ const WEEK1 = [
             "explanation_cn": "第二句：comes in September or October（九月或十月）。"
           },
           {
-            "id": "sat-rd2",
-            "type": "choice",
-            "question": "What is the moon like on that day?",
-            "options": [
-              "Round and bright",
-              "Small and dark",
-              "Thin like a banana",
-              "We can't see it"
-            ],
-            "answer": 0,
-            "explanation_cn": "那时月亮又圆又亮（round and bright）。"
-          },
-          {
             "id": "sat-rd3",
             "type": "choice",
             "question": "What do people eat on the Mid-Autumn Festival?",
@@ -3469,19 +2811,6 @@ const WEEK1 = [
             "explanation_cn": "那天晚上全家人一起赏月、吃月饼（mooncakes）。"
           },
           {
-            "id": "sat-rd4",
-            "type": "choice",
-            "question": "What is inside mooncakes?",
-            "options": [
-              "Different fillings",
-              "Only water",
-              "Only sugar",
-              "Nothing"
-            ],
-            "answer": 0,
-            "explanation_cn": "月饼里有不同的馅（fillings），比如莲蓉和红豆。"
-          },
-          {
             "id": "sat-rd5",
             "type": "choice",
             "question": "Why do people love mooncakes?",
@@ -3493,58 +2822,6 @@ const WEEK1 = [
             ],
             "answer": 0,
             "explanation_cn": "圆圆的形状代表全家团圆（family reunion）。"
-          },
-          {
-            "id": "sat-rd6",
-            "type": "choice",
-            "question": "What do children do under the moonlight?",
-            "options": [
-              "They listen to old stories about the moon.",
-              "They do their homework.",
-              "They go swimming.",
-              "They play football."
-            ],
-            "answer": 0,
-            "explanation_cn": "孩子们喜欢在月光下听关于月亮的古老故事。"
-          },
-          {
-            "id": "sat-rd7",
-            "type": "choice",
-            "question": "Where does the family sit on that evening?",
-            "options": [
-              "In the open air",
-              "In a cinema",
-              "On a bus",
-              "In a classroom"
-            ],
-            "answer": 0,
-            "explanation_cn": "那天晚上全家人坐在户外（in the open air）赏月。"
-          },
-          {
-            "id": "sat-rd8",
-            "type": "choice",
-            "question": "The word \"reunion\" here means ___.",
-            "options": [
-              "团聚",
-              "离别",
-              "旅行",
-              "争吵"
-            ],
-            "answer": 0,
-            "explanation_cn": "reunion 意思是「团聚」，圆月和圆月饼都代表团圆。"
-          },
-          {
-            "id": "sat-rd9",
-            "type": "choice",
-            "question": "The Mid-Autumn Festival is a special day for ___.",
-            "options": [
-              "family",
-              "shopping",
-              "study",
-              "sports"
-            ],
-            "answer": 0,
-            "explanation_cn": "第一句：a special day for family（家人团圆的日子）。"
           },
           {
             "id": "sat-rd10",
@@ -3618,62 +2895,6 @@ const WEEK1 = [
             ],
             "answer": 0,
             "explanation_cn": "主语 the round shape 是单数，动词用 means。"
-          },
-          {
-            "id": "sat-mc5",
-            "type": "choice",
-            "question": "There are many old ___ about the moon.",
-            "options": [
-              "stories",
-              "storys",
-              "story",
-              "storyes"
-            ],
-            "answer": 0,
-            "explanation_cn": "story 的复数是 stories（辅音字母+y 变 ies）。"
-          }
-        ]
-      },
-      {
-        "id": "sat-tense2",
-        "name_cn": "时态练习",
-        "type": "tense",
-        "duration": 5,
-        "questions": [
-          {
-            "id": "sat-tn21",
-            "type": "fill",
-            "question": "The Mid-Autumn Festival ___ (come) in September or October. [填入正确形式]",
-            "answer": "comes",
-            "explanation_cn": "表示每年的事实，主语三单用 comes。"
-          },
-          {
-            "id": "sat-tn22",
-            "type": "fill",
-            "question": "We ___ (eat) mooncakes with grandma last night. [填入正确形式]",
-            "answer": "ate",
-            "explanation_cn": "last night 过去时间，eat 的过去式是 ate。"
-          },
-          {
-            "id": "sat-tn23",
-            "type": "fill",
-            "question": "Look! The moon ___ (rise) over the sea. [填入正确形式]",
-            "answer": "is rising",
-            "explanation_cn": "Look! 提示正在进行，用 is rising。"
-          },
-          {
-            "id": "sat-tn24",
-            "type": "fill",
-            "question": "My family ___ (watch) the moon together every year. [填入正确形式]",
-            "answer": "watches",
-            "explanation_cn": "every year 习惯动作，主语 my family 整体看，三单用 watches。"
-          },
-          {
-            "id": "sat-tn25",
-            "type": "fill",
-            "question": "Chang'e, the moon lady, ___ (be) in the old story. [填入正确形式]",
-            "answer": "was",
-            "explanation_cn": "讲过去的故事人物，用 was。"
           }
         ]
       }
@@ -3683,7 +2904,7 @@ const WEEK1 = [
     "day_cn": "周日",
     "day_en": "Sunday",
     "is_speaking_day": false,
-    "total_duration": 35,
+    "total_duration": 25,
     "theme_cn": "阅读理解 + 高频词汇 + 完形填空",
     "modules": [
       {
@@ -4127,7 +3348,7 @@ const WEEK1 = [
         "name_cn": "完形填空",
         "type": "cloze",
         "duration": 10,
-        "passage": "Peking Opera is one of China's oldest 1___ arts. It started more than 200 years ago. The actors wear beautiful 2___ and paint their faces in different colours. A red face 3___ a good and brave man, and a white face means a bad man. The actors sing in a special 4___ and move in special ways. Many old people love to 5___ Peking Opera on TV or in the theatre. Some children learn it 6___ school clubs. It is not 7___ to learn, because an actor may practise for many years 8___ he can sing well. Today, more and more young people are starting to love this old art. It is an important 9___ of Chinese culture. If you watch it once, you will never 10___ it.",
+        "passage": "Peking Opera is one of China's oldest 1___ arts. It started more than 200 years ago. The actors wear beautiful 2___ and paint their faces in different colours. A red face 3___ a good and brave man, and a white face means a bad man. Many old people love to 4___ Peking Opera on TV or in the theatre. Some children learn it 5___ school clubs. If you watch it once, you will never 6___ it.",
         "questions": [
           {
             "id": "sun-cz1",
@@ -4173,19 +3394,6 @@ const WEEK1 = [
             "type": "choice",
             "question": "4___",
             "options": [
-              "way",
-              "room",
-              "school",
-              "dinner"
-            ],
-            "answer": 0,
-            "explanation_cn": "用特别的「方式」演唱，sing in a special way。"
-          },
-          {
-            "id": "sun-cz5",
-            "type": "choice",
-            "question": "5___",
-            "options": [
               "watch",
               "touch",
               "draw",
@@ -4195,9 +3403,9 @@ const WEEK1 = [
             "explanation_cn": "在电视上「观看」京剧用 watch。"
           },
           {
-            "id": "sun-cz6",
+            "id": "sun-cz5",
             "type": "choice",
-            "question": "6___",
+            "question": "5___",
             "options": [
               "in",
               "on",
@@ -4208,48 +3416,9 @@ const WEEK1 = [
             "explanation_cn": "「在学校社团里」用 in school clubs。"
           },
           {
-            "id": "sun-cz7",
+            "id": "sun-cz6",
             "type": "choice",
-            "question": "7___",
-            "options": [
-              "easy",
-              "sad",
-              "angry",
-              "lazy"
-            ],
-            "answer": 0,
-            "explanation_cn": "后文说要练很多年，所以学起来不「容易」，easy。"
-          },
-          {
-            "id": "sun-cz8",
-            "type": "choice",
-            "question": "8___",
-            "options": [
-              "before",
-              "after",
-              "so",
-              "but"
-            ],
-            "answer": 0,
-            "explanation_cn": "练很多年「之后才」能唱好 → 在能唱好「之前」，用 before。"
-          },
-          {
-            "id": "sun-cz9",
-            "type": "choice",
-            "question": "9___",
-            "options": [
-              "part",
-              "piece",
-              "page",
-              "pair"
-            ],
-            "answer": 0,
-            "explanation_cn": "an important part of Chinese culture：中国文化的重要一部分。"
-          },
-          {
-            "id": "sun-cz10",
-            "type": "choice",
-            "question": "10___",
+            "question": "6___",
             "options": [
               "forget",
               "remember",
@@ -4258,122 +3427,6 @@ const WEEK1 = [
             ],
             "answer": 0,
             "explanation_cn": "看过一次就不会「忘记」，never forget。"
-          }
-        ]
-      },
-      {
-        "id": "sun-tense",
-        "name_cn": "时态练习",
-        "type": "tense",
-        "duration": 5,
-        "questions": [
-          {
-            "id": "sun-tn1",
-            "type": "fill",
-            "question": "Peking Opera ___ (start) more than 200 years ago. [填入正确形式]",
-            "answer": "started",
-            "explanation_cn": "more than 200 years ago 是过去时间，start 的过去式是 started。"
-          },
-          {
-            "id": "sun-tn2",
-            "type": "fill",
-            "question": "Look! The actors ___ (paint) their faces now. [填入正确形式]",
-            "answer": "are painting",
-            "explanation_cn": "Look! 和 now 提示正在进行，用现在进行时 are painting。"
-          },
-          {
-            "id": "sun-tn3",
-            "type": "fill",
-            "question": "My grandpa ___ (watch) Peking Opera every Sunday. [填入正确形式]",
-            "answer": "watches",
-            "explanation_cn": "every Sunday 表示习惯，主语三单，动词用 watches。"
-          },
-          {
-            "id": "sun-tn4",
-            "type": "fill",
-            "question": "A red face ___ (mean) a brave man in Peking Opera. [填入正确形式]",
-            "answer": "means",
-            "explanation_cn": "主语 a red face 是三单，一般现在时动词加 s：means。"
-          },
-          {
-            "id": "sun-tn5",
-            "type": "fill",
-            "question": "We ___ (see) a wonderful show last night. [填入正确形式]",
-            "answer": "saw",
-            "explanation_cn": "last night 过去时间，see 的过去式是 saw。"
-          }
-        ]
-      },
-      {
-        "id": "sun-grammar",
-        "name_cn": "语法练习",
-        "type": "grammar",
-        "duration": 5,
-        "questions": [
-          {
-            "id": "sun-gr1",
-            "type": "choice",
-            "question": "Peking Opera is ___ old art form.",
-            "options": [
-              "a",
-              "an",
-              "the",
-              "/（不填）"
-            ],
-            "answer": 1,
-            "explanation_cn": "old 以元音音素开头，用 an。"
-          },
-          {
-            "id": "sun-gr2",
-            "type": "choice",
-            "question": "The actors' faces are painted ___ different colours.",
-            "options": [
-              "in",
-              "at",
-              "of",
-              "for"
-            ],
-            "answer": 0,
-            "explanation_cn": "「用…颜色」用 in different colours。"
-          },
-          {
-            "id": "sun-gr3",
-            "type": "choice",
-            "question": "Many old people love ___ TV.",
-            "options": [
-              "watching",
-              "watch",
-              "watches",
-              "watched"
-            ],
-            "answer": 0,
-            "explanation_cn": "love doing sth：喜欢看（电视）。"
-          },
-          {
-            "id": "sun-gr4",
-            "type": "choice",
-            "question": "___ great the actors' moves are!",
-            "options": [
-              "How",
-              "What",
-              "Where",
-              "When"
-            ],
-            "answer": 0,
-            "explanation_cn": "How + 形容词 + 主谓：How great…!"
-          },
-          {
-            "id": "sun-gr5",
-            "type": "choice",
-            "question": "An actor practises many years ___ he can sing well.",
-            "options": [
-              "before",
-              "after",
-              "because",
-              "but"
-            ],
-            "answer": 0,
-            "explanation_cn": "练很多年「才」能唱好 → before（在能唱好之前）。"
           }
         ]
       },
@@ -4464,7 +3517,7 @@ const WEEK2 = [
     "day_cn": "周一",
     "day_en": "Monday",
     "is_speaking_day": true,
-    "total_duration": 55,
+    "total_duration": 50,
     "theme_cn": "AI口语 + 高频词汇 + 阅读理解",
     "modules": [
       {
@@ -5035,8 +4088,8 @@ const WEEK2 = [
         "name_cn": "阅读理解",
         "type": "reading",
         "duration": 10,
-        "passage": "China's high-speed trains are famous around the world. They run at about 350 kilometres per hour. A trip from Beijing to Shanghai takes only about four and a half hours by high-speed train. Ten years ago, the same trip took more than ten hours. The trains are clean, quiet and always on time. You can buy tickets with a mobile phone and get on the train without paper tickets. People from many countries come to China to learn how to build their own high-speed railways.",
-        "passage_cn": "中国的高铁世界闻名。它们的时速大约是350公里。坐高铁从北京到上海只需要大约四个半小时。十年前，同样的路程要花十多个小时。高铁干净、安静，而且总是准点。你可以用手机买票，不用纸质车票就能上车。许多国家的人来中国学习如何修建自己的高速铁路。",
+        "passage": "China's high-speed trains are famous around the world. They run at about 350 kilometres per hour. A trip from Beijing to Shanghai takes only about four and a half hours by high-speed train. Ten years ago, the same trip took more than ten hours. The trains are clean, quiet and always on time. You can buy tickets with a mobile phone and get on the train without paper tickets.",
+        "passage_cn": "中国的高铁世界闻名。它们的时速大约是350公里。坐高铁从北京到上海只需要大约四个半小时。十年前，同样的路程要花十多个小时。高铁干净、安静，而且总是准点。你可以用手机买票，不用纸质车票就能上车。",
         "questions": [
           {
             "id": "w2-mon-rd1",
@@ -5063,84 +4116,6 @@ const WEEK2 = [
             ],
             "answer": 0,
             "explanation_cn": "现在坐高铁只要大约四个半小时。"
-          },
-          {
-            "id": "w2-mon-rd3",
-            "type": "choice",
-            "question": "How long did the same trip take ten years ago?",
-            "options": [
-              "More than ten hours",
-              "Four and a half hours",
-              "Two hours",
-              "Half an hour"
-            ],
-            "answer": 0,
-            "explanation_cn": "十年前同样的路程要超过十个小时。"
-          },
-          {
-            "id": "w2-mon-rd4",
-            "type": "choice",
-            "question": "What are the trains like?",
-            "options": [
-              "Clean, quiet and always on time",
-              "Dirty and slow",
-              "Noisy and crowded",
-              "Old and small"
-            ],
-            "answer": 0,
-            "explanation_cn": "文中说高铁干净、安静、总是准点。"
-          },
-          {
-            "id": "w2-mon-rd5",
-            "type": "choice",
-            "question": "How can you buy a ticket now?",
-            "options": [
-              "With a mobile phone",
-              "Only at the station",
-              "From the conductor only",
-              "By letter"
-            ],
-            "answer": 0,
-            "explanation_cn": "可以用手机买票（buy tickets with a mobile phone）。"
-          },
-          {
-            "id": "w2-mon-rd6",
-            "type": "choice",
-            "question": "What do people from other countries come to China to learn?",
-            "options": [
-              "How to build their own high-speed railways",
-              "How to cook Chinese food",
-              "How to make trains by hand",
-              "How to drive trains fast"
-            ],
-            "answer": 0,
-            "explanation_cn": "他们来学习如何修建自己的高速铁路。"
-          },
-          {
-            "id": "w2-mon-rd7",
-            "type": "choice",
-            "question": "The word \"on time\" here means ___.",
-            "options": [
-              "准时",
-              "提前",
-              "迟到",
-              "在线"
-            ],
-            "answer": 0,
-            "explanation_cn": "on time 意思是「准时」。"
-          },
-          {
-            "id": "w2-mon-rd8",
-            "type": "choice",
-            "question": "Which is NOT true about high-speed trains?",
-            "options": [
-              "They are often late.",
-              "They are clean.",
-              "They are quiet.",
-              "They are fast."
-            ],
-            "answer": 0,
-            "explanation_cn": "文中说高铁总是准点（always on time），说它们经常晚点不对。"
           },
           {
             "id": "w2-mon-rd9",
@@ -5227,62 +4202,6 @@ const WEEK2 = [
             ],
             "answer": 0,
             "explanation_cn": "on time 准时，固定搭配。"
-          },
-          {
-            "id": "w2-mon-mc5",
-            "type": "choice",
-            "question": "Travelling by high-speed train is ___ than by bus.",
-            "options": [
-              "faster",
-              "fast",
-              "fastest",
-              "more fast"
-            ],
-            "answer": 0,
-            "explanation_cn": "than 比较级用 faster。"
-          }
-        ]
-      },
-      {
-        "id": "w2-mon-tense2",
-        "name_cn": "时态练习",
-        "type": "tense",
-        "duration": 5,
-        "questions": [
-          {
-            "id": "w2-mon-tn21",
-            "type": "fill",
-            "question": "The high-speed train ___ (run) at 350 kilometres per hour. [填入正确形式]",
-            "answer": "runs",
-            "explanation_cn": "客观事实，主语三单，用 runs。"
-          },
-          {
-            "id": "w2-mon-tn22",
-            "type": "fill",
-            "question": "I ___ (take) the train to Beijing next Monday. [填入正确形式]",
-            "answer": "will take",
-            "explanation_cn": "next Monday 将来时间，用 will take。"
-          },
-          {
-            "id": "w2-mon-tn23",
-            "type": "fill",
-            "question": "The trip ___ (take) ten hours ten years ago. [填入正确形式]",
-            "answer": "took",
-            "explanation_cn": "ten years ago 过去时间，用过去式 took。"
-          },
-          {
-            "id": "w2-mon-tn24",
-            "type": "fill",
-            "question": "Look! The train ___ (arrive) at the station. [填入正确形式]",
-            "answer": "is arriving",
-            "explanation_cn": "Look! 提示正在进行，用 is arriving。"
-          },
-          {
-            "id": "w2-mon-tn25",
-            "type": "fill",
-            "question": "Trains ___ (be) much faster now than before. [填入正确形式]",
-            "answer": "are",
-            "explanation_cn": "主语 trains 复数，now 用 are。"
           }
         ]
       }
@@ -5300,8 +4219,8 @@ const WEEK2 = [
         "name_cn": "阅读理解",
         "type": "reading",
         "duration": 10,
-        "passage": "The Chinese space station Tiangong is like a home in space. It flies more than 300 kilometres above the earth. Astronauts live and work there for about six months at a time. They do science experiments and even give lessons to students from space! The astronauts exercise every day, because living in space makes bones and muscles weak. They eat special space food and sleep in small sleeping bags on the wall. In 2021, Chinese astronauts gave a science lesson from Tiangong, and millions of students watched it on TV.",
-        "passage_cn": "中国空间站「天宫」就像太空里的家。它在距离地球三百多公里的高空飞行。宇航员每次在那里生活和工作大约六个月。他们做科学实验，甚至还从太空给学生上课！宇航员每天都要锻炼，因为在太空生活会让骨骼和肌肉变弱。他们吃特制的太空食品，睡在墙上的小睡袋里。2021年，中国航天员在天宫上了一堂太空科学课，数百万学生通过电视观看了这堂课。",
+        "passage": "The Chinese space station Tiangong is like a home in space. It flies more than 300 kilometres above the earth. Astronauts live and work there for about six months at a time. They do science experiments and even give lessons to students from space! The astronauts exercise every day, because living in space makes bones and muscles weak. They eat special space food and sleep in small sleeping bags on the wall.",
+        "passage_cn": "中国空间站「天宫」就像太空里的家。它在距离地球三百多公里的高空飞行。宇航员每次在那里生活和工作大约六个月。他们做科学实验，甚至还从太空给学生上课！宇航员每天都要锻炼，因为在太空生活会让骨骼和肌肉变弱。他们吃特制的太空食品，睡在墙上的小睡袋里。",
         "questions": [
           {
             "id": "w2-tue-rd1",
@@ -5317,19 +4236,6 @@ const WEEK2 = [
             "explanation_cn": "天宫是中国空间站（space station）。"
           },
           {
-            "id": "w2-tue-rd2",
-            "type": "choice",
-            "question": "How far does it fly above the earth?",
-            "options": [
-              "More than 300 kilometres",
-              "More than 3000 kilometres",
-              "About 30 kilometres",
-              "About 3 kilometres"
-            ],
-            "answer": 0,
-            "explanation_cn": "它在距地球三百多公里的高空飞行。"
-          },
-          {
             "id": "w2-tue-rd3",
             "type": "choice",
             "question": "How long do astronauts live there at a time?",
@@ -5343,19 +4249,6 @@ const WEEK2 = [
             "explanation_cn": "宇航员每次在空间站待大约六个月。"
           },
           {
-            "id": "w2-tue-rd4",
-            "type": "choice",
-            "question": "What do astronauts do in space?",
-            "options": [
-              "They do science experiments and give lessons.",
-              "They cook for tourists.",
-              "They grow big trees.",
-              "They drive cars."
-            ],
-            "answer": 0,
-            "explanation_cn": "他们做科学实验，还从太空给学生上课。"
-          },
-          {
             "id": "w2-tue-rd5",
             "type": "choice",
             "question": "Why do astronauts exercise every day?",
@@ -5367,58 +4260,6 @@ const WEEK2 = [
             ],
             "answer": 0,
             "explanation_cn": "太空生活让骨骼和肌肉变弱，所以要每天锻炼。"
-          },
-          {
-            "id": "w2-tue-rd6",
-            "type": "choice",
-            "question": "Where do astronauts sleep?",
-            "options": [
-              "In sleeping bags on the wall",
-              "In big beds",
-              "On the floor",
-              "In chairs"
-            ],
-            "answer": 0,
-            "explanation_cn": "他们睡在固定在墙上的睡袋里。"
-          },
-          {
-            "id": "w2-tue-rd7",
-            "type": "choice",
-            "question": "When did astronauts give a science lesson from Tiangong?",
-            "options": [
-              "In 2021",
-              "In 2012",
-              "In 1990",
-              "In 2024"
-            ],
-            "answer": 0,
-            "explanation_cn": "2021年，中国航天员在天宫上了科学课。"
-          },
-          {
-            "id": "w2-tue-rd8",
-            "type": "choice",
-            "question": "Who watched that lesson?",
-            "options": [
-              "Millions of students",
-              "Only the astronauts' families",
-              "Only scientists",
-              "No one"
-            ],
-            "answer": 0,
-            "explanation_cn": "数百万学生通过电视观看了太空授课。"
-          },
-          {
-            "id": "w2-tue-rd9",
-            "type": "choice",
-            "question": "The word \"astronauts\" means ___.",
-            "options": [
-              "航天员",
-              "老师",
-              "农民",
-              "司机"
-            ],
-            "answer": 0,
-            "explanation_cn": "astronaut 意思是「航天员」，在空间站生活工作的人。"
           },
           {
             "id": "w2-tue-rd10",
@@ -5518,58 +4359,6 @@ const WEEK2 = [
             ],
             "answer": 0,
             "explanation_cn": "rooms 可数复数，用 several（几个）。"
-          },
-          {
-            "id": "w2-tue-gr7",
-            "type": "choice",
-            "question": "___ a wonderful lesson it was!",
-            "options": [
-              "What",
-              "How",
-              "Where",
-              "When"
-            ],
-            "answer": 0,
-            "explanation_cn": "What + a + 形容词 + 名词：What a wonderful lesson!"
-          },
-          {
-            "id": "w2-tue-gr8",
-            "type": "choice",
-            "question": "Astronauts are ___ heroes in our hearts.",
-            "options": [
-              "real",
-              "really",
-              "reality",
-              "realer"
-            ],
-            "answer": 0,
-            "explanation_cn": "名词 heroes 前用形容词 real（真正的）。"
-          },
-          {
-            "id": "w2-tue-gr9",
-            "type": "choice",
-            "question": "China ___ its first space station in 2021.",
-            "options": [
-              "completed",
-              "completes",
-              "complete",
-              "completing"
-            ],
-            "answer": 0,
-            "explanation_cn": "in 2021 过去时间，用过去式 completed。"
-          },
-          {
-            "id": "w2-tue-gr10",
-            "type": "choice",
-            "question": "We are proud ___ our astronauts.",
-            "options": [
-              "of",
-              "at",
-              "for",
-              "with"
-            ],
-            "answer": 0,
-            "explanation_cn": "be proud of…：为…感到自豪。"
           }
         ]
       },
@@ -5682,32 +4471,6 @@ const WEEK2 = [
             ],
             "answer": 0,
             "explanation_cn": "Millions of + 复数名词：数百万的。"
-          },
-          {
-            "id": "w2-tue-mc9",
-            "type": "choice",
-            "question": "Living in space makes bones ___.",
-            "options": [
-              "weak",
-              "weakly",
-              "weaker than",
-              "weakest"
-            ],
-            "answer": 0,
-            "explanation_cn": "make + 宾语 + 形容词：make bones weak。"
-          },
-          {
-            "id": "w2-tue-mc10",
-            "type": "choice",
-            "question": "The astronauts must ___ every day in space.",
-            "options": [
-              "exercise",
-              "exercises",
-              "exercising",
-              "exercised"
-            ],
-            "answer": 0,
-            "explanation_cn": "must 后面用动词原形 exercise。"
           }
         ]
       }
@@ -5717,7 +4480,7 @@ const WEEK2 = [
     "day_cn": "周三",
     "day_en": "Wednesday",
     "is_speaking_day": true,
-    "total_duration": 55,
+    "total_duration": 50,
     "theme_cn": "AI口语 + 高频词汇 + 阅读理解",
     "modules": [
       {
@@ -6272,8 +5035,8 @@ const WEEK2 = [
         "name_cn": "阅读理解",
         "type": "reading",
         "duration": 10,
-        "passage": "Mobile payment has changed the way Chinese people shop. Today, most people pay for things with a mobile phone. In shops, restaurants and even street markets, you just scan a QR code and the money goes to the seller in one second. Ten years ago, people carried cash everywhere and waited for change. Now many young people don't take any cash at all. Old people can learn it too — the steps are simple. Mobile payment makes shopping faster and safer, because you don't need to carry a lot of money with you.",
-        "passage_cn": "移动支付改变了中国人的购物方式。如今，大多数人用手机付款。在商店、餐馆甚至街边市场，你只需要扫一下二维码，钱一秒钟就到了卖家手里。十年前，人们到处带着现金，还要等找零。现在很多年轻人根本不带现金。老人也能学会——步骤很简单。移动支付让购物更快、更安全，因为你不用随身带很多钱。",
+        "passage": "Mobile payment has changed the way Chinese people shop. Today, most people pay for things with a mobile phone. In shops, restaurants and even street markets, you just scan a QR code and the money goes to the seller in one second. Ten years ago, people carried cash everywhere and waited for change. Now many young people don't take any cash at all. Mobile payment makes shopping faster and safer, because you don't need to carry a lot of money with you.",
+        "passage_cn": "移动支付改变了中国人的购物方式。如今，大多数人用手机付款。在商店、餐馆甚至街边市场，你只需要扫一下二维码，钱一秒钟就到了卖家手里。十年前，人们到处带着现金，还要等找零。现在很多年轻人根本不带现金。移动支付让购物更快、更安全，因为你不用随身带很多钱。",
         "questions": [
           {
             "id": "w2-wed-rd1",
@@ -6289,19 +5052,6 @@ const WEEK2 = [
             "explanation_cn": "第一句：移动支付改变了人们的购物方式。"
           },
           {
-            "id": "w2-wed-rd2",
-            "type": "choice",
-            "question": "How do most people pay today?",
-            "options": [
-              "With a mobile phone",
-              "With cash only",
-              "With bank cards only",
-              "They don't pay"
-            ],
-            "answer": 0,
-            "explanation_cn": "现在大多数人用手机付款。"
-          },
-          {
             "id": "w2-wed-rd3",
             "type": "choice",
             "question": "What do you scan to pay?",
@@ -6315,19 +5065,6 @@ const WEEK2 = [
             "explanation_cn": "扫二维码（QR code）就可以付款。"
           },
           {
-            "id": "w2-wed-rd4",
-            "type": "choice",
-            "question": "How fast does the money go to the seller?",
-            "options": [
-              "In one second",
-              "In one day",
-              "In one hour",
-              "In one week"
-            ],
-            "answer": 0,
-            "explanation_cn": "钱一秒钟就到卖家手里。"
-          },
-          {
             "id": "w2-wed-rd5",
             "type": "choice",
             "question": "What did people do ten years ago?",
@@ -6339,58 +5076,6 @@ const WEEK2 = [
             ],
             "answer": 0,
             "explanation_cn": "十年前人们带现金还要等找零。"
-          },
-          {
-            "id": "w2-wed-rd6",
-            "type": "choice",
-            "question": "Who can learn mobile payment?",
-            "options": [
-              "Everyone, because the steps are simple",
-              "Only young people",
-              "Only rich people",
-              "Only students"
-            ],
-            "answer": 0,
-            "explanation_cn": "步骤简单，老人也能学会。"
-          },
-          {
-            "id": "w2-wed-rd7",
-            "type": "choice",
-            "question": "Why is mobile payment safer?",
-            "options": [
-              "Because you don't carry much money.",
-              "Because it never makes mistakes.",
-              "Because it is slow.",
-              "Because it uses paper."
-            ],
-            "answer": 0,
-            "explanation_cn": "不用随身带很多钱，所以更安全。"
-          },
-          {
-            "id": "w2-wed-rd8",
-            "type": "choice",
-            "question": "The word \"cash\" here means ___.",
-            "options": [
-              "现金",
-              "卡片",
-              "硬币",
-              "货物"
-            ],
-            "answer": 0,
-            "explanation_cn": "cash 意思是「现金」。"
-          },
-          {
-            "id": "w2-wed-rd9",
-            "type": "choice",
-            "question": "Mobile payment makes shopping ___.",
-            "options": [
-              "faster and safer",
-              "slower and harder",
-              "more expensive",
-              "more difficult"
-            ],
-            "answer": 0,
-            "explanation_cn": "最后一句：更快、更安全（faster and safer）。"
           },
           {
             "id": "w2-wed-rd10",
@@ -6464,62 +5149,6 @@ const WEEK2 = [
             ],
             "answer": 0,
             "explanation_cn": "ten years ago 过去时间，用过去式 carried。"
-          },
-          {
-            "id": "w2-wed-mc5",
-            "type": "choice",
-            "question": "Now many young people don't take ___ cash.",
-            "options": [
-              "any",
-              "some",
-              "many",
-              "much of"
-            ],
-            "answer": 0,
-            "explanation_cn": "否定句用 any cash。"
-          }
-        ]
-      },
-      {
-        "id": "w2-wed-tense2",
-        "name_cn": "时态练习",
-        "type": "tense",
-        "duration": 5,
-        "questions": [
-          {
-            "id": "w2-wed-tn21",
-            "type": "fill",
-            "question": "Most people ___ (pay) with phones in China now. [填入正确形式]",
-            "answer": "pay",
-            "explanation_cn": "people 复数，一般现在时用原形。"
-          },
-          {
-            "id": "w2-wed-tn22",
-            "type": "fill",
-            "question": "I ___ (buy) a gift online yesterday. [填入正确形式]",
-            "answer": "bought",
-            "explanation_cn": "yesterday 过去时间，buy 的过去式是 bought。"
-          },
-          {
-            "id": "w2-wed-tn23",
-            "type": "fill",
-            "question": "Look! The deliveryman ___ (scan) the parcel. [填入正确形式]",
-            "answer": "is scanning",
-            "explanation_cn": "Look! 提示正在进行，用 is scanning。"
-          },
-          {
-            "id": "w2-wed-tn24",
-            "type": "fill",
-            "question": "Mobile payment ___ (be) popular for about ten years. [填入正确形式]",
-            "answer": "has been",
-            "explanation_cn": "for about ten years 与现在完成时连用。"
-          },
-          {
-            "id": "w2-wed-tn25",
-            "type": "fill",
-            "question": "Grandma ___ (learn) to shop online next month. [填入正确形式]",
-            "answer": "will learn",
-            "explanation_cn": "next month 将来时间，用 will learn。"
           }
         ]
       }
@@ -6607,76 +5236,6 @@ const WEEK2 = [
             ],
             "answer": 0,
             "explanation_cn": "learn from China（向中国学习），不是 teach（教）。"
-          },
-          {
-            "id": "w2-thu-ls6",
-            "type": "choice",
-            "question": "听到的句子是什么？",
-            "audio_text": "The space station flies more than 300 kilometres above the earth.",
-            "options": [
-              "The space station flies more than 300 kilometres above the earth.",
-              "The space station flies more than 3000 kilometres above the earth.",
-              "The space station walks more than 300 kilometres above the sea.",
-              "The airplane flies more than 300 kilometres above the earth."
-            ],
-            "answer": 0,
-            "explanation_cn": "300（三百）不是 3000；主语是 space station（空间站）。"
-          },
-          {
-            "id": "w2-thu-ls7",
-            "type": "choice",
-            "question": "听到的句子是什么？",
-            "audio_text": "Astronauts live and work there for about six months.",
-            "options": [
-              "Astronauts live and work there for about six months.",
-              "Astronauts live and work there for about six weeks.",
-              "Astronauts play and sleep there for about six months.",
-              "Astronauts lived and worked there six years ago."
-            ],
-            "answer": 0,
-            "explanation_cn": "six months（六个月）不是 six weeks；动词 live and work。"
-          },
-          {
-            "id": "w2-thu-ls8",
-            "type": "choice",
-            "question": "听到的句子是什么？",
-            "audio_text": "They eat special space food and sleep in sleeping bags.",
-            "options": [
-              "They eat special space food and sleep in sleeping bags.",
-              "They eat special space noodles and sleep in big beds.",
-              "They cook special food and sleep on the floor.",
-              "They drink special juice and sleep in chairs."
-            ],
-            "answer": 0,
-            "explanation_cn": "space food（太空食品）和 sleeping bags（睡袋）。"
-          },
-          {
-            "id": "w2-thu-ls9",
-            "type": "choice",
-            "question": "听到的句子是什么？",
-            "audio_text": "Millions of students watched the space lesson on TV.",
-            "options": [
-              "Millions of students watched the space lesson on TV.",
-              "Millions of teachers watched the space lesson on TV.",
-              "Millions of students played the space game on TV.",
-              "Millions of students watched the space lesson on phones."
-            ],
-            "answer": 0,
-            "explanation_cn": "观看者是 students（学生），设备是 TV（电视）。"
-          },
-          {
-            "id": "w2-thu-ls10",
-            "type": "choice",
-            "question": "听到的句子是什么？",
-            "audio_text": "AI can recognize faces and answer questions.",
-            "options": [
-              "AI can recognize faces and answer questions.",
-              "AI can recognize voices and ask questions.",
-              "AI can draw faces and answer questions.",
-              "AI cannot recognize faces or answer questions."
-            ],
-            "answer": 0,
-            "explanation_cn": "recognize faces（识别人脸）+ answer（回答）不是 ask（提问）。"
           }
         ]
       },
@@ -6685,7 +5244,7 @@ const WEEK2 = [
         "name_cn": "完形填空",
         "type": "cloze",
         "duration": 10,
-        "passage": "New energy cars are becoming more and more 1___ in China. They use electricity instead of petrol. They make 2___ pollution, so the air in big cities is getting 3___. The cars are also quiet. When you sit 4___ a new energy car, you can hardly hear the engine. Drivers can 5___ the cars at charging stations, just like charging a big phone. It 6___ about one hour to fill the battery. These cars are not 7___, and the government helps people buy them. In big cities, many families 8___ to buy new energy cars for their second car. More and more charging stations are 9___ up along the roads. In the future, most cars on the streets will 10___ electric ones.",
+        "passage": "New energy cars are becoming more and more 1___ in China. They use electricity instead of petrol. They make 2___ pollution, so the air in big cities is getting 3___. The cars are also quiet. When you sit 4___ a new energy car, you can hardly hear the engine. Drivers can 5___ the cars at charging stations, just like charging a big phone. In the future, most cars on the streets will 6___ electric ones.",
         "questions": [
           {
             "id": "w2-thu-cz1",
@@ -6757,58 +5316,6 @@ const WEEK2 = [
             "type": "choice",
             "question": "6___",
             "options": [
-              "takes",
-              "take",
-              "taking",
-              "took"
-            ],
-            "answer": 0,
-            "explanation_cn": "it takes + 时间：花大约一小时，主语 it 三单用 takes。"
-          },
-          {
-            "id": "w2-thu-cz7",
-            "type": "choice",
-            "question": "7___",
-            "options": [
-              "expensive",
-              "cheap",
-              "free",
-              "fast"
-            ],
-            "answer": 0,
-            "explanation_cn": "后面说政府补贴，说明车不「贵」，expensive。"
-          },
-          {
-            "id": "w2-thu-cz8",
-            "type": "choice",
-            "question": "8___",
-            "options": [
-              "choose",
-              "chooses",
-              "choosing",
-              "chose"
-            ],
-            "answer": 0,
-            "explanation_cn": "主语 many families 复数，一般现在时用原形 choose。"
-          },
-          {
-            "id": "w2-thu-cz9",
-            "type": "choice",
-            "question": "9___",
-            "options": [
-              "showing",
-              "putting",
-              "getting",
-              "standing"
-            ],
-            "answer": 0,
-            "explanation_cn": "charging stations are showing up：越来越多的充电站出现。"
-          },
-          {
-            "id": "w2-thu-cz10",
-            "type": "choice",
-            "question": "10___",
-            "options": [
               "be",
               "is",
               "are",
@@ -6859,41 +5366,6 @@ const WEEK2 = [
             "question": "People ___ (carry) cash everywhere ten years ago. [填入正确形式]",
             "answer": "carried",
             "explanation_cn": "ten years ago 过去时间，carry 的过去式是 carried。"
-          },
-          {
-            "id": "w2-thu-tn6",
-            "type": "fill",
-            "question": "Astronauts ___ (live) on Tiangong since June. [填入正确形式]",
-            "answer": "have lived",
-            "explanation_cn": "since June 与现在完成时连用：have lived。"
-          },
-          {
-            "id": "w2-thu-tn7",
-            "type": "fill",
-            "question": "We ___ (watch) a space lesson next Friday. [填入正确形式]",
-            "answer": "will watch",
-            "explanation_cn": "next Friday 将来时间，用 will watch。"
-          },
-          {
-            "id": "w2-thu-tn8",
-            "type": "fill",
-            "question": "While the train ___ (move), I read a book. [填入正确形式]",
-            "answer": "was moving",
-            "explanation_cn": "while 引导过去进行时：was moving。"
-          },
-          {
-            "id": "w2-thu-tn9",
-            "type": "fill",
-            "question": "QR codes ___ (use) everywhere in China now. [填入正确形式]",
-            "answer": "are used",
-            "explanation_cn": "二维码被使用，一般现在时被动：are used。"
-          },
-          {
-            "id": "w2-thu-tn10",
-            "type": "fill",
-            "question": "The engineer ___ (build) this railway for three years by last December. [填入正确形式]",
-            "answer": "had built",
-            "explanation_cn": "by last December 过去之前完成，用过去完成时 had built。"
           }
         ]
       }
@@ -7238,71 +5710,6 @@ const WEEK2 = [
             ],
             "answer": 0,
             "explanation_cn": "so + 形容词 + that：如此…以至于。"
-          },
-          {
-            "id": "w2-fri-gr9",
-            "type": "choice",
-            "question": "AI helps doctors save ___ people's lives.",
-            "options": [
-              "many",
-              "much",
-              "a little",
-              "a lot of"
-            ],
-            "answer": 0,
-            "explanation_cn": "people 复数，用 many（句中 people's lives 前用 many）。"
-          },
-          {
-            "id": "w2-fri-gr10",
-            "type": "choice",
-            "question": "Robots can do the same job ___ than people, without rest.",
-            "options": [
-              "faster",
-              "fast",
-              "fastest",
-              "more fast"
-            ],
-            "answer": 0,
-            "explanation_cn": "than 提示比较级 faster。"
-          },
-          {
-            "id": "w2-fri-gr11",
-            "type": "choice",
-            "question": "You'd better ___ the answers before you hand them in.",
-            "options": [
-              "check",
-              "to check",
-              "checking",
-              "checked"
-            ],
-            "answer": 0,
-            "explanation_cn": "had better do sth：最好做某事，用原形 check。"
-          },
-          {
-            "id": "w2-fri-gr12",
-            "type": "choice",
-            "question": "The scientists are working ___ a new space lab.",
-            "options": [
-              "on",
-              "at",
-              "in",
-              "for"
-            ],
-            "answer": 0,
-            "explanation_cn": "work on…：从事、研制某个项目。"
-          },
-          {
-            "id": "w2-fri-gr13",
-            "type": "choice",
-            "question": "By 2030, China ___ more space stations in orbit.",
-            "options": [
-              "will have",
-              "had",
-              "has",
-              "having"
-            ],
-            "answer": 0,
-            "explanation_cn": "By 2030 将来时间，用一般将来时 will have。"
           }
         ]
       }
@@ -7312,7 +5719,7 @@ const WEEK2 = [
     "day_cn": "周六",
     "day_en": "Saturday",
     "is_speaking_day": true,
-    "total_duration": 55,
+    "total_duration": 50,
     "theme_cn": "AI口语 + 高频词汇 + 阅读理解",
     "modules": [
       {
@@ -7865,8 +6272,8 @@ const WEEK2 = [
         "name_cn": "阅读理解",
         "type": "reading",
         "duration": 10,
-        "passage": "Artificial intelligence, or AI, is becoming a big part of our life. AI can recognize faces, translate languages and answer questions. Some students use AI tools to practise English — the AI listens and helps them correct their mistakes. In hospitals, AI helps doctors read X-ray pictures quickly. In factories, smart robots work day and night and never feel tired. But AI is not perfect. It sometimes makes mistakes, so people must check its answers. Scientists say AI is a good helper, but the most important thinking is still done by people. In the future, AI will do more and more jobs, and we should learn to work with it.",
-        "passage_cn": "人工智能（AI）正在成为我们生活中重要的一部分。AI 能识别人脸、翻译语言、回答问题。一些学生用 AI 工具练习英语——AI 会听他们朗读，帮他们纠正错误。在医院，AI 帮助医生快速看X光片。在工厂里，智能机器人昼夜工作，从不觉得累。但 AI 并不完美。它有时会出错，所以人们必须检查它的答案。科学家说 AI 是好帮手，但最重要的思考仍然由人来做。未来 AI 会做越来越多工作，我们要学会与它合作。",
+        "passage": "Artificial intelligence, or AI, is becoming a big part of our life. AI can recognize faces, translate languages and answer questions. Some students use AI tools to practise English — the AI listens and helps them correct their mistakes. But AI is not perfect. It sometimes makes mistakes, so people must check its answers. Scientists say AI is a good helper, but the most important thinking is still done by people.",
+        "passage_cn": "人工智能（AI）正在成为我们生活中重要的一部分。AI能识别人脸、翻译语言、回答问题。一些学生用AI工具练习英语——AI会听他们朗读，帮他们纠正错误。但AI并不完美。它有时会出错，所以人们必须检查它的答案。科学家说AI是好帮手，但最重要的思考仍然由人来做。",
         "questions": [
           {
             "id": "w2-sat-rd1",
@@ -7895,32 +6302,6 @@ const WEEK2 = [
             "explanation_cn": "学生用 AI 工具练英语，AI 帮他们纠错。"
           },
           {
-            "id": "w2-sat-rd3",
-            "type": "choice",
-            "question": "Where does AI help doctors?",
-            "options": [
-              "In hospitals",
-              "In parks",
-              "In shops",
-              "On farms"
-            ],
-            "answer": 0,
-            "explanation_cn": "在医院，AI 帮医生快速看X光片。"
-          },
-          {
-            "id": "w2-sat-rd4",
-            "type": "choice",
-            "question": "What do smart robots do in factories?",
-            "options": [
-              "They work day and night.",
-              "They sleep at noon.",
-              "They feel tired easily.",
-              "They play with children."
-            ],
-            "answer": 0,
-            "explanation_cn": "智能机器人昼夜工作，从不觉得累。"
-          },
-          {
             "id": "w2-sat-rd5",
             "type": "choice",
             "question": "Is AI perfect?",
@@ -7932,58 +6313,6 @@ const WEEK2 = [
             ],
             "answer": 0,
             "explanation_cn": "AI 不完美，有时会出错，要人工检查。"
-          },
-          {
-            "id": "w2-sat-rd6",
-            "type": "choice",
-            "question": "Who does the most important thinking?",
-            "options": [
-              "People",
-              "Robots",
-              "Computers",
-              "Phones"
-            ],
-            "answer": 0,
-            "explanation_cn": "最重要的思考仍然由人来完成。"
-          },
-          {
-            "id": "w2-sat-rd7",
-            "type": "choice",
-            "question": "What should we learn to do in the future?",
-            "options": [
-              "Work with AI",
-              "Stop using phones",
-              "Sell our computers",
-              "Sleep more"
-            ],
-            "answer": 0,
-            "explanation_cn": "未来要学会与 AI 合作。"
-          },
-          {
-            "id": "w2-sat-rd8",
-            "type": "choice",
-            "question": "The word \"recognize\" here means ___.",
-            "options": [
-              "识别",
-              "涂色",
-              "丢弃",
-              "购买"
-            ],
-            "answer": 0,
-            "explanation_cn": "recognize 意思是「识别、认出」。"
-          },
-          {
-            "id": "w2-sat-rd9",
-            "type": "choice",
-            "question": "Which is an example of AI in the passage?",
-            "options": [
-              "A robot working in a factory",
-              "A cat sleeping on a bed",
-              "A child riding a bike",
-              "A bird flying in the sky"
-            ],
-            "answer": 0,
-            "explanation_cn": "工厂里的智能机器人是 AI 的例子。"
           },
           {
             "id": "w2-sat-rd10",
@@ -8057,62 +6386,6 @@ const WEEK2 = [
             ],
             "answer": 0,
             "explanation_cn": "help sb do sth：help 后面用动词原形 read。"
-          },
-          {
-            "id": "w2-sat-mc5",
-            "type": "choice",
-            "question": "Smart robots work day and night and never feel ___.",
-            "options": [
-              "tired",
-              "tiring",
-              "tire",
-              "tiredly"
-            ],
-            "answer": 0,
-            "explanation_cn": "feel 是系动词，后面用形容词 tired（累）。"
-          }
-        ]
-      },
-      {
-        "id": "w2-sat-tense2",
-        "name_cn": "时态练习",
-        "type": "tense",
-        "duration": 5,
-        "questions": [
-          {
-            "id": "w2-sat-tn21",
-            "type": "fill",
-            "question": "AI ___ (become) a big part of our life. [填入正确形式]",
-            "answer": "is becoming",
-            "explanation_cn": "正在成为，用现在进行时。"
-          },
-          {
-            "id": "w2-sat-tn22",
-            "type": "fill",
-            "question": "The robot ___ (work) day and night last month. [填入正确形式]",
-            "answer": "worked",
-            "explanation_cn": "last month 过去时间，用过去式 worked。"
-          },
-          {
-            "id": "w2-sat-tn23",
-            "type": "fill",
-            "question": "AI tools ___ (help) students since 2022. [填入正确形式]",
-            "answer": "have helped",
-            "explanation_cn": "since 2022 与现在完成时连用。"
-          },
-          {
-            "id": "w2-sat-tn24",
-            "type": "fill",
-            "question": "Look! The AI ___ (answer) the question now. [填入正确形式]",
-            "answer": "is answering",
-            "explanation_cn": "Look! 提示正在进行，用 is answering。"
-          },
-          {
-            "id": "w2-sat-tn25",
-            "type": "fill",
-            "question": "We ___ (work) with AI more in the future. [填入正确形式]",
-            "answer": "will work",
-            "explanation_cn": "in the future 将来时间，用 will work。"
           }
         ]
       }
@@ -8122,7 +6395,7 @@ const WEEK2 = [
     "day_cn": "周日",
     "day_en": "Sunday",
     "is_speaking_day": false,
-    "total_duration": 30,
+    "total_duration": 20,
     "theme_cn": "阅读理解 + 高频词汇 + 完形填空",
     "modules": [
       {
@@ -8555,7 +6828,7 @@ const WEEK2 = [
         "name_cn": "完形填空",
         "type": "cloze",
         "duration": 10,
-        "passage": "Drones are small flying machines, and they are changing our 1___. A delivery company now sends parcels by drone. The drone 2___ the parcel from the sky and drops it at your door in minutes. Doctors in mountain villages also use drones to get medicine 3___. Before drones, the medicine took two days to arrive; now it 4___ only thirty minutes. Firefighters use drones to see where the fire is. Farmers use them to watch their 5___ from the sky. Drones are not very 6___, and more and more people can buy one. But there are rules: drones must not fly near 7___, and children need grown-ups 8___ them. Scientists are working 9___ bigger drones that can carry people. Maybe one day we will 10___ to school by drone taxi!",
+        "passage": "Drones are small flying machines, and they are changing our 1___. A delivery company now sends parcels by drone. The drone 2___ the parcel from the sky and drops it at your door in minutes. Doctors in mountain villages also use drones to get medicine 3___. Before drones, the medicine took two days to arrive; now it 4___ only thirty minutes. Drones are not very 5___, and more and more people can buy one. Maybe one day we will 6___ to school by drone taxi!",
         "questions": [
           {
             "id": "w2-sun-cz1",
@@ -8614,19 +6887,6 @@ const WEEK2 = [
             "type": "choice",
             "question": "5___",
             "options": [
-              "crops",
-              "crop",
-              "croping",
-              "cropped"
-            ],
-            "answer": 0,
-            "explanation_cn": "农民从空中看「庄稼」，crops 复数。"
-          },
-          {
-            "id": "w2-sun-cz6",
-            "type": "choice",
-            "question": "6___",
-            "options": [
               "expensive",
               "cheap",
               "free",
@@ -8636,48 +6896,9 @@ const WEEK2 = [
             "explanation_cn": "后面说更多人买得起，说明不「贵」，expensive。"
           },
           {
-            "id": "w2-sun-cz7",
+            "id": "w2-sun-cz6",
             "type": "choice",
-            "question": "7___",
-            "options": [
-              "airports",
-              "airport",
-              "airports'",
-              "the airports"
-            ],
-            "answer": 0,
-            "explanation_cn": "禁飞区：不能在「机场」附近飞，用复数泛指 airports。"
-          },
-          {
-            "id": "w2-sun-cz8",
-            "type": "choice",
-            "question": "8___",
-            "options": [
-              "to help",
-              "help",
-              "helping",
-              "helped"
-            ],
-            "answer": 0,
-            "explanation_cn": "need sb to do sth：需要大人帮忙，用 to help。"
-          },
-          {
-            "id": "w2-sun-cz9",
-            "type": "choice",
-            "question": "9___",
-            "options": [
-              "on",
-              "at",
-              "in",
-              "for"
-            ],
-            "answer": 0,
-            "explanation_cn": "work on…：研制更大的无人机。"
-          },
-          {
-            "id": "w2-sun-cz10",
-            "type": "choice",
-            "question": "10___",
+            "question": "6___",
             "options": [
               "fly",
               "flew",
@@ -8686,122 +6907,6 @@ const WEEK2 = [
             ],
             "answer": 0,
             "explanation_cn": "will 后面用动词原形 fly。"
-          }
-        ]
-      },
-      {
-        "id": "w2-sun-tense",
-        "name_cn": "时态练习",
-        "type": "tense",
-        "duration": 5,
-        "questions": [
-          {
-            "id": "w2-sun-tn1",
-            "type": "fill",
-            "question": "The drone ___ (carry) the parcel to our door just now. [填入正确形式]",
-            "answer": "carried",
-            "explanation_cn": "just now 刚才，carry 的过去式是 carried。"
-          },
-          {
-            "id": "w2-sun-tn2",
-            "type": "fill",
-            "question": "Drones ___ (become) popular in the last few years. [填入正确形式]",
-            "answer": "have become",
-            "explanation_cn": "in the last few years 与现在完成时连用。"
-          },
-          {
-            "id": "w2-sun-tn3",
-            "type": "fill",
-            "question": "Look! A drone ___ (fly) over our school. [填入正确形式]",
-            "answer": "is flying",
-            "explanation_cn": "Look! 提示正在进行，用 is flying。"
-          },
-          {
-            "id": "w2-sun-tn4",
-            "type": "fill",
-            "question": "Farmers ___ (use) drones to watch crops every day. [填入正确形式]",
-            "answer": "use",
-            "explanation_cn": "every day 习惯动作，主语复数用原形 use。"
-          },
-          {
-            "id": "w2-sun-tn5",
-            "type": "fill",
-            "question": "My uncle ___ (buy) a drone last month. [填入正确形式]",
-            "answer": "bought",
-            "explanation_cn": "last month 过去时间，buy 的过去式是 bought。"
-          }
-        ]
-      },
-      {
-        "id": "w2-sun-grammar",
-        "name_cn": "语法练习",
-        "type": "grammar",
-        "duration": 5,
-        "questions": [
-          {
-            "id": "w2-sun-gr1",
-            "type": "choice",
-            "question": "Drones are small ___ that can fly.",
-            "options": [
-              "machines",
-              "machine",
-              "machining",
-              "machined"
-            ],
-            "answer": 0,
-            "explanation_cn": "machines 用复数，后面 that can fly 作定语。"
-          },
-          {
-            "id": "w2-sun-gr2",
-            "type": "choice",
-            "question": "The medicine used to take two days ___ it arrives now.",
-            "options": [
-              "but now",
-              "and now",
-              "so now",
-              "or now"
-            ],
-            "answer": 0,
-            "explanation_cn": "以前要两天「但现在」30分钟，but now 表转折。"
-          },
-          {
-            "id": "w2-sun-gr3",
-            "type": "choice",
-            "question": "Children need grown-ups ___ them with drones.",
-            "options": [
-              "to help",
-              "help",
-              "helping",
-              "helped"
-            ],
-            "answer": 0,
-            "explanation_cn": "need sb to do sth：需要大人帮忙。"
-          },
-          {
-            "id": "w2-sun-gr4",
-            "type": "choice",
-            "question": "___ useful the drone is!",
-            "options": [
-              "How",
-              "What",
-              "Which",
-              "Who"
-            ],
-            "answer": 0,
-            "explanation_cn": "How + 形容词：How useful…!"
-          },
-          {
-            "id": "w2-sun-gr5",
-            "type": "choice",
-            "question": "Drones must not fly near ___.",
-            "options": [
-              "airports",
-              "airport's",
-              "the airport of",
-              "an airports"
-            ],
-            "answer": 0,
-            "explanation_cn": "airports 复数泛指机场。"
           }
         ]
       },
@@ -8892,7 +6997,7 @@ const WEEK3 = [
     "day_cn": "周一",
     "day_en": "Monday",
     "is_speaking_day": true,
-    "total_duration": 55,
+    "total_duration": 50,
     "theme_cn": "AI口语 + 高频词汇 + 阅读理解",
     "modules": [
       {
@@ -9447,8 +7552,8 @@ const WEEK3 = [
         "name_cn": "阅读理解",
         "type": "reading",
         "duration": 10,
-        "passage": "Online shopping is now a big part of family life in China. With a few taps on a mobile phone, people can buy clothes, food, books and even fruit from faraway farms. The things they order usually arrive in two or three days. Some big cities can deliver in half a day. If you don't like the thing you bought, you can send it back easily and get your money back. During big online shopping festivals, the prices are lower and people buy more than usual. Grandma Wang, who is seventy, also learned to shop online — now she buys vegetables for the whole family on her phone.",
-        "passage_cn": "网上购物现在是中国家庭生活的重要部分。在手机上点几下，人们就能买到衣服、食品、书籍，甚至远方农场的水果。买的东西通常两三天就送到。一些大城市半天就能送达。如果你不喜欢买到的商品，可以轻松退回并拿回钱。在大型网购节期间，价格更低，人们买得比平时更多。七十岁的王奶奶也学会了网购——现在她用手机给全家买菜。",
+        "passage": "Online shopping is now a big part of family life in China. With a few taps on a mobile phone, people can buy clothes, food, books and even fruit from faraway farms. The things they order usually arrive in two or three days. If you don't like the thing you bought, you can send it back easily and get your money back. During big online shopping festivals, the prices are lower and people buy more than usual. Grandma Wang, who is seventy, also learned to shop online — now she buys vegetables for the whole family on her phone.",
+        "passage_cn": "网上购物现在是中国家庭生活的重要部分。在手机上点几下，人们就能买到衣服、食品、书籍，甚至远方农场的水果。买的东西通常两三天就送到。如果你不喜欢买到的商品，可以轻松退回并拿回钱。在大型网购节期间，价格更低，人们买得比平时更多。七十岁的王奶奶也学会了网购——现在她用手机给全家买菜。",
         "questions": [
           {
             "id": "w3-mon-rd1",
@@ -9477,19 +7582,6 @@ const WEEK3 = [
             "explanation_cn": "通常两三天送到。"
           },
           {
-            "id": "w3-mon-rd3",
-            "type": "choice",
-            "question": "How fast can some big cities deliver?",
-            "options": [
-              "In half a day",
-              "In half a month",
-              "In half a year",
-              "In five days"
-            ],
-            "answer": 0,
-            "explanation_cn": "一些大城市半天就能送达。"
-          },
-          {
             "id": "w3-mon-rd4",
             "type": "choice",
             "question": "What can you do if you don't like your order?",
@@ -9501,71 +7593,6 @@ const WEEK3 = [
             ],
             "answer": 0,
             "explanation_cn": "不喜欢可以轻松退货退款。"
-          },
-          {
-            "id": "w3-mon-rd5",
-            "type": "choice",
-            "question": "What happens during big shopping festivals?",
-            "options": [
-              "The prices are lower.",
-              "The shops close.",
-              "The delivery stops.",
-              "The phones break."
-            ],
-            "answer": 0,
-            "explanation_cn": "购物节期间价格更低，人们买得更多。"
-          },
-          {
-            "id": "w3-mon-rd6",
-            "type": "choice",
-            "question": "Who learned to shop online?",
-            "options": [
-              "Grandma Wang, who is seventy",
-              "Only students",
-              "Only workers",
-              "Nobody old"
-            ],
-            "answer": 0,
-            "explanation_cn": "七十岁的王奶奶也学会了网购。"
-          },
-          {
-            "id": "w3-mon-rd7",
-            "type": "choice",
-            "question": "What does Grandma Wang buy online?",
-            "options": [
-              "Vegetables for the family",
-              "Toys for herself",
-              "Books for school",
-              "Nothing"
-            ],
-            "answer": 0,
-            "explanation_cn": "她现在用手机给全家买菜。"
-          },
-          {
-            "id": "w3-mon-rd8",
-            "type": "choice",
-            "question": "The word \"deliver\" here means ___.",
-            "options": [
-              "送货",
-              "做饭",
-              "扫地",
-              "上课"
-            ],
-            "answer": 0,
-            "explanation_cn": "deliver 意思是「投递、送货」。"
-          },
-          {
-            "id": "w3-mon-rd9",
-            "type": "choice",
-            "question": "The underlined word \"order\" here means ___.",
-            "options": [
-              "订购的东西",
-              "命令",
-              "顺序",
-              "办公室"
-            ],
-            "answer": 0,
-            "explanation_cn": "order 在这里是「订购的货品」。"
           },
           {
             "id": "w3-mon-rd10",
@@ -9639,62 +7666,6 @@ const WEEK3 = [
             ],
             "answer": 0,
             "explanation_cn": "than 比较级用 lower。"
-          },
-          {
-            "id": "w3-mon-mc5",
-            "type": "choice",
-            "question": "Grandma Wang learned ___ online last year.",
-            "options": [
-              "to shop",
-              "shopping",
-              "shop",
-              "shops"
-            ],
-            "answer": 0,
-            "explanation_cn": "learn to do sth：学会网购，用 to shop。"
-          }
-        ]
-      },
-      {
-        "id": "w3-mon-tense2",
-        "name_cn": "时态练习",
-        "type": "tense",
-        "duration": 5,
-        "questions": [
-          {
-            "id": "w3-mon-tn21",
-            "type": "fill",
-            "question": "Online shopping ___ (change) our life a lot. [填入正确形式]",
-            "answer": "has changed",
-            "explanation_cn": "表示已经产生的影响，用现在完成时。"
-          },
-          {
-            "id": "w3-mon-tn22",
-            "type": "fill",
-            "question": "Grandma Wang ___ (start) to shop online last year. [填入正确形式]",
-            "answer": "started",
-            "explanation_cn": "last year 过去时间，用过去式 started。"
-          },
-          {
-            "id": "w3-mon-tn23",
-            "type": "fill",
-            "question": "Look! The postman ___ (deliver) the boxes. [填入正确形式]",
-            "answer": "is delivering",
-            "explanation_cn": "Look! 提示正在进行，用 is delivering。"
-          },
-          {
-            "id": "w3-mon-tn24",
-            "type": "fill",
-            "question": "The things usually ___ (arrive) in two days. [填入正确形式]",
-            "answer": "arrive",
-            "explanation_cn": "usually 习惯动作，主语复数用原形。"
-          },
-          {
-            "id": "w3-mon-tn25",
-            "type": "fill",
-            "question": "People ___ (buy) more during the festival next month. [填入正确形式]",
-            "answer": "will buy",
-            "explanation_cn": "next month 将来时间，用 will buy。"
           }
         ]
       }
@@ -9712,22 +7683,9 @@ const WEEK3 = [
         "name_cn": "阅读理解",
         "type": "reading",
         "duration": 10,
-        "passage": "Shared bikes are everywhere in Chinese cities. You can find them near bus stops, schools and shopping centres. To use one, you just open an app on your phone and scan the code on the bike. It costs only one yuan for thirty minutes. Shared bikes help people go the last kilometre between the bus stop and their homes. They are also good for the environment because riding a bike makes no pollution. But there is a problem: some people park the bikes in wrong places, and the streets become messy. Now the cities have new rules, and riders must park the bikes in special areas.",
-        "passage_cn": "共享单车在中国城市里随处可见。在公交站、学校和购物中心附近都能找到。使用时只需打开手机App，扫一下车上的码。三十分钟只要一块钱。共享单车帮助人们解决公交站到家之间「最后一公里」。骑车不产生污染，也很环保。但也有问题：有些人把车停在错误的地方，街道变得乱糟糟。现在城市出台了新规，骑车人必须把车停到专门区域。",
+        "passage": "Shared bikes are everywhere in Chinese cities. To use one, you just open an app on your phone and scan the code on the bike. Shared bikes help people go the last kilometre between the bus stop and their homes. They are also good for the environment because riding a bike makes no pollution. But there is a problem: some people park the bikes in wrong places, and the streets become messy. Now the cities have new rules, and riders must park the bikes in special areas.",
+        "passage_cn": "共享单车在中国城市里随处可见。使用时只需打开手机App，扫一下车上的码。共享单车帮助人们解决公交站到家之间「最后一公里」。骑车不产生污染，也很环保。但也有问题：有些人把车停在错误的地方，街道变得乱糟糟。现在城市出台了新规，骑车人必须把车停到专门区域。",
         "questions": [
-          {
-            "id": "w3-tue-rd1",
-            "type": "choice",
-            "question": "Where can you find shared bikes?",
-            "options": [
-              "Near bus stops, schools and shopping centres",
-              "Only at train stations",
-              "Only in villages",
-              "Inside museums"
-            ],
-            "answer": 0,
-            "explanation_cn": "公交站、学校、购物中心附近都有。"
-          },
           {
             "id": "w3-tue-rd2",
             "type": "choice",
@@ -9740,19 +7698,6 @@ const WEEK3 = [
             ],
             "answer": 0,
             "explanation_cn": "打开手机App扫车上的码即可解锁。"
-          },
-          {
-            "id": "w3-tue-rd3",
-            "type": "choice",
-            "question": "How much does it cost for thirty minutes?",
-            "options": [
-              "One yuan",
-              "Ten yuan",
-              "One hundred yuan",
-              "Nothing at all"
-            ],
-            "answer": 0,
-            "explanation_cn": "三十分钟只要一块钱。"
           },
           {
             "id": "w3-tue-rd4",
@@ -9779,58 +7724,6 @@ const WEEK3 = [
             ],
             "answer": 0,
             "explanation_cn": "骑车不产生污染，所以环保。"
-          },
-          {
-            "id": "w3-tue-rd6",
-            "type": "choice",
-            "question": "What problem do shared bikes bring?",
-            "options": [
-              "Some people park them in wrong places.",
-              "They are too fast.",
-              "They cost too much.",
-              "They are too heavy."
-            ],
-            "answer": 0,
-            "explanation_cn": "问题在于乱停乱放，街道变乱。"
-          },
-          {
-            "id": "w3-tue-rd7",
-            "type": "choice",
-            "question": "What must riders do now?",
-            "options": [
-              "Park the bikes in special areas",
-              "Buy their own bikes",
-              "Ride only at night",
-              "Stop riding bikes"
-            ],
-            "answer": 0,
-            "explanation_cn": "新规要求停到专门区域。"
-          },
-          {
-            "id": "w3-tue-rd8",
-            "type": "choice",
-            "question": "The word \"messy\" here means ___.",
-            "options": [
-              "乱糟糟的",
-              "干净的",
-              "安静的",
-              "空荡的"
-            ],
-            "answer": 0,
-            "explanation_cn": "messy 意思是「乱的」。"
-          },
-          {
-            "id": "w3-tue-rd9",
-            "type": "choice",
-            "question": "Riding a shared bike is ___ than driving a car.",
-            "options": [
-              "greener",
-              "greenerest",
-              "more green than",
-              "greenest"
-            ],
-            "answer": 0,
-            "explanation_cn": "骑车更环保，than 句子里用比较级 greener。"
           },
           {
             "id": "w3-tue-rd10",
@@ -9930,58 +7823,6 @@ const WEEK3 = [
             ],
             "answer": 0,
             "explanation_cn": "两个优点并列用 and。"
-          },
-          {
-            "id": "w3-tue-gr7",
-            "type": "choice",
-            "question": "Please put the bikes ___ after using them.",
-            "options": [
-              "back",
-              "up",
-              "off",
-              "away of"
-            ],
-            "answer": 0,
-            "explanation_cn": "put…back：把车放回原处。"
-          },
-          {
-            "id": "w3-tue-gr8",
-            "type": "choice",
-            "question": "It was ___ hot day, so we rode slowly.",
-            "options": [
-              "a",
-              "an",
-              "the",
-              "/（不填）"
-            ],
-            "answer": 0,
-            "explanation_cn": "hot 辅音音素开头，用 a。"
-          },
-          {
-            "id": "w3-tue-gr9",
-            "type": "choice",
-            "question": "The riders ___ park in the special area from now on.",
-            "options": [
-              "will",
-              "wills",
-              "will to",
-              "will be"
-            ],
-            "answer": 0,
-            "explanation_cn": "will 后面用动词原形 park。"
-          },
-          {
-            "id": "w3-tue-gr10",
-            "type": "choice",
-            "question": "___ polite to park the bike in the right place.",
-            "options": [
-              "It's",
-              "Its",
-              "It",
-              "This is"
-            ],
-            "answer": 0,
-            "explanation_cn": "It's + 形容词 + to do：把车停对位置是有礼貌的。"
           }
         ]
       },
@@ -10094,32 +7935,6 @@ const WEEK3 = [
             ],
             "answer": 0,
             "explanation_cn": "It is faster to do sth：短途骑车更快。"
-          },
-          {
-            "id": "w3-tue-mc9",
-            "type": "choice",
-            "question": "Don't forget ___ the bike when you arrive.",
-            "options": [
-              "to lock",
-              "locking",
-              "lock",
-              "locks"
-            ],
-            "answer": 0,
-            "explanation_cn": "forget to do sth：记得要锁车。"
-          },
-          {
-            "id": "w3-tue-mc10",
-            "type": "choice",
-            "question": "Shared bikes make city life ___ easier.",
-            "options": [
-              "much",
-              "many",
-              "more",
-              "most"
-            ],
-            "answer": 0,
-            "explanation_cn": "much 修饰比较级 easier。"
           }
         ]
       }
@@ -10129,7 +7944,7 @@ const WEEK3 = [
     "day_cn": "周三",
     "day_en": "Wednesday",
     "is_speaking_day": true,
-    "total_duration": 55,
+    "total_duration": 50,
     "theme_cn": "AI口语 + 高频词汇 + 阅读理解",
     "modules": [
       {
@@ -10691,8 +8506,8 @@ const WEEK3 = [
         "name_cn": "阅读理解",
         "type": "reading",
         "duration": 10,
-        "passage": "Short videos are very popular now, and some teachers use them to help students learn. In one popular kind of video, a teacher explains a maths problem in just one minute. Students can watch it again and again until they understand. Many museums also make short videos to show their treasures, so children can enjoy them at home. But watching too many short videos is bad for the eyes, and some videos are not useful at all. Doctors say students should watch screens for less than two hours a day. The best way is to pick good videos, watch for a short time, and then go outside to play.",
-        "passage_cn": "短视频现在非常流行，一些老师用它们帮助学生学习。在一种热门视频里，老师只用一分钟讲解一道数学题。学生可以反复观看，直到看懂为止。很多博物馆也拍短视频展示馆藏珍宝，孩子们在家就能欣赏。但看太多短视频伤眼睛，而且有些视频完全没用。医生建议学生每天看屏幕不要超过两小时。最好的办法是：挑好视频、短时间观看，然后出门去玩。",
+        "passage": "Short videos are very popular now, and some teachers use them to help students learn. In one popular kind of video, a teacher explains a maths problem in just one minute. Many museums also make short videos to show their treasures, so children can enjoy them at home. But watching too many short videos is bad for the eyes, and some videos are not useful at all. Doctors say students should watch screens for less than two hours a day. The best way is to pick good videos, watch for a short time, and then go outside to play.",
+        "passage_cn": "短视频现在非常流行，一些老师用它们帮助学生学习。在一种热门视频里，老师只用一分钟讲解一道数学题。很多博物馆也拍短视频展示馆藏珍宝，孩子们在家就能欣赏。但看太多短视频伤眼睛，而且有些视频完全没用。医生建议学生每天看屏幕不要超过两小时。最好的办法是：挑好视频、短时间观看，然后出门去玩。",
         "questions": [
           {
             "id": "w3-wed-rd1",
@@ -10708,32 +8523,6 @@ const WEEK3 = [
             "explanation_cn": "老师用短视频辅助教学。"
           },
           {
-            "id": "w3-wed-rd2",
-            "type": "choice",
-            "question": "How long does the maths video take?",
-            "options": [
-              "One minute",
-              "One hour",
-              "One day",
-              "Ten seconds"
-            ],
-            "answer": 0,
-            "explanation_cn": "老师只用一分钟讲一道数学题。"
-          },
-          {
-            "id": "w3-wed-rd3",
-            "type": "choice",
-            "question": "What can students do if they don't understand?",
-            "options": [
-              "Watch the video again and again",
-              "Do nothing",
-              "Buy a new phone",
-              "Stop learning"
-            ],
-            "answer": 0,
-            "explanation_cn": "可以反复观看直到看懂。"
-          },
-          {
             "id": "w3-wed-rd4",
             "type": "choice",
             "question": "What do museums make short videos for?",
@@ -10747,19 +8536,6 @@ const WEEK3 = [
             "explanation_cn": "博物馆用短视频展示馆藏珍宝。"
           },
           {
-            "id": "w3-wed-rd5",
-            "type": "choice",
-            "question": "What is bad about watching too many short videos?",
-            "options": [
-              "It is bad for the eyes.",
-              "It makes people taller.",
-              "It costs a lot of money.",
-              "It is too slow."
-            ],
-            "answer": 0,
-            "explanation_cn": "看太多伤眼睛。"
-          },
-          {
             "id": "w3-wed-rd6",
             "type": "choice",
             "question": "How long should students watch screens a day?",
@@ -10771,45 +8547,6 @@ const WEEK3 = [
             ],
             "answer": 0,
             "explanation_cn": "医生建议每天看屏幕不超过两小时。"
-          },
-          {
-            "id": "w3-wed-rd7",
-            "type": "choice",
-            "question": "What is the best way to watch short videos?",
-            "options": [
-              "Pick good ones, watch for a short time, then go outside",
-              "Watch all night",
-              "Only watch funny ones",
-              "Never watch any"
-            ],
-            "answer": 0,
-            "explanation_cn": "最后一句：挑好视频、短时间看，再出去玩。"
-          },
-          {
-            "id": "w3-wed-rd8",
-            "type": "choice",
-            "question": "The word \"treasures\" here means ___.",
-            "options": [
-              "珍宝",
-              "垃圾",
-              "门票",
-              "桌椅"
-            ],
-            "answer": 0,
-            "explanation_cn": "treasures 意思是「珍宝」，指博物馆里的文物。"
-          },
-          {
-            "id": "w3-wed-rd9",
-            "type": "choice",
-            "question": "Which one is NOT talked about in the short video passage?",
-            "options": [
-              "Short videos can cook dinner.",
-              "Teachers use short videos.",
-              "Museums make short videos.",
-              "Too many videos hurt eyes."
-            ],
-            "answer": 0,
-            "explanation_cn": "短视频不能做饭，其余三项都在文中。"
           },
           {
             "id": "w3-wed-rd10",
@@ -10883,62 +8620,6 @@ const WEEK3 = [
             ],
             "answer": 0,
             "explanation_cn": "目的用 to show。"
-          },
-          {
-            "id": "w3-wed-mc5",
-            "type": "choice",
-            "question": "Watching too many videos is bad ___ the eyes.",
-            "options": [
-              "for",
-              "at",
-              "with",
-              "of"
-            ],
-            "answer": 0,
-            "explanation_cn": "be bad for…：对…有害。"
-          }
-        ]
-      },
-      {
-        "id": "w3-wed-tense2",
-        "name_cn": "时态练习",
-        "type": "tense",
-        "duration": 5,
-        "questions": [
-          {
-            "id": "w3-wed-tn21",
-            "type": "fill",
-            "question": "Short videos ___ (be) very popular now. [填入正确形式]",
-            "answer": "are",
-            "explanation_cn": "videos 复数，now 用 are。"
-          },
-          {
-            "id": "w3-wed-tn22",
-            "type": "fill",
-            "question": "The teacher ___ (explain) the problem in one minute yesterday. [填入正确形式]",
-            "answer": "explained",
-            "explanation_cn": "yesterday 过去时间，用过去式 explained。"
-          },
-          {
-            "id": "w3-wed-tn23",
-            "type": "fill",
-            "question": "Look! The kids ___ (watch) a science video. [填入正确形式]",
-            "answer": "are watching",
-            "explanation_cn": "Look! 提示正在进行，用 are watching。"
-          },
-          {
-            "id": "w3-wed-tn24",
-            "type": "fill",
-            "question": "Museums ___ (make) short videos since 2020. [填入正确形式]",
-            "answer": "have made",
-            "explanation_cn": "since 2020 与现在完成时连用。"
-          },
-          {
-            "id": "w3-wed-tn25",
-            "type": "fill",
-            "question": "We ___ (pick) good videos and watch less from today. [填入正确形式]",
-            "answer": "will pick",
-            "explanation_cn": "from today 表示从今往后，用 will pick。"
           }
         ]
       }
@@ -11026,76 +8707,6 @@ const WEEK3 = [
             ],
             "answer": 0,
             "explanation_cn": "价格是 one yuan（一元），时间 thirty minutes；costs 不是 takes。"
-          },
-          {
-            "id": "w3-thu-ls6",
-            "type": "choice",
-            "question": "听到的句子是什么？",
-            "audio_text": "Some people park the bikes in wrong places.",
-            "options": [
-              "Some people park the bikes in wrong places.",
-              "Some people ride the bikes in wrong places.",
-              "All people park the bikes in right places.",
-              "Some people paint the bikes in wrong places."
-            ],
-            "answer": 0,
-            "explanation_cn": "park（停放）不是 ride（骑）；wrong places（错误地方）。"
-          },
-          {
-            "id": "w3-thu-ls7",
-            "type": "choice",
-            "question": "听到的句子是什么？",
-            "audio_text": "Students should watch screens for less than two hours a day.",
-            "options": [
-              "Students should watch screens for less than two hours a day.",
-              "Students should watch screens for more than two hours a day.",
-              "Students should watch films for less than two hours a day.",
-              "Teachers should watch screens for less than two hours a day."
-            ],
-            "answer": 0,
-            "explanation_cn": "less than（少于）不是 more than；对象是 students。"
-          },
-          {
-            "id": "w3-thu-ls8",
-            "type": "choice",
-            "question": "听到的句子是什么？",
-            "audio_text": "The museum uses lights and big screens to show old things.",
-            "options": [
-              "The museum uses lights and big screens to show old things.",
-              "The museum uses lights and big screens to sell old things.",
-              "The library uses lights and big screens to show old things.",
-              "The museum uses candles and paper to show old things."
-            ],
-            "answer": 0,
-            "explanation_cn": "lights and big screens（灯光和大屏幕），动词 show。"
-          },
-          {
-            "id": "w3-thu-ls9",
-            "type": "choice",
-            "question": "听到的句子是什么？",
-            "audio_text": "Young people like sharing museum photos online.",
-            "options": [
-              "Young people like sharing museum photos online.",
-              "Young people like drawing museum photos online.",
-              "Old people like sharing museum photos online.",
-              "Young people like sharing school photos online."
-            ],
-            "answer": 0,
-            "explanation_cn": "like sharing（喜欢分享），地点 online（网上）。"
-          },
-          {
-            "id": "w3-thu-ls10",
-            "type": "choice",
-            "question": "听到的句子是什么？",
-            "audio_text": "The doctors say watching too many videos hurts the eyes.",
-            "options": [
-              "The doctors say watching too many videos hurts the eyes.",
-              "The doctors say watching too many videos helps the eyes.",
-              "The teacher says reading too many books hurts the eyes.",
-              "The doctors say watching too many films hurts the ears."
-            ],
-            "answer": 0,
-            "explanation_cn": "hurts（伤害）不是 helps；伤的是 eyes（眼睛）。"
           }
         ]
       },
@@ -11104,7 +8715,7 @@ const WEEK3 = [
         "name_cn": "完形填空",
         "type": "cloze",
         "duration": 10,
-        "passage": "Garbage sorting is an important habit in Chinese cities now. In Shanghai and many other cities, people must 1___ their garbage into four kinds: dry, wet, recyclable and harmful. Kitchen waste like banana skins is 2___ garbage. Bottles, paper and old clothes are 3___, because they can be made into new things. Batteries and old medicine are 4___ garbage, so we need 5___ care with them. At first, many people found 6___ hard to remember the four kinds, but now most people do it well. Some neighborhoods give small 7___ to people who sort well, like soap and eggs. Children also learn sorting at 8___ and teach their parents at home. Sorting garbage 9___ only one minute every day, but it helps the earth a lot. If everyone takes part, our cities will become 10___ cleaner and more beautiful.",
+        "passage": "Garbage sorting is an important habit in Chinese cities now. In Shanghai and many other cities, people must 1___ their garbage into four kinds: dry, wet, recyclable and harmful. Kitchen waste like banana skins is 2___ garbage. Bottles, paper and old clothes are 3___, because they can be made into new things. Batteries and old medicine are 4___ garbage, so we need 5___ care with them. Sorting garbage takes only one minute every day, but it helps the earth a lot. If everyone takes part, our cities will become 6___ cleaner and more beautiful.",
         "questions": [
           {
             "id": "w3-thu-cz1",
@@ -11176,58 +8787,6 @@ const WEEK3 = [
             "type": "choice",
             "question": "6___",
             "options": [
-              "it",
-              "them",
-              "its",
-              "they"
-            ],
-            "answer": 0,
-            "explanation_cn": "found it hard to do sth：it 作形式宾语。"
-          },
-          {
-            "id": "w3-thu-cz7",
-            "type": "choice",
-            "question": "7___",
-            "options": [
-              "gifts",
-              "gift",
-              "gifts'",
-              "a gift"
-            ],
-            "answer": 0,
-            "explanation_cn": "some gifts：一些小礼物，用复数。"
-          },
-          {
-            "id": "w3-thu-cz8",
-            "type": "choice",
-            "question": "8___",
-            "options": [
-              "school",
-              "schools'",
-              "the school of",
-              "schooling"
-            ],
-            "answer": 0,
-            "explanation_cn": "「在学校」at school，固定搭配。"
-          },
-          {
-            "id": "w3-thu-cz9",
-            "type": "choice",
-            "question": "9___",
-            "options": [
-              "takes",
-              "take",
-              "taking",
-              "took"
-            ],
-            "answer": 0,
-            "explanation_cn": "动名词短语作主语按单数算，takes。"
-          },
-          {
-            "id": "w3-thu-cz10",
-            "type": "choice",
-            "question": "10___",
-            "options": [
               "much",
               "many",
               "most",
@@ -11278,41 +8837,6 @@ const WEEK3 = [
             "question": "The city ___ (give) small gifts to good sorters since 2020. [填入正确形式]",
             "answer": "has given",
             "explanation_cn": "since 2020 与现在完成时连用。"
-          },
-          {
-            "id": "w3-thu-tn6",
-            "type": "fill",
-            "question": "Bottles ___ (make) into new things every day. [填入正确形式]",
-            "answer": "are made",
-            "explanation_cn": "瓶子被做成新东西，一般现在时被动 are made。"
-          },
-          {
-            "id": "w3-thu-tn7",
-            "type": "fill",
-            "question": "I ___ (finish) sorting before mom came home. [填入正确形式]",
-            "answer": "had finished",
-            "explanation_cn": "mom 回来之前已完成，用过去完成时 had finished。"
-          },
-          {
-            "id": "w3-thu-tn8",
-            "type": "fill",
-            "question": "Tomorrow our class ___ (visit) the recycling centre. [填入正确形式]",
-            "answer": "will visit",
-            "explanation_cn": "tomorrow 将来时间，用 will visit。"
-          },
-          {
-            "id": "w3-thu-tn9",
-            "type": "fill",
-            "question": "While dad ___ (clean) the kitchen, I sorted the bottles. [填入正确形式]",
-            "answer": "was cleaning",
-            "explanation_cn": "while 引导过去进行时：was cleaning。"
-          },
-          {
-            "id": "w3-thu-tn10",
-            "type": "fill",
-            "question": "Don't forget ___ (wash) your hands after sorting. [填入正确形式]",
-            "answer": "to wash",
-            "explanation_cn": "remember/forget to do sth：别忘了洗手。"
           }
         ]
       }
@@ -11657,71 +9181,6 @@ const WEEK3 = [
             ],
             "answer": 0,
             "explanation_cn": "车被停放，将来时被动 will be parked。"
-          },
-          {
-            "id": "w3-fri-gr9",
-            "type": "choice",
-            "question": "Not all short videos ___ good for children.",
-            "options": [
-              "are",
-              "is",
-              "was",
-              "be"
-            ],
-            "answer": 0,
-            "explanation_cn": "videos 复数，主语是 Not all…，用 are。"
-          },
-          {
-            "id": "w3-fri-gr10",
-            "type": "choice",
-            "question": "The teacher asked us ___ too much time on videos.",
-            "options": [
-              "not to spend",
-              "don't spend",
-              "not spending",
-              "to not spend"
-            ],
-            "answer": 0,
-            "explanation_cn": "ask sb not to do sth：叫我们别花太多时间。"
-          },
-          {
-            "id": "w3-fri-gr11",
-            "type": "choice",
-            "question": "By the time we arrived, the museum tickets ___ sold out.",
-            "options": [
-              "had been",
-              "have been",
-              "were being",
-              "are"
-            ],
-            "answer": 0,
-            "explanation_cn": "到达之前已卖完，过去完成时 had been。"
-          },
-          {
-            "id": "w3-fri-gr12",
-            "type": "choice",
-            "question": "The number of museum visitors ___ growing every year.",
-            "options": [
-              "is",
-              "are",
-              "were",
-              "be"
-            ],
-            "answer": 0,
-            "explanation_cn": "the number of… 作主语按单数，is growing。"
-          },
-          {
-            "id": "w3-fri-gr13",
-            "type": "choice",
-            "question": "Remember ___ your own bag when you go shopping.",
-            "options": [
-              "to take",
-              "taking",
-              "take",
-              "takes"
-            ],
-            "answer": 0,
-            "explanation_cn": "remember to do sth：记得自带购物袋。"
           }
         ]
       }
@@ -11731,7 +9190,7 @@ const WEEK3 = [
     "day_cn": "周六",
     "day_en": "Saturday",
     "is_speaking_day": true,
-    "total_duration": 55,
+    "total_duration": 50,
     "theme_cn": "AI口语 + 高频词汇 + 阅读理解",
     "modules": [
       {
@@ -12288,8 +9747,8 @@ const WEEK3 = [
         "name_cn": "阅读理解",
         "type": "reading",
         "duration": 10,
-        "passage": "More and more young people love visiting museums in China. On weekends, many museums are full of students and families. Some famous museums are so popular that people must book tickets days before. Why are museums hot now? First, museums look more beautiful and friendly than before. Many of them use lights, sounds and big screens to show old things in new ways. Second, museums make lovely ice cream, books and toys with pictures of their treasures. Third, taking photos in museums is fun, and young people like sharing them online. Museums are no longer quiet and boring places — they are becoming the most fashionable classrooms in China.",
-        "passage_cn": "在中国，越来越多的年轻人喜欢参观博物馆。周末许多博物馆满是学生和家庭。一些著名博物馆太火了，人们要提前好几天预约门票。为什么博物馆现在这么火？第一，博物馆比以前更漂亮、更亲民。很多用灯光、声音和大屏幕，用新方式展示古老文物。第二，博物馆用馆藏形象做出可爱的冰淇淋、书和玩具。第三，在博物馆拍照很好玩，年轻人喜欢把照片分享到网上。博物馆不再是安静无聊的地方——它们正成为中国最时髦的课堂。",
+        "passage": "More and more young people love visiting museums in China. Why are museums hot now? First, museums look more beautiful and friendly than before. Many of them use lights, sounds and big screens to show old things in new ways. Second, museums make lovely ice cream, books and toys with pictures of their treasures. Museums are no longer quiet and boring places — they are becoming the most fashionable classrooms in China.",
+        "passage_cn": "在中国，越来越多的年轻人喜欢参观博物馆。为什么博物馆现在这么火？第一，博物馆比以前更漂亮、更亲民。很多用灯光、声音和大屏幕，用新方式展示古老文物。第二，博物馆用馆藏形象做出可爱的冰淇淋、书和玩具。博物馆不再是安静无聊的地方——它们正成为中国最时髦的课堂。",
         "questions": [
           {
             "id": "w3-sat-rd1",
@@ -12303,19 +9762,6 @@ const WEEK3 = [
             ],
             "answer": 0,
             "explanation_cn": "第一句：越来越多的年轻人爱逛博物馆。"
-          },
-          {
-            "id": "w3-sat-rd2",
-            "type": "choice",
-            "question": "What must people do for famous museums?",
-            "options": [
-              "Book tickets days before",
-              "Pay a lot of money",
-              "Wear special clothes",
-              "Take an exam"
-            ],
-            "answer": 0,
-            "explanation_cn": "热门博物馆要提前几天预约。"
           },
           {
             "id": "w3-sat-rd3",
@@ -12342,71 +9788,6 @@ const WEEK3 = [
             ],
             "answer": 0,
             "explanation_cn": "博物馆文创：冰淇淋、书和玩具。"
-          },
-          {
-            "id": "w3-sat-rd5",
-            "type": "choice",
-            "question": "What do young people like doing in museums?",
-            "options": [
-              "Taking photos and sharing them online",
-              "Sleeping on benches",
-              "Running and shouting",
-              "Cooking dinner"
-            ],
-            "answer": 0,
-            "explanation_cn": "拍照并分享到网上。"
-          },
-          {
-            "id": "w3-sat-rd6",
-            "type": "choice",
-            "question": "What were museums like before?",
-            "options": [
-              "Quiet and boring",
-              "Noisy and crowded",
-              "Full of games",
-              "Closed all day"
-            ],
-            "answer": 0,
-            "explanation_cn": "最后说博物馆「不再」安静无聊，说明以前是那样。"
-          },
-          {
-            "id": "w3-sat-rd7",
-            "type": "choice",
-            "question": "The passage calls museums the most fashionable ___.",
-            "options": [
-              "classrooms",
-              "playgrounds",
-              "cinemas",
-              "restaurants"
-            ],
-            "answer": 0,
-            "explanation_cn": "最后一句：最时髦的课堂（classrooms）。"
-          },
-          {
-            "id": "w3-sat-rd8",
-            "type": "choice",
-            "question": "The word \"book\" in \"book tickets\" means ___.",
-            "options": [
-              "预约",
-              "书本",
-              "账本",
-              "书店"
-            ],
-            "answer": 0,
-            "explanation_cn": "这里的 book 是动词「预订」。"
-          },
-          {
-            "id": "w3-sat-rd9",
-            "type": "choice",
-            "question": "How many reasons does the passage give?",
-            "options": [
-              "Three",
-              "Two",
-              "Four",
-              "Five"
-            ],
-            "answer": 0,
-            "explanation_cn": "First、Second、Third — 共三个原因。"
           },
           {
             "id": "w3-sat-rd10",
@@ -12480,62 +9861,6 @@ const WEEK3 = [
             ],
             "answer": 0,
             "explanation_cn": "目的用不定式 to show。"
-          },
-          {
-            "id": "w3-sat-mc5",
-            "type": "choice",
-            "question": "The museums make lovely toys ___ pictures of treasures.",
-            "options": [
-              "with",
-              "in",
-              "at",
-              "of"
-            ],
-            "answer": 0,
-            "explanation_cn": "「带有…图案的」玩具，用 with。"
-          }
-        ]
-      },
-      {
-        "id": "w3-sat-tense2",
-        "name_cn": "时态练习",
-        "type": "tense",
-        "duration": 5,
-        "questions": [
-          {
-            "id": "w3-sat-tn21",
-            "type": "fill",
-            "question": "More and more people ___ (visit) museums every year. [填入正确形式]",
-            "answer": "visit",
-            "explanation_cn": "every year 习惯动作，主语复数用原形。"
-          },
-          {
-            "id": "w3-sat-tn22",
-            "type": "fill",
-            "question": "The museum ___ (open) a new hall last month. [填入正确形式]",
-            "answer": "opened",
-            "explanation_cn": "last month 过去时间，用过去式 opened。"
-          },
-          {
-            "id": "w3-sat-tn23",
-            "type": "fill",
-            "question": "Look! The students ___ (take) photos of the treasures. [填入正确形式]",
-            "answer": "are taking",
-            "explanation_cn": "Look! 提示正在进行，用 are taking。"
-          },
-          {
-            "id": "w3-sat-tn24",
-            "type": "fill",
-            "question": "Museums ___ (become) the fashionable classrooms already. [填入正确形式]",
-            "answer": "have become",
-            "explanation_cn": "already 与现在完成时连用。"
-          },
-          {
-            "id": "w3-sat-tn25",
-            "type": "fill",
-            "question": "Our class ___ (go) to the museum next Saturday. [填入正确形式]",
-            "answer": "will go",
-            "explanation_cn": "next Saturday 将来时间，用 will go。"
           }
         ]
       }
@@ -12545,7 +9870,7 @@ const WEEK3 = [
     "day_cn": "周日",
     "day_en": "Sunday",
     "is_speaking_day": false,
-    "total_duration": 30,
+    "total_duration": 20,
     "theme_cn": "阅读理解 + 高频词汇 + 完形填空",
     "modules": [
       {
@@ -12989,7 +10314,7 @@ const WEEK3 = [
         "name_cn": "完形填空",
         "type": "cloze",
         "duration": 10,
-        "passage": "More and more people in China love running, and city marathon races are everywhere now. Every year, big cities like Beijing and Shanghai hold marathon 1___. Tens of thousands of people join them. Runners wear sports 2___ and numbers on their backs. The race 3___ about forty-two kilometres, and it usually starts early in the morning. Many people are not fast, 4___ they keep running to the end. Doctors and volunteers stand along the 5___ to help. Water and fruit are 6___ at rest points every few kilometres. Running is good 7___ the heart, and it also makes people feel happy. Children can join the short 8___, maybe three kilometres. To run well, you must 9___ every day for months before the race. Marathon is not just a race — it is a 10___ of never giving up.",
+        "passage": "More and more people in China love running, and city marathon races are everywhere now. Every year, big cities like Beijing and Shanghai hold marathon 1___. The race 2___ about forty-two kilometres, and it usually starts early in the morning. Many people are not fast, 3___ they keep running to the end. Water and fruit are 4___ at rest points every few kilometres. Children can join the short 5___, maybe three kilometres. Marathon is not just a race — it is a 6___ of never giving up.",
         "questions": [
           {
             "id": "w3-sun-cz1",
@@ -13009,19 +10334,6 @@ const WEEK3 = [
             "type": "choice",
             "question": "2___",
             "options": [
-              "clothes",
-              "cloths",
-              "clothing of",
-              "cloths'"
-            ],
-            "answer": 0,
-            "explanation_cn": "运动服装 clothes，本身就是复数形式。"
-          },
-          {
-            "id": "w3-sun-cz3",
-            "type": "choice",
-            "question": "3___",
-            "options": [
               "is",
               "are",
               "am",
@@ -13031,9 +10343,9 @@ const WEEK3 = [
             "explanation_cn": "主语 the race 单数，用 is（全长约42公里）。"
           },
           {
-            "id": "w3-sun-cz4",
+            "id": "w3-sun-cz3",
             "type": "choice",
-            "question": "4___",
+            "question": "3___",
             "options": [
               "but",
               "and",
@@ -13044,22 +10356,9 @@ const WEEK3 = [
             "explanation_cn": "「虽然」跑得不快「但是」坚持到终点，but。"
           },
           {
-            "id": "w3-sun-cz5",
+            "id": "w3-sun-cz4",
             "type": "choice",
-            "question": "5___",
-            "options": [
-              "way",
-              "road of",
-              "ways",
-              "roadside of"
-            ],
-            "answer": 0,
-            "explanation_cn": "along the way：沿路。"
-          },
-          {
-            "id": "w3-sun-cz6",
-            "type": "choice",
-            "question": "6___",
+            "question": "4___",
             "options": [
               "free",
               "freely",
@@ -13070,22 +10369,9 @@ const WEEK3 = [
             "explanation_cn": "水是「免费」提供的，形容词 free。"
           },
           {
-            "id": "w3-sun-cz7",
+            "id": "w3-sun-cz5",
             "type": "choice",
-            "question": "7___",
-            "options": [
-              "for",
-              "at",
-              "with",
-              "of"
-            ],
-            "answer": 0,
-            "explanation_cn": "be good for the heart：对心脏有好处。"
-          },
-          {
-            "id": "w3-sun-cz8",
-            "type": "choice",
-            "question": "8___",
+            "question": "5___",
             "options": [
               "race",
               "races",
@@ -13096,22 +10382,9 @@ const WEEK3 = [
             "explanation_cn": "the short race 短程赛，特指用单数。"
           },
           {
-            "id": "w3-sun-cz9",
+            "id": "w3-sun-cz6",
             "type": "choice",
-            "question": "9___",
-            "options": [
-              "practise",
-              "practises",
-              "practising",
-              "practised"
-            ],
-            "answer": 0,
-            "explanation_cn": "must 后面用动词原形 practise。"
-          },
-          {
-            "id": "w3-sun-cz10",
-            "type": "choice",
-            "question": "10___",
+            "question": "6___",
             "options": [
               "lesson",
               "lesson's",
@@ -13120,122 +10393,6 @@ const WEEK3 = [
             ],
             "answer": 0,
             "explanation_cn": "a lesson of never giving up：一堂「永不放弃」的课。"
-          }
-        ]
-      },
-      {
-        "id": "w3-sun-tense",
-        "name_cn": "时态练习",
-        "type": "tense",
-        "duration": 5,
-        "questions": [
-          {
-            "id": "w3-sun-tn1",
-            "type": "fill",
-            "question": "Our city ___ (hold) a marathon race last autumn. [填入正确形式]",
-            "answer": "held",
-            "explanation_cn": "last autumn 过去时间，hold 的过去式是 held。"
-          },
-          {
-            "id": "w3-sun-tn2",
-            "type": "fill",
-            "question": "Look! The runners ___ (pass) our street now. [填入正确形式]",
-            "answer": "are passing",
-            "explanation_cn": "Look! 提示正在进行，用 are passing。"
-          },
-          {
-            "id": "w3-sun-tn3",
-            "type": "fill",
-            "question": "Running ___ (be) good for the heart. [填入正确形式]",
-            "answer": "is",
-            "explanation_cn": "动名词作主语按单数，用 is。"
-          },
-          {
-            "id": "w3-sun-tn4",
-            "type": "fill",
-            "question": "My uncle ___ (run) marathons since 2020. [填入正确形式]",
-            "answer": "has run",
-            "explanation_cn": "since 2020 与现在完成时连用，run 的过去分词是 run。"
-          },
-          {
-            "id": "w3-sun-tn5",
-            "type": "fill",
-            "question": "The volunteers ___ (give) out water at every rest point tomorrow. [填入正确形式]",
-            "answer": "will give",
-            "explanation_cn": "tomorrow 将来时间，用 will give。"
-          }
-        ]
-      },
-      {
-        "id": "w3-sun-grammar",
-        "name_cn": "语法练习",
-        "type": "grammar",
-        "duration": 5,
-        "questions": [
-          {
-            "id": "w3-sun-gr1",
-            "type": "choice",
-            "question": "Tens of thousands ___ people join the race.",
-            "options": [
-              "of",
-              "off",
-              "for",
-              "with"
-            ],
-            "answer": 0,
-            "explanation_cn": "tens of thousands of people：数以万计的人。"
-          },
-          {
-            "id": "w3-sun-gr2",
-            "type": "choice",
-            "question": "The runners wear numbers ___ their backs.",
-            "options": [
-              "on",
-              "in",
-              "at",
-              "under"
-            ],
-            "answer": 0,
-            "explanation_cn": "「背在背上」用 on their backs。"
-          },
-          {
-            "id": "w3-sun-gr3",
-            "type": "choice",
-            "question": "Keep ___ and you will reach the end.",
-            "options": [
-              "running",
-              "run",
-              "runs",
-              "ran"
-            ],
-            "answer": 0,
-            "explanation_cn": "keep doing sth：坚持跑下去。"
-          },
-          {
-            "id": "w3-sun-gr4",
-            "type": "choice",
-            "question": "Marathon is a lesson of never ___ up.",
-            "options": [
-              "giving",
-              "give",
-              "gives",
-              "gave"
-            ],
-            "answer": 0,
-            "explanation_cn": "of 后面用动名词 giving up。"
-          },
-          {
-            "id": "w3-sun-gr5",
-            "type": "choice",
-            "question": "___ exciting the marathon finish is!",
-            "options": [
-              "How",
-              "What",
-              "Where",
-              "When"
-            ],
-            "answer": 0,
-            "explanation_cn": "How + 形容词：How exciting…!"
           }
         ]
       },
@@ -13326,7 +10483,7 @@ const WEEK4 = [
     "day_cn": "周一",
     "day_en": "Monday",
     "is_speaking_day": true,
-    "total_duration": 55,
+    "total_duration": 50,
     "theme_cn": "AI口语 + 高频词汇 + 阅读理解",
     "modules": [
       {
@@ -13893,8 +11050,8 @@ const WEEK4 = [
         "name_cn": "阅读理解",
         "type": "reading",
         "duration": 10,
-        "passage": "The Palace Museum, also known as the Forbidden City, stands in the heart of Beijing. Emperors of the Ming and Qing dynasties lived and worked there for almost 500 years. The palace has about 9000 rooms, and the buildings are made of wood without a single nail. Red walls and golden roofs shine under the blue sky. Today it is one of the most popular museums in the world, and over seventeen million people visit it every year. The museum now uses apps and online tours, so people can enjoy the palace without leaving home. On snowy days, photos of the red palace in white snow spread quickly on the internet, and people say it becomes the Forbidden City of six hundred years ago again.",
-        "passage_cn": "故宫博物院，又叫紫禁城，坐落在北京市中心。明清两代的皇帝在这里生活、理政近五百年。故宫有大约九千间房，建筑全部用木头建成，不用一根钉子。红墙金瓦在蓝天下闪闪发光。今天它是世界上最受欢迎的博物馆之一，每年有一千七百多万人前来参观。故宫现在还推出了App和线上游览，人们足不出户也能欣赏故宫。下雪天，红墙白雪的照片在网上迅速传播，人们说它又变成了六百年前的紫禁城。",
+        "passage": "The Palace Museum, also known as the Forbidden City, stands in the heart of Beijing. Emperors of the Ming and Qing dynasties lived and worked there for almost 500 years. The palace has about 9000 rooms, and the buildings are made of wood without a single nail. Red walls and golden roofs shine under the blue sky. Today it is one of the most popular museums in the world, and over seventeen million people visit it every year. On snowy days, photos of the red palace in white snow spread quickly on the internet, and people say it becomes the Forbidden City of six hundred years ago again.",
+        "passage_cn": "故宫博物院，又叫紫禁城，坐落在北京市中心。明清两代的皇帝在这里生活、理政近五百年。故宫有大约九千间房，建筑全部用木头建成，不用一根钉子。红墙金瓦在蓝天下闪闪发光。今天它是世界上最受欢迎的博物馆之一，每年有一千七百多万人前来参观。下雪天，红墙白雪的照片在网上迅速传播，人们说它又变成了六百年前的紫禁城。",
         "questions": [
           {
             "id": "w4-mon-rd1",
@@ -13910,19 +11067,6 @@ const WEEK4 = [
             "explanation_cn": "第一句：also known as the Palace Museum（又叫故宫博物院）。"
           },
           {
-            "id": "w4-mon-rd2",
-            "type": "choice",
-            "question": "Who lived in the Forbidden City?",
-            "options": [
-              "Emperors of the Ming and Qing dynasties",
-              "Kings of England",
-              "Famous scientists",
-              "Ancient fighters"
-            ],
-            "answer": 0,
-            "explanation_cn": "明清两代的皇帝在这里生活理政。"
-          },
-          {
             "id": "w4-mon-rd3",
             "type": "choice",
             "question": "How long did emperors live and work there?",
@@ -13936,19 +11080,6 @@ const WEEK4 = [
             "explanation_cn": "近五百年（almost 500 years）。"
           },
           {
-            "id": "w4-mon-rd4",
-            "type": "choice",
-            "question": "How many rooms does the palace have?",
-            "options": [
-              "About 9000",
-              "About 900",
-              "About 90000",
-              "About 90"
-            ],
-            "answer": 0,
-            "explanation_cn": "大约九千间房。"
-          },
-          {
             "id": "w4-mon-rd5",
             "type": "choice",
             "question": "What are the buildings made of?",
@@ -13960,58 +11091,6 @@ const WEEK4 = [
             ],
             "answer": 0,
             "explanation_cn": "全木结构，不用一根钉子。"
-          },
-          {
-            "id": "w4-mon-rd6",
-            "type": "choice",
-            "question": "How many people visit the museum every year?",
-            "options": [
-              "Over seventeen million",
-              "Over seven thousand",
-              "Over seventy thousand",
-              "Over seven million"
-            ],
-            "answer": 0,
-            "explanation_cn": "每年超过一千七百万人参观。"
-          },
-          {
-            "id": "w4-mon-rd7",
-            "type": "choice",
-            "question": "How can people enjoy the palace without leaving home?",
-            "options": [
-              "Through apps and online tours",
-              "By reading letters",
-              "By watching films only",
-              "They can't"
-            ],
-            "answer": 0,
-            "explanation_cn": "用App和线上游览。"
-          },
-          {
-            "id": "w4-mon-rd8",
-            "type": "choice",
-            "question": "What happens on snowy days?",
-            "options": [
-              "Photos of the red palace spread quickly online.",
-              "The palace closes early.",
-              "People stop visiting.",
-              "The roofs turn white forever."
-            ],
-            "answer": 0,
-            "explanation_cn": "雪天红墙白雪的照片在网上迅速传播。"
-          },
-          {
-            "id": "w4-mon-rd9",
-            "type": "choice",
-            "question": "The word \"nail\" here means ___.",
-            "options": [
-              "钉子",
-              "指甲",
-              "门钉",
-              "锤子"
-            ],
-            "answer": 0,
-            "explanation_cn": "nail 在建筑里指「钉子」。"
           },
           {
             "id": "w4-mon-rd10",
@@ -14085,62 +11164,6 @@ const WEEK4 = [
             ],
             "answer": 0,
             "explanation_cn": "How + 形容词：How beautiful…!"
-          },
-          {
-            "id": "w4-mon-mc5",
-            "type": "choice",
-            "question": "Over seventeen ___ people visit it every year.",
-            "options": [
-              "million",
-              "millions",
-              "million of",
-              "millions of"
-            ],
-            "answer": 0,
-            "explanation_cn": "数词 + million 单数：seventeen million。"
-          }
-        ]
-      },
-      {
-        "id": "w4-mon-tense2",
-        "name_cn": "时态练习",
-        "type": "tense",
-        "duration": 5,
-        "questions": [
-          {
-            "id": "w4-mon-tn21",
-            "type": "fill",
-            "question": "Emperors ___ (live) there for almost 500 years. [填入正确形式]",
-            "answer": "lived",
-            "explanation_cn": "for almost 500 years 过去时间段，用过去式 lived。"
-          },
-          {
-            "id": "w4-mon-tn22",
-            "type": "fill",
-            "question": "Look! Visitors ___ (take) photos of the red walls. [填入正确形式]",
-            "answer": "are taking",
-            "explanation_cn": "Look! 提示正在进行，用 are taking。"
-          },
-          {
-            "id": "w4-mon-tn23",
-            "type": "fill",
-            "question": "The museum ___ (use) apps for a few years. [填入正确形式]",
-            "answer": "has used",
-            "explanation_cn": "for a few years 与现在完成时连用。"
-          },
-          {
-            "id": "w4-mon-tn24",
-            "type": "fill",
-            "question": "The photos ___ (spread) quickly online last night. [填入正确形式]",
-            "answer": "spread",
-            "explanation_cn": "last night 过去时间，spread 的过去式还是 spread。"
-          },
-          {
-            "id": "w4-mon-tn25",
-            "type": "fill",
-            "question": "More people ___ (visit) the palace next year. [填入正确形式]",
-            "answer": "will visit",
-            "explanation_cn": "next year 将来时间，用 will visit。"
           }
         ]
       }
@@ -14158,8 +11181,8 @@ const WEEK4 = [
         "name_cn": "阅读理解",
         "type": "reading",
         "duration": 10,
-        "passage": "Chang'e is the name of China's moon exploration programme, taken from a goddess in an old Chinese story. In 2020, Chang'e-5 flew to the moon, collected moon soil and brought it back to the earth. It was the first time in over forty years that any country had brought moon rocks home. In 2024, Chang'e-6 did something even more amazing — it brought back soil from the far side of the moon, the side we can never see from the earth. Chinese scientists also sent a small robot car to drive on the moon and take photos. The moon soil helps scientists learn how the moon was born. One day, Chinese astronauts may walk on the moon and build a moon research station, and children watching today may become the builders of tomorrow.",
-        "passage_cn": "「嫦娥」是中国探月工程的名字，取自古代神话里的仙女。2020年，嫦娥五号飞向月球，采集月壤并带回地球。这是四十多年来人类首次把月岩带回。2024年，嫦娥六号完成了一项更了不起的任务——带回了月球背面的土壤，那是我们从地球上永远看不到的一面。中国科学家还把一台小小的月球车送上月球，在月面行驶拍照。月壤帮助科学家研究月球是怎样诞生的。将来某一天，中国航天员也许会在月面行走、建立月球科研站，今天观看发射的孩子们，可能就是明天的建设者。",
+        "passage": "Chang'e is the name of China's moon exploration programme, taken from a goddess in an old Chinese story. In 2020, Chang'e-5 flew to the moon, collected moon soil and brought it back to the earth. It was the first time in over forty years that any country had brought moon rocks home. In 2024, Chang'e-6 did something even more amazing — it brought back soil from the far side of the moon, the side we can never see from the earth. The moon soil helps scientists learn how the moon was born. One day, Chinese astronauts may walk on the moon and build a moon research station, and children watching today may become the builders of tomorrow.",
+        "passage_cn": "「嫦娥」是中国探月工程的名字，取自古代神话里的仙女。2020年，嫦娥五号飞向月球，采集月壤并带回地球。这是四十多年来人类首次把月岩带回。2024年，嫦娥六号完成了一项更了不起的任务——带回了月球背面的土壤，那是我们从地球上永远看不到的一面。月壤帮助科学家研究月球是怎样诞生的。将来某一天，中国航天员也许会在月面行走、建立月球科研站，今天观看发射的孩子们，可能就是明天的建设者。",
         "questions": [
           {
             "id": "w4-tue-rd1",
@@ -14188,19 +11211,6 @@ const WEEK4 = [
             "explanation_cn": "嫦娥五号采集月壤并带回地球。"
           },
           {
-            "id": "w4-tue-rd3",
-            "type": "choice",
-            "question": "How long had it been since moon rocks were last brought home?",
-            "options": [
-              "Over forty years",
-              "Over four years",
-              "Over fourteen years",
-              "Over four hundred years"
-            ],
-            "answer": 0,
-            "explanation_cn": "这是四十多年来人类首次。"
-          },
-          {
             "id": "w4-tue-rd4",
             "type": "choice",
             "question": "What was special about Chang'e-6?",
@@ -14212,71 +11222,6 @@ const WEEK4 = [
             ],
             "answer": 0,
             "explanation_cn": "嫦娥六号带回了月球背面的土壤。"
-          },
-          {
-            "id": "w4-tue-rd5",
-            "type": "choice",
-            "question": "What can we see from the earth?",
-            "options": [
-              "Only one side of the moon",
-              "Both sides of the moon",
-              "No side of the moon",
-              "The inside of the moon"
-            ],
-            "answer": 0,
-            "explanation_cn": "月球背面是我们从地球上永远看不到的一面。"
-          },
-          {
-            "id": "w4-tue-rd6",
-            "type": "choice",
-            "question": "What did the small robot car do on the moon?",
-            "options": [
-              "It drove around and took photos.",
-              "It built a house.",
-              "It planted flowers.",
-              "It played football."
-            ],
-            "answer": 0,
-            "explanation_cn": "月球车在月面行驶、拍照。"
-          },
-          {
-            "id": "w4-tue-rd7",
-            "type": "choice",
-            "question": "Why is moon soil important?",
-            "options": [
-              "It helps scientists learn how the moon was born.",
-              "It can be sold for money.",
-              "It makes plants grow fast.",
-              "It is used to build roads."
-            ],
-            "answer": 0,
-            "explanation_cn": "月壤帮助科学家研究月球的诞生。"
-          },
-          {
-            "id": "w4-tue-rd8",
-            "type": "choice",
-            "question": "What may happen one day?",
-            "options": [
-              "Chinese astronauts may build a moon research station.",
-              "Astronauts may live on the sun.",
-              "The moon may fly away.",
-              "Chang'e may come back as a goddess."
-            ],
-            "answer": 0,
-            "explanation_cn": "将来中国航天员也许会建月球科研站。"
-          },
-          {
-            "id": "w4-tue-rd9",
-            "type": "choice",
-            "question": "The word \"exploration\" here means ___.",
-            "options": [
-              "探测、探索",
-              "爆炸",
-              "旅游",
-              "种植"
-            ],
-            "answer": 0,
-            "explanation_cn": "exploration 意思是「探索、探测」。"
           },
           {
             "id": "w4-tue-rd10",
@@ -14376,58 +11321,6 @@ const WEEK4 = [
             ],
             "answer": 0,
             "explanation_cn": "neither…nor…：土壤和照片都不能告诉我们全部。"
-          },
-          {
-            "id": "w4-tue-gr7",
-            "type": "choice",
-            "question": "Astronauts must keep ___ in space, too.",
-            "options": [
-              "healthy",
-              "health",
-              "healthly",
-              "healthful"
-            ],
-            "answer": 0,
-            "explanation_cn": "keep + 形容词：保持健康。"
-          },
-          {
-            "id": "w4-tue-gr8",
-            "type": "choice",
-            "question": "The launch was shown ___ TV all over the world.",
-            "options": [
-              "on",
-              "in",
-              "at",
-              "by"
-            ],
-            "answer": 0,
-            "explanation_cn": "「在电视上」用 on TV。"
-          },
-          {
-            "id": "w4-tue-gr9",
-            "type": "choice",
-            "question": "Everyone watched the rocket ___ into the sky.",
-            "options": [
-              "fly",
-              "flew",
-              "flying",
-              "to fly"
-            ],
-            "answer": 0,
-            "explanation_cn": "watch sth do sth：看火箭飞上天空，用原形 fly（强调全过程）。"
-          },
-          {
-            "id": "w4-tue-gr10",
-            "type": "choice",
-            "question": "The children dream of ___ on the moon one day.",
-            "options": [
-              "walking",
-              "walk",
-              "walks",
-              "walked"
-            ],
-            "answer": 0,
-            "explanation_cn": "dream of doing sth：梦想在月球上行走。"
           }
         ]
       },
@@ -14540,32 +11433,6 @@ const WEEK4 = [
             ],
             "answer": 0,
             "explanation_cn": "月球绕着地球转：travels around the earth。"
-          },
-          {
-            "id": "w4-tue-mc9",
-            "type": "choice",
-            "question": "The mission was ___ success.",
-            "options": [
-              "a",
-              "an",
-              "the",
-              "/（不填）"
-            ],
-            "answer": 0,
-            "explanation_cn": "a success：一件成功的事，success 可数时用 a。"
-          },
-          {
-            "id": "w4-tue-mc10",
-            "type": "choice",
-            "question": "We are proud ___ Chang'e.",
-            "options": [
-              "of",
-              "with",
-              "at",
-              "for"
-            ],
-            "answer": 0,
-            "explanation_cn": "be proud of…：为嫦娥感到骄傲。"
           }
         ]
       }
@@ -14575,7 +11442,7 @@ const WEEK4 = [
     "day_cn": "周三",
     "day_en": "Wednesday",
     "is_speaking_day": true,
-    "total_duration": 55,
+    "total_duration": 50,
     "theme_cn": "AI口语 + 高频词汇 + 阅读理解",
     "modules": [
       {
@@ -15125,8 +11992,8 @@ const WEEK4 = [
         "name_cn": "阅读理解",
         "type": "reading",
         "duration": 10,
-        "passage": "C919 is China's first big passenger plane made by itself. The letter C stands for China, and 919 sounds like \"jiu jiu\" in Chinese, which means a long, long time — people hope the plane will fly safely forever. The plane can carry about 160 passengers and fly over five thousand kilometres without stopping. Its first passenger flight was in May 2023, from Shanghai to Beijing. Many parts of the plane, like the wings and the body, are made in Chinese factories. Sitting inside, passengers find wide seats, big windows and quiet engines. More and more airlines are choosing C919 for busy lines between big cities. The sky used to belong to planes from other countries, but now China has its own big plane, and it is flying higher and higher.",
-        "passage_cn": "C919是中国自主制造的第一架大型客机。字母C代表中国，919在中文里谐音「久久」，寓意长长久久——人们希望这架飞机永远安全飞行。这架飞机可以载约160名乘客，不休息能飞五千多公里。它的首次商业飞行在2023年5月，从上海到北京。飞机的机翼、机身等许多部件都是中国工厂制造的。坐在里面，乘客能看到宽大的座椅、大窗户和安静的发动机。越来越多的航空公司选择C919执飞大城市之间的繁忙航线。天空曾经属于别国的飞机，现在中国有了自己的大飞机，而且飞得越来越高。",
+        "passage": "C919 is China's first big passenger plane made by itself. The letter C stands for China, and 919 sounds like \"jiu jiu\" in Chinese, which means a long, long time — people hope the plane will fly safely forever. The plane can carry about 160 passengers and fly over five thousand kilometres without stopping. Its first passenger flight was in May 2023, from Shanghai to Beijing. Many parts of the plane, like the wings and the body, are made in Chinese factories. The sky used to belong to planes from other countries, but now China has its own big plane, and it is flying higher and higher.",
+        "passage_cn": "C919是中国自主制造的第一架大型客机。字母C代表中国，919在中文里谐音「久久」，寓意长长久久——人们希望这架飞机永远安全飞行。这架飞机可以载约160名乘客，不休息能飞五千多公里。它的首次商业飞行在2023年5月，从上海到北京。飞机的机翼、机身等许多部件都是中国工厂制造的。天空曾经属于别国的飞机，现在中国有了自己的大飞机，而且飞得越来越高。",
         "questions": [
           {
             "id": "w4-wed-rd1",
@@ -15142,19 +12009,6 @@ const WEEK4 = [
             "explanation_cn": "字母 C 代表中国（China）。"
           },
           {
-            "id": "w4-wed-rd2",
-            "type": "choice",
-            "question": "What does 919 sound like in Chinese?",
-            "options": [
-              "\"Jiu jiu\", meaning a long, long time",
-              "\"Jiu wu\", meaning save me",
-              "\"Yi jiu\", meaning first",
-              "Nothing special"
-            ],
-            "answer": 0,
-            "explanation_cn": "919 谐音「久久」，寓意长长久久。"
-          },
-          {
             "id": "w4-wed-rd3",
             "type": "choice",
             "question": "How many passengers can C919 carry?",
@@ -15168,19 +12022,6 @@ const WEEK4 = [
             "explanation_cn": "可载约160名乘客。"
           },
           {
-            "id": "w4-wed-rd4",
-            "type": "choice",
-            "question": "How far can it fly without stopping?",
-            "options": [
-              "Over five thousand kilometres",
-              "Over five hundred kilometres",
-              "Over fifty kilometres",
-              "Over five kilometres"
-            ],
-            "answer": 0,
-            "explanation_cn": "不休息能飞五千多公里。"
-          },
-          {
             "id": "w4-wed-rd5",
             "type": "choice",
             "question": "When was its first passenger flight?",
@@ -15192,58 +12033,6 @@ const WEEK4 = [
             ],
             "answer": 0,
             "explanation_cn": "首次商业飞行在2023年5月。"
-          },
-          {
-            "id": "w4-wed-rd6",
-            "type": "choice",
-            "question": "Where was the first flight from and to?",
-            "options": [
-              "From Shanghai to Beijing",
-              "From Beijing to Shanghai",
-              "From Shanghai to Guangzhou",
-              "From Chengdu to Beijing"
-            ],
-            "answer": 0,
-            "explanation_cn": "首航从上海到北京。"
-          },
-          {
-            "id": "w4-wed-rd7",
-            "type": "choice",
-            "question": "What are the seats like?",
-            "options": [
-              "Wide",
-              "Narrow",
-              "Hard",
-              "Small and dark"
-            ],
-            "answer": 0,
-            "explanation_cn": "乘客发现座椅宽大。"
-          },
-          {
-            "id": "w4-wed-rd8",
-            "type": "choice",
-            "question": "Who is choosing C919 for busy lines?",
-            "options": [
-              "More and more airlines",
-              "No one yet",
-              "Only foreign airlines",
-              "Only the army"
-            ],
-            "answer": 0,
-            "explanation_cn": "越来越多航空公司选择C919。"
-          },
-          {
-            "id": "w4-wed-rd9",
-            "type": "choice",
-            "question": "The word \"passenger\" here means ___.",
-            "options": [
-              "乘客",
-              "飞行员",
-              "司机",
-              "工程师"
-            ],
-            "answer": 0,
-            "explanation_cn": "passenger 意思是「乘客」。"
           },
           {
             "id": "w4-wed-rd10",
@@ -15317,62 +12106,6 @@ const WEEK4 = [
             ],
             "answer": 0,
             "explanation_cn": "in May 2023 过去时间，用 was。"
-          },
-          {
-            "id": "w4-wed-mc5",
-            "type": "choice",
-            "question": "Passengers find wide seats and ___ windows.",
-            "options": [
-              "big",
-              "small",
-              "broken",
-              "dark"
-            ],
-            "answer": 0,
-            "explanation_cn": "宽大的座椅、大窗户，big windows。"
-          }
-        ]
-      },
-      {
-        "id": "w4-wed-tense2",
-        "name_cn": "时态练习",
-        "type": "tense",
-        "duration": 5,
-        "questions": [
-          {
-            "id": "w4-wed-tn21",
-            "type": "fill",
-            "question": "C919 ___ (make) its first flight in May 2023. [填入正确形式]",
-            "answer": "made",
-            "explanation_cn": "in May 2023 过去时间，make 的过去式是 made。"
-          },
-          {
-            "id": "w4-wed-tn22",
-            "type": "fill",
-            "question": "Look! The big plane ___ (fly) higher and higher. [填入正确形式]",
-            "answer": "is flying",
-            "explanation_cn": "Look! 提示正在进行，用 is flying。"
-          },
-          {
-            "id": "w4-wed-tn23",
-            "type": "fill",
-            "question": "More airlines ___ (choose) C919 since 2023. [填入正确形式]",
-            "answer": "have chosen",
-            "explanation_cn": "since 2023 与现在完成时连用。"
-          },
-          {
-            "id": "w4-wed-tn24",
-            "type": "fill",
-            "question": "The plane ___ (carry) about 160 passengers. [填入正确形式]",
-            "answer": "carries",
-            "explanation_cn": "客观能力，主语三单用 carries。"
-          },
-          {
-            "id": "w4-wed-tn25",
-            "type": "fill",
-            "question": "Chinese factories ___ (build) more C919s in the future. [填入正确形式]",
-            "answer": "will build",
-            "explanation_cn": "in the future 将来时间，用 will build。"
           }
         ]
       }
@@ -15460,76 +12193,6 @@ const WEEK4 = [
             ],
             "answer": 0,
             "explanation_cn": "white snow（白雪）不是 rain；spread quickly（迅速传播）。"
-          },
-          {
-            "id": "w4-thu-ls6",
-            "type": "choice",
-            "question": "听到的句子是什么？",
-            "audio_text": "C919 can carry about 160 passengers.",
-            "options": [
-              "C919 can carry about 160 passengers.",
-              "C919 can carry about 1060 passengers.",
-              "C919 can carry about 60 passengers.",
-              "C919 could carry about 160 passengers long ago."
-            ],
-            "answer": 0,
-            "explanation_cn": "数字 160（一百六），别听成 1060。"
-          },
-          {
-            "id": "w4-thu-ls7",
-            "type": "choice",
-            "question": "听到的句子是什么？",
-            "audio_text": "Its first passenger flight was from Shanghai to Beijing.",
-            "options": [
-              "Its first passenger flight was from Shanghai to Beijing.",
-              "Its first passenger flight was from Beijing to Shanghai.",
-              "Its first test flight was from Shanghai to Beijing.",
-              "Its last passenger flight was from Shanghai to Beijing."
-            ],
-            "answer": 0,
-            "explanation_cn": "first（首次）flight，方向 Shanghai → Beijing。"
-          },
-          {
-            "id": "w4-thu-ls8",
-            "type": "choice",
-            "question": "听到的句子是什么？",
-            "audio_text": "Chang'e-5 brought moon soil back to the earth in 2020.",
-            "options": [
-              "Chang'e-5 brought moon soil back to the earth in 2020.",
-              "Chang'e-6 brought moon soil back to the earth in 2020.",
-              "Chang'e-5 brought moon rocks back to the moon in 2020.",
-              "Chang'e-5 brought moon soil back to the earth in 2024."
-            ],
-            "answer": 0,
-            "explanation_cn": "是 Chang'e-5（五号），2020年，带回了月壤。"
-          },
-          {
-            "id": "w4-thu-ls9",
-            "type": "choice",
-            "question": "听到的句子是什么？",
-            "audio_text": "Astronauts may build a research station on the moon.",
-            "options": [
-              "Astronauts may build a research station on the moon.",
-              "Astronauts may build a research station on Mars.",
-              "Astronauts may buy a research station on the moon.",
-              "Scientists may build a research station under the sea."
-            ],
-            "answer": 0,
-            "explanation_cn": "主语 astronauts，地点 the moon，建 research station（科研站）。"
-          },
-          {
-            "id": "w4-thu-ls10",
-            "type": "choice",
-            "question": "听到的句子是什么？",
-            "audio_text": "Paper cutting connects China and the world.",
-            "options": [
-              "Paper cutting connects China and the world.",
-              "Paper cutting divides China and the world.",
-              "Paper cutting connects the past and the world only.",
-              "Paper cutting connects Beijing and Shanghai."
-            ],
-            "answer": 0,
-            "explanation_cn": "connects（连接）不是 divides（分开）。"
           }
         ]
       },
@@ -15538,7 +12201,7 @@ const WEEK4 = [
         "name_cn": "完形填空",
         "type": "cloze",
         "duration": 10,
-        "passage": "The Hong Kong-Zhuhai-Macao Bridge is a wonder of modern engineering. It is the longest sea crossing bridge in the world, with a total 1___ of 55 kilometres. The bridge 2___ Hong Kong, Zhuhai and Macao like a dragon on the sea. Before the bridge, a trip between Hong Kong and Zhuhai 3___ about four hours by road. Now it takes only forty-five 4___. The bridge has to fight the sea wind and heavy storms, so engineers 5___ it for 120 years of use. It can also stand strong 6___. The tunnel in the middle runs 7___ the sea, so big ships can pass above it. The bridge 8___ in October 2018 after nine years of building. Workers used more than 400000 tons of steel, enough to 9___ sixty Eiffel Towers. Today, thousands of cars cross the bridge every day, and people say it 10___ the three cities into one big family.",
+        "passage": "The Hong Kong-Zhuhai-Macao Bridge is a wonder of modern engineering. It is the longest sea crossing bridge in the world, with a total 1___ of 55 kilometres. The bridge 2___ Hong Kong, Zhuhai and Macao like a dragon on the sea. Before the bridge, a trip between Hong Kong and Zhuhai 3___ about four hours by road. Now it takes only forty-five 4___. The tunnel in the middle runs 5___ the sea, so big ships can pass above it. Today, thousands of cars cross the bridge every day, and people say it 6___ the three cities into one big family.",
         "questions": [
           {
             "id": "w4-thu-cz1",
@@ -15597,32 +12260,6 @@ const WEEK4 = [
             "type": "choice",
             "question": "5___",
             "options": [
-              "made",
-              "make",
-              "makes",
-              "making"
-            ],
-            "answer": 0,
-            "explanation_cn": "工程师把它「设计建造」为可使用120年，made it for…。"
-          },
-          {
-            "id": "w4-thu-cz6",
-            "type": "choice",
-            "question": "6___",
-            "options": [
-              "earthquakes",
-              "earthquake",
-              "the earthquake of",
-              "an earthquakes"
-            ],
-            "answer": 0,
-            "explanation_cn": "stand strong earthquakes：抵御强震，复数泛指。"
-          },
-          {
-            "id": "w4-thu-cz7",
-            "type": "choice",
-            "question": "7___",
-            "options": [
               "under",
               "on",
               "over",
@@ -15632,35 +12269,9 @@ const WEEK4 = [
             "explanation_cn": "海底隧道在海「下面」穿过，under the sea。"
           },
           {
-            "id": "w4-thu-cz8",
+            "id": "w4-thu-cz6",
             "type": "choice",
-            "question": "8___",
-            "options": [
-              "opened",
-              "opens",
-              "opening",
-              "open"
-            ],
-            "answer": 0,
-            "explanation_cn": "in October 2018 过去时间，用过去式 opened。"
-          },
-          {
-            "id": "w4-thu-cz9",
-            "type": "choice",
-            "question": "9___",
-            "options": [
-              "build",
-              "builds",
-              "building",
-              "built"
-            ],
-            "answer": 0,
-            "explanation_cn": "enough to build：足以建造六十座埃菲尔铁塔，to 后面用原形。"
-          },
-          {
-            "id": "w4-thu-cz10",
-            "type": "choice",
-            "question": "10___",
+            "question": "6___",
             "options": [
               "turns",
               "turn",
@@ -15712,41 +12323,6 @@ const WEEK4 = [
             "question": "A trip ___ (take) only forty-five minutes now. [填入正确形式]",
             "answer": "takes",
             "explanation_cn": "now 一般现在时，主语单数用 takes。"
-          },
-          {
-            "id": "w4-thu-tn6",
-            "type": "fill",
-            "question": "Engineers ___ (design) the bridge to last 120 years. [填入正确形式]",
-            "answer": "designed",
-            "explanation_cn": "叙述设计事实，用过去式 designed。"
-          },
-          {
-            "id": "w4-thu-tn7",
-            "type": "fill",
-            "question": "Big ships ___ (pass) over the tunnel every day. [填入正确形式]",
-            "answer": "pass",
-            "explanation_cn": "every day 习惯动作，主语复数用原形 pass。"
-          },
-          {
-            "id": "w4-thu-tn8",
-            "type": "fill",
-            "question": "While the tunnel ___ (build), engineers met many problems. [填入正确形式]",
-            "answer": "was being built",
-            "explanation_cn": "隧道「被建造」的过程，过去进行时被动 was being built。"
-          },
-          {
-            "id": "w4-thu-tn9",
-            "type": "fill",
-            "question": "By 2030, the bridge ___ (serve) for over twelve years. [填入正确形式]",
-            "answer": "will have served",
-            "explanation_cn": "by + 将来时间，用将来完成时 will have served。"
-          },
-          {
-            "id": "w4-thu-tn10",
-            "type": "fill",
-            "question": "More bridges like this ___ (build) in the future. [填入正确形式]",
-            "answer": "will be built",
-            "explanation_cn": "将来会被建造，将来时被动 will be built。"
           }
         ]
       }
@@ -15897,6 +12473,48 @@ const WEEK4 = [
         "duration": 20,
         "questions": [
           {
+            "id": "w4-fri-gr18",
+            "type": "choice",
+            "question": "Look at the picture. Three ___ are on the floor.（玩具）",
+            "options": [
+              "toy",
+              "toies",
+              "toys",
+              "toyies"
+            ],
+            "answer": 2,
+            "explanation_cn": "toy 直接加 s：toys。以「元音+y」结尾的词复数直接加 s，不变 ies。",
+            "explanation_en": "Toy ends in vowel + y, so the plural is just toys."
+          },
+          {
+            "id": "w4-fri-gr19",
+            "type": "choice",
+            "question": "The painter needs two ___ .（刷子）",
+            "options": [
+              "brush",
+              "brushs",
+              "brushes",
+              "brushies"
+            ],
+            "answer": 2,
+            "explanation_cn": "brush 以 sh 结尾，复数加 -es：brushes。s/x/ch/sh 结尾都加 -es。",
+            "explanation_en": "Brush ends in -sh, so the plural is brushes."
+          },
+          {
+            "id": "w4-fri-gr20",
+            "type": "choice",
+            "question": "There are many ___ in the world.（国家）",
+            "options": [
+              "countrys",
+              "country",
+              "countryes",
+              "countries"
+            ],
+            "answer": 3,
+            "explanation_cn": "country 是「辅音+y」结尾，变 y 为 i 加 es：countries。同类的还有 city→cities。",
+            "explanation_en": "Country: consonant + y becomes countries (y → i, add -es)."
+          },
+          {
             "id": "w4-fri-gr1",
             "type": "fill",
             "question": "School café menu: b__rg__（汉堡）",
@@ -15991,88 +12609,6 @@ const WEEK4 = [
             "answer": "bar",
             "explanation_cn": "一块（条状）巧克力用 a bar of chocolate，也可以 a bar of soap（一块肥皂）。",
             "explanation_en": "A bar of chocolate."
-          },
-          {
-            "id": "w4-fri-gr13",
-            "type": "fill",
-            "question": "Please bring a ___ of water.（一瓶水）",
-            "answer": "bottle",
-            "explanation_cn": "一瓶水 a bottle of water。瓶装水也叫 bottled water。",
-            "explanation_en": "A bottle of water."
-          },
-          {
-            "id": "w4-fri-gr14",
-            "type": "fill",
-            "question": "Cut a ___ of ham first.（一片火腿）",
-            "answer": "slice",
-            "explanation_cn": "切下来的一片用 a slice of...：a slice of ham / bread / pizza。",
-            "explanation_en": "A slice of ham."
-          },
-          {
-            "id": "w4-fri-gr15",
-            "type": "fill",
-            "question": "Do you need two ___ of honey?（两罐蜂蜜）",
-            "answer": "jars",
-            "explanation_cn": "蜂蜜是罐装的：a jar of honey，两罐 two jars of honey。蜂蜜不可数，变复数的是 jar。",
-            "explanation_en": "Honey is uncountable; the jar is countable: two jars of honey."
-          },
-          {
-            "id": "w4-fri-gr16",
-            "type": "fill",
-            "question": "There are two ___ of paper on the desk.（两张纸）",
-            "answer": "sheets",
-            "explanation_cn": "纸不可数，一张纸 a sheet of paper，两张 two sheets of paper。",
-            "explanation_en": "Paper is uncountable: two sheets of paper."
-          },
-          {
-            "id": "w4-fri-gr17",
-            "type": "fill",
-            "question": "She used to drink two ___ of beer in the evening.（两罐啤酒）",
-            "answer": "cans",
-            "explanation_cn": "罐装啤酒 a can of beer，两罐 two cans of beer。啤酒本身不可数。",
-            "explanation_en": "Beer is uncountable; two cans of beer."
-          },
-          {
-            "id": "w4-fri-gr18",
-            "type": "choice",
-            "question": "Look at the picture. Three ___ are on the floor.（玩具）",
-            "options": [
-              "toy",
-              "toies",
-              "toys",
-              "toyies"
-            ],
-            "answer": 2,
-            "explanation_cn": "toy 直接加 s：toys。以「元音+y」结尾的词复数直接加 s，不变 ies。",
-            "explanation_en": "Toy ends in vowel + y, so the plural is just toys."
-          },
-          {
-            "id": "w4-fri-gr19",
-            "type": "choice",
-            "question": "The painter needs two ___ .（刷子）",
-            "options": [
-              "brush",
-              "brushs",
-              "brushes",
-              "brushies"
-            ],
-            "answer": 2,
-            "explanation_cn": "brush 以 sh 结尾，复数加 -es：brushes。s/x/ch/sh 结尾都加 -es。",
-            "explanation_en": "Brush ends in -sh, so the plural is brushes."
-          },
-          {
-            "id": "w4-fri-gr20",
-            "type": "choice",
-            "question": "There are many ___ in the world.（国家）",
-            "options": [
-              "countrys",
-              "country",
-              "countryes",
-              "countries"
-            ],
-            "answer": 3,
-            "explanation_cn": "country 是「辅音+y」结尾，变 y 为 i 加 es：countries。同类的还有 city→cities。",
-            "explanation_en": "Country: consonant + y becomes countries (y → i, add -es)."
           }
         ]
       }
@@ -16082,7 +12618,7 @@ const WEEK4 = [
     "day_cn": "周六",
     "day_en": "Saturday",
     "is_speaking_day": true,
-    "total_duration": 55,
+    "total_duration": 50,
     "theme_cn": "AI口语 + 高频词汇 + 阅读理解",
     "modules": [
       {
@@ -16637,8 +13173,8 @@ const WEEK4 = [
         "name_cn": "阅读理解",
         "type": "reading",
         "duration": 10,
-        "passage": "Paper cutting is one of China's oldest folk arts, and it is now becoming popular around the world. With only a pair of scissors and a piece of red paper, artists can make wonderful pictures of flowers, animals and people. In the north of China, people still put paper cuttings on windows during the Spring Festival, because the red colour means good luck. In 2009, Chinese paper cutting was added to the world intangible cultural heritage list. Today, paper cutting artists teach in schools and even online, and short videos of their hands moving quickly get millions of likes. Foreign visitors love taking paper cutting classes when they travel to China. A girl from France said, \"It looks easy, but one wrong cut and you must start again.\" Paper cutting connects the past and the present, the old and the young, China and the world.",
-        "passage_cn": "剪纸是中国最古老的民间艺术之一，如今正在世界范围内流行。艺术家只用一把剪刀和一张红纸，就能剪出花草、动物和人像。在中国北方，春节时人们仍然把剪纸贴在窗上，因为红色代表好运。2009年，中国剪纸被列入世界非物质文化遗产名录。如今，剪纸艺人走进学校，甚至在网上教学，他们灵巧双手的短视频获得数百万点赞。外国游客来中国旅游时也喜欢上剪纸课。一位法国女孩说：「看起来容易，但只要剪错一刀，就得从头再来。」剪纸连接着过去与现在、老人与孩子、中国与世界。",
+        "passage": "Paper cutting is one of China's oldest folk arts, and it is now becoming popular around the world. With only a pair of scissors and a piece of red paper, artists can make wonderful pictures of flowers, animals and people. In the north of China, people still put paper cuttings on windows during the Spring Festival, because the red colour means good luck. In 2009, Chinese paper cutting was added to the world intangible cultural heritage list. Today, paper cutting artists teach in schools and even online, and short videos of their hands moving quickly get millions of likes. Paper cutting connects the past and the present, the old and the young, China and the world.",
+        "passage_cn": "剪纸是中国最古老的民间艺术之一，如今正在世界范围内流行。艺术家只用一把剪刀和一张红纸，就能剪出花草、动物和人像。在中国北方，春节时人们仍然把剪纸贴在窗上，因为红色代表好运。2009年，中国剪纸被列入世界非物质文化遗产名录。如今，剪纸艺人走进学校，甚至在网上教学，他们灵巧双手的短视频获得数百万点赞。」剪纸连接着过去与现在、老人与孩子、中国与世界。",
         "questions": [
           {
             "id": "w4-sat-rd1",
@@ -16667,19 +13203,6 @@ const WEEK4 = [
             "explanation_cn": "北方春节时把剪纸贴在窗上。"
           },
           {
-            "id": "w4-sat-rd3",
-            "type": "choice",
-            "question": "Why do people use red paper?",
-            "options": [
-              "Because red means good luck.",
-              "Because red is cheap.",
-              "Because red is bright.",
-              "Because red is easy to cut."
-            ],
-            "answer": 0,
-            "explanation_cn": "红色代表好运。"
-          },
-          {
             "id": "w4-sat-rd4",
             "type": "choice",
             "question": "When was paper cutting added to the world heritage list?",
@@ -16691,71 +13214,6 @@ const WEEK4 = [
             ],
             "answer": 0,
             "explanation_cn": "2009年列入世界非遗名录。"
-          },
-          {
-            "id": "w4-sat-rd5",
-            "type": "choice",
-            "question": "What do paper cutting artists do today?",
-            "options": [
-              "They teach in schools and online.",
-              "They only work at home.",
-              "They sell scissors.",
-              "They make paper."
-            ],
-            "answer": 0,
-            "explanation_cn": "艺人进学校、上网课。"
-          },
-          {
-            "id": "w4-sat-rd6",
-            "type": "choice",
-            "question": "What do the artists' short videos get?",
-            "options": [
-              "Millions of likes",
-              "No likes",
-              "Only a few likes",
-              "Bad comments"
-            ],
-            "answer": 0,
-            "explanation_cn": "短视频获得数百万点赞。"
-          },
-          {
-            "id": "w4-sat-rd7",
-            "type": "choice",
-            "question": "Who loves taking paper cutting classes?",
-            "options": [
-              "Foreign visitors",
-              "Only Chinese children",
-              "Only old people",
-              "Nobody"
-            ],
-            "answer": 0,
-            "explanation_cn": "外国游客来中国喜欢上剪纸课。"
-          },
-          {
-            "id": "w4-sat-rd8",
-            "type": "choice",
-            "question": "What did the French girl say?",
-            "options": [
-              "One wrong cut and you must start again.",
-              "Paper cutting is too easy.",
-              "She hates paper cutting.",
-              "Paper cutting is expensive."
-            ],
-            "answer": 0,
-            "explanation_cn": "「剪错一刀就得重来」。"
-          },
-          {
-            "id": "w4-sat-rd9",
-            "type": "choice",
-            "question": "The word \"intangible\" here means ___.",
-            "options": [
-              "非物质的",
-              "看不见的",
-              "重要的",
-              "古老的"
-            ],
-            "answer": 0,
-            "explanation_cn": "intangible cultural heritage：非物质文化遗产。"
           },
           {
             "id": "w4-sat-rd10",
@@ -16829,62 +13287,6 @@ const WEEK4 = [
             ],
             "answer": 0,
             "explanation_cn": "主语 red（红色）三单，用 means。"
-          },
-          {
-            "id": "w4-sat-mc5",
-            "type": "choice",
-            "question": "Paper cutting ___ to the world heritage list in 2009.",
-            "options": [
-              "was added",
-              "added",
-              "is added",
-              "adds"
-            ],
-            "answer": 0,
-            "explanation_cn": "剪纸「被列入」，过去时被动 was added。"
-          }
-        ]
-      },
-      {
-        "id": "w4-sat-tense2",
-        "name_cn": "时态练习",
-        "type": "tense",
-        "duration": 5,
-        "questions": [
-          {
-            "id": "w4-sat-tn21",
-            "type": "fill",
-            "question": "Paper cutting ___ (be) popular for hundreds of years. [填入正确形式]",
-            "answer": "has been",
-            "explanation_cn": "for hundreds of years 与现在完成时连用。"
-          },
-          {
-            "id": "w4-sat-tn22",
-            "type": "fill",
-            "question": "People ___ (add) it to the heritage list in 2009. [填入正确形式]",
-            "answer": "added",
-            "explanation_cn": "in 2009 过去时间，用过去式 added。"
-          },
-          {
-            "id": "w4-sat-tn23",
-            "type": "fill",
-            "question": "Look! The artist ___ (cut) a red paper flower. [填入正确形式]",
-            "answer": "is cutting",
-            "explanation_cn": "Look! 提示正在进行，用 is cutting。"
-          },
-          {
-            "id": "w4-sat-tn24",
-            "type": "fill",
-            "question": "Short videos of the artists ___ (get) millions of likes. [填入正确形式]",
-            "answer": "have got",
-            "explanation_cn": "表示已经获得的影响，用现在完成时。"
-          },
-          {
-            "id": "w4-sat-tn25",
-            "type": "fill",
-            "question": "The girl ___ (start) again after the wrong cut. [填入正确形式]",
-            "answer": "started",
-            "explanation_cn": "叙述过去的事，用过去式 started。"
           }
         ]
       }
@@ -16894,7 +13296,7 @@ const WEEK4 = [
     "day_cn": "周日",
     "day_en": "Sunday",
     "is_speaking_day": false,
-    "total_duration": 30,
+    "total_duration": 20,
     "theme_cn": "阅读理解 + 高频词汇 + 完形填空",
     "modules": [
       {
@@ -17337,7 +13739,7 @@ const WEEK4 = [
         "name_cn": "完形填空",
         "type": "cloze",
         "duration": 10,
-        "passage": "Chinese characters are one of the oldest writing systems in the world. People wrote on oracle bones more than 3000 years 1___. In old times, characters looked like the things they stood 2___. For example, the character for \"mountain\" looked like three 3___, and \"sun\" was a circle with a dot. Later, the characters became simpler and rounder. Today, Chinese people write with pens and 4___, but the old shapes are still easy to see. There are more than 50000 characters in all, 5___ people only use a few thousand in daily life. Schoolchildren learn about 2500 characters in six years. In 2010, the UN made Chinese Language Day to 6___ this old writing. Now more and more foreigners are learning Chinese, and some of them find characters 7___ but beautiful. A foreign student said each character is 8___ a small picture with a story inside. Calligraphy, the art of writing characters, is also 9___. With a brush and ink, a good writer can make the characters dance on the paper. Chinese characters carry the history of 5000 years, and they will keep 10___ for the next 5000 years.",
+        "passage": "Chinese characters are one of the oldest writing systems in the world. People wrote on oracle bones more than 3000 years 1___. In old times, characters looked like the things they stood 2___. For example, the character for \"mountain\" looked like three 3___, and \"sun\" was a circle with a dot. Today, Chinese people write with pens and 4___, but the old shapes are still easy to see. There are more than 50000 characters in all, 5___ people only use a few thousand in daily life. Chinese characters carry the history of 5000 years, and they will keep 6___ for the next 5000 years.",
         "questions": [
           {
             "id": "w4-sun-cz1",
@@ -17408,174 +13810,6 @@ const WEEK4 = [
             "id": "w4-sun-cz6",
             "type": "choice",
             "question": "6___",
-            "options": [
-              "celebrate",
-              "celebrates",
-              "celebrating",
-              "celebrated"
-            ],
-            "answer": 0,
-            "explanation_cn": "to 后面用动词原形 celebrate（庆祝）。"
-          },
-          {
-            "id": "w4-sun-cz7",
-            "type": "choice",
-            "question": "7___",
-            "options": [
-              "hard",
-              "easy",
-              "cheap",
-              "soft"
-            ],
-            "answer": 0,
-            "explanation_cn": "后面说但很美，说明学起来「难」，hard。"
-          },
-          {
-            "id": "w4-sun-cz8",
-            "type": "choice",
-            "question": "8___",
-            "options": [
-              "like",
-              "likes",
-              "liking",
-              "liked"
-            ],
-            "answer": 0,
-            "explanation_cn": "is like a small picture：像一幅小画。"
-          },
-          {
-            "id": "w4-sun-cz9",
-            "type": "choice",
-            "question": "9___",
-            "options": [
-              "famous",
-              "fame",
-              "famously",
-              "more famous"
-            ],
-            "answer": 0,
-            "explanation_cn": "is also famous：书法也很有名，形容词 famous。"
-          },
-          {
-            "id": "w4-sun-cz10",
-            "type": "choice",
-            "question": "10___",
-            "options": [
-              "growing",
-              "grow",
-              "grows",
-              "grew"
-            ],
-            "answer": 0,
-            "explanation_cn": "keep doing sth：keep growing 继续生长。"
-          }
-        ]
-      },
-      {
-        "id": "w4-sun-tense",
-        "name_cn": "时态练习",
-        "type": "tense",
-        "duration": 5,
-        "questions": [
-          {
-            "id": "w4-sun-tn1",
-            "type": "fill",
-            "question": "People ___ (write) on oracle bones 3000 years ago. [填入正确形式]",
-            "answer": "wrote",
-            "explanation_cn": "3000 years ago 过去时间，write 的过去式是 wrote。"
-          },
-          {
-            "id": "w4-sun-tn2",
-            "type": "fill",
-            "question": "Look! The old master ___ (write) with a brush. [填入正确形式]",
-            "answer": "is writing",
-            "explanation_cn": "Look! 提示正在进行，用 is writing。"
-          },
-          {
-            "id": "w4-sun-tn3",
-            "type": "fill",
-            "question": "Chinese characters ___ (carry) history for 5000 years. [填入正确形式]",
-            "answer": "have carried",
-            "explanation_cn": "for 5000 years 与现在完成时连用。"
-          },
-          {
-            "id": "w4-sun-tn4",
-            "type": "fill",
-            "question": "The UN ___ (make) Chinese Language Day in 2010. [填入正确形式]",
-            "answer": "made",
-            "explanation_cn": "in 2010 过去时间，make 的过去式是 made。"
-          },
-          {
-            "id": "w4-sun-tn5",
-            "type": "fill",
-            "question": "More and more foreigners ___ (learn) Chinese now. [填入正确形式]",
-            "answer": "are learning",
-            "explanation_cn": "now 与进行时连用，主语复数 are learning。"
-          }
-        ]
-      },
-      {
-        "id": "w4-sun-grammar",
-        "name_cn": "语法练习",
-        "type": "grammar",
-        "duration": 5,
-        "questions": [
-          {
-            "id": "w4-sun-gr1",
-            "type": "choice",
-            "question": "Chinese characters are one of the oldest ___ systems.",
-            "options": [
-              "writing",
-              "write",
-              "wrote",
-              "written of"
-            ],
-            "answer": 0,
-            "explanation_cn": "writing system 文字系统，动名词作定语。"
-          },
-          {
-            "id": "w4-sun-gr2",
-            "type": "choice",
-            "question": "The character for \"mountain\" looked like three ___.",
-            "options": [
-              "peaks",
-              "peak",
-              "peak's",
-              "a peak"
-            ],
-            "answer": 0,
-            "explanation_cn": "three peaks 三个山峰，复数。"
-          },
-          {
-            "id": "w4-sun-gr3",
-            "type": "choice",
-            "question": "Each character is ___ a small picture.",
-            "options": [
-              "like",
-              "likes",
-              "liking",
-              "liked"
-            ],
-            "answer": 0,
-            "explanation_cn": "be like：像，like 是介词。"
-          },
-          {
-            "id": "w4-sun-gr4",
-            "type": "choice",
-            "question": "A good writer can make the characters ___ on the paper.",
-            "options": [
-              "dance",
-              "dances",
-              "dancing",
-              "danced"
-            ],
-            "answer": 0,
-            "explanation_cn": "make sth do sth：让字在纸上「跳舞」，用原形 dance。"
-          },
-          {
-            "id": "w4-sun-gr5",
-            "type": "choice",
-            "question": "Chinese characters will keep ___ for the next 5000 years.",
             "options": [
               "growing",
               "grow",
@@ -17764,27 +13998,18 @@ const CLOZE_SENTENCE_CN = {
     "中国是茶的故乡。",
     "中国人很久很久以前就开始喝茶了。",
     "在过去，人们沿着古老的道路把茶叶运往许多国家。",
-    "那条路在今天被叫做「茶马古道」。",
     "中国有很多种茶，比如绿茶和红茶。",
     "绿茶生长在杭州和其他温暖的地方。",
-    "大多数中国人喜欢喝热茶，不喝冷茶。",
     "客人来家里时，主人总会端上一杯茶。",
-    "这是一种表达欢迎和喜爱的方式。",
-    "人们还说喝茶对健康有好处。",
-    "下次你去中国人家里做客，记得好好品一品那杯茶。",
-    "它带着悠久的历史和温暖的心意。"
+    "下次你去中国人家里做客，记得好好品一品那杯茶。"
   ],
   "sun-cloze": [
     "京剧是中国最古老的民间艺术之一。",
     "它有两百多年的历史。",
     "演员们穿着漂亮的戏服，把脸画成不同的颜色。",
     "红脸代表善良勇敢的人，白脸代表坏人。",
-    "演员们用特别的方式演唱，用特别的动作表演。",
     "许多老人喜欢在电视上或戏院里看京剧。",
     "一些孩子在学校社团里学京剧。",
-    "学京剧并不容易，因为演员可能要练习很多年才能唱好。",
-    "如今，越来越多的年轻人开始喜爱这门古老的艺术。",
-    "它是中国文化重要的一部分。",
     "只要你看过一次，就永远不会忘记它。"
   ],
   "w2-thu-cloze": [
@@ -17794,10 +14019,6 @@ const CLOZE_SENTENCE_CN = {
     "这些车还很安静。",
     "当你坐在新能源汽车里，几乎听不到发动机的声音。",
     "司机可以在充电站给车充电，就像给一部大手机充电一样。",
-    "把电池充满大约要一个小时。",
-    "这些车并不贵，政府还会补贴购车的人。",
-    "在大城市，许多家庭选择把新能源汽车作为家里的第二辆车。",
-    "越来越多的充电站正在路边出现。",
     "将来，街上行驶的大多数汽车都会是电动车。"
   ],
   "w2-sun-cloze": [
@@ -17806,11 +14027,7 @@ const CLOZE_SENTENCE_CN = {
     "无人机从空中带着包裹，几分钟就送到你家门口。",
     "山村里的医生也用无人机快速拿到药品。",
     "在无人机出现之前，药品要两天才能到；现在只需要三十分钟。",
-    "消防员用无人机看火情在哪里。",
-    "农民用它们从空中看庄稼。",
     "无人机并不贵，越来越多的人可以买一台。",
-    "但是有规则：无人机不能在机场附近飞，孩子需要大人帮忙。",
-    "科学家正在研制能载人的更大的无人机。",
     "也许有一天，我们会坐无人机出租车去上学！"
   ],
   "w3-thu-cloze": [
@@ -17819,24 +14036,16 @@ const CLOZE_SENTENCE_CN = {
     "香蕉皮这样的厨余是湿垃圾。",
     "瓶子、纸张和旧衣服是可回收物，因为它们能变成新的东西。",
     "电池和过期药品是有害垃圾，所以我们要特别小心地处理它们。",
-    "一开始很多人觉得很难记住这四类，但现在大多数人都能分好。",
-    "一些小区给分得好的居民小奖励，比如肥皂和鸡蛋。",
-    "孩子们在学校学习垃圾分类，回家再教爸爸妈妈。",
     "每天给垃圾分类只花一分钟，却对地球帮助很大。",
     "如果人人都参与，我们的城市会变得干净得多、美丽得多。"
   ],
   "w3-sun-cloze": [
     "在中国，越来越多的人热爱跑步，城市马拉松比赛现在到处都有。",
     "每年，北京、上海等大城市都会举办马拉松比赛。",
-    "数以万计的人参加。",
-    "跑者们穿着运动服，背上有号码布。",
     "全程大约四十二公里，通常一大早开始。",
     "很多人跑得不快，但他们坚持跑到终点。",
-    "医生和志愿者沿路守候，随时提供帮助。",
     "每隔几公里的补给站提供免费的水和水果。",
-    "跑步对心脏有好处，还让人心情愉快。",
     "孩子们可以参加大约三公里的短程赛。",
-    "想跑好，比赛前必须坚持每天练习几个月。",
     "马拉松不只是一场比赛，它是一堂「永不放弃」的课。"
   ],
   "w4-thu-cloze": [
@@ -17845,11 +14054,7 @@ const CLOZE_SENTENCE_CN = {
     "大桥像一条海上巨龙，把香港、珠海和澳门连接起来。",
     "在大桥建成之前，香港到珠海坐车要四个小时。",
     "现在只需要四十五分钟。",
-    "大桥要对抗海风和强台风，所以工程师把它设计为可以使用120年。",
-    "它还能抵御强烈地震。",
     "中段的海底隧道在海面之下穿行，大型船只可以从上方通过。",
-    "大桥经过九年建设，于2018年10月通车。",
-    "工人用了超过40万吨钢铁，足够建造六十座埃菲尔铁塔。",
     "如今每天有成千上万的汽车通过大桥，人们说它把三座城市连成了一个大家庭。"
   ],
   "w4-sun-cloze": [
@@ -17857,15 +14062,8 @@ const CLOZE_SENTENCE_CN = {
     "三千多年前，人们把字刻在甲骨上。",
     "古时候，汉字长得像它们所代表的东西。",
     "比如，「山」字像三个山峰，「日」字是一个圆圈加一点。",
-    "后来，汉字变得更简单、更圆润。",
     "今天，中国人用笔和键盘写字，但古老的字形仍然看得出来。",
     "汉字总共有五万多个，但日常生活中人们只用几千个。",
-    "小学生六年里学大约2500个字。",
-    "2010年，联合国设立了中文日来纪念这种古老的文字。",
-    "现在越来越多的外国人学中文，有些人觉得汉字难，但很美。",
-    "一位外国学生说，每个汉字都像一幅藏着故事的小画。",
-    "书法，这门写字的艺术，也很有名。",
-    "一支毛笔、一滴墨，好的书写者能让字在纸上跳舞。",
     "汉字承载着五千年的历史，还会在未来五千年继续生长。"
   ]
 };

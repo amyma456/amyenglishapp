@@ -70,7 +70,7 @@ ok(fns._pairSentences(D.W[2][5].modules.find(m => m.type === 'reading')),
 
 // 这一篇的逐句参考答案要与系统中文对得上：抽查配对数与含主题词的句子
 const tmPairs = fns._pairSentences(D.W[2][5].modules.find(m => m.type === 'reading'));
-ok(tmPairs.length >= 8 && tmPairs.some(p => p.cn.indexOf('博物馆') !== -1),
+ok(tmPairs.length >= 6 && tmPairs.some(p => p.cn.indexOf('博物馆') !== -1),
    '★ 逐句配对完整且参考答案是本课中文', '共 ' + tmPairs.length + ' 句');
 ok(tmPairs.every(p => p.en && p.cn), '每一句都有英文原句和中文参考');
 

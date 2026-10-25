@@ -22,23 +22,23 @@ const htmlSrc = fs.readFileSync(path.join(R, '..', 'public', 'index.html'), 'utf
 const swSrc = fs.readFileSync(path.join(R, '..', 'public', 'sw.js'), 'utf8');
 const dataSrc = fs.readFileSync(path.join(R, '..', 'public', 'data.js'), 'utf8');
 
-console.log('== 1. 每天恰好 30 个单元（题 + 词）==');
+console.log('== 1. 每天恰好 30 个真实动作（v155 口径：读/译/题/词）==');
 {
   const W = new Function(dataSrc + '; return HOMEWORK_WEEKS;')();
+  const sentsEN = t => String(t).replace(/\s+/g, ' ').match(/[^.!?]+[.!?]+["']?(?=\s|$)/g) || [String(t)];
   let allOk = true, detail = [];
   W.forEach((week, wi) => week.forEach(d => {
-    let q = 0, words = 0;
+    let n = 0;
     (d.modules || []).forEach(m => {
-      if (m.questions) q += m.questions.length;
-      if (m.blanks) q += m.blanks.length;
-      if (m.words) words += m.words.length;
+      if (m.questions) n += m.questions.length;
+      if (m.blanks) n += m.blanks.length;
+      if (m.words) n += m.words.length;
+      if (m.passage) n += 2 * sentsEN(m.passage).length;   // 读一句 + 译一句
+      if (m.type === 'writing_template') n += sentsEN(m.full_text || '').length;
     });
-    if (q + words !== 30) allOk = false;
-    if (words > 0 && q !== 25) allOk = false;
-    if (words === 0 && q !== 30) allOk = false;
-    if (q + words !== 30) detail.push('W' + (wi + 1) + d.day_cn + '=' + (q + words));
+    if (n !== 30) { allOk = false; detail.push('W' + (wi + 1) + d.day_cn + '=' + n); }
   }));
-  ok(allOk, '28 天每天题 + 词恰好 30', detail.join(' '));
+  ok(allOk, '28 天每天真实动作恰好 30', detail.join(' '));
   let durOk = true;
   W.forEach(week => week.forEach(d => {
     const sum = d.modules.reduce((s, m) => s + (m.duration || 0), 0);
@@ -72,9 +72,13 @@ console.log('\n== 2. 做题进度按"题"计数 ==');
       fetch: () => new Promise(() => {}),
     }).App;
   };
-  ok(/_dayUnits\(dayIdx\) \{/.test(appSrc), '_dayUnits 有定义（题 + 词 = 单元）');
-  ok(/_unitsOfStep\(step, day\) \{/.test(appSrc), '_unitsOfStep 有定义（过程屏占 0）');
+  ok(/_dayUnits\(dayIdx\) \{/.test(appSrc), '_dayUnits 有定义（真实动作 = 单元）');
+  ok(/_unitsOfStep\(step, day\) \{/.test(appSrc), '_unitsOfStep 有定义');
   ok(/_unitsBeforeStep\(steps, idx, dayIdx\) \{/.test(appSrc), '_unitsBeforeStep 有定义');
+  // v155：读一句 / 译一句都是真实的一道题
+  ok(/2 \* this\._splitSentences\(m\.passage\)\.length/.test(appSrc), '文章逐句读+逐句译都计入单元数');
+  ok(/step\.kind === 'sentence' \|\| step\.kind === 'translate'/.test(appSrc), '读一句/译一句各占 1 个单元');
+  ok(/step\.kind === 'writingread'\) return this\._writingSentences\(m\)\.length/.test(appSrc), '朗读作文逐句计入单元数');
   // 词汇模块的词全算单元
   ok(/if \(m\.words\) n \+= m\.words\.length;/.test(appSrc), '词汇的词计入单元数');
   // sh-count 不再显示步骤下标
@@ -85,21 +89,24 @@ console.log('\n== 2. 做题进度按"题"计数 ==');
   // 行为级：单元计数对得上
   const App = makeApp();
   const day0 = new Function(dataSrc + '; return HOMEWORK_WEEKS[0][0];')();
-  // W1 周一：口语5 + 阅读10 + MC5 + 时态5 = 25 题 + 词汇 5 词 = 30
-  ok(App._dayUnits(0) === 30, 'W1 周一单元数 = 30（' + App._dayUnits(0) + '）');
+  // v155：W1 周一 = 口语5 + 词汇5 + 阅读(读6+译6+题4) + 单选4 = 30
+  ok(App._dayUnits(0) === 30, 'W1 周一真实动作 = 30（' + App._dayUnits(0) + '）');
   const steps = App._buildSteps(0);
   ok(steps[0].kind === 'speaking', '第 1 步是口语题');
   const units0 = App._unitsBeforeStep(steps, 0, 0);
   const u0 = App._unitsOfStep(steps[0], day0);
   ok(units0 === 0 && u0 === 1, '口语第 1 题之前 0 个单元、本步占 1 个');
-  // 找到阅读逐句翻译那一步：之前应该是 10（口语5 + 词汇5）
+  // 阅读逐句翻译那一步：每句翻译本身是一道题（占 1）
   const tIdx = steps.findIndex(s => s.kind === 'translate');
   ok(tIdx > 0, '存在阅读逐句翻译步骤');
   if (tIdx > 0) {
     const before = App._unitsBeforeStep(steps, tIdx, 0);
-    ok(before === 10, '逐句翻译开始前已完成 10 个单元（' + before + '）');
-    ok(App._unitsOfStep(steps[tIdx], day0) === 0, '逐句翻译屏占 0 个单元（不涨数）');
+    ok(before === 16, '逐句翻译开始前已完成 16 个动作（口语5 + 词汇5 + 读6句）（' + before + '）');
+    ok(App._unitsOfStep(steps[tIdx], day0) === 1, '每句翻译占 1 个单元（真的一道题）');
   }
+  // 读句子那一步也占 1
+  const sIdx = steps.findIndex(s => s.kind === 'sentence');
+  if (sIdx > 0) ok(App._unitsOfStep(steps[sIdx], day0) === 1, '读一句英语占 1 个单元');
   // 巩固步骤（retry/review）占 0
   const rStep = { kind: 'review', word: 'test' };
   ok(App._unitsOfStep(rStep, null) === 0, '错词巩固步骤占 0 个单元');
@@ -158,9 +165,9 @@ console.log('\n== 4. 单词跟读放宽（说了就过）==');
 
 console.log('\n== 5. 版本号 = 154 ==');
 {
-  ok(/app-version" content="154"/.test(htmlSrc), 'index.html meta = 154');
-  ok((htmlSrc.match(/\?v=154/g) || []).length >= 5, '脚本引用 ?v=154（' + (htmlSrc.match(/\?v=154/g) || []).length + ' 处）');
-  ok(/amy-english-v154/.test(swSrc) && /var V = 154;/.test(swSrc), 'sw.js 缓存名与 V = 154');
+  ok(/app-version" content="155"/.test(htmlSrc), 'index.html meta = 154');
+  ok((htmlSrc.match(/\?v=155/g) || []).length >= 5, '脚本引用 ?v=155（' + (htmlSrc.match(/\?v=155/g) || []).length + ' 处）');
+  ok(/amy-english-v155/.test(swSrc) && /var V = 155;/.test(swSrc), 'sw.js 缓存名与 V = 154');
 }
 
 console.log('');
