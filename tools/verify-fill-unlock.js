@@ -97,10 +97,11 @@ const src = fs.readFileSync(BASE + 'app.js', 'utf8');
 const dataSrc = fs.readFileSync(BASE + 'data.js', 'utf8');
 const htmlSrc = fs.readFileSync(BASE + 'index.html', 'utf8');
 const swSrc = fs.readFileSync(BASE + 'sw.js', 'utf8');
-// 固定用第 3 周（家长报的就是这一周的周二）：注入哪一周由测试决定，
+// 固定用第 4 周（v153 起周二语法改成纯选择，混合「选择+填空」的模块
+// 只剩 W4 周五的语法练习）：注入哪一周由测试决定，
 // 不跟着日历走，免得下周日历一翻就假失败。
 const WEEKS = new Function(dataSrc + '; return HOMEWORK_WEEKS;')();
-const WEEK = 2;
+const WEEK = 3;
 const HOMEWORK_DATA = WEEKS[WEEK];
 
 process.on('unhandledRejection', () => {});
@@ -153,8 +154,8 @@ function loginAs(day) {
   App.state.stepIdx = 0;
 }
 
-// 周二（dayIdx 1）的语法模块里既有选择题也有填空题 —— 家长报的那道题就在这。
-const DAY = 1;
+// 周五（dayIdx 4）的语法模块里既有选择题也有填空题（v153 起唯一混合题型）。
+const DAY = 4;
 const dayData = HOMEWORK_DATA[DAY];
 const GMI = dayData.modules.findIndex(m => m.type === 'grammar');
 const GM = dayData.modules[GMI];
@@ -316,8 +317,8 @@ console.log('\n=== 8. 静态检查：新写法在位 ===');
   ok(studentPath.indexOf("ansEl.innerHTML = '✅ 正确！';") < 0,
      '学生路径上不再有"只显示正确、不给下一步"的写法（老师端预览保留原样）');
 
-  ok(/name="app-version" content="152"/.test(htmlSrc), '版本号升到 144');
-  ok(/amy-english-v152/.test(swSrc), 'Service Worker 缓存名同步到 v144（不然手机上还是旧版）');
+  ok(/name="app-version" content="153"/.test(htmlSrc), '版本号升到 144');
+  ok(/amy-english-v153/.test(swSrc), 'Service Worker 缓存名同步到 v144（不然手机上还是旧版）');
 }
 
 console.log('\n' + (fail ? '❌ ' + fail + ' 项未通过' : '✅ 全部通过'));

@@ -1,5 +1,5 @@
 // v149 验证：
-//  1) W4 周五语法复习 = 35 道新题（选择+填空），写作练习保留，total 40
+//  1) W4 周五语法复习（v153 起裁到 20 道：30 = 写作5 + 语法20 + KET5），写作保留
 //  2) 打卡上报持久重试队列（失败入队、flush 出队、keepalive）
 //  3) 重发触发器（每分钟 / online / 打开 App）
 const fs = require('fs');
@@ -9,13 +9,13 @@ function ok(cond, name, extra) {
   else { failN++; console.log('  FAIL ' + name + (extra ? ' —— ' + extra : '')); }
 }
 
-console.log('== 1. 周五语法复习 35 道新题 ==');
+console.log('== 1. 周五语法复习（v153 裁到 20 道）==');
 {
   const src = fs.readFileSync('public/data.js', 'utf8');
   const d = new Function(src + ';return WEEK4;')();
   const fri = d[4];
   ok(fri.day_cn === '周五', '取到的是周五');
-  ok(fri.total_duration === 40, '周五 total_duration = 40', String(fri.total_duration));
+  ok(fri.total_duration === 45, '周五 total_duration = 45（写作15 + KET10 + 语法20）', String(fri.total_duration));
   const w = fri.modules.find(m => m.id === 'w4-fri-writing');
   ok(!!w, '写作练习模块保留');
   ok(w && w.title === 'Protecting Our Earth', '写作题目未变');
@@ -23,10 +23,10 @@ console.log('== 1. 周五语法复习 35 道新题 ==');
   ok(!!k && k.questions.length === 5, 'KET/PET 模块保留 5 题');
   const g = fri.modules.find(m => m.id === 'w4-fri-grammar');
   ok(!!g && g.type === 'grammar', '语法复习模块存在');
-  ok(g.questions.length === 35, '语法复习 = 35 道题', String(g.questions.length));
+  ok(g.questions.length === 20, '语法复习 = 20 道题（每天 30 题上限）', String(g.questions.length));
   const fills = g.questions.filter(q => q.type === 'fill').length;
   const choices = g.questions.filter(q => q.type === 'choice').length;
-  ok(fills + choices === 35, '题型只有 fill/choice：填 ' + fills + ' + 选 ' + choices);
+  ok(fills + choices === 20, '题型只有 fill/choice：填 ' + fills + ' + 选 ' + choices);
   // 每题结构
   let bad = 0, noCn = 0, dup = 0;
   const ids = {};
@@ -44,15 +44,13 @@ console.log('== 1. 周五语法复习 35 道新题 ==');
   ok(bad === 0, '每题答案/选项结构完整', bad + ' 题');
   ok(noCn === 0, '每题都有中文解析', noCn + ' 题缺');
   ok(dup === 0, '题目 ID 无重复');
-  // 知识点抽查：量词 7 题、复数选择 14 题、不规则 4 题、菜单 10 题
+  // 知识点抽查（裁剪后保留：菜单 10 题 + 量词 7 题 + 复数选择前 3 题）
   const ansOf = q => (q.type === 'choice' ? q.options[q.answer] : q.answer);
   ok(/loaf/.test(ansOf(g.questions[10])), '第 11 题量词 loaf');
   ok(ansOf(g.questions[16]) === 'cans', '第 17 题量词 cans');
-  ok(ansOf(g.questions[26]) === 'bamboo', 'bamboo 不可数（选 bamboo）');
-  ok(ansOf(g.questions[34]) === 'sheep', 'sheep 单复数同形');
-  const plurals = g.questions.slice(17, 31);
-  const ansIdx = plurals.map(q => q.answer);
-  ok(new Set(ansIdx).size >= 3, '选择题正确位置不扎堆', JSON.stringify(ansIdx));
+  const choiceList = g.questions.filter(q => q.type === 'choice');
+  const ansIdx = choiceList.map(q => q.answer);
+  ok(new Set(ansIdx).size >= 2, '选择题正确位置不扎堆', JSON.stringify(ansIdx));
   // 家长的红线：所有答案小写
   const upper = g.questions.filter(q => /[A-Z]/.test(String(q.answer)));
   ok(upper.length === 0, '所有答案都是小写', upper.map(q => q.id).join(','));

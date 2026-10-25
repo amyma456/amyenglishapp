@@ -93,6 +93,43 @@ const Recorder = {
     return this._primeP;
   },
 
+  // v153：给 start() 里每一个可能挂死的 await 套上超时。
+  // 家长 2026-10-23/25（华为 nova 14 自带浏览器）：读完卡在「正在出分…」永远
+  // 不动，成绩提交不了、下一题弹不出来，整道题卡死。真凶就是这一串——
+  // getUserMedia / AudioContext.resume / audioWorklet.addModule 在华为系浏览器
+  // 上可能**永远不回来**（不报错、就是挂着），上层等的是这条 promise，
+  // 它不回来，孩子就被锁死。每一段最多等几秒，等不到就按失败走兜底。
+  _raceTimeout(p, ms, tag) {
+    let gaveUp = false;
+    const wrapped = new Promise(function (resolve, reject) {
+      let done = false;
+      const t = setTimeout(function () {
+        if (done) return;
+        done = true; gaveUp = true;
+        reject(new Error('recorder start timeout: ' + tag));
+      }, ms);
+      p.then(function (v) {
+        if (done) return;
+        done = true; clearTimeout(t);
+        resolve(v);
+      }, function (e) {
+        if (done) return;
+        done = true; clearTimeout(t);
+        reject(e || new Error(tag));
+      });
+    });
+    // 超时被放弃的那条真 promise 如果事后成功了（比如麦克风其实开出来了），
+    // 必须把流关掉，不能让麦克风一直亮着。
+    wrapped.catch(function () {}).then(function () {
+      if (gaveUp && p && typeof p.then === 'function') {
+        p.then(function (v) {
+          try { if (v && v.getTracks) v.getTracks().forEach(function (t) { t.stop(); }); } catch (e) {}
+        }).catch(function () {});
+      }
+    });
+    return wrapped;
+  },
+
   async start(opts) {
     const options = opts || {};
     this._primeP = null;          // 走过一次 start，预热标记就作废
@@ -116,7 +153,7 @@ const Recorder = {
         autoGainControl: true,
       },
     });
-    const stream = await streamP;
+    const stream = await this._raceTimeout(streamP, 6000, 'getUserMedia');
 
     // Reuse one AudioContext across takes. Building it and compiling the
     // worklet each time cost ~95ms, and a child who starts speaking the
@@ -129,7 +166,11 @@ const Recorder = {
       this._ctx = ctx;
       this._workletReady = false;
     }
-    if (ctx.state === 'suspended') { try { await ctx.resume(); } catch (e) {} }
+    if (ctx.state === 'suspended') {
+      // v153：resume 也可能挂着（华为系），2 秒不回来就带病继续 —— 采不到声
+      // 顶多这一遍判"没声音"，不能把孩子锁死。
+      try { await this._raceTimeout(ctx.resume(), 2000, 'ctx.resume'); } catch (e) {}
+    }
 
     const source = ctx.createMediaStreamSource(stream);
     const chunks = [];
@@ -153,7 +194,10 @@ const Recorder = {
     if (ctx.audioWorklet) {
       try {
         if (!this._workletReady) {
-          await ctx.audioWorklet.addModule(this._workletModuleUrl());
+          // v153：addModule 在华为系浏览器上可能永远不回来 —— 4 秒拿不到就
+          // 放弃 worklet，退回 ScriptProcessor（老接口，但哪里都能跑）。
+          await this._raceTimeout(
+            ctx.audioWorklet.addModule(this._workletModuleUrl()), 4000, 'addModule');
           this._workletReady = true;
         }
         node = new AudioWorkletNode(ctx, 'pcm-tap');

@@ -172,8 +172,8 @@ console.log('\n=== 1. 完形填空的题干朗读：再也不出现 blank，且�
     const t4 = App._questionSpeechText(m, m.questions[3]);
     const t5 = App._questionSpeechText(m, m.questions[4]);
     ok(t4 === t5, '今天的第 4 空和第 5 空朗读的是同一句（因为它们在同一个句子里）');
-    ok(/must take care of it/.test(t4), '第 4 空补上了 must：' + t4.slice(0, 60));
-    ok(/make you happy/.test(t4), '第 5 空补上了 happy（同句一起补全）');
+    ok(/harmful garbage/.test(t4), '第 4 空补上了 harmful：' + t4.slice(0, 60));
+    ok(/special care/.test(t4), '第 5 空补上了 special（同句一起补全）');
     ok(!hasBlank(t4) && !hasUnderscore(t4), '这一句里既没有 blank 也没有下划线');
   } else {
     ok(false, '找不到 w3-thu-cloze（今天这周的完形填空），检查数据 id 是否变了');
@@ -221,7 +221,7 @@ console.log('\n=== 2. 同句多空合并成一屏：一题不漏、顺序不乱 
 
   if (TODAY) {
     const groups = App._clozeQuestionGroups(TODAY.m);
-    ok(JSON.stringify(groups) === JSON.stringify([[0], [1], [2], [3, 4]]),
+    ok(JSON.stringify(groups) === JSON.stringify([[0], [1], [2], [3, 4], [5], [6], [7], [8], [9]]),
        '今天的完整分组是 1/2/3/(4+5)：' + JSON.stringify(groups));
   }
 
@@ -229,8 +229,9 @@ console.log('\n=== 2. 同句多空合并成一屏：一题不漏、顺序不乱 
   if (TODAY) {
     const fq = TODAY.m.questions[3];
     const rd = App._buildReadSentence(TODAY.m, fq);
-    ok(rd === '"You must take care of it, and it will make you happy."',
-       '第 4+5 空这一屏跟读的是填满两个空的完整句');
+    // v153：新课文里 4+5 空同句 —— "Batteries and old medicine are 4___ garbage, so we need 5___ care with them."
+    ok(rd === 'Batteries and old medicine are harmful garbage, so we need special care with them.',
+       '第 4+5 空这一屏跟读的是填满两个空的完整句：' + rd);
   }
 }
 
@@ -436,10 +437,10 @@ console.log('\n=== 7. v127：每一句都有参考中文；没参考时绝不锁
   if (TODAY) {
     const A = loadApp(weeks[TODAY.wk]);
     const sents = A._splitSentences(TODAY.m.passage);
-    ok(/Grandpa Wang lives near a small lake/.test(sents[0]),
-       '今天第 1 句就是家长报的那句（' + sents[0] + '）');
+    ok(/Garbage sorting is an important habit/.test(sents[0]),
+       '今天第 1 句是 v153 新课文的第 1 句（' + sents[0] + '）');
     const ref0 = A._clozeSentenceRefCn(TODAY.m, 0, sents[0]);
-    ok(/王/.test(ref0), '第 1 句（没挖空）也拿得到中文参考：' + ref0);
+    ok(/垃圾分类/.test(ref0), '第 1 句（没挖空）也拿得到中文参考：' + ref0);
     ok(ref0.indexOf('blank') < 0 && !hasUnderscore(ref0), '参考译文里没有 blank / ___');
 
     // 每一句都要能拿到参考，且不能是"解析口气"的长句堆积

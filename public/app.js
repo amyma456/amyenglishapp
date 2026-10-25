@@ -6000,14 +6000,29 @@ const App = {
       ? performance.now() : Date.now();
     const liveP = this._liveStop();
     const clipP = this._finishClipCapture();
+    // v153：出分总看门狗。家长实测（华为 nova 14 自带浏览器）：卡在
+    // 「正在出分…」永远不动。不管 Promise.all 挂在哪一步，25 秒后强制
+    // 按"确实读了"结算，孩子永远能进下一题。晚到的正常结果被 settled 挡住，
+    // 不会二刷界面。
+    let settled = false;
+    const settle = function (spoken, source, verdict, voiceOk) {
+      if (settled) return;
+      settled = true;
+      clearTimeout(watchdog);
+      self._spShowResult(mi, qi, dayIdx, ctx, spoken, source, verdict, voiceOk);
+    };
+    const watchdog = setTimeout(function () {
+      if (settled) return;
+      console.warn('Speaking scoring watchdog (25s) fired — force settle');
+      settle(null, null, null, true);
+    }, 25000);
     Promise.all([liveP, clipP]).then(async function(res) {
       // 两路择优（v98）：A 路（手机自带识别）判过就立即出分，判不过才等
       // B 路（云端）复核 —— 见 _bestTranscript 的注释。
       const best = await self._bestTranscript(ctx.sentence, res[0], res[1], self._spClipSamples);
       // v143：兜底放行必须"真的像读了一整句"—— 门槛按词数算，哼一声过不了。
       const vMin = self._minVoiceSec(ctx.sentence);
-      self._spShowResult(mi, qi, dayIdx, ctx,
-        best ? best.spoken : null,
+      settle(best ? best.spoken : null,
         best ? best.source : null,
         best ? best.verdict : null,
         !best && self._lastClipVoiceOk(vMin));
@@ -6016,7 +6031,7 @@ const App = {
         : (!best ? 'voice' : (best.verdict && best.verdict.passed ? 'pass' : 'low')) });
     }).catch(function(e) {
       console.warn('Speaking read capture failed:', e);
-      self._spShowResult(mi, qi, dayIdx, ctx, null, null, null, self._lastClipVoiceOk(self._minVoiceSec(ctx.sentence)));
+      settle(null, null, null, self._lastClipVoiceOk(self._minVoiceSec(ctx.sentence)));
       Api.perfEnd({ kind: 'fail' });
     });
   },
@@ -6297,8 +6312,15 @@ const App = {
     // Wait for a capture that is still starting up, so a fast recognition
     // result cannot leave the microphone running.
     if (this._spClipStarting) {
-      try { await this._spClipStarting; } catch (e) {}
+      // v153：起录在某些华为/荣耀机型的浏览器上可能永远不回来（recorder.js
+      // 里已给每个 await 套了超时，这里是第二道保险）。最多再等 3 秒，
+      // 等不到就放弃这一遍的音频，判分走"有没有出声"的兜底 ——
+      // 绝不让孩子停在「正在出分…」不动。
+      const starting = this._spClipStarting;
       this._spClipStarting = null;
+      try {
+        await Promise.race([starting, new Promise(function (r) { setTimeout(r, 3000); })]);
+      } catch (e) {}
     }
     if (!this._spClip) return this._spClipBlob || null;
     this._spClip = null;
@@ -12286,13 +12308,27 @@ const App = {
     const liveP = this._liveStop();
     const clipP = this._finishClipCapture();
 
+    // v153：跟读出分总看门狗（和口语那条路同一个道理，华为 nova 14 实测
+    // 会永远停在「正在出分…」）。25 秒强制结算，晚到的结果不二刷。
+    let settled = false;
+    const settle = function (spoken, source, verdict, voiceOk) {
+      if (settled) return;
+      settled = true;
+      clearTimeout(watchdog);
+      self._showHoldReadResult(mi, qi, dayIdx, ctx.sentence, spoken, source, verdict, voiceOk);
+    };
+    const watchdog = setTimeout(function () {
+      if (settled) return;
+      console.warn('Hold-read scoring watchdog (25s) fired — force settle');
+      settle(null, null, null, true);
+    }, 25000);
+
     Promise.all([liveP, clipP]).then(async function(res) {
       // 两路择优（v98）：A 路判过就立即出分，判不过才等 B 路复核。
       const best = await self._bestTranscript(ctx.sentence, res[0], res[1], self._spClipSamples);
       // v143：兜底放行按"这句有多少词"设时长门槛（见 _minVoiceSec）。
       const hMin = self._minVoiceSec(ctx.sentence);
-      self._showHoldReadResult(mi, qi, dayIdx, ctx.sentence,
-        best ? best.spoken : null,
+      settle(best ? best.spoken : null,
         best ? best.source : null,
         best ? best.verdict : null,
         !best && self._lastClipVoiceOk(hMin));
@@ -12300,8 +12336,7 @@ const App = {
         : (!best ? 'voice' : (best.verdict && best.verdict.passed ? 'pass' : 'low')) });
     }).catch(function(e) {
       console.warn('Hold-read capture failed:', e);
-      self._showHoldReadResult(mi, qi, dayIdx, ctx.sentence, null, null, null,
-        self._lastClipVoiceOk(self._minVoiceSec(ctx.sentence)));
+      settle(null, null, null, self._lastClipVoiceOk(self._minVoiceSec(ctx.sentence)));
       Api.perfEnd({ kind: 'fail' });
     });
   },

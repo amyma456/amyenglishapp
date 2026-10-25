@@ -137,7 +137,9 @@ let qShortDay = -1, qShortMi = -1, qShortQi = -1, qShortOi = -1, qShortWord = ''
 HOMEWORK_DATA.forEach((d, di) => (d.modules || []).forEach((mm, mi) => {
   if (spDay < 0 && mm.type === 'speaking' && mm.questions) { spDay = di; spMi = mi; }
   if ((qDay < 0) && mm.questions && mm.type !== 'speaking' && mm.type !== 'writing_template') { qDay = di; qMi = mi; }
-  if (qShortDay < 0 && mm.questions && mm.type !== 'speaking' && mm.type !== 'writing_template') {
+  if (qShortDay < 0 && mm.questions && mm.type !== 'speaking' && mm.type !== 'writing_template' && mm.type !== 'reading') {
+    // v153：阅读模块点选项读「问句+答句」整句（v141 行为，第 3 节另测），
+    // 单词选项的朗读红线只对非阅读模块生效。
     mm.questions.forEach((q, qi) => (q.options || []).forEach((o, oi) => {
       if (qShortDay < 0 && o && !/\s/.test(String(o).trim()) && String(o).trim() && oi !== q.answer) {
         qShortDay = di; qShortMi = mi; qShortQi = qi; qShortOi = oi; qShortWord = String(o);

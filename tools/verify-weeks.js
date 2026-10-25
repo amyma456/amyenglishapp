@@ -23,7 +23,7 @@ ok(Array.isArray(ctx.HOMEWORK_DATA) && ctx.HOMEWORK_DATA.length === 7, 'HOMEWORK
 
 const allIds = new Set();
 const questionTexts = {}; // key -> week，跨周查重
-const PASSAGE_STEMS = /^[0-9]___$/; // 完形填空的空位桩，各周必然相同，不查重
+const PASSAGE_STEMS = /^[0-9]{1,2}___$/; // v153：完形可到 10 空 // 完形填空的空位桩，各周必然相同，不查重
 const LISTEN_STEMS = [/听到的句子/, /听到的数字/];
 
 for (let w = 0; w < WEEKS.length; w++) {

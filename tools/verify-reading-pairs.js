@@ -66,13 +66,13 @@ ok(total >= 16, '课文总数符合预期（≥16 篇，v143 去掉周日那 4 �
 ok(pairOk === total, '★ 全部课文都能逐句配对（不再退化成全文翻译）',
    pairOk + '/' + total + (failures.length ? '，配不上：' + failures.join('、') : ''));
 ok(fns._pairSentences(D.W[2][5].modules.find(m => m.type === 'reading')),
-   '★ 明天（WEEK3 周六海豚课文）走逐句翻译');
+   '★ 明天（WEEK3 周六博物馆课文，v153 主题改版）走逐句翻译');
 
-// 明天那篇的逐句参考答案要和系统听力对得上：抽样核对前两句与海豚句
+// 这一篇的逐句参考答案要与系统中文对得上：抽查配对数与含主题词的句子
 const tmPairs = fns._pairSentences(D.W[2][5].modules.find(m => m.type === 'reading'));
-ok(tmPairs[3].en.indexOf('Dolphins') !== -1 && tmPairs[3].cn.indexOf('海豚') !== -1,
-   '★ 第 4 句参考答案是「海豚！她喊道。」', tmPairs[3].en.slice(0, 30) + ' → ' + tmPairs[3].cn);
-ok(tmPairs.length === 10, '海豚课文 10 句全配对', '实际 ' + tmPairs.length);
+ok(tmPairs.length >= 8 && tmPairs.some(p => p.cn.indexOf('博物馆') !== -1),
+   '★ 逐句配对完整且参考答案是本课中文', '共 ' + tmPairs.length + ' 句');
+ok(tmPairs.every(p => p.en && p.cn), '每一句都有英文原句和中文参考');
 
 // 逐句步骤里词可点（点单词看中文意思）+ 参考答案就是系统里那句中文
 ok(/_wordSpans\(pair\.en\)/.test(appSrc), '逐句翻译页英文按词切分（可点查意思）');

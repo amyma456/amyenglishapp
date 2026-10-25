@@ -1,9 +1,13 @@
+// 题库数据 —— v153 起由 tools/apply-v153-content.js 生成。
+// 每天恒 30 道；阅读/完形/写作主题 = 中国文化 · 科学技术 · 现代热点。
+// 改题库：改 tools/v153-content-*.js 后重跑该脚本，再跑 node tools/verify-weeks.js。
+
 const WEEK1 = [
   {
     "day_cn": "周一",
     "day_en": "Monday",
     "is_speaking_day": true,
-    "total_duration": 40,
+    "total_duration": 60,
     "theme_cn": "AI口语 + 高频词汇 + 阅读理解",
     "modules": [
       {
@@ -25,7 +29,14 @@ const WEEK1 = [
             "answer": 0,
             "pronunciation_tips": "注意 favorite 的发音，美音重音在第一音节 fa-vo-rite，/ˈfeɪvərɪt/",
             "explanation_cn": "这是一道日常对话题，询问最喜欢的科目。回答时应直接说出科目名称，使用 My favorite subject is... 的句型。注意 subject 的发音，/ˈsʌbdʒekt/，重音在第一音节。",
-            "explanation_en": "This is a daily conversation question asking about your favorite subject. You should directly state the subject using 'My favorite subject is...'. Note the pronunciation of 'subject' with stress on the first syllable /ˈsʌbdʒekt/."
+            "explanation_en": "This is a daily conversation question asking about your favorite subject. You should directly state the subject using 'My favorite subject is...'. Note the pronunciation of 'subject' with stress on the first syllable /ˈsʌbdʒekt/.",
+            "answer_cn_hint": "它在问「哪一门科目」，答句只要说出一个科目名，别的都不用说。",
+            "options_cn": [
+              "我最喜欢的科目是英语。",
+              "我喜欢踢足球。",
+              "我中午吃午饭。",
+              "我坐公交车去上学。"
+            ]
           },
           {
             "id": "mon-sp2",
@@ -40,7 +51,14 @@ const WEEK1 = [
             "answer": 0,
             "pronunciation_tips": "注意 school 中 sch 的发音 /sk/，不要读成 /ʃ/；by bus 连读时注意过渡自然",
             "explanation_cn": "这题询问出行方式。常用回答：by bus/car/bike/subway 或 on foot。注意 means of transportation 前面用 by，不用 by a。school 的 sch 发 /sk/ 音，不是 /ʃ/。",
-            "explanation_en": "This question asks about transportation. Common answers: by bus/car/bike/subway or on foot. Note that we use 'by' without 'a' before the transport. The 'sch' in 'school' is pronounced /sk/, not /ʃ/."
+            "explanation_en": "This question asks about transportation. Common answers: by bus/car/bike/subway or on foot. Note that we use 'by' without 'a' before the transport. The 'sch' in 'school' is pronounced /sk/, not /ʃ/.",
+            "answer_cn_hint": "它在问「用什么方式去」，答句要说走路、骑车、坐公交车这类出行方式。",
+            "options_cn": [
+              "我坐公交车去上学。",
+              "我喜欢读书。",
+              "我的学校很大。",
+              "我有五节课。"
+            ]
           },
           {
             "id": "mon-sp3",
@@ -55,7 +73,14 @@ const WEEK1 = [
             "answer": 0,
             "pronunciation_tips": "注意 last weekend 中 last 的 /æ/ 音要发饱满，went 是 go 的过去式 /went/",
             "explanation_cn": "这题用一般过去时询问上周末活动。注意问题用 did，回答动词要用过去式（went, played, visited 等）。不能回答现在进行时或将来时，时态必须一致。",
-            "explanation_en": "This question uses the simple past tense to ask about last weekend. Since the question uses 'did', the answer must use past tense verbs (went, played, visited). The tense must be consistent."
+            "explanation_en": "This question uses the simple past tense to ask about last weekend. Since the question uses 'did', the answer must use past tense verbs (went, played, visited). The tense must be consistent.",
+            "answer_cn_hint": "它在问「上周末做了什么」，答句要说过去做过的一件事，动词要用过去式。",
+            "options_cn": [
+              "我和家人去了公园。",
+              "我正在做作业。",
+              "我将去看望奶奶。",
+              "我喜欢游泳。"
+            ]
           },
           {
             "id": "mon-sp4",
@@ -70,7 +95,14 @@ const WEEK1 = [
             "answer": 0,
             "pronunciation_tips": "注意 family 的发音 /ˈfæməli/，美音常弱化为 /ˈfæmli/；parents 注意 /peərənts/ 的双元音",
             "explanation_cn": "这是开放式家庭介绍题。回答时应包括家庭人数和成员。常用句型：There are... people in my family. 注意介绍自己时放在最后：my parents, my sister and me（不是 I）。",
-            "explanation_en": "This is an open-ended question about family. Your answer should include the number of family members and who they are. Common pattern: 'There are... people in my family.' Note: when listing family members, put yourself last using 'me' not 'I'."
+            "explanation_en": "This is an open-ended question about family. Your answer should include the number of family members and who they are. Common pattern: 'There are... people in my family.' Note: when listing family members, put yourself last using 'me' not 'I'.",
+            "answer_cn_hint": "这是在请你介绍家人，答句要说家里有谁，而不是说宠物、学校或吃的。",
+            "options_cn": [
+              "当然！我家有四口人：爸爸、妈妈、姐姐和我。",
+              "我有一只宠物狗。",
+              "我的学校离家很远。",
+              "我不喜欢蔬菜。"
+            ]
           },
           {
             "id": "mon-sp5",
@@ -85,7 +117,14 @@ const WEEK1 = [
             "answer": 0,
             "pronunciation_tips": "注意 grow up 连读，grow 的 /gr/ 和 up 的 /ʌ/ 要自然过渡；because 重音在第二音节 /bɪˈkɒz/",
             "explanation_cn": "这题询问未来理想职业。回答格式：I want to be a/an + 职业名词 + because + 原因。注意职业前用 a 或 an（元音前用 an，如 an engineer）。grow up 是固定短语，意思是长大。",
-            "explanation_en": "This question asks about future career aspirations. Answer format: I want to be a/an + job + because + reason. Note: use 'an' before vowels (e.g., an engineer). 'Grow up' is a fixed phrase meaning to become an adult."
+            "explanation_en": "This question asks about future career aspirations. Answer format: I want to be a/an + job + because + reason. Note: use 'an' before vowels (e.g., an engineer). 'Grow up' is a fixed phrase meaning to become an adult.",
+            "answer_cn_hint": "它在问「将来想做什么职业」，答句要说出一种职业，最好再说说为什么。",
+            "options_cn": [
+              "我想当医生，因为我想帮助生病的人。",
+              "我今年十岁。",
+              "我喜欢玩游戏。",
+              "我妈妈是老师。"
+            ]
           }
         ]
       },
@@ -180,7 +219,8 @@ const WEEK1 = [
               "beau",
               "ti",
               "ful"
-            ]
+            ],
+            "hint_cn": "看到花、看到晚霞，心里觉得“真好看”的那种感觉"
           },
           {
             "word": "library",
@@ -265,7 +305,8 @@ const WEEK1 = [
               "li",
               "bra",
               "ry"
-            ]
+            ],
+            "hint_cn": "一个很安静的地方，书很多，可以把书借回家看"
           },
           {
             "word": "honest",
@@ -348,7 +389,8 @@ const WEEK1 = [
             "syllables": [
               "ho",
               "nest"
-            ]
+            ],
+            "hint_cn": "说真话、不骗人，答应过的事一定做到"
           },
           {
             "word": "celebrate",
@@ -435,7 +477,8 @@ const WEEK1 = [
               "ce",
               "le",
               "brate"
-            ]
+            ],
+            "hint_cn": "生日那天、过节那天，大家一起热闹一下"
           },
           {
             "word": "discover",
@@ -521,7 +564,8 @@ const WEEK1 = [
               "dis",
               "co",
               "ver"
-            ]
+            ],
+            "hint_cn": "原来不知道的东西，忽然被找到了"
           }
         ]
       },
@@ -529,51 +573,320 @@ const WEEK1 = [
         "id": "mon-reading",
         "name_cn": "阅读理解",
         "type": "reading",
-        "duration": 5,
-        "passage": "Tom is a 10-year-old boy from England. He loves sports, especially football. Every Saturday, he plays football with his friends in the park. His dream is to become a professional football player one day. His father is a PE teacher and always helps him practice. Tom also likes reading books about famous football players.",
-        "passage_cn": "汤姆是一个来自英国的10岁男孩。他热爱运动，尤其是足球。每个星期六，他和朋友们在公园里踢足球。他的梦想是有一天成为一名职业足球运动员。他的父亲是一名体育老师，总是帮助他练习。汤姆也喜欢阅读关于著名足球运动员的书籍。",
+        "duration": 10,
+        "passage": "The Spring Festival is the most important festival in China. It usually comes in January or February. Before the festival, people clean their houses and buy new clothes. On New Year's Eve, the whole family get together and enjoy a big dinner. Children love this festival best because they can get lucky money in red envelopes. During the festival, people visit relatives and friends, and say 'Happy New Year' to each other.",
+        "passage_cn": "春节是中国最重要的节日。它通常在一月或二月到来。节日前，人们打扫房子、买新衣服。除夕夜，全家人聚在一起吃一顿丰盛的年夜饭。孩子们最喜欢这个节日，因为他们可以收到红包里的压岁钱。节日期间，人们走亲访友，互相说「新年快乐」。",
         "questions": [
           {
             "id": "mon-rd1",
             "type": "choice",
-            "question": "How old is Tom?",
+            "question": "What is the most important festival in China?",
             "options": [
-              "8 years old",
-              "10 years old",
-              "12 years old",
-              "14 years old"
+              "The Mid-Autumn Festival",
+              "The Dragon Boat Festival",
+              "The Spring Festival",
+              "Christmas"
             ],
-            "answer": 1,
-            "explanation_cn": "文章第一句明确说 Tom is a 10-year-old boy，所以汤姆10岁。注意 10-year-old 作形容词时，year 不加 s，中间用连字符连接。",
-            "explanation_en": "The first sentence states 'Tom is a 10-year-old boy', so Tom is 10 years old. Note: when used as an adjective before a noun, 'year' doesn't take 's' and hyphens are used: 10-year-old boy."
+            "answer": 2,
+            "explanation_cn": "第一句：The Spring Festival is the most important festival in China。"
           },
           {
             "id": "mon-rd2",
             "type": "choice",
-            "question": "What does Tom do every Saturday?",
+            "question": "When does the Spring Festival usually come?",
             "options": [
-              "Reads books",
-              "Plays football",
-              "Watches TV",
-              "Goes swimming"
+              "In March or April",
+              "In June or July",
+              "In November or December",
+              "In January or February"
             ],
-            "answer": 1,
-            "explanation_cn": "文章说 Every Saturday, he plays football with his friends in the park。每个星期六他和朋友在公园踢足球。注意 every Saturday 表示每周六，用一般现在时。",
-            "explanation_en": "The text says 'Every Saturday, he plays football with his friends in the park.' Note: 'every Saturday' indicates a regular habit, so the simple present tense is used."
+            "answer": 3,
+            "explanation_cn": "第二句：usually comes in January or February（一月或二月）。"
           },
           {
             "id": "mon-rd3",
             "type": "choice",
-            "question": "What is Tom's dream?",
+            "question": "What do people do before the festival?",
             "options": [
-              "To be a teacher",
-              "To be a football player",
-              "To be a writer",
-              "To be a doctor"
+              "They go swimming in the sea.",
+              "They clean their houses and buy new clothes.",
+              "They plant many trees.",
+              "They sleep at home all day."
             ],
             "answer": 1,
-            "explanation_cn": "文章说 His dream is to become a professional football player one day。他的梦想是有一天成为职业足球运动员。注意 professional 意为职业的，one day 意为有一天（指未来）。",
-            "explanation_en": "The text says 'His dream is to become a professional football player one day.' Note: 'professional' means doing something as a paid job, and 'one day' refers to a future time."
+            "explanation_cn": "第三句：clean their houses and buy new clothes（打扫房子、买新衣服）。"
+          },
+          {
+            "id": "mon-rd4",
+            "type": "choice",
+            "question": "When does the whole family enjoy a big dinner?",
+            "options": [
+              "On Monday morning",
+              "After the festival",
+              "At noon every day",
+              "On New Year's Eve"
+            ],
+            "answer": 3,
+            "explanation_cn": "除夕夜（New Year's Eve）全家人聚在一起吃年夜饭。"
+          },
+          {
+            "id": "mon-rd5",
+            "type": "choice",
+            "question": "Why do children love the Spring Festival best?",
+            "options": [
+              "They can get lucky money.",
+              "They can sleep all day.",
+              "They can watch TV all night.",
+              "They don't have dinner."
+            ],
+            "answer": 0,
+            "explanation_cn": "孩子们最喜欢春节，因为可以收到压岁钱（lucky money）。"
+          },
+          {
+            "id": "mon-rd6",
+            "type": "choice",
+            "question": "Where is the lucky money put?",
+            "options": [
+              "In blue boxes",
+              "In white bags",
+              "In red envelopes",
+              "In school bags"
+            ],
+            "answer": 2,
+            "explanation_cn": "压岁钱装在红包（red envelopes）里。"
+          },
+          {
+            "id": "mon-rd7",
+            "type": "choice",
+            "question": "What do people say to each other during the festival?",
+            "options": [
+              "\"Good night\"",
+              "\"Happy New Year\"",
+              "\"Happy birthday\"",
+              "\"See you tomorrow\""
+            ],
+            "answer": 1,
+            "explanation_cn": "人们见面互相说「Happy New Year（新年快乐）」。"
+          },
+          {
+            "id": "mon-rd8",
+            "type": "choice",
+            "question": "\"Get together\" in the passage means ___.",
+            "options": [
+              "meet and stay with family",
+              "have a fight",
+              "go to school",
+              "take a trip"
+            ],
+            "answer": 0,
+            "explanation_cn": "get together 意思是「聚在一起」，除夕夜全家人团聚吃年夜饭。"
+          },
+          {
+            "id": "mon-rd9",
+            "type": "choice",
+            "question": "Which of the following is NOT in the passage?",
+            "options": [
+              "People go swimming in the sea.",
+              "People clean their houses.",
+              "People buy new clothes.",
+              "People visit relatives and friends."
+            ],
+            "answer": 0,
+            "explanation_cn": "文章没有说人们去海边游泳，其余三项都在文中。"
+          },
+          {
+            "id": "mon-rd10",
+            "type": "choice",
+            "question": "What is the passage mainly about?",
+            "options": [
+              "The Great Wall.",
+              "The Spring Festival.",
+              "Giant pandas.",
+              "Chinese tea."
+            ],
+            "answer": 1,
+            "explanation_cn": "全文围绕春节展开：时间、习俗、年夜饭、压岁钱。"
+          }
+        ]
+      },
+      {
+        "id": "mon-mc",
+        "name_cn": "单项选择",
+        "type": "multiple_choice",
+        "duration": 10,
+        "questions": [
+          {
+            "id": "mon-mc1",
+            "type": "choice",
+            "question": "The Spring Festival ___ the most important festival in China.",
+            "options": [
+              "is",
+              "are",
+              "am",
+              "be"
+            ],
+            "answer": 0,
+            "explanation_cn": "主语 the Spring Festival 是单数，be 动词用 is。"
+          },
+          {
+            "id": "mon-mc2",
+            "type": "choice",
+            "question": "People usually clean their houses ___ the festival.",
+            "options": [
+              "before",
+              "after",
+              "under",
+              "between"
+            ],
+            "answer": 0,
+            "explanation_cn": "节日「之前」打扫房子，用 before。"
+          },
+          {
+            "id": "mon-mc3",
+            "type": "choice",
+            "question": "There ___ many lanterns in the street at night.",
+            "options": [
+              "are",
+              "is",
+              "am",
+              "be"
+            ],
+            "answer": 0,
+            "explanation_cn": "lanterns 是复数，There be 用 are。"
+          },
+          {
+            "id": "mon-mc4",
+            "type": "choice",
+            "question": "Children can get lucky money ___ red envelopes.",
+            "options": [
+              "in",
+              "on",
+              "at",
+              "of"
+            ],
+            "answer": 0,
+            "explanation_cn": "「在红包里」用 in red envelopes。"
+          },
+          {
+            "id": "mon-mc5",
+            "type": "choice",
+            "question": "We ___ our relatives during the Spring Festival every year.",
+            "options": [
+              "visit",
+              "visits",
+              "visited",
+              "visiting"
+            ],
+            "answer": 0,
+            "explanation_cn": "every year 表示经常性动作，主语 we 是复数，动词用原形 visit。"
+          },
+          {
+            "id": "mon-mc6",
+            "type": "choice",
+            "question": "Look! The children ___ dragon dances in the street.",
+            "options": [
+              "are watching",
+              "watches",
+              "watched",
+              "watch"
+            ],
+            "answer": 0,
+            "explanation_cn": "Look! 提示动作正在进行，用现在进行时 are watching。"
+          },
+          {
+            "id": "mon-mc7",
+            "type": "choice",
+            "question": "My mother ___ dumplings for us last night.",
+            "options": [
+              "makes",
+              "made",
+              "make",
+              "making"
+            ],
+            "answer": 1,
+            "explanation_cn": "last night 是过去时间，用过去式 made（make 的过去式）。"
+          },
+          {
+            "id": "mon-mc8",
+            "type": "choice",
+            "question": "___ do people eat mooncakes? — Because they are delicious.",
+            "options": [
+              "Why",
+              "When",
+              "Where",
+              "Who"
+            ],
+            "answer": 0,
+            "explanation_cn": "答句是 Because…，问句用 Why（为什么）。"
+          },
+          {
+            "id": "mon-mc9",
+            "type": "choice",
+            "question": "Beijing is ___ old city with a long history.",
+            "options": [
+              "a",
+              "an",
+              "the",
+              "/（不填）"
+            ],
+            "answer": 1,
+            "explanation_cn": "old 以元音音素开头，前面用 an。"
+          },
+          {
+            "id": "mon-mc10",
+            "type": "choice",
+            "question": "The Spring Festival is ___ January or February.",
+            "options": [
+              "in",
+              "on",
+              "at",
+              "to"
+            ],
+            "answer": 0,
+            "explanation_cn": "月份前面用介词 in：in January or February。"
+          }
+        ]
+      },
+      {
+        "id": "mon-tense2",
+        "name_cn": "时态练习",
+        "type": "tense",
+        "duration": 5,
+        "questions": [
+          {
+            "id": "mon-tn21",
+            "type": "fill",
+            "question": "The Spring Festival usually ___ (come) in January or February. [填入正确形式]",
+            "answer": "comes",
+            "explanation_cn": "usually 表示习惯，主语三单，动词加 es。"
+          },
+          {
+            "id": "mon-tn22",
+            "type": "fill",
+            "question": "We ___ (clean) our house before the festival next week. [填入正确形式]",
+            "answer": "will clean",
+            "explanation_cn": "next week 将来时间，用 will clean。"
+          },
+          {
+            "id": "mon-tn23",
+            "type": "fill",
+            "question": "Last year, I ___ (get) lucky money from my grandma. [填入正确形式]",
+            "answer": "got",
+            "explanation_cn": "last year 过去时间，get 的过去式是 got。"
+          },
+          {
+            "id": "mon-tn24",
+            "type": "fill",
+            "question": "Look! Mom ___ (cook) the big dinner now. [填入正确形式]",
+            "answer": "is cooking",
+            "explanation_cn": "Look! 提示正在进行，用 is cooking。"
+          },
+          {
+            "id": "mon-tn25",
+            "type": "fill",
+            "question": "Children ___ (love) the festival very much. [填入正确形式]",
+            "answer": "love",
+            "explanation_cn": "主语 children 复数，一般现在时用原形。"
           }
         ]
       }
@@ -591,50 +904,138 @@ const WEEK1 = [
         "name_cn": "阅读理解",
         "type": "reading",
         "duration": 10,
-        "passage": "Emma lives in a small town near the sea. Every morning, she walks to school with her best friend Lily. They have known each other since kindergarten. Emma's favorite class is Art because she loves drawing pictures of the ocean. After school, she often goes to the beach to collect seashells. She has a big collection of beautiful shells in her room.",
-        "passage_cn": "艾玛住在海边的一个小镇上。每天早上，她和最好的朋友莉莉一起走路上学。她们从幼儿园就认识了。艾玛最喜欢的课是美术，因为她喜欢画大海的画。放学后，她经常去海滩收集贝壳。她的房间里有一大堆美丽的贝壳收藏。",
+        "passage": "The Great Wall is one of the greatest wonders in the world. It is in the north of China. It is more than 20000 kilometres long, like a huge dragon on the mountains. People started to build it over 2000 years ago. In old times, soldiers stood on the wall and watched for enemies. Today, many visitors from all over the world come to climb the Great Wall every year. When you stand on it, you can see beautiful mountains all around.",
+        "passage_cn": "长城是世界上最伟大的奇迹之一。它在中国的北方。它有两万多公里长，像一条卧在群山上的巨龙。人们两千多年前就开始修建它了。古时候，士兵们站在城墙上瞭望敌人。如今，每年都有来自世界各地的游客来爬长城。当你站在长城上，四周能看到美丽的群山。",
         "questions": [
           {
             "id": "tue-rd1",
             "type": "choice",
-            "question": "Where does Emma live?",
+            "question": "Where is the Great Wall?",
             "options": [
-              "In a big city",
-              "Near the sea",
-              "In the mountains",
-              "Near a forest"
+              "In the south of China",
+              "In the west of China",
+              "In the north of China",
+              "In the east of China"
             ],
-            "answer": 1,
-            "explanation_cn": "文章第一句说 Emma lives in a small town near the sea。艾玛住在海边的一个小镇上。near the sea 意为靠近海边，注意区分 near（靠近）和 next to（紧挨着）的用法。",
-            "explanation_en": "The first sentence says 'Emma lives in a small town near the sea.' 'Near the sea' means close to the sea. Note the difference between 'near' (close to) and 'next to' (immediately beside)."
+            "answer": 2,
+            "explanation_cn": "第二句：It is in the north of China（在北方）。"
           },
           {
             "id": "tue-rd2",
             "type": "choice",
-            "question": "Who is Lily?",
+            "question": "How long is the Great Wall?",
             "options": [
-              "Emma's sister",
-              "Emma's teacher",
-              "Emma's best friend",
-              "Emma's neighbor"
+              "More than 20000 kilometres",
+              "About 2000 kilometres",
+              "About 200 kilometres",
+              "More than 2 kilometres"
             ],
-            "answer": 2,
-            "explanation_cn": "文章说 she walks to school with her best friend Lily。莉莉是艾玛最好的朋友。best friend 意为最好的朋友，注意 friend 是可数名词，前面有形容词修饰时可以加冠词或代词。",
-            "explanation_en": "The text says 'she walks to school with her best friend Lily.' Lily is Emma's best friend. 'Best friend' means the closest friend. Note: 'friend' is a countable noun."
+            "answer": 0,
+            "explanation_cn": "第三句：more than 20000 kilometres long（两万多公里）。"
           },
           {
             "id": "tue-rd3",
             "type": "choice",
-            "question": "Why does Emma like Art class?",
+            "question": "What does the Great Wall look like?",
             "options": [
-              "Because she likes the teacher",
-              "Because she loves drawing",
-              "Because it's easy",
-              "Because her friend is there"
+              "A huge dragon on the mountains",
+              "A long river",
+              "A big house",
+              "A small bridge"
+            ],
+            "answer": 0,
+            "explanation_cn": "文中说它像一条卧在群山上的巨龙（a huge dragon）。"
+          },
+          {
+            "id": "tue-rd4",
+            "type": "choice",
+            "question": "When did people start to build it?",
+            "options": [
+              "Over 2000 years ago",
+              "200 years ago",
+              "20 years ago",
+              "Over 20000 years ago"
+            ],
+            "answer": 0,
+            "explanation_cn": "第四句：over 2000 years ago（两千多年前）。"
+          },
+          {
+            "id": "tue-rd5",
+            "type": "choice",
+            "question": "What did soldiers do on the wall in old times?",
+            "options": [
+              "They watched for enemies.",
+              "They grew rice.",
+              "They sold tea.",
+              "They played football."
+            ],
+            "answer": 0,
+            "explanation_cn": "古时候士兵站在城墙上瞭望敌人（watched for enemies）。"
+          },
+          {
+            "id": "tue-rd6",
+            "type": "choice",
+            "question": "Who comes to climb the Great Wall today?",
+            "options": [
+              "Only Chinese students",
+              "Visitors from all over the world",
+              "Only old people",
+              "Only the soldiers"
             ],
             "answer": 1,
-            "explanation_cn": "文章说 Emma's favorite class is Art because she loves drawing pictures of the ocean。艾玛最喜欢美术课因为她喜欢画大海。because 引导原因状语从句，解释为什么喜欢美术课。",
-            "explanation_en": "The text says 'Emma's favorite class is Art because she loves drawing pictures of the ocean.' The 'because' clause explains the reason. 'Drawing pictures of the ocean' means making pictures about the sea."
+            "explanation_cn": "如今每年有来自世界各地的游客来爬长城。"
+          },
+          {
+            "id": "tue-rd7",
+            "type": "choice",
+            "question": "What can you see when you stand on the wall?",
+            "options": [
+              "Beautiful mountains",
+              "A big sea",
+              "Long rivers only",
+              "Tall buildings only"
+            ],
+            "answer": 0,
+            "explanation_cn": "最后一句：可以看到四周美丽的群山。"
+          },
+          {
+            "id": "tue-rd8",
+            "type": "choice",
+            "question": "The word \"wonders\" here means ___.",
+            "options": [
+              "奇迹",
+              "窗户",
+              "问题",
+              "商品"
+            ],
+            "answer": 0,
+            "explanation_cn": "wonder 在这里是「奇迹」的意思，长城是世界奇迹之一。"
+          },
+          {
+            "id": "tue-rd9",
+            "type": "choice",
+            "question": "How many wonders does the passage say the Great Wall belongs to?",
+            "options": [
+              "One of the greatest",
+              "The second greatest",
+              "The last one",
+              "It doesn't say"
+            ],
+            "answer": 0,
+            "explanation_cn": "第一句：one of the greatest wonders（最伟大的奇迹之一）。"
+          },
+          {
+            "id": "tue-rd10",
+            "type": "choice",
+            "question": "The best title (标题) for the passage is ___.",
+            "options": [
+              "Soldiers in Old China",
+              "Mountains in the North",
+              "The Great Wall",
+              "A Trip to Beijing"
+            ],
+            "answer": 2,
+            "explanation_cn": "全文都在介绍长城：位置、长度、历史和今天。"
           }
         ]
       },
@@ -647,60 +1048,132 @@ const WEEK1 = [
           {
             "id": "tue-gr1",
             "type": "choice",
-            "question": "She ___ to school every day.",
+            "question": "There ___ many towers on the Great Wall.",
             "options": [
-              "go",
-              "goes",
-              "going",
-              "went"
+              "are",
+              "is",
+              "am",
+              "be"
             ],
-            "answer": 1,
-            "explanation_cn": "主语 She 是第三人称单数，every day 表示经常性动作，用一般现在时。第三人称单数动词加 -es：go → goes。注意 do → does, watch → watches, study → studies 等变化规则。",
-            "explanation_en": "The subject 'She' is third person singular, and 'every day' indicates a habitual action, so we use the simple present tense. Third person singular verbs add -s or -es: go → goes. Note other patterns: do → does, watch → watches, study → studies."
+            "answer": 0,
+            "explanation_cn": "towers 是复数，There be 用 are。"
           },
           {
             "id": "tue-gr2",
             "type": "choice",
-            "question": "I ___ my homework when he called me.",
+            "question": "People built the wall ___ 2000 years.",
             "options": [
-              "do",
-              "did",
-              "was doing",
-              "am doing"
+              "over",
+              "on",
+              "at",
+              "to"
             ],
-            "answer": 2,
-            "explanation_cn": "这句话表示当过去某个动作发生时，另一个动作正在进行。called 是过去时，所以正在进行的动作用过去进行时 was doing。注意过去进行时结构：was/were + doing。",
-            "explanation_en": "This sentence describes an action in progress when another past action occurred. 'Called' is past tense, so the ongoing action uses the past continuous: was doing. Structure: was/were + verb-ing."
+            "answer": 0,
+            "explanation_cn": "over 2000 years：两千多年，over 表示「超过」。"
           },
           {
             "id": "tue-gr3",
-            "type": "fill",
-            "question": "There ___ (be) many books on the shelf. [填入正确形式]",
-            "answer": "are",
-            "explanation_cn": "There be 句型遵循就近原则。books 是复数，且在 shelf 上，离动词最近的是 many books，所以用 are。注意 There is a book and two pens 中，离动词最近的是 a book（单数），用 is。",
-            "explanation_en": "The 'There be' pattern follows the principle of proximity - the verb agrees with the nearest noun. Since 'books' is plural and nearest to the verb, we use 'are'. Note: 'There is a book and two pens' uses 'is' because 'a book' (singular) is nearest."
+            "type": "choice",
+            "question": "The soldiers were very ___.",
+            "options": [
+              "brave",
+              "bravely",
+              "braveness",
+              "braver"
+            ],
+            "answer": 0,
+            "explanation_cn": "be 动词后面用形容词 brave（勇敢的）作表语。"
           },
           {
             "id": "tue-gr4",
             "type": "choice",
-            "question": "He has ___ eaten his breakfast.",
+            "question": "My father ___ me to the Great Wall when I was six.",
             "options": [
-              "yet",
-              "already",
-              "never",
-              "just now"
+              "took",
+              "takes",
+              "take",
+              "taking"
             ],
-            "answer": 1,
-            "explanation_cn": "现在完成时 has eaten 中，already 用于肯定句表示已经。yet 用于否定句和疑问句。never 表示从不。just now 一般与过去时连用。注意 already 常放在 have/has 和过去分词之间。",
-            "explanation_en": "In the present perfect 'has eaten', 'already' is used in affirmative sentences meaning something has happened. 'Yet' is for negatives and questions. 'Never' means not at any time. 'Just now' is usually used with past tense. 'Already' goes between have/has and the past participle."
+            "answer": 0,
+            "explanation_cn": "when I was six 是过去时间，用过去式 took（take 的过去式）。"
           },
           {
             "id": "tue-gr5",
-            "type": "fill",
-            "question": "The boy ___ (talk) to his teacher now is my brother. [填入正确形式]",
-            "answer": "talking",
-            "explanation_cn": "这句话中 The boy is my brother 是主句，talking to his teacher now 是现在分词短语作后置定语修饰 The boy。boy 和 talk 是主动关系，所以用现在分词 talking。相当于 who is talking 的省略。",
-            "explanation_en": "In this sentence, 'The boy is my brother' is the main clause. 'Talking to his teacher now' is a present participle phrase used as a post-modifier describing 'The boy'. Since the boy and talk have an active relationship, we use the present participle 'talking'. It's a shortened form of 'who is talking'."
+            "type": "choice",
+            "question": "We walked for three hours ___ we got to the top.",
+            "options": [
+              "before",
+              "after",
+              "so",
+              "but"
+            ],
+            "answer": 0,
+            "explanation_cn": "走了三个小时「才/在…之前」到达山顶，用 before。"
+          },
+          {
+            "id": "tue-gr6",
+            "type": "choice",
+            "question": "The Great Wall is ___ than my school.",
+            "options": [
+              "much longer",
+              "more longer",
+              "longest",
+              "long"
+            ],
+            "answer": 0,
+            "explanation_cn": "than 比较级：much longer（长得多）。"
+          },
+          {
+            "id": "tue-gr7",
+            "type": "choice",
+            "question": "It took ___ two hours to get there by bus.",
+            "options": [
+              "us",
+              "we",
+              "our",
+              "ours"
+            ],
+            "answer": 0,
+            "explanation_cn": "take 后面用宾格 us：took us two hours（花了我们两小时）。"
+          },
+          {
+            "id": "tue-gr8",
+            "type": "choice",
+            "question": "___ interesting the story about the wall is!",
+            "options": [
+              "How",
+              "What",
+              "What an",
+              "Where"
+            ],
+            "answer": 0,
+            "explanation_cn": "How + 形容词 + 主谓：How interesting…!"
+          },
+          {
+            "id": "tue-gr9",
+            "type": "choice",
+            "question": "The wall is famous ___ all over the world.",
+            "options": [
+              "to",
+              "with",
+              "in",
+              "at"
+            ],
+            "answer": 2,
+            "explanation_cn": "be famous in…：在全世界都有名，用 in。"
+          },
+          {
+            "id": "tue-gr10",
+            "type": "choice",
+            "question": "Don't ___ on the wall. It's dangerous.",
+            "options": [
+              "run",
+              "runs",
+              "running",
+              "ran"
+            ],
+            "answer": 0,
+            "explanation_cn": "Don't 后面用动词原形：Don't run（不要跑）。"
           }
         ]
       },
@@ -713,72 +1186,132 @@ const WEEK1 = [
           {
             "id": "tue-mc1",
             "type": "choice",
-            "question": "___ interesting book it is!",
+            "question": "The Great Wall ___ more than 20000 kilometres long.",
             "options": [
-              "What",
-              "What an",
-              "How",
-              "How an"
+              "is",
+              "are",
+              "am",
+              "be"
             ],
-            "answer": 1,
-            "explanation_cn": "感叹句结构：What (a/an) + 形容词 + 名词 + 主语 + 谓语！book 是可数名词单数，interesting 元音音素开头用 an。所以是 What an interesting book it is! 注意 How 引导的感叹句结构：How + 形容词/副词 + 主语 + 谓语！",
-            "explanation_en": "Exclamatory sentence structure: What (a/an) + adjective + noun + subject + verb! 'Book' is a singular countable noun, and 'interesting' starts with a vowel sound, so we use 'an'. Answer: What an interesting book it is! Note: 'How' structure is: How + adj/adv + subject + verb!"
+            "answer": 0,
+            "explanation_cn": "主语 the Great Wall 是单数，用 is。"
           },
           {
             "id": "tue-mc2",
             "type": "choice",
-            "question": "My father will come back ___ next week.",
+            "question": "It looks like a huge dragon ___ the mountains.",
             "options": [
-              "sometime",
-              "some time",
-              "sometimes",
-              "some times"
+              "on",
+              "in",
+              "under",
+              "at"
             ],
             "answer": 0,
-            "explanation_cn": "这四个词容易混淆：sometime 某个时候（未来或过去）；some time 一段时间；sometimes 有时（频度副词）；some times 几次。句意是下周某个时候回来，选 sometime。",
-            "explanation_en": "These four are easily confused: 'sometime' = at some unspecified time; 'some time' = a period of time; 'sometimes' = occasionally (adverb of frequency); 'some times' = several occasions. The sentence means 'at some time next week', so 'sometime' is correct."
+            "explanation_cn": "「在群山上」用 on the mountains。"
           },
           {
             "id": "tue-mc3",
             "type": "choice",
-            "question": "The teacher asked us ___ noise in class.",
+            "question": "People ___ to build it over 2000 years ago.",
             "options": [
-              "don't make",
-              "not make",
-              "to not make",
-              "not to make"
+              "started",
+              "start",
+              "starts",
+              "starting"
             ],
-            "answer": 3,
-            "explanation_cn": "ask sb to do sth 是固定结构，否定形式是 ask sb not to do sth。注意 not 要放在 to do 前面，不是 to not do。类似的还有 tell sb not to do, want sb not to do 等。",
-            "explanation_en": "'Ask sb to do sth' is a fixed pattern, and its negative form is 'ask sb not to do sth'. Note: 'not' comes before 'to do', not 'to not do'. Similar patterns: tell sb not to do, want sb not to do."
+            "answer": 0,
+            "explanation_cn": "over 2000 years ago 是过去时间，用过去式 started。"
           },
           {
             "id": "tue-mc4",
             "type": "choice",
-            "question": "___ of the students in our class ___ girls.",
+            "question": "In old times, soldiers ___ on the wall and watched for enemies.",
             "options": [
-              "Two-third; are",
-              "Two-thirds; are",
-              "Two-thirds; is",
-              "Two-third; is"
+              "stood",
+              "stand",
+              "stands",
+              "standing"
             ],
-            "answer": 1,
-            "explanation_cn": "分数表达：分子用基数词，分母用序数词，分子大于1时分母加 s。2/3 = two-thirds。主语 students 是复数，谓语用 are。注意 population 做主语时用单数，但分数+population 时谓语取决于上下文。",
-            "explanation_en": "Fraction expression: numerator uses cardinal number, denominator uses ordinal number, and when the numerator is greater than 1, the denominator takes 's'. 2/3 = two-thirds. The subject 'students' is plural, so the verb is 'are'."
+            "answer": 0,
+            "explanation_cn": "and 连接并列的过去动作，用 stood（stand 的过去式）。"
           },
           {
             "id": "tue-mc5",
             "type": "choice",
-            "question": "I don't know ___ tomorrow.",
+            "question": "___ visitors come to climb the Great Wall every year!",
             "options": [
-              "if will it rain",
-              "if it will rain",
-              "whether it rains",
-              "whether does it rain"
+              "Many",
+              "Much",
+              "A lot",
+              "Little"
+            ],
+            "answer": 0,
+            "explanation_cn": "visitors 是可数复数，用 Many；much 修饰不可数名词。"
+          },
+          {
+            "id": "tue-mc6",
+            "type": "choice",
+            "question": "The Great Wall is one of the greatest ___ in the world.",
+            "options": [
+              "wonders",
+              "wonder",
+              "wondering",
+              "wondered"
+            ],
+            "answer": 0,
+            "explanation_cn": "one of + 复数名词：最伟大的奇迹之一。"
+          },
+          {
+            "id": "tue-mc7",
+            "type": "choice",
+            "question": "We climbed the Great Wall ___ last summer.",
+            "options": [
+              "happy",
+              "happily",
+              "happyly",
+              "happiness"
             ],
             "answer": 1,
-            "explanation_cn": "宾语从句用陈述语序（主语+谓语），排除 A 和 D。tomorrow 表示将来时，用 will rain。if 和 whether 都可以引导宾语从句表示是否，但 if 更口语化。注意从句时态：主句现在时，从句可以用将来时。",
-            "explanation_en": "Object clauses use statement word order (subject + verb), eliminating A and D. 'Tomorrow' indicates future tense, so 'will rain' is used. Both 'if' and 'whether' can introduce object clauses meaning 'whether', but 'if' is more colloquial."
+            "explanation_cn": "修饰动词 climbed 用副词 happily（快乐的地）。"
+          },
+          {
+            "id": "tue-mc8",
+            "type": "choice",
+            "question": "___ long the Great Wall is!",
+            "options": [
+              "How",
+              "What",
+              "Where",
+              "Why"
+            ],
+            "answer": 0,
+            "explanation_cn": "How + 形容词：How long the Great Wall is!（多长啊！）"
+          },
+          {
+            "id": "tue-mc9",
+            "type": "choice",
+            "question": "The wall is in the ___ of China.",
+            "options": [
+              "north",
+              "northern",
+              "northward",
+              "northerner"
+            ],
+            "answer": 0,
+            "explanation_cn": "in the north of China：在北方，用名词 north。"
+          },
+          {
+            "id": "tue-mc10",
+            "type": "choice",
+            "question": "When you stand on it, you ___ see beautiful mountains.",
+            "options": [
+              "can",
+              "cans",
+              "is",
+              "are"
+            ],
+            "answer": 0,
+            "explanation_cn": "情态动词 can 后面用动词原形 see。"
           }
         ]
       }
@@ -788,7 +1321,7 @@ const WEEK1 = [
     "day_cn": "周三",
     "day_en": "Wednesday",
     "is_speaking_day": true,
-    "total_duration": 40,
+    "total_duration": 60,
     "theme_cn": "AI口语 + 高频词汇 + 阅读理解",
     "modules": [
       {
@@ -810,7 +1343,14 @@ const WEEK1 = [
             "answer": 0,
             "pronunciation_tips": "注意 usually 的发音 /ˈjuːʒuəli/，中间的 s 发 /ʒ/ 音；get up 连读时 t 弱化",
             "explanation_cn": "这题询问日常作息时间。回答用 I usually + 动词 + at + 时间。usually 是频度副词，放在实义动词前。注意时间表达：6:30 读作 six thirty 或 half past six。",
-            "explanation_en": "This question asks about daily routine time. Answer: I usually + verb + at + time. 'Usually' is an adverb of frequency placed before the main verb. Time expression: 6:30 can be read as 'six thirty' or 'half past six'."
+            "explanation_en": "This question asks about daily routine time. Answer: I usually + verb + at + time. 'Usually' is an adverb of frequency placed before the main verb. Time expression: 6:30 can be read as 'six thirty' or 'half past six'.",
+            "answer_cn_hint": "它在问「几点」，答句里一定要出现一个具体的时间，比如 at 6:30。",
+            "options_cn": [
+              "我通常早上六点半起床。",
+              "我正在吃早饭。",
+              "我喜欢睡觉。",
+              "现在是早上。"
+            ]
           },
           {
             "id": "wed-sp2",
@@ -825,7 +1365,14 @@ const WEEK1 = [
             "answer": 0,
             "pronunciation_tips": "注意 weather 的 th 发 /ð/（浊音），不要发成 /θ/；sunny 和 warm 之间停顿一下",
             "explanation_cn": "What's the weather like? 是询问天气的常用句型。回答用 It's + 天气形容词。常用天气词：sunny, cloudy, rainy, windy, snowy, foggy。注意 weather 不可数名词，不能用 a/an。",
-            "explanation_en": "'What's the weather like?' is a common pattern for asking about weather. Answer: It's + weather adjective. Common weather words: sunny, cloudy, rainy, windy, snowy, foggy. Note: 'weather' is an uncountable noun."
+            "explanation_en": "'What's the weather like?' is a common pattern for asking about weather. Answer: It's + weather adjective. Common weather words: sunny, cloudy, rainy, windy, snowy, foggy. Note: 'weather' is an uncountable noun.",
+            "answer_cn_hint": "它在问「天气怎么样」，答句要用 sunny、rainy、windy 这类词说天气。",
+            "options_cn": [
+              "今天晴朗又暖和。",
+              "我喜欢夏天。",
+              "我最喜欢的颜色是蓝色。",
+              "我不知道。"
+            ]
           },
           {
             "id": "wed-sp3",
@@ -840,7 +1387,14 @@ const WEEK1 = [
             "answer": 0,
             "pronunciation_tips": "注意 going to 的连读 /ɡənə/，vacation 美音 /veɪˈkeɪʃn/，英音 /vəˈkeɪʃn/",
             "explanation_cn": "这题用 be going to 结构询问暑假计划。be going to + 动词原形表示打算做某事。注意 this summer vacation 前面不用介词 in。回答时态要对应，用 be going to 结构。",
-            "explanation_en": "This question uses 'be going to' to ask about summer vacation plans. Structure: be going to + base verb means 'plan to do something'. Note: no preposition before 'this summer vacation'. The answer should match with 'be going to' structure."
+            "explanation_en": "This question uses 'be going to' to ask about summer vacation plans. Structure: be going to + base verb means 'plan to do something'. Note: no preposition before 'this summer vacation'. The answer should match with 'be going to' structure.",
+            "answer_cn_hint": "它在问「打算做什么」，答句要说将来的计划，用 be going to 或 will。",
+            "options_cn": [
+              "我打算去北京看望爷爷奶奶。",
+              "我去了公园。",
+              "我是一名学生。",
+              "我有一本书。"
+            ]
           },
           {
             "id": "wed-sp4",
@@ -855,7 +1409,14 @@ const WEEK1 = [
             "answer": 0,
             "pronunciation_tips": "注意 describe 的重音在第二音节 /dɪˈskraɪb/；tall 和 kind 之间稍作停顿",
             "explanation_cn": "这是描述人物的题。回答应包括外貌特征（tall, short, thin 等）和性格特点（kind, funny, smart 等）。常用句型：She/He is + 形容词. She/He has + 特征. describe 是动词，名词形式是 description。",
-            "explanation_en": "This is a person description question. Your answer should include physical appearance (tall, short, thin, etc.) and personality traits (kind, funny, smart, etc.). Common patterns: She/He is + adjective. She/He has + feature. 'Describe' is a verb; its noun form is 'description'."
+            "explanation_en": "This is a person description question. Your answer should include physical appearance (tall, short, thin, etc.) and personality traits (kind, funny, smart, etc.). Common patterns: She/He is + adjective. She/He has + feature. 'Describe' is a verb; its noun form is 'description'.",
+            "answer_cn_hint": "这是在请你说说好朋友长什么样、人怎么样，答句要有外貌或者性格。",
+            "options_cn": [
+              "当然！她又高又善良，留着长头发，总是帮助别人。",
+              "我有一只狗。",
+              "我的朋友在家。",
+              "我不喜欢她。"
+            ]
           },
           {
             "id": "wed-sp5",
@@ -870,7 +1431,14 @@ const WEEK1 = [
             "answer": 0,
             "pronunciation_tips": "注意 dumplings 的 /dʌm/ 音，delicious 重音在第二音节 /dɪˈlɪʃəs/，注意 ci 发 /ʃ/",
             "explanation_cn": "这题询问喜欢的食物及原因。回答格式：My favorite food is + 食物 + because + 原因。常用原因词：delicious（美味的）, healthy（健康的）, sweet（甜的）。注意 food 不可数，但具体食物名称如 dumplings 可数。",
-            "explanation_en": "This question asks about favorite food and the reason. Answer format: My favorite food is + food + because + reason. Common reason words: delicious, healthy, sweet. Note: 'food' is uncountable, but specific food names like 'dumplings' are countable."
+            "explanation_en": "This question asks about favorite food and the reason. Answer format: My favorite food is + food + because + reason. Common reason words: delicious, healthy, sweet. Note: 'food' is uncountable, but specific food names like 'dumplings' are countable.",
+            "answer_cn_hint": "它问了两件事：最喜欢的食物 + 为什么，答句最好两样都有（…because…）。",
+            "options_cn": [
+              "我最喜欢的食物是饺子，因为它们很好吃。",
+              "我饿了。",
+              "我在学校吃午饭。",
+              "食物很重要。"
+            ]
           }
         ]
       },
@@ -965,7 +1533,8 @@ const WEEK1 = [
               "ad",
               "ven",
               "ture"
-            ]
+            ],
+            "hint_cn": "去陌生的地方走一走，路上又惊又好玩"
           },
           {
             "word": "imagine",
@@ -1050,7 +1619,8 @@ const WEEK1 = [
               "i",
               "ma",
               "gine"
-            ]
+            ],
+            "hint_cn": "闭上眼睛，在脑子里“看见”从来没去过的地方"
           },
           {
             "word": "protect",
@@ -1134,7 +1704,8 @@ const WEEK1 = [
             "syllables": [
               "pro",
               "tect"
-            ]
+            ],
+            "hint_cn": "挡在前面，不让它受伤害"
           },
           {
             "word": "success",
@@ -1218,7 +1789,8 @@ const WEEK1 = [
             "syllables": [
               "suc",
               "cess"
-            ]
+            ],
+            "hint_cn": "努力以后，事情办成了"
           },
           {
             "word": "explore",
@@ -1302,7 +1874,8 @@ const WEEK1 = [
             "syllables": [
               "ex",
               "plore"
-            ]
+            ],
+            "hint_cn": "走进没去过的地方，看看里面到底有什么"
           }
         ]
       },
@@ -1310,51 +1883,320 @@ const WEEK1 = [
         "id": "wed-reading",
         "name_cn": "阅读理解",
         "type": "reading",
-        "duration": 5,
-        "passage": "David is a 12-year-old boy who loves science. His dream is to become an astronaut and travel to space. Every week, he reads books about planets and stars. His science teacher, Mr. Brown, encourages him to study hard. Last summer, David visited a space museum with his class. He saw real rockets and spacesuits there. It was the most exciting day of his life.",
-        "passage_cn": "大卫是一个12岁的男孩，热爱科学。他的梦想是成为一名宇航员去太空旅行。每周他都读关于行星和恒星的书。他的科学老师布朗先生鼓励他努力学习。去年夏天，大卫和全班同学参观了太空博物馆。他在那里看到了真正的火箭和宇航服。那是他一生中最激动人心的一天。",
+        "duration": 10,
+        "passage": "Giant pandas are one of the most loved animals in China. They have black and white fur and look very cute. Pandas live in the bamboo forests of Sichuan. They spend most of their day eating bamboo — about twelve hours a day! A baby panda is very, very small. It is only about 100 grams at birth, lighter than a cup of water. Pandas are good at climbing trees and swimming. Now there are panda bases in Sichuan, and scientists there help baby pandas grow up well.",
+        "passage_cn": "大熊猫是中国最受喜爱的动物之一。它们长着黑白相间的毛，看起来非常可爱。大熊猫生活在四川的竹林里。它们一天中大部分时间都在吃竹子——每天大约要吃十二个小时！熊猫宝宝非常非常小。出生时只有大约100克，比一杯水还轻。大熊猫擅长爬树和游泳。现在四川建有大熊猫基地，那里的科学家帮助熊猫宝宝健康成长。",
         "questions": [
           {
             "id": "wed-rd1",
             "type": "choice",
-            "question": "What does David want to be?",
+            "question": "What colour is a panda's fur?",
             "options": [
-              "A teacher",
-              "An astronaut",
-              "A doctor",
-              "A football player"
+              "Black and white",
+              "All white",
+              "Brown and yellow",
+              "All black"
             ],
-            "answer": 1,
-            "explanation_cn": "文章说 His dream is to become an astronaut and travel to space。大卫的梦想是成为宇航员。astronaut 意为宇航员，注意该词的拼写和发音 /ˈæstrənɔːt/。",
-            "explanation_en": "The text says 'His dream is to become an astronaut and travel to space.' 'Astronaut' means a person who travels in space. Note the pronunciation /ˈæstrənɔːt/."
+            "answer": 0,
+            "explanation_cn": "第一段：black and white fur（黑白相间的毛）。"
           },
           {
             "id": "wed-rd2",
             "type": "choice",
-            "question": "What did David see at the space museum?",
+            "question": "Where do pandas live?",
             "options": [
-              "Books and pencils",
-              "Rockets and spacesuits",
-              "Animals and plants",
-              "Movies and games"
+              "In the bamboo forests of Sichuan",
+              "In the deserts",
+              "Near the sea",
+              "In big cities"
             ],
-            "answer": 1,
-            "explanation_cn": "文章说 He saw real rockets and spacesuits there。他在太空博物馆看到了真正的火箭和宇航服。real 意为真正的，rockets 意为火箭，spacesuits 意为宇航服。",
-            "explanation_en": "The text says 'He saw real rockets and spacesuits there.' 'Real' means actual, not fake. 'Rockets' are space vehicles, and 'spacesuits' are special suits for astronauts."
+            "answer": 0,
+            "explanation_cn": "第二句：pandas live in the bamboo forests of Sichuan（四川竹林）。"
           },
           {
             "id": "wed-rd3",
             "type": "choice",
-            "question": "How did David feel about the museum visit?",
+            "question": "How long do pandas eat bamboo every day?",
             "options": [
-              "Bored",
-              "Excited",
-              "Scared",
-              "Tired"
+              "About two hours",
+              "About five hours",
+              "About twelve hours",
+              "About twenty hours"
+            ],
+            "answer": 2,
+            "explanation_cn": "它们每天大约花十二个小时吃竹子。"
+          },
+          {
+            "id": "wed-rd4",
+            "type": "choice",
+            "question": "How heavy is a baby panda at birth?",
+            "options": [
+              "About 100 grams",
+              "About 1 kilogram",
+              "About 10 kilograms",
+              "About 100 kilograms"
+            ],
+            "answer": 0,
+            "explanation_cn": "出生时只有约 100 克，比一杯水还轻。"
+          },
+          {
+            "id": "wed-rd5",
+            "type": "choice",
+            "question": "What are pandas good at?",
+            "options": [
+              "Climbing trees and swimming",
+              "Running very fast",
+              "Jumping very high",
+              "Singing and dancing"
+            ],
+            "answer": 0,
+            "explanation_cn": "文中说熊猫擅长爬树（climbing trees）和游泳（swimming）。"
+          },
+          {
+            "id": "wed-rd6",
+            "type": "choice",
+            "question": "Who helps baby pandas grow up well?",
+            "options": [
+              "Scientists in the panda bases",
+              "Farmers in the north",
+              "Teachers at school",
+              "Doctors in hospitals"
+            ],
+            "answer": 0,
+            "explanation_cn": "熊猫基地的科学家帮助熊猫宝宝长大。"
+          },
+          {
+            "id": "wed-rd7",
+            "type": "choice",
+            "question": "Why do people love pandas?",
+            "options": [
+              "They look very cute.",
+              "They can talk.",
+              "They are very big.",
+              "They can fly."
+            ],
+            "answer": 0,
+            "explanation_cn": "第一句说熊猫是最受喜爱的动物之一，因为长得可爱。"
+          },
+          {
+            "id": "wed-rd8",
+            "type": "choice",
+            "question": "What do pandas mostly eat?",
+            "options": [
+              "Bamboo",
+              "Meat",
+              "Fish",
+              "Rice"
+            ],
+            "answer": 0,
+            "explanation_cn": "它们大部分时间在吃竹子（bamboo）。"
+          },
+          {
+            "id": "wed-rd9",
+            "type": "choice",
+            "question": "A baby panda at birth is lighter than ___.",
+            "options": [
+              "a cup of water",
+              "a school bag",
+              "a big dog",
+              "an adult panda"
+            ],
+            "answer": 0,
+            "explanation_cn": "文中说它比一杯水还轻（lighter than a cup of water）。"
+          },
+          {
+            "id": "wed-rd10",
+            "type": "choice",
+            "question": "The best title for the panda passage is ___.",
+            "options": [
+              "Bamboo in Sichuan",
+              "Cute Giant Pandas",
+              "Animals in the Zoo",
+              "Scientists at Work"
             ],
             "answer": 1,
-            "explanation_cn": "文章最后一句说 It was the most exciting day of his life。这是他一生中最激动人心的一天。exciting 意为令人激动的，注意 exciting（令人激动的）和 excited（感到激动的）的区别。",
-            "explanation_en": "The last sentence says 'It was the most exciting day of his life.' 'Exciting' means causing excitement. Note the difference: 'exciting' describes something that causes excitement, while 'excited' describes how someone feels."
+            "explanation_cn": "全文介绍大熊猫的样子、食物、宝宝和熊猫基地。"
+          }
+        ]
+      },
+      {
+        "id": "wed-mc",
+        "name_cn": "单项选择",
+        "type": "multiple_choice",
+        "duration": 10,
+        "questions": [
+          {
+            "id": "wed-mc1",
+            "type": "choice",
+            "question": "The panda ___ black and white fur.",
+            "options": [
+              "has",
+              "have",
+              "having",
+              "is have"
+            ],
+            "answer": 0,
+            "explanation_cn": "主语 the panda 是第三人称单数，动词用 has。"
+          },
+          {
+            "id": "wed-mc2",
+            "type": "choice",
+            "question": "Pandas live ___ the bamboo forests of Sichuan.",
+            "options": [
+              "in",
+              "on",
+              "under",
+              "at"
+            ],
+            "answer": 0,
+            "explanation_cn": "「在竹林里」用 in the bamboo forests。"
+          },
+          {
+            "id": "wed-mc3",
+            "type": "choice",
+            "question": "A baby panda is only about 100 grams at ___.",
+            "options": [
+              "birth",
+              "school",
+              "lunch",
+              "work"
+            ],
+            "answer": 0,
+            "explanation_cn": "「出生时」说 at birth，是固定搭配。"
+          },
+          {
+            "id": "wed-mc4",
+            "type": "choice",
+            "question": "Pandas spend most of their day ___ bamboo.",
+            "options": [
+              "eating",
+              "eat",
+              "ate",
+              "eats"
+            ],
+            "answer": 0,
+            "explanation_cn": "spend time doing sth：spend 后面动词用 -ing 形式。"
+          },
+          {
+            "id": "wed-mc5",
+            "type": "choice",
+            "question": "Pandas are good at ___ trees.",
+            "options": [
+              "climbing",
+              "climb",
+              "climbed",
+              "climbs"
+            ],
+            "answer": 0,
+            "explanation_cn": "be good at doing sth：at 后面用动名词 climbing。"
+          },
+          {
+            "id": "wed-mc6",
+            "type": "choice",
+            "question": "___ lovely the pandas are!",
+            "options": [
+              "How",
+              "What",
+              "Where",
+              "When"
+            ],
+            "answer": 0,
+            "explanation_cn": "How + 形容词 + 主语 + 谓语：How lovely the pandas are!"
+          },
+          {
+            "id": "wed-mc7",
+            "type": "choice",
+            "question": "There ___ a panda base in Sichuan.",
+            "options": [
+              "is",
+              "are",
+              "am",
+              "be"
+            ],
+            "answer": 0,
+            "explanation_cn": "a panda base 是单数，There be 用 is。"
+          },
+          {
+            "id": "wed-mc8",
+            "type": "choice",
+            "question": "Pandas can ___ trees very well.",
+            "options": [
+              "climb",
+              "climbs",
+              "climbing",
+              "climbed"
+            ],
+            "answer": 0,
+            "explanation_cn": "情态动词 can 后面用动词原形 climb。"
+          },
+          {
+            "id": "wed-mc9",
+            "type": "choice",
+            "question": "The panda is one of the most ___ animals in China.",
+            "options": [
+              "loved",
+              "love",
+              "loving",
+              "loves"
+            ],
+            "answer": 0,
+            "explanation_cn": "one of the most loved animals：最受喜爱的动物之一，用 loved。"
+          },
+          {
+            "id": "wed-mc10",
+            "type": "choice",
+            "question": "Scientists in the bases help baby pandas ___ up well.",
+            "options": [
+              "grow",
+              "grows",
+              "growing",
+              "grew"
+            ],
+            "answer": 0,
+            "explanation_cn": "help sb do sth：help 后面用动词原形 grow。"
+          }
+        ]
+      },
+      {
+        "id": "wed-tense2",
+        "name_cn": "时态练习",
+        "type": "tense",
+        "duration": 5,
+        "questions": [
+          {
+            "id": "wed-tn21",
+            "type": "fill",
+            "question": "The panda ___ (spend) twelve hours a day eating. [填入正确形式]",
+            "answer": "spends",
+            "explanation_cn": "主语三单，一般现在时动词加 s。"
+          },
+          {
+            "id": "wed-tn22",
+            "type": "fill",
+            "question": "We ___ (see) the baby panda at the base last May. [填入正确形式]",
+            "answer": "saw",
+            "explanation_cn": "last May 过去时间，see 的过去式是 saw。"
+          },
+          {
+            "id": "wed-tn23",
+            "type": "fill",
+            "question": "Scientists ___ (help) pandas since 1963. [填入正确形式]",
+            "answer": "have helped",
+            "explanation_cn": "since 1963 与现在完成时连用。"
+          },
+          {
+            "id": "wed-tn24",
+            "type": "fill",
+            "question": "Look! The panda ___ (climb) the tree. [填入正确形式]",
+            "answer": "is climbing",
+            "explanation_cn": "Look! 提示正在进行，用 is climbing。"
+          },
+          {
+            "id": "wed-tn25",
+            "type": "fill",
+            "question": "Pandas ___ (not eat) meat often. [填入正确形式]",
+            "answer": "don't eat",
+            "explanation_cn": "主语复数，否定用 don't + 动词原形。"
           }
         ]
       }
@@ -1377,70 +2219,141 @@ const WEEK1 = [
             "id": "thu-ls1",
             "type": "choice",
             "question": "听到的句子是什么？",
-            "audio_text": "I usually have breakfast at seven o'clock.",
+            "audio_text": "The Great Wall is in the north of China.",
             "options": [
-              "I usually have breakfast at seven o'clock.",
-              "I usually have lunch at seven o'clock.",
-              "I usually have dinner at seven o'clock.",
-              "I usually have breakfast at six o'clock."
+              "The Great Wall is in the north of China.",
+              "The Great Wall is in the south of China.",
+              "The Great Wall is in the east of China.",
+              "The Great Wall is in the west of China."
             ],
             "answer": 0,
-            "explanation_cn": "听力关键词：breakfast（早餐）和 seven o'clock（七点）。注意区分 breakfast/lunch/dinner 的发音。breakfast /ˈbrekfəst/，lunch /lʌntʃ/，dinner /ˈdɪnə/。听的时候要抓住关键信息。",
-            "explanation_en": "Key listening words: 'breakfast' and 'seven o\\'clock'. Note the difference in pronunciation: breakfast /ˈbrekfəst/, lunch /lʌntʃ/, dinner /ˈdɪnə/. Focus on key information when listening."
+            "explanation_cn": "听到的是 north（北方），注意区分 north / south / east / west。"
           },
           {
             "id": "thu-ls2",
             "type": "choice",
             "question": "听到的句子是什么？",
-            "audio_text": "She is wearing a red dress today.",
+            "audio_text": "It is more than 20000 kilometres long.",
             "options": [
-              "She is wearing a red dress today.",
-              "She is wearing a red skirt today.",
-              "She is wearing a blue dress today.",
-              "She is wearing a red hat today."
+              "It is more than 20000 kilometres long.",
+              "It is more than 2000 kilometres long.",
+              "It is more than 200 kilometres long.",
+              "It is less than 20000 kilometres long."
             ],
             "answer": 0,
-            "explanation_cn": "听力关键词：wearing（穿着），red（红色），dress（裙子）。注意 dress 和 skirt 的区别：dress 是连衣裙，skirt 是半身裙。wearing 的发音 /ˈweərɪŋ/，注意 ing 的鼻音。",
-            "explanation_en": "Key words: 'wearing', 'red', 'dress'. Note the difference: 'dress' is a one-piece garment, 'skirt' is a separate bottom. 'Wearing' is pronounced /ˈweərɪŋ/ with a nasal ending."
+            "explanation_cn": "数字题：20000（两万），别听成 2000 或 200；注意 more than 和 less than。"
           },
           {
             "id": "thu-ls3",
             "type": "choice",
             "question": "听到的句子是什么？",
-            "audio_text": "The library is next to the post office.",
+            "audio_text": "People started to build it over 2000 years ago.",
             "options": [
-              "The library is next to the post office.",
-              "The library is behind the post office.",
-              "The bank is next to the post office.",
-              "The library is next to the school."
+              "People started to build it over 2000 years ago.",
+              "People started to build it over 200 years ago.",
+              "People stopped building it 2000 years ago.",
+              "People finished building it last year."
             ],
             "answer": 0,
-            "explanation_cn": "听力关键词：library（图书馆），next to（紧挨着），post office（邮局）。注意 next to 和 behind 的区别：next to 是旁边，behind 是后面。library 的发音注意 /ˈlaɪbrəri/。",
-            "explanation_en": "Key words: 'library', 'next to', 'post office'. Note: 'next to' means beside, 'behind' means at the back. Library pronunciation: /ˈlaɪbrəri/."
+            "explanation_cn": "started（开始）和 stopped（停止）发音相近要分清；数字是 2000 多年前。"
           },
           {
             "id": "thu-ls4",
-            "type": "fill",
-            "question": "听到的数字是什么？",
-            "audio_text": "There are forty-eight students in our class.",
-            "answer": "48",
-            "explanation_cn": "听力数字：forty-eight (48)。注意英语数字的构成：40 是 forty（不是 fourty），8 是 eight。连读时 forty-eight 中 y 和 e 之间有轻微过渡音。注意区分 fourteen (14) 和 forty (40) 的发音。",
-            "explanation_en": "Number: forty-eight (48). Note: 40 is spelled 'forty' (not 'fourty'), 8 is 'eight'. Distinguish between 'fourteen' (14) /ˌfɔːˈtiːn/ and 'forty' (40) /ˈfɔːti/ by stress and vowel length."
+            "type": "choice",
+            "question": "听到的句子是什么？",
+            "audio_text": "Soldiers stood on the wall and watched for enemies.",
+            "options": [
+              "Soldiers stood on the wall and watched for enemies.",
+              "Soldiers played on the wall and sang songs.",
+              "Soldiers slept on the wall at night.",
+              "Soldiers cooked dinner on the wall."
+            ],
+            "answer": 0,
+            "explanation_cn": "关键词 stood（站立）和 watched（瞭望），别听成 played 或 slept。"
           },
           {
             "id": "thu-ls5",
             "type": "choice",
             "question": "听到的句子是什么？",
-            "audio_text": "Would you like something to drink?",
+            "audio_text": "Many visitors come to climb the Great Wall every year.",
             "options": [
-              "Would you like something to drink?",
-              "Would you like something to eat?",
-              "Do you want something to drink?",
-              "Could you give me something to drink?"
+              "Many visitors come to climb the Great Wall every year.",
+              "Many visitors come to climb the mountain every week.",
+              "Many students come to clean the Great Wall.",
+              "Few visitors come to the Great Wall."
             ],
             "answer": 0,
-            "explanation_cn": "听力关键句型：Would you like something to drink? 这是一句礼貌的询问。Would you like 比 Do you want 更客气。something to drink 意为喝的东西。注意 something 的发音 /ˈsʌmθɪŋ/，th 发 /θ/。",
-            "explanation_en": "Key pattern: 'Would you like something to drink?' This is a polite offer. 'Would you like' is more polite than 'Do you want'. 'Something to drink' means a beverage. 'Something' is pronounced /ˈsʌmθɪŋ/ with /θ/."
+            "explanation_cn": "主语是 visitors（游客），动词是 climb（爬），时间是 every year。"
+          },
+          {
+            "id": "thu-ls6",
+            "type": "choice",
+            "question": "听到的句子是什么？",
+            "audio_text": "When you stand on it, you can see beautiful mountains.",
+            "options": [
+              "When you stand on it, you can see beautiful mountains.",
+              "When you stand on it, you can see a long river.",
+              "When you sit on it, you can see beautiful flowers.",
+              "When you stand under it, you can see tall buildings."
+            ],
+            "answer": 0,
+            "explanation_cn": "stand（站）和 sit（坐）要分清；看到的是 mountains（山）。"
+          },
+          {
+            "id": "thu-ls7",
+            "type": "choice",
+            "question": "听到的句子是什么？",
+            "audio_text": "The wall looks like a huge dragon.",
+            "options": [
+              "The wall looks like a huge dragon.",
+              "The wall looks like a long snake.",
+              "The wall sounds like a big drum.",
+              "The wall looks like a small bridge."
+            ],
+            "answer": 0,
+            "explanation_cn": "looks like（看起来像）a huge dragon（巨龙）。"
+          },
+          {
+            "id": "thu-ls8",
+            "type": "choice",
+            "question": "听到的句子是什么？",
+            "audio_text": "We took a bus to the Great Wall last Sunday.",
+            "options": [
+              "We took a bus to the Great Wall last Sunday.",
+              "We took a train to the Great Wall last Sunday.",
+              "We took a bus to the Summer Palace last Sunday.",
+              "We walked to the Great Wall last Sunday."
+            ],
+            "answer": 0,
+            "explanation_cn": "交通工具是 took a bus（坐公交），地点是 the Great Wall。"
+          },
+          {
+            "id": "thu-ls9",
+            "type": "choice",
+            "question": "听到的句子是什么？",
+            "audio_text": "Climbing the Great Wall makes me feel proud.",
+            "options": [
+              "Climbing the Great Wall makes me feel proud.",
+              "Climbing the Great Wall makes me feel tired.",
+              "Climbing the mountain makes me feel proud.",
+              "Drawing the Great Wall makes me feel happy."
+            ],
+            "answer": 0,
+            "explanation_cn": "feel proud（感到自豪），别听成 tired（累）。"
+          },
+          {
+            "id": "thu-ls10",
+            "type": "choice",
+            "question": "听到的句子是什么？",
+            "audio_text": "The old wall tells us a long story.",
+            "options": [
+              "The old wall tells us a long story.",
+              "The old man tells us a long story.",
+              "The old wall tells us a short story.",
+              "The old book tells us a long story."
+            ],
+            "answer": 0,
+            "explanation_cn": "主语是 the old wall（古老的城墙），不是 the old man。"
           }
         ]
       },
@@ -1449,77 +2362,137 @@ const WEEK1 = [
         "name_cn": "完形填空",
         "type": "cloze",
         "duration": 10,
-        "passage": "Last Sunday, Lisa went to the zoo with her family. She saw many 1___ there. First, they visited the monkeys. The monkeys were 2___ from tree to tree. Then they went to see the 3___. The elephants were very big and strong. Lisa's favorite animal is the 4___ because it has a long neck. At noon, they had a picnic 5___ a big tree. It was a wonderful day.",
+        "passage": "China is the home 1___ tea. People in China started to drink tea long, long ago. In the past, people 2___ tea leaves to many countries along the old roads. That road is 3___ the Tea Road today. There are many 4___ of tea in China, like green tea and black tea. Green tea is 5___ in Hangzhou and other warm places. Most Chinese people like to 6___ hot tea, not cold tea. When guests come to a Chinese home, the host always 7___ them a cup of tea. It is a way to show welcome and 8___. People also say that drinking tea is good for 9___. Next time you visit a Chinese family, remember to 10___ the tea. It carries a long history and a warm heart.",
         "questions": [
           {
             "id": "thu-cz1",
             "type": "choice",
             "question": "1___",
             "options": [
-              "animals",
-              "books",
-              "friends",
-              "teachers"
+              "of",
+              "to",
+              "at",
+              "in"
             ],
             "answer": 0,
-            "explanation_cn": "上下文是去动物园（zoo），所以看到的是动物（animals）。注意 zoo 意为动物园，animal 意为动物。many 后面接可数名词复数，所以用 animals。",
-            "explanation_en": "The context is visiting a zoo, so they saw 'animals'. 'Zoo' means a place where animals are kept. 'Many' is followed by plural countable nouns, so 'animals'."
+            "explanation_cn": "the home of tea：茶的故乡，of 表示所属。"
           },
           {
             "id": "thu-cz2",
             "type": "choice",
             "question": "2___",
             "options": [
-              "jumping",
-              "reading",
-              "sleeping",
-              "writing"
+              "carried",
+              "drank",
+              "ate",
+              "drew"
             ],
             "answer": 0,
-            "explanation_cn": "猴子在树间跳跃，用 jumping。from tree to tree 意为从一棵树到另一棵树。jump 意为跳跃，jumping 是现在分词表示正在进行的动作。注意猴子（monkey）的天性是跳跃。",
-            "explanation_en": "Monkeys jump from tree to tree, so 'jumping' is correct. 'From tree to tree' means between trees. 'Jumping' is the present participle showing ongoing action. Monkeys are naturally active and jump around."
+            "explanation_cn": "把茶叶「运」到别的国家用 carried（carry 的过去式）。"
           },
           {
             "id": "thu-cz3",
             "type": "choice",
             "question": "3___",
             "options": [
-              "elephants",
-              "pencils",
-              "computers",
-              "desks"
+              "called",
+              "asked",
+              "told",
+              "sang"
             ],
             "answer": 0,
-            "explanation_cn": "后一句说 The elephants were very big and strong，所以这里填 elephants。elephant 意为大象，注意拼写 e-l-e-p-h-a-n-t。big and strong 意为大而强壮。",
-            "explanation_en": "The next sentence says 'The elephants were very big and strong', so the answer is 'elephants'. Note the spelling: e-l-e-p-h-a-n-t. 'Big and strong' means large in size and powerful."
+            "explanation_cn": "那条路「被叫做」Tea Road，用 is called。"
           },
           {
             "id": "thu-cz4",
             "type": "choice",
             "question": "4___",
             "options": [
-              "giraffe",
-              "tiger",
-              "fish",
-              "bird"
+              "kinds",
+              "pieces",
+              "boxes",
+              "glasses"
             ],
             "answer": 0,
-            "explanation_cn": "有长脖子（long neck）的动物是长颈鹿（giraffe）。giraffe 意为长颈鹿，注意拼写和发音 /dʒəˈrɑːf/。a long neck 意为长脖子。",
-            "explanation_en": "The animal with a long neck is the 'giraffe'. Note the spelling and pronunciation /dʒəˈrɑːf/. 'A long neck' means a lengthy neck, which is the giraffe's most distinctive feature."
+            "explanation_cn": "many kinds of tea：许多种茶，kinds 意思是「种类」。"
           },
           {
             "id": "thu-cz5",
             "type": "choice",
             "question": "5___",
             "options": [
-              "under",
-              "on",
-              "in",
-              "above"
+              "grown",
+              "eaten",
+              "drawn",
+              "thrown"
             ],
             "answer": 0,
-            "explanation_cn": "在大树下野餐用 under a big tree。under 意为在...下面。注意区分：on 在...上面，in 在...里面，above 在...上方（不接触），under 在...正下方。picnic 意为野餐。",
-            "explanation_en": "Having a picnic under a tree uses 'under'. 'Under' means directly below something. Note: 'on' = on top of, 'in' = inside, 'above' = higher than (not touching), 'under' = directly below. 'Picnic' means an outdoor meal."
+            "explanation_cn": "茶「种植」在杭州等温暖的地方，用 grown（grow 的过去分词）。"
+          },
+          {
+            "id": "thu-cz6",
+            "type": "choice",
+            "question": "6___",
+            "options": [
+              "drink",
+              "eat",
+              "cook",
+              "wash"
+            ],
+            "answer": 0,
+            "explanation_cn": "喝热茶用 drink hot tea。"
+          },
+          {
+            "id": "thu-cz7",
+            "type": "choice",
+            "question": "7___",
+            "options": [
+              "gives",
+              "give",
+              "giving",
+              "gave"
+            ],
+            "answer": 0,
+            "explanation_cn": "主语 the host 是第三人称单数，一般现在时动词加 s：gives。"
+          },
+          {
+            "id": "thu-cz8",
+            "type": "choice",
+            "question": "8___",
+            "options": [
+              "love",
+              "money",
+              "sleep",
+              "cold"
+            ],
+            "answer": 0,
+            "explanation_cn": "show welcome and love：表达欢迎和喜爱。"
+          },
+          {
+            "id": "thu-cz9",
+            "type": "choice",
+            "question": "9___",
+            "options": [
+              "health",
+              "homework",
+              "sports",
+              "music"
+            ],
+            "answer": 0,
+            "explanation_cn": "be good for health：对健康有好处。"
+          },
+          {
+            "id": "thu-cz10",
+            "type": "choice",
+            "question": "10___",
+            "options": [
+              "enjoy",
+              "throw",
+              "forget",
+              "leave"
+            ],
+            "answer": 0,
+            "explanation_cn": "remember to do sth：记得去享受这杯茶，用 enjoy。"
           }
         ]
       },
@@ -1532,48 +2505,72 @@ const WEEK1 = [
           {
             "id": "thu-tn1",
             "type": "fill",
-            "question": "I ___ (visit) my grandmother last Sunday. [填入正确形式]",
-            "answer": "visited",
-            "explanation_cn": "last Sunday 是过去时间标志词，用一般过去时。visit 的过去式是 visited（直接加 ed）。注意规则动词过去式变化：一般加 ed，以 e 结尾加 d，辅音+y 变 y 为 i 加 ed，重读闭音节双写末尾辅音加 ed。",
-            "explanation_en": "'Last Sunday' is a past time marker, so we use the simple past tense. The past form of 'visit' is 'visited' (add -ed). Regular verb past tense rules: add -ed; if ending in 'e', add -d; consonant+y changes to -ied; double the final consonant for stressed closed syllables."
+            "question": "I ___ (drink) a cup of green tea yesterday. [填入正确形式]",
+            "answer": "drank",
+            "explanation_cn": "yesterday 是过去时间标志，drink 的过去式是 drank（不规则变化）。"
           },
           {
             "id": "thu-tn2",
             "type": "fill",
-            "question": "Look! The children ___ (play) football on the playground. [填入正确形式]",
-            "answer": "are playing",
-            "explanation_cn": "Look! 是现在进行时标志词，表示正在发生的动作。结构：be + doing。children 是复数，用 are playing。注意 Look! / Listen! / now / at the moment 等都是现在进行时标志词。",
-            "explanation_en": "'Look!' is a present continuous tense marker, indicating an action happening now. Structure: be + verb-ing. 'Children' is plural, so 'are playing'. Markers: Look!, Listen!, now, at the moment all indicate present continuous."
+            "question": "China ___ (be) the home of tea for thousands of years. [填入正确形式]",
+            "answer": "has been",
+            "explanation_cn": "for thousands of years 表示延续到现在，用现在完成时 has been。"
           },
           {
             "id": "thu-tn3",
             "type": "fill",
-            "question": "My father ___ (work) in this factory since 2010. [填入正确形式]",
-            "answer": "has worked",
-            "explanation_cn": "since 2010 是现在完成时标志词，表示从过去持续到现在。结构：have/has + 过去分词。主语 My father 是第三人称单数，用 has worked。注意 since + 时间点，for + 时间段。",
-            "explanation_en": "'Since 2010' is a present perfect tense marker, indicating an action from the past continuing to now. Structure: have/has + past participle. 'My father' is third person singular, so 'has worked'. Note: 'since' + point in time, 'for' + period of time."
+            "question": "Look! The old man ___ (make) tea in the garden. [填入正确形式]",
+            "answer": "is making",
+            "explanation_cn": "Look! 提示动作正在进行，用现在进行时 is making。"
           },
           {
             "id": "thu-tn4",
             "type": "fill",
-            "question": "We ___ (have) an English test tomorrow. [填入正确形式]",
-            "answer": "will have",
-            "explanation_cn": "tomorrow 是将来时间标志词，用一般将来时 will + 动词原形。也可以用 be going to have。注意 will 后面接动词原形，不要写成 will to have。will 可以缩写为 'll。",
-            "explanation_en": "'Tomorrow' is a future time marker, using the simple future tense: will + base verb. 'Be going to have' is also acceptable. Note: 'will' is followed by the base form of the verb, not 'to + verb'. 'Will' can be contracted to ''ll'."
+            "question": "My grandpa often ___ (tell) me stories about the Tea Road. [填入正确形式]",
+            "answer": "tells",
+            "explanation_cn": "often 表示经常，主语是三单，动词用 tells。"
           },
           {
             "id": "thu-tn5",
-            "type": "choice",
-            "question": "By the time he arrived, the train ___.",
-            "options": [
-              "left",
-              "has left",
-              "had left",
-              "was leaving"
-            ],
-            "answer": 2,
-            "explanation_cn": "By the time + 过去时，主句用过去完成时 had + 过去分词。表示在过去的某个时间点之前已经完成的动作。arrived 是过去时，火车离开发生在到达之前，所以用 had left。过去完成时表示过去的过去。",
-            "explanation_en": "With 'By the time' + past tense, the main clause uses the past perfect: had + past participle. It shows an action completed before a past time. 'Arrived' is past tense; the train leaving happened before arriving, so 'had left'. Past perfect = the past of the past."
+            "type": "fill",
+            "question": "People ___ (start) to grow tea in China long ago. [填入正确形式]",
+            "answer": "started",
+            "explanation_cn": "long ago 是过去时间，用过去式 started。"
+          },
+          {
+            "id": "thu-tn6",
+            "type": "fill",
+            "question": "We ___ (visit) a tea museum next Sunday. [填入正确形式]",
+            "answer": "will visit",
+            "explanation_cn": "next Sunday 是将来时间，用一般将来时 will visit。"
+          },
+          {
+            "id": "thu-tn7",
+            "type": "fill",
+            "question": "The host ___ (give) us some tea just now. [填入正确形式]",
+            "answer": "gave",
+            "explanation_cn": "just now 刚才，用过去式 gave（give 的过去式）。"
+          },
+          {
+            "id": "thu-tn8",
+            "type": "fill",
+            "question": "Tea ___ (grow) in warm places. [填入正确形式]",
+            "answer": "is grown",
+            "explanation_cn": "茶是被种植的，用一般现在时的被动语态 is grown。"
+          },
+          {
+            "id": "thu-tn9",
+            "type": "fill",
+            "question": "While mom ___ (boil) the water, I washed the cups. [填入正确形式]",
+            "answer": "was boiling",
+            "explanation_cn": "while 引导的过去进行：while + was boiling（正在烧水）。"
+          },
+          {
+            "id": "thu-tn10",
+            "type": "fill",
+            "question": "Remember ___ (bring) a teacup to school tomorrow. [填入正确形式]",
+            "answer": "to bring",
+            "explanation_cn": "remember to do sth：记得要带（还没做），用 to bring。"
           }
         ]
       }
@@ -1583,7 +2580,7 @@ const WEEK1 = [
     "day_cn": "周五",
     "day_en": "Friday",
     "is_speaking_day": false,
-    "total_duration": 30,
+    "total_duration": 40,
     "theme_cn": "模板写作 + KET/PET题型 + 语法复习",
     "modules": [
       {
@@ -1591,129 +2588,221 @@ const WEEK1 = [
         "name_cn": "写作练习",
         "type": "writing_template",
         "duration": 15,
-        "title": "My Best Friend",
+        "title": "Making Dumplings",
         "requirement_cn": "请根据关键词提示完成作文，完成后请背诵全文。明天将进行挖空默写测试！",
         "keywords": [
-          "best friend",
-          "tall and kind",
-          "play together",
-          "help each other",
-          "happy"
+          "dumplings",
+          "wash the vegetables",
+          "make the filling",
+          "wrap the dumplings",
+          "delicious"
         ],
         "keywords_cn": [
-          "最好的朋友",
-          "又高又善良",
-          "一起玩",
-          "互相帮助",
-          "开心的"
+          "饺子",
+          "洗菜",
+          "调馅",
+          "包饺子",
+          "美味的"
         ],
-        "template": "My {{1}} is Tom. He is very {{2}}. We often {{3}} after school. We always {{4}} with our homework. I feel very {{5}} when I am with him.",
+        "template": "My family often makes {{1}} on winter weekends. First, we {{2}}. Then we {{3}} together. After that, we sit around the table and {{4}}. The dumplings taste very {{5}}.",
         "blanks": [
           {
             "id": 1,
-            "hint_cn": "最好的朋友",
-            "hint_en": "best friend",
-            "answer": "best friend"
+            "hint_cn": "饺子",
+            "hint_en": "dumplings",
+            "answer": "dumplings"
           },
           {
             "id": 2,
-            "hint_cn": "又高又善良",
-            "hint_en": "tall and kind",
-            "answer": "tall and kind"
+            "hint_cn": "洗菜",
+            "hint_en": "wash the vegetables",
+            "answer": "wash the vegetables"
           },
           {
             "id": 3,
-            "hint_cn": "一起玩",
-            "hint_en": "play together",
-            "answer": "play together"
+            "hint_cn": "调馅",
+            "hint_en": "make the filling",
+            "answer": "make the filling"
           },
           {
             "id": 4,
-            "hint_cn": "互相帮助",
-            "hint_en": "help each other",
-            "answer": "help each other"
+            "hint_cn": "包饺子",
+            "hint_en": "wrap the dumplings",
+            "answer": "wrap the dumplings"
           },
           {
             "id": 5,
-            "hint_cn": "开心的",
-            "hint_en": "happy",
-            "answer": "happy"
+            "hint_cn": "美味的",
+            "hint_en": "delicious",
+            "answer": "delicious"
           }
         ],
-        "full_text": "My best friend is Tom. He is very tall and kind. We often play together after school. We always help each other with our homework. I feel very happy when I am with him.",
-        "full_text_cn": "我最好的朋友是 Tom。他又高又善良。放学后我们常常一起玩。我们总是互相帮忙做作业。和他在一起的时候，我觉得非常开心。",
-        "explanation_cn": "这篇作文围绕最好的朋友展开，使用了5个关键词。注意：1) best friend 是固定搭配；2) tall and kind 用 and 连接两个形容词；3) play together 中 together 是副词；4) help each other 是互帮互助的意思；5) when 引导时间状语从句。整篇作文使用一般现在时，表达日常状态。",
+        "full_text": "My family often makes dumplings on winter weekends. First, we wash the vegetables. Then we make the filling together. After that, we sit around the table and wrap the dumplings. The dumplings taste very delicious.",
+        "full_text_cn": "我家常常在冬天的周末包饺子。首先，我们洗菜。然后我们一起调馅。之后，我们围着桌子包饺子。饺子尝起来非常美味。",
+        "explanation_cn": "这篇作文按「先…然后…之后」的顺序写包饺子的过程。注意：1) make dumplings 固定搭配；2) wash the vegetables 洗菜；3) make the filling 调馅；4) wrap the dumplings 包饺子；5) taste + 形容词，尝起来…。全文用一般现在时描写经常做的事。",
         "explanation_en": "This essay is about a best friend, using 5 keywords. Notes: 1) 'best friend' is a fixed collocation; 2) 'tall and kind' uses 'and' to connect two adjectives; 3) 'together' is an adverb in 'play together'; 4) 'help each other' means mutual assistance; 5) 'when' introduces a time clause. The entire essay uses the simple present tense to express a routine state."
       },
       {
         "id": "fri-ket",
         "name_cn": "KET/PET题型",
         "type": "ket_pet",
-        "duration": 10,
+        "duration": 12,
         "questions": [
           {
             "id": "fri-kp1",
             "type": "choice",
-            "question": "KET: Choose the correct answer. — Where ___ you go yesterday? — I went to the cinema.",
+            "question": "KET: — Would you like some tea? — ___",
             "options": [
-              "do",
-              "did",
-              "were",
-              "was"
+              "Yes, please.",
+              "Yes, I would like.",
+              "No, I am.",
+              "Yes, I do."
             ],
-            "answer": 1,
-            "explanation_cn": "KET考试常见题型。yesterday 是过去时间标志词，疑问句用 did 提问，后面动词用原形 go。回答用过去式 went。注意一般过去时的疑问句结构：Did + 主语 + 动词原形?",
-            "explanation_en": "This is a common KET exam question type. 'Yesterday' is a past time marker; questions use 'did' and the main verb stays in base form. The answer uses past tense 'went'. Structure: Did + subject + base verb?"
+            "answer": 0,
+            "explanation_cn": "Would you like…? 的肯定回答用 Yes, please（好的，麻烦了）。"
           },
           {
             "id": "fri-kp2",
             "type": "choice",
-            "question": "KET: Choose the correct answer. There isn't ___ milk in the fridge.",
+            "question": "KET: — ___ do you drink tea? — Every day.",
             "options": [
-              "some",
-              "any",
-              "much",
-              "many"
+              "How often",
+              "How long",
+              "How many",
+              "How much"
             ],
-            "answer": 1,
-            "explanation_cn": "KET语法题。否定句中用 any，不用 some。milk 是不可数名词，不能用 many。some 用于肯定句和礼貌请求（Would you like some...?）。any 用于否定句和疑问句。",
-            "explanation_en": "KET grammar question. In negative sentences, we use 'any', not 'some'. 'Milk' is uncountable, so 'many' cannot be used. 'Some' is for affirmative sentences and polite requests (Would you like some...?). 'Any' is for negatives and questions."
+            "answer": 0,
+            "explanation_cn": "答句是 every day（频率），问 How often（多久一次）。"
           },
           {
             "id": "fri-kp3",
             "type": "choice",
-            "question": "PET: Choose the correct answer. The book ___ by millions of readers since it was published.",
+            "question": "KET: The tea smells ___. Let's have a cup.",
             "options": [
-              "has read",
-              "has been read",
-              "read",
-              "is reading"
+              "good",
+              "well",
+              "better than",
+              "best"
             ],
-            "answer": 1,
-            "explanation_cn": "PET考试题型。主语 The book 和 read 是被动关系（书被读），用被动语态。since 引导的时间状语要求用现在完成时。所以用现在完成时的被动语态 has been read。结构：has/have been + 过去分词。",
-            "explanation_en": "PET exam type. The subject 'The book' and 'read' have a passive relationship (the book is read), so passive voice is used. 'Since' requires the present perfect tense. So we use the present perfect passive: has been read. Structure: has/have been + past participle."
+            "answer": 0,
+            "explanation_cn": "smell 是系动词，后面用形容词 good（闻起来很香）。"
           },
           {
             "id": "fri-kp4",
-            "type": "fill",
-            "question": "PET: Complete the second sentence so that it means the same as the first. 'The room is too small for us to sit in.' = The room isn't ___ for us to sit in.",
-            "answer": "big enough",
-            "explanation_cn": "PET句型转换题。too...to...（太...而不能...）可以转换为 not...enough to...（不够...而不能...）。too small = not big enough。注意 enough 放在形容词后面：big enough，不是 enough big。",
-            "explanation_en": "PET sentence transformation. 'Too...to...' (so...that...cannot) can be transformed to 'not...enough to...' (not sufficiently...to). too small = not big enough. Note: 'enough' comes after the adjective: 'big enough', not 'enough big'."
+            "type": "choice",
+            "question": "KET: — Where is the tea grown? — It ___ in warm places.",
+            "options": [
+              "is grown",
+              "grows up",
+              "grew",
+              "growing"
+            ],
+            "answer": 0,
+            "explanation_cn": "茶是被种植的，用被动语态 is grown。"
           },
           {
             "id": "fri-kp5",
             "type": "choice",
-            "question": "KET: Choose the correct answer. — Would you like ___ tea? — Yes, please.",
+            "question": "KET: There isn't ___ tea left in the pot.",
             "options": [
               "any",
               "some",
-              "a",
-              "many"
+              "many",
+              "a"
             ],
-            "answer": 1,
-            "explanation_cn": "KET题型。Would you like...? 是礼貌邀请/提议，虽然形式上是疑问句，但用 some 不用 any。tea 是不可数名词，不能用 a。many 用于可数名词复数。这是 KET 常考考点。",
-            "explanation_en": "KET question type. 'Would you like...?' is a polite offer. Although it's a question form, we use 'some', not 'any'. 'Tea' is uncountable, so 'a' is wrong. 'Many' is for plural countable nouns. This is a frequently tested KET point."
+            "answer": 0,
+            "explanation_cn": "否定句里用 any，不用 some。"
+          },
+          {
+            "id": "fri-kp6",
+            "type": "choice",
+            "question": "KET: — ___ cups of tea do you want? — Two, please.",
+            "options": [
+              "How many",
+              "How much",
+              "How long",
+              "How often"
+            ],
+            "answer": 0,
+            "explanation_cn": "cups 是可数复数，问数量用 How many。"
+          },
+          {
+            "id": "fri-kp7",
+            "type": "choice",
+            "question": "KET: My grandma enjoys ___ tea with her friends.",
+            "options": [
+              "drinking",
+              "to drink",
+              "drink",
+              "drinks"
+            ],
+            "answer": 0,
+            "explanation_cn": "enjoy 后面接动名词 drinking。"
+          },
+          {
+            "id": "fri-kp8",
+            "type": "choice",
+            "question": "KET: — Did you like the green tea? — Yes, ___.",
+            "options": [
+              "I did",
+              "I do",
+              "I liked",
+              "I was"
+            ],
+            "answer": 0,
+            "explanation_cn": "Did 开头的一般过去时疑问句，回答用 I did。"
+          },
+          {
+            "id": "fri-kp9",
+            "type": "choice",
+            "question": "KET: Pass ___ the teapot, please.",
+            "options": [
+              "me",
+              "I",
+              "my",
+              "mine"
+            ],
+            "answer": 0,
+            "explanation_cn": "动词 pass 后面用宾格 me。"
+          },
+          {
+            "id": "fri-kp10",
+            "type": "choice",
+            "question": "KET: The Tea Road is ___ old road between China and other countries.",
+            "options": [
+              "an",
+              "a",
+              "the",
+              "/（不填）"
+            ],
+            "answer": 0,
+            "explanation_cn": "old 以元音音素开头，用 an。"
+          },
+          {
+            "id": "fri-kp11",
+            "type": "choice",
+            "question": "KET: — Whose cup is this? — It's ___.",
+            "options": [
+              "mine",
+              "my",
+              "me",
+              "I"
+            ],
+            "answer": 0,
+            "explanation_cn": "「我的（杯子）」用名词性物主代词 mine。"
+          },
+          {
+            "id": "fri-kp12",
+            "type": "choice",
+            "question": "KET: Please ___ the door when you leave the tea house.",
+            "options": [
+              "close",
+              "closing",
+              "closed",
+              "closes"
+            ],
+            "answer": 0,
+            "explanation_cn": "祈使句用动词原形 close。"
           }
         ]
       },
@@ -1721,43 +2810,176 @@ const WEEK1 = [
         "id": "fri-grammar",
         "name_cn": "语法复习",
         "type": "grammar",
-        "duration": 5,
+        "duration": 13,
         "questions": [
           {
             "id": "fri-gr1",
             "type": "choice",
-            "question": "Neither Tom nor I ___ a student.",
+            "question": "Chinese people ___ tea for thousands of years.",
             "options": [
-              "am",
-              "is",
-              "are",
-              "be"
+              "have drunk",
+              "drank",
+              "drink",
+              "will drink"
             ],
             "answer": 0,
-            "explanation_cn": "Neither...nor... 结构遵循就近原则，谓语动词与最近的主语一致。最近的主语是 I，所以用 am。注意区分 Either...or... 和 Neither...nor... 的用法，都遵循就近原则。",
-            "explanation_en": "'Neither...nor...' follows the principle of proximity - the verb agrees with the nearest subject. The nearest subject is 'I', so 'am' is used. Note: both 'Either...or...' and 'Neither...nor...' follow this principle."
+            "explanation_cn": "for thousands of years 表示延续到现在，用现在完成时 have drunk。"
           },
           {
             "id": "fri-gr2",
             "type": "choice",
-            "question": "The number of students in our class ___ 45.",
+            "question": "The host gave us two ___ of tea.",
             "options": [
-              "are",
-              "is",
-              "have",
-              "has"
+              "cups",
+              "cup",
+              "cupes",
+              "cupies"
             ],
-            "answer": 1,
-            "explanation_cn": "The number of + 名词复数 + 单数谓语动词，表示...的数量是。注意区分 a number of + 复数名词 + 复数谓语（许多...）。这是常考易混点。The number of students is 45. A number of students are playing.",
-            "explanation_en": "'The number of + plural noun + singular verb' means 'the quantity of... is'. Note the difference: 'a number of + plural noun + plural verb' means 'many...'. Example: The number of students is 45. A number of students are playing."
+            "answer": 0,
+            "explanation_cn": "cup 是可数名词，two 后面用复数 cups；两杯茶 two cups of tea。"
           },
           {
             "id": "fri-gr3",
-            "type": "fill",
-            "question": "If it ___ (not rain) tomorrow, we will go camping. [填入正确形式]",
-            "answer": "doesn't rain",
-            "explanation_cn": "这是条件状语从句，主将从现原则：主句用将来时 will go，从句用一般现在时。it 是第三人称单数，否定用 doesn't + 动词原形。所以是 doesn't rain。注意主将从现：主句将来时，if/when 引导的从句用现在时表将来。",
-            "explanation_en": "This is a conditional clause with the 'main future, subordinate present' rule: the main clause uses future tense 'will go', and the subordinate clause uses present tense. 'It' is third person singular, negative form: doesn't + base verb. So: doesn't rain. Rule: main clause future, if/when clause uses present for future meaning."
+            "type": "choice",
+            "question": "Would you like ___ sugar in your tea?",
+            "options": [
+              "some",
+              "any",
+              "many",
+              "a"
+            ],
+            "answer": 0,
+            "explanation_cn": "表示委婉邀请、希望对方回答 yes 时，疑问句也用 some。"
+          },
+          {
+            "id": "fri-gr4",
+            "type": "choice",
+            "question": "This tea tastes ___. I want another cup.",
+            "options": [
+              "good",
+              "well",
+              "badly",
+              "bad"
+            ],
+            "answer": 0,
+            "explanation_cn": "taste 是系动词，后面用形容词 good。"
+          },
+          {
+            "id": "fri-gr5",
+            "type": "choice",
+            "question": "Tea ___ from China to the world long ago.",
+            "options": [
+              "spread",
+              "spreaded",
+              "spreads",
+              "is spread"
+            ],
+            "answer": 0,
+            "explanation_cn": "long ago 是过去时间；spread 的过去式还是 spread。"
+          },
+          {
+            "id": "fri-gr6",
+            "type": "choice",
+            "question": "My mother likes tea ___ my father likes coffee.",
+            "options": [
+              "while",
+              "so",
+              "because",
+              "or"
+            ],
+            "answer": 0,
+            "explanation_cn": "while 表示对比：妈妈喜欢茶，而爸爸喜欢咖啡。"
+          },
+          {
+            "id": "fri-gr7",
+            "type": "choice",
+            "question": "Don't forget ___ the door when you leave.",
+            "options": [
+              "to close",
+              "closing",
+              "close",
+              "closed"
+            ],
+            "answer": 0,
+            "explanation_cn": "forget to do sth：忘记要去做（还没做），用 to close。"
+          },
+          {
+            "id": "fri-gr8",
+            "type": "choice",
+            "question": "The tea is too hot ___ .",
+            "options": [
+              "to drink",
+              "drink",
+              "drinking",
+              "drank"
+            ],
+            "answer": 0,
+            "explanation_cn": "too…to… 结构：太烫了而不能喝。"
+          },
+          {
+            "id": "fri-gr9",
+            "type": "choice",
+            "question": "There ___ any milk in the tea.",
+            "options": [
+              "isn't",
+              "aren't",
+              "am not",
+              "be not"
+            ],
+            "answer": 0,
+            "explanation_cn": "milk 是不可数名词，be 动词用 isn't。"
+          },
+          {
+            "id": "fri-gr10",
+            "type": "choice",
+            "question": "How ___ water do you need for the tea?",
+            "options": [
+              "much",
+              "many",
+              "long",
+              "often"
+            ],
+            "answer": 0,
+            "explanation_cn": "water 不可数，用 How much。"
+          },
+          {
+            "id": "fri-gr11",
+            "type": "choice",
+            "question": "The tea ___ very popular in England now.",
+            "options": [
+              "is",
+              "was",
+              "were",
+              "be"
+            ],
+            "answer": 0,
+            "explanation_cn": "now 提示现在时，主语 the tea 单数，用 is。"
+          },
+          {
+            "id": "fri-gr12",
+            "type": "choice",
+            "question": "We ___ to a tea house and watched a show last night.",
+            "options": [
+              "went",
+              "go",
+              "goes",
+              "going"
+            ],
+            "answer": 0,
+            "explanation_cn": "last night 过去时间，go 的过去式是 went。"
+          },
+          {
+            "id": "fri-gr13",
+            "type": "choice",
+            "question": "It's kind ___ you to make tea for us.",
+            "options": [
+              "of",
+              "for",
+              "to",
+              "with"
+            ],
+            "answer": 0,
+            "explanation_cn": "It's kind of you：你真好心，形容人的品质用 of。"
           }
         ]
       }
@@ -1767,7 +2989,7 @@ const WEEK1 = [
     "day_cn": "周六",
     "day_en": "Saturday",
     "is_speaking_day": true,
-    "total_duration": 40,
+    "total_duration": 60,
     "theme_cn": "AI口语 + 高频词汇 + 阅读理解",
     "modules": [
       {
@@ -1789,7 +3011,14 @@ const WEEK1 = [
             "answer": 0,
             "pronunciation_tips": "注意 weekend 的重音在第一音节 /ˈwiːkend/，usually 的 s 发 /ʒ/ 音",
             "explanation_cn": "这题询问周末活动。on weekends 意为在周末（美式），英式常用 at weekends。回答用一般现在时表示经常性活动。注意 weekend 是复合词：week + end。",
-            "explanation_en": "This question asks about weekend activities. 'On weekends' is American English; British English uses 'at weekends'. Use the simple present tense for habitual activities. Note: 'weekend' is a compound word: week + end."
+            "explanation_en": "This question asks about weekend activities. 'On weekends' is American English; British English uses 'at weekends'. Use the simple present tense for habitual activities. Note: 'weekend' is a compound word: week + end.",
+            "answer_cn_hint": "它在问「周末通常做什么」，答句要说一件具体的活动，usually 表示习惯。",
+            "options_cn": [
+              "我周末通常和朋友们打篮球。",
+              "我是一名学生。",
+              "我有一只猫。",
+              "今天是星期天。"
+            ]
           },
           {
             "id": "sat-sp2",
@@ -1804,7 +3033,14 @@ const WEEK1 = [
             "answer": 0,
             "pronunciation_tips": "注意 holiday 的发音 /ˈhɒlədeɪ/，festival 重音在第一音节 /ˈfestɪvl/",
             "explanation_cn": "这题询问最喜欢的节日。Spring Festival 是春节。red envelopes 是红包。回答格式：My favorite holiday is + 节日 + because + 原因。常见节日：Christmas, Thanksgiving, Mid-Autumn Festival。",
-            "explanation_en": "This question asks about favorite holidays. 'Spring Festival' is Chinese New Year. 'Red envelopes' are monetary gifts. Answer format: My favorite holiday is + holiday + because + reason. Common holidays: Christmas, Thanksgiving, Mid-Autumn Festival."
+            "explanation_en": "This question asks about favorite holidays. 'Spring Festival' is Chinese New Year. 'Red envelopes' are monetary gifts. Answer format: My favorite holiday is + holiday + because + reason. Common holidays: Christmas, Thanksgiving, Mid-Autumn Festival.",
+            "answer_cn_hint": "它问「最喜欢的节日 + 为什么」，答句要说出节日名，再说一句理由。",
+            "options_cn": [
+              "我最喜欢的节日是春节，因为我可以收到红包。",
+              "我喜欢吃东西。",
+              "今天是节日。",
+              "我不知道。"
+            ]
           },
           {
             "id": "sat-sp3",
@@ -1819,7 +3055,14 @@ const WEEK1 = [
             "answer": 0,
             "pronunciation_tips": "注意 celebrate 的重音在第一音节 /ˈselɪbreɪt/，birthday 中 th 发 /θ/",
             "explanation_cn": "这题询问生日庆祝方式。celebrate 意为庆祝。回答可以包括：have a party（开派对），eat birthday cake（吃蛋糕），invite friends（邀请朋友）。注意 celebrate 的拼写和重音。",
-            "explanation_en": "This question asks about birthday celebration. 'Celebrate' means to mark a special occasion. Answers can include: have a party, eat birthday cake, invite friends. Note the spelling and stress of 'celebrate'."
+            "explanation_en": "This question asks about birthday celebration. 'Celebrate' means to mark a special occasion. Answers can include: have a party, eat birthday cake, invite friends. Note the spelling and stress of 'celebrate'.",
+            "answer_cn_hint": "它在问「怎么庆祝」，答句要说生日那天的活动，不是日期。",
+            "options_cn": [
+              "我通常和家人朋友一起开生日聚会。",
+              "我很开心。",
+              "我的生日在五月。",
+              "我喜欢蛋糕。"
+            ]
           },
           {
             "id": "sat-sp4",
@@ -1834,7 +3077,14 @@ const WEEK1 = [
             "answer": 0,
             "pronunciation_tips": "注意 million 的发音 /ˈmɪljən/，would 和 I 连读 /wʊdaɪ/，dollars 注意 /ˈdɒləz/",
             "explanation_cn": "这是虚拟语气题。If + 过去时, would + 动词原形，表示对现在的虚拟假设。注意这里 had 不是过去时而是虚拟语气用法。travel around the world 意为环游世界。",
-            "explanation_en": "This is a subjunctive mood question. 'If + past tense, would + base verb' expresses a hypothetical situation about the present. Note: 'had' here is subjunctive, not past tense. 'Travel around the world' means to visit many countries globally."
+            "explanation_en": "This is a subjunctive mood question. 'If + past tense, would + base verb' expresses a hypothetical situation about the present. Note: 'had' here is subjunctive, not past tense. 'Travel around the world' means to visit many countries globally.",
+            "answer_cn_hint": "这是假设句，问「如果……你会做什么」，答句要用 If … I would … 说出你会做的事。",
+            "options_cn": [
+              "如果我有一百万美元，我会环游世界。",
+              "我有钱。",
+              "我喜欢美元。",
+              "钱很重要。"
+            ]
           },
           {
             "id": "sat-sp5",
@@ -1849,7 +3099,14 @@ const WEEK1 = [
             "answer": 0,
             "pronunciation_tips": "注意 recently 的发音 /ˈriːsəntli/，wizard 的 /wɪzəd/，magic 重音在第一音节",
             "explanation_cn": "这题要求描述一本书。回答应包括：书名、内容简述、个人感受。recently 意为最近，常与现在完成时或过去时搭配。wizard 意为巫师，magic school 意为魔法学校。",
-            "explanation_en": "This question requires describing a book. Your answer should include: title, brief content summary, personal feelings. 'Recently' means lately and is often used with present perfect or past tense. 'Wizard' means a male magic user, 'magic school' means a school for learning magic."
+            "explanation_en": "This question requires describing a book. Your answer should include: title, brief content summary, personal feelings. 'Recently' means lately and is often used with present perfect or past tense. 'Wizard' means a male magic user, 'magic school' means a school for learning magic.",
+            "answer_cn_hint": "这是请你介绍一本书，答句要有书名，再说书里讲了什么。",
+            "options_cn": [
+              "我最近读了《哈利·波特》，讲的是一个去魔法学校上学的小巫师。",
+              "我不喜欢读书。",
+              "书很贵。",
+              "我每天都读书。"
+            ]
           }
         ]
       },
@@ -1941,7 +3198,8 @@ const WEEK1 = [
             "syllables": [
               "cu",
               "rious"
-            ]
+            ],
+            "hint_cn": "什么都想问“为什么”，总想弄个明白"
           },
           {
             "word": "ancient",
@@ -2025,7 +3283,8 @@ const WEEK1 = [
             "syllables": [
               "an",
               "cient"
-            ]
+            ],
+            "hint_cn": "很久很久以前留下来的，老得不得了"
           },
           {
             "word": "neighbor",
@@ -2110,7 +3369,8 @@ const WEEK1 = [
             "syllables": [
               "nei",
               "ghbor"
-            ]
+            ],
+            "hint_cn": "住在你家隔壁的那个人"
           },
           {
             "word": "dangerous",
@@ -2197,7 +3457,8 @@ const WEEK1 = [
               "dan",
               "ge",
               "rous"
-            ]
+            ],
+            "hint_cn": "碰了会受伤，要离得远一点"
           },
           {
             "word": "volunteer",
@@ -2284,7 +3545,8 @@ const WEEK1 = [
               "vol",
               "un",
               "teer"
-            ]
+            ],
+            "hint_cn": "不要钱也愿意去帮忙的人"
           }
         ]
       },
@@ -2292,51 +3554,320 @@ const WEEK1 = [
         "id": "sat-reading",
         "name_cn": "阅读理解",
         "type": "reading",
-        "duration": 5,
-        "passage": "Mike has a pet dog named Buddy. Buddy is a golden retriever with soft, shiny fur. Every morning, Mike takes Buddy for a walk in the park. Buddy loves running and chasing balls. Last week, Buddy saved a little boy who fell into the river. Everyone in the neighborhood thinks Buddy is a hero. Mike is very proud of his brave dog.",
-        "passage_cn": "迈克有一只叫巴迪的宠物狗。巴迪是一只金毛寻回犬，有柔软闪亮的毛。每天早上，迈克带巴迪去公园散步。巴迪喜欢跑步和追球。上周，巴迪救了一个掉进河里的小男孩。社区里每个人都认为巴迪是个英雄。迈克为他勇敢的狗感到非常自豪。",
+        "duration": 10,
+        "passage": "The Mid-Autumn Festival is a special day for family in China. It comes in September or October, when the moon is round and bright. On that evening, the whole family sit together in the open air, watch the moon and eat mooncakes. Mooncakes are small round cakes with different fillings, like lotus seeds and red beans. People love them because the round shape means family reunion. There are also many old stories about the moon, and children enjoy listening to them under the bright moonlight.",
+        "passage_cn": "中秋节是中国人团圆的特殊日子。它在九月或十月到来，那时月亮又圆又亮。那天晚上，全家人坐在户外，一起赏月、吃月饼。月饼是小小的圆饼，里面有各种馅，比如莲蓉和红豆。人们喜爱月饼，因为它圆圆的形状代表全家团圆。关于月亮还有许多古老的故事，孩子们喜欢在明亮的月光下听这些故事。",
         "questions": [
           {
             "id": "sat-rd1",
             "type": "choice",
-            "question": "What kind of dog is Buddy?",
+            "question": "When is the Mid-Autumn Festival?",
             "options": [
-              "A small dog",
-              "A golden retriever",
-              "A police dog",
-              "A puppy"
+              "In July or August",
+              "In September or October",
+              "In November or December",
+              "In January or February"
             ],
             "answer": 1,
-            "explanation_cn": "文章说 Buddy is a golden retriever。golden retriever 意为金毛寻回犬，是一种大型犬。注意 retriever /rɪˈtriːvə/ 的发音。soft, shiny fur 意为柔软闪亮的毛。",
-            "explanation_en": "The text says 'Buddy is a golden retriever.' A golden retriever is a large breed of dog. Note the pronunciation of 'retriever' /rɪˈtriːvə/. 'Soft, shiny fur' means the dog's coat is smooth and glossy."
+            "explanation_cn": "第二句：comes in September or October（九月或十月）。"
           },
           {
             "id": "sat-rd2",
             "type": "choice",
-            "question": "What did Buddy do last week?",
+            "question": "What is the moon like on that day?",
             "options": [
-              "He got lost",
-              "He saved a boy",
-              "He won a prize",
-              "He was sick"
+              "Round and bright",
+              "Small and dark",
+              "Thin like a banana",
+              "We can't see it"
             ],
-            "answer": 1,
-            "explanation_cn": "文章说 Buddy saved a little boy who fell into the river。巴迪救了一个掉进河里的小男孩。saved 意为救了，fell into the river 意为掉进河里。注意 save 的过去式是 saved。",
-            "explanation_en": "The text says 'Buddy saved a little boy who fell into the river.' 'Saved' means rescued. 'Fell into the river' means dropped into the water. Note: the past form of 'save' is 'saved'."
+            "answer": 0,
+            "explanation_cn": "那时月亮又圆又亮（round and bright）。"
           },
           {
             "id": "sat-rd3",
             "type": "choice",
-            "question": "How does Mike feel about Buddy?",
+            "question": "What do people eat on the Mid-Autumn Festival?",
             "options": [
-              "Sad",
-              "Proud",
-              "Angry",
-              "Worried"
+              "Noodles",
+              "Zongzi",
+              "Mooncakes",
+              "Hamburgers"
             ],
-            "answer": 1,
-            "explanation_cn": "文章最后一句说 Mike is very proud of his brave dog。迈克为他勇敢的狗感到自豪。proud 意为自豪的，be proud of 意为以...为豪。brave 意为勇敢的。",
-            "explanation_en": "The last sentence says 'Mike is very proud of his brave dog.' 'Proud' means feeling satisfaction. 'Be proud of' means to take pride in someone/something. 'Brave' means showing courage."
+            "answer": 2,
+            "explanation_cn": "那天晚上全家人一起赏月、吃月饼（mooncakes）。"
+          },
+          {
+            "id": "sat-rd4",
+            "type": "choice",
+            "question": "What is inside mooncakes?",
+            "options": [
+              "Different fillings",
+              "Only water",
+              "Only sugar",
+              "Nothing"
+            ],
+            "answer": 0,
+            "explanation_cn": "月饼里有不同的馅（fillings），比如莲蓉和红豆。"
+          },
+          {
+            "id": "sat-rd5",
+            "type": "choice",
+            "question": "Why do people love mooncakes?",
+            "options": [
+              "The round shape means family reunion.",
+              "They are very cheap.",
+              "They are very big.",
+              "They are made in factories."
+            ],
+            "answer": 0,
+            "explanation_cn": "圆圆的形状代表全家团圆（family reunion）。"
+          },
+          {
+            "id": "sat-rd6",
+            "type": "choice",
+            "question": "What do children do under the moonlight?",
+            "options": [
+              "They listen to old stories about the moon.",
+              "They do their homework.",
+              "They go swimming.",
+              "They play football."
+            ],
+            "answer": 0,
+            "explanation_cn": "孩子们喜欢在月光下听关于月亮的古老故事。"
+          },
+          {
+            "id": "sat-rd7",
+            "type": "choice",
+            "question": "Where does the family sit on that evening?",
+            "options": [
+              "In the open air",
+              "In a cinema",
+              "On a bus",
+              "In a classroom"
+            ],
+            "answer": 0,
+            "explanation_cn": "那天晚上全家人坐在户外（in the open air）赏月。"
+          },
+          {
+            "id": "sat-rd8",
+            "type": "choice",
+            "question": "The word \"reunion\" here means ___.",
+            "options": [
+              "团聚",
+              "离别",
+              "旅行",
+              "争吵"
+            ],
+            "answer": 0,
+            "explanation_cn": "reunion 意思是「团聚」，圆月和圆月饼都代表团圆。"
+          },
+          {
+            "id": "sat-rd9",
+            "type": "choice",
+            "question": "The Mid-Autumn Festival is a special day for ___.",
+            "options": [
+              "family",
+              "shopping",
+              "study",
+              "sports"
+            ],
+            "answer": 0,
+            "explanation_cn": "第一句：a special day for family（家人团圆的日子）。"
+          },
+          {
+            "id": "sat-rd10",
+            "type": "choice",
+            "question": "Which one is NOT talked about in the Mid-Autumn passage?",
+            "options": [
+              "People give lucky money that day.",
+              "People watch the moon.",
+              "People eat mooncakes.",
+              "There are old stories about the moon."
+            ],
+            "answer": 0,
+            "explanation_cn": "发压岁钱是春节的习俗，文章没提；其余三项都在文中。"
+          }
+        ]
+      },
+      {
+        "id": "sat-mc",
+        "name_cn": "单项选择",
+        "type": "multiple_choice",
+        "duration": 10,
+        "questions": [
+          {
+            "id": "sat-mc1",
+            "type": "choice",
+            "question": "The Mid-Autumn Festival comes ___ September or October.",
+            "options": [
+              "in",
+              "on",
+              "at",
+              "of"
+            ],
+            "answer": 0,
+            "explanation_cn": "月份前面用 in：in September or October。"
+          },
+          {
+            "id": "sat-mc2",
+            "type": "choice",
+            "question": "On that evening, the family sit together and ___ the moon.",
+            "options": [
+              "watch",
+              "watches",
+              "watched",
+              "watching"
+            ],
+            "answer": 0,
+            "explanation_cn": "and 连接两个动作，与 sit 并列，用动词原形 watch。"
+          },
+          {
+            "id": "sat-mc3",
+            "type": "choice",
+            "question": "Mooncakes are small ___ cakes.",
+            "options": [
+              "round",
+              "square",
+              "long",
+              "tall"
+            ],
+            "answer": 0,
+            "explanation_cn": "月饼是圆圆的小饼，round 意思是「圆的」。"
+          },
+          {
+            "id": "sat-mc4",
+            "type": "choice",
+            "question": "The round shape ___ family reunion.",
+            "options": [
+              "means",
+              "mean",
+              "meaning",
+              "meant"
+            ],
+            "answer": 0,
+            "explanation_cn": "主语 the round shape 是单数，动词用 means。"
+          },
+          {
+            "id": "sat-mc5",
+            "type": "choice",
+            "question": "There are many old ___ about the moon.",
+            "options": [
+              "stories",
+              "storys",
+              "story",
+              "storyes"
+            ],
+            "answer": 0,
+            "explanation_cn": "story 的复数是 stories（辅音字母+y 变 ies）。"
+          },
+          {
+            "id": "sat-mc6",
+            "type": "choice",
+            "question": "Children enjoy ___ to the old stories.",
+            "options": [
+              "listening",
+              "listen",
+              "listens",
+              "listened"
+            ],
+            "answer": 0,
+            "explanation_cn": "enjoy doing sth：enjoy 后面用动名词 listening。"
+          },
+          {
+            "id": "sat-mc7",
+            "type": "choice",
+            "question": "The moon is ___ and bright on that day.",
+            "options": [
+              "round",
+              "rounds",
+              "rounding",
+              "rounded"
+            ],
+            "answer": 0,
+            "explanation_cn": "系动词 is 后面用形容词 round，作表语。"
+          },
+          {
+            "id": "sat-mc8",
+            "type": "choice",
+            "question": "We usually eat mooncakes ___ the evening.",
+            "options": [
+              "in",
+              "on",
+              "at",
+              "for"
+            ],
+            "answer": 0,
+            "explanation_cn": "「在晚上」用 in the evening。"
+          },
+          {
+            "id": "sat-mc9",
+            "type": "choice",
+            "question": "___ beautiful the moon is tonight!",
+            "options": [
+              "How",
+              "What",
+              "Which",
+              "Who"
+            ],
+            "answer": 0,
+            "explanation_cn": "How + 形容词 + 主语 + 谓语：How beautiful the moon is!"
+          },
+          {
+            "id": "sat-mc10",
+            "type": "choice",
+            "question": "My grandma ___ us a story about Chang'e every year.",
+            "options": [
+              "tells",
+              "tell",
+              "telling",
+              "told"
+            ],
+            "answer": 0,
+            "explanation_cn": "every year 表示习惯动作，主语 my grandma 是三单，用 tells。"
+          }
+        ]
+      },
+      {
+        "id": "sat-tense2",
+        "name_cn": "时态练习",
+        "type": "tense",
+        "duration": 5,
+        "questions": [
+          {
+            "id": "sat-tn21",
+            "type": "fill",
+            "question": "The Mid-Autumn Festival ___ (come) in September or October. [填入正确形式]",
+            "answer": "comes",
+            "explanation_cn": "表示每年的事实，主语三单用 comes。"
+          },
+          {
+            "id": "sat-tn22",
+            "type": "fill",
+            "question": "We ___ (eat) mooncakes with grandma last night. [填入正确形式]",
+            "answer": "ate",
+            "explanation_cn": "last night 过去时间，eat 的过去式是 ate。"
+          },
+          {
+            "id": "sat-tn23",
+            "type": "fill",
+            "question": "Look! The moon ___ (rise) over the sea. [填入正确形式]",
+            "answer": "is rising",
+            "explanation_cn": "Look! 提示正在进行，用 is rising。"
+          },
+          {
+            "id": "sat-tn24",
+            "type": "fill",
+            "question": "My family ___ (watch) the moon together every year. [填入正确形式]",
+            "answer": "watches",
+            "explanation_cn": "every year 习惯动作，主语 my family 整体看，三单用 watches。"
+          },
+          {
+            "id": "sat-tn25",
+            "type": "fill",
+            "question": "Chang'e, the moon lady, ___ (be) in the old story. [填入正确形式]",
+            "answer": "was",
+            "explanation_cn": "讲过去的故事人物，用 was。"
           }
         ]
       }
@@ -2346,61 +3877,9 @@ const WEEK1 = [
     "day_cn": "周日",
     "day_en": "Sunday",
     "is_speaking_day": false,
-    "total_duration": 30,
+    "total_duration": 40,
     "theme_cn": "阅读理解 + 高频词汇 + 完形填空",
     "modules": [
-      {
-        "id": "sun-reading",
-        "name_cn": "阅读理解",
-        "type": "reading",
-        "duration": 10,
-        "passage": "Sarah is a 11-year-old girl who loves music. She started playing the piano when she was five years old. Now she can play many beautiful songs. Her music teacher says she has a great talent. Every day, she practices for one hour after finishing her homework. Her dream is to become a famous pianist and perform in concerts around the world.",
-        "passage_cn": "莎拉是一个11岁的女孩，热爱音乐。她从五岁开始弹钢琴。现在她能弹奏许多优美的曲子。她的音乐老师说她很有天赋。每天，她做完作业后练习一小时。她的梦想是成为一名著名的钢琴家，在世界各地的音乐会上演出。",
-        "questions": [
-          {
-            "id": "sun-rd1",
-            "type": "choice",
-            "question": "When did Sarah start playing the piano?",
-            "options": [
-              "At age 3",
-              "At age 5",
-              "At age 7",
-              "At age 11"
-            ],
-            "answer": 1,
-            "explanation_cn": "文章说 She started playing the piano when she was five years old。莎拉五岁开始弹钢琴。start doing sth 意为开始做某事。when 引导时间状语从句。",
-            "explanation_en": "The text says 'She started playing the piano when she was five years old.' 'Start doing sth' means to begin an activity. 'When' introduces a time clause."
-          },
-          {
-            "id": "sun-rd2",
-            "type": "choice",
-            "question": "How long does Sarah practice every day?",
-            "options": [
-              "30 minutes",
-              "1 hour",
-              "2 hours",
-              "3 hours"
-            ],
-            "answer": 1,
-            "explanation_cn": "文章说 she practices for one hour after finishing her homework。莎拉每天练习一小时。for one hour 意为一小时。after finishing her homework 意为做完作业后。注意 after + doing sth。",
-            "explanation_en": "The text says 'she practices for one hour after finishing her homework.' 'For one hour' indicates duration. 'After finishing her homework' means completing homework first. Note: 'after + doing sth' structure."
-          },
-          {
-            "id": "sun-rd3",
-            "type": "choice",
-            "question": "What is Sarah's dream?",
-            "options": [
-              "To be a singer",
-              "To be a pianist",
-              "To be a teacher",
-              "To be a dancer"
-            ],
-            "answer": 1,
-            "explanation_cn": "文章说 Her dream is to become a famous pianist and perform in concerts around the world。她的梦想是成为著名钢琴家并在世界各地的音乐会上演出。pianist 意为钢琴家，concert 意为音乐会。",
-            "explanation_en": "The text says 'Her dream is to become a famous pianist and perform in concerts around the world.' A 'pianist' is someone who plays the piano professionally. A 'concert' is a live music performance."
-          }
-        ]
-      },
       {
         "id": "sun-vocab",
         "name_cn": "高频词汇",
@@ -2491,7 +3970,8 @@ const WEEK1 = [
             "syllables": [
               "know",
               "ledge"
-            ]
+            ],
+            "hint_cn": "书本和老师给你的那些“懂的东西”"
           },
           {
             "word": "healthy",
@@ -2575,7 +4055,8 @@ const WEEK1 = [
             "syllables": [
               "heal",
               "thy"
-            ]
+            ],
+            "hint_cn": "不生病、身体棒棒的"
           },
           {
             "word": "machine",
@@ -2659,7 +4140,8 @@ const WEEK1 = [
             "syllables": [
               "ma",
               "chine"
-            ]
+            ],
+            "hint_cn": "通上电就能帮你干活的东西"
           },
           {
             "word": "weather",
@@ -2743,7 +4225,8 @@ const WEEK1 = [
             "syllables": [
               "wea",
               "ther"
-            ]
+            ],
+            "hint_cn": "今天晴还是下雨，出门前要看一看"
           },
           {
             "word": "surprise",
@@ -2828,7 +4311,8 @@ const WEEK1 = [
             "syllables": [
               "sur",
               "prise"
-            ]
+            ],
+            "hint_cn": "事先一点都不知道，突然发生的开心事"
           }
         ]
       },
@@ -2837,77 +4321,366 @@ const WEEK1 = [
         "name_cn": "完形填空",
         "type": "cloze",
         "duration": 10,
-        "passage": "Peter is a 10-year-old boy. He 1___ in Shanghai with his parents. Every morning, he 2___ up at 6:30 and has breakfast at 7:00. His school is not far from his home, so he 3___ to school. His favorite 4___ is English because he likes reading English stories. After school, he often plays 5___ with his classmates. He is a happy boy.",
+        "passage": "Peking Opera is one of China's oldest 1___ arts. It started more than 200 years ago. The actors wear beautiful 2___ and paint their faces in different colours. A red face 3___ a good and brave man, and a white face means a bad man. The actors sing in a special 4___ and move in special ways. Many old people love to 5___ Peking Opera on TV or in the theatre. Some children learn it 6___ school clubs. It is not 7___ to learn, because an actor may practise for many years 8___ he can sing well. Today, more and more young people are starting to love this old art. It is an important 9___ of Chinese culture. If you watch it once, you will never 10___ it.",
         "questions": [
           {
             "id": "sun-cz1",
             "type": "choice",
             "question": "1___",
             "options": [
-              "lives",
-              "live",
-              "living",
-              "to live"
+              "folk",
+              "fast",
+              "funny",
+              "foreign"
             ],
             "answer": 0,
-            "explanation_cn": "主语 He 是第三人称单数，一般现在时动词加 s：live → lives。live in 意为住在某地。注意第三人称单数变化规则：一般加 s，以 s/x/sh/ch/o 结尾加 es，辅音+y 变 ies。",
-            "explanation_en": "The subject 'He' is third person singular; present tense verbs add -s: live → lives. 'Live in' means to reside in a place. Rules: generally add -s; add -es after s/x/sh/ch/o; change y to ies after consonant+y."
+            "explanation_cn": "folk art：民间艺术，京剧是中国的民间艺术。"
           },
           {
             "id": "sun-cz2",
             "type": "choice",
             "question": "2___",
             "options": [
-              "get",
-              "gets",
-              "getting",
-              "got"
+              "clothes",
+              "books",
+              "cars",
+              "glasses"
             ],
-            "answer": 1,
-            "explanation_cn": "Every morning 表示经常性动作，用一般现在时。He 是第三人称单数，get → gets。get up 意为起床。注意区分 get up（起床）和 wake up（醒来）。",
-            "explanation_en": "'Every morning' indicates habitual action, using the simple present tense. 'He' is third person singular: get → gets. 'Get up' means to rise from bed. Note: 'get up' (rise from bed) vs 'wake up' (become conscious)."
+            "answer": 0,
+            "explanation_cn": "演员穿着漂亮的戏服，用 clothes。"
           },
           {
             "id": "sun-cz3",
             "type": "choice",
             "question": "3___",
             "options": [
-              "walks",
-              "drives",
-              "flies",
-              "swims"
+              "means",
+              "makes",
+              "takes",
+              "puts"
             ],
             "answer": 0,
-            "explanation_cn": "学校不远所以他走路去，用 walks。注意题目说 school is not far（学校不远），所以步行 walks。walk to school 意为步行去学校。注意区分 walk（步行）和 drive（开车）。",
-            "explanation_en": "The school is not far, so he walks: 'walks'. The text says 'school is not far from his home, so he walks to school.' 'Walk to school' means to go on foot. Note: walk (on foot) vs drive (by car)."
+            "explanation_cn": "红脸「代表」好人，means 表示「意味着」。"
           },
           {
             "id": "sun-cz4",
             "type": "choice",
             "question": "4___",
             "options": [
-              "subject",
-              "color",
-              "food",
-              "sport"
+              "way",
+              "room",
+              "school",
+              "dinner"
             ],
             "answer": 0,
-            "explanation_cn": "后文说 because he likes reading English stories，所以 favorite subject 是 English。subject 意为科目。常用科目：English, Math, Science, Art, Music, PE。",
-            "explanation_en": "The following text says 'because he likes reading English stories', so his favorite 'subject' is English. 'Subject' means a school course. Common subjects: English, Math, Science, Art, Music, PE."
+            "explanation_cn": "用特别的「方式」演唱，sing in a special way。"
           },
           {
             "id": "sun-cz5",
             "type": "choice",
             "question": "5___",
             "options": [
-              "basketball",
-              "breakfast",
-              "homework",
-              "piano"
+              "watch",
+              "touch",
+              "draw",
+              "close"
             ],
             "answer": 0,
-            "explanation_cn": "plays 后面接运动或乐器。plays basketball 打篮球，plays piano 弹钢琴。但 with his classmates 暗示是集体运动，选 basketball。注意 play + 运动（不加 the），play + 乐器（加 the）。",
-            "explanation_en": "After 'plays', we need a sport or instrument. 'Plays basketball' (sport) or 'plays the piano' (instrument). 'With his classmates' suggests a team sport, so 'basketball'. Note: play + sport (no 'the'), play + instrument (with 'the')."
+            "explanation_cn": "在电视上「观看」京剧用 watch。"
+          },
+          {
+            "id": "sun-cz6",
+            "type": "choice",
+            "question": "6___",
+            "options": [
+              "in",
+              "on",
+              "under",
+              "behind"
+            ],
+            "answer": 0,
+            "explanation_cn": "「在学校社团里」用 in school clubs。"
+          },
+          {
+            "id": "sun-cz7",
+            "type": "choice",
+            "question": "7___",
+            "options": [
+              "easy",
+              "sad",
+              "angry",
+              "lazy"
+            ],
+            "answer": 0,
+            "explanation_cn": "后文说要练很多年，所以学起来不「容易」，easy。"
+          },
+          {
+            "id": "sun-cz8",
+            "type": "choice",
+            "question": "8___",
+            "options": [
+              "before",
+              "after",
+              "so",
+              "but"
+            ],
+            "answer": 0,
+            "explanation_cn": "练很多年「之后才」能唱好 → 在能唱好「之前」，用 before。"
+          },
+          {
+            "id": "sun-cz9",
+            "type": "choice",
+            "question": "9___",
+            "options": [
+              "part",
+              "piece",
+              "page",
+              "pair"
+            ],
+            "answer": 0,
+            "explanation_cn": "an important part of Chinese culture：中国文化的重要一部分。"
+          },
+          {
+            "id": "sun-cz10",
+            "type": "choice",
+            "question": "10___",
+            "options": [
+              "forget",
+              "remember",
+              "miss",
+              "hate"
+            ],
+            "answer": 0,
+            "explanation_cn": "看过一次就不会「忘记」，never forget。"
+          }
+        ]
+      },
+      {
+        "id": "sun-tense",
+        "name_cn": "时态练习",
+        "type": "tense",
+        "duration": 10,
+        "questions": [
+          {
+            "id": "sun-tn1",
+            "type": "fill",
+            "question": "Peking Opera ___ (start) more than 200 years ago. [填入正确形式]",
+            "answer": "started",
+            "explanation_cn": "more than 200 years ago 是过去时间，start 的过去式是 started。"
+          },
+          {
+            "id": "sun-tn2",
+            "type": "fill",
+            "question": "Look! The actors ___ (paint) their faces now. [填入正确形式]",
+            "answer": "are painting",
+            "explanation_cn": "Look! 和 now 提示正在进行，用现在进行时 are painting。"
+          },
+          {
+            "id": "sun-tn3",
+            "type": "fill",
+            "question": "My grandpa ___ (watch) Peking Opera every Sunday. [填入正确形式]",
+            "answer": "watches",
+            "explanation_cn": "every Sunday 表示习惯，主语三单，动词用 watches。"
+          },
+          {
+            "id": "sun-tn4",
+            "type": "fill",
+            "question": "A red face ___ (mean) a brave man in Peking Opera. [填入正确形式]",
+            "answer": "means",
+            "explanation_cn": "主语 a red face 是三单，一般现在时动词加 s：means。"
+          },
+          {
+            "id": "sun-tn5",
+            "type": "fill",
+            "question": "We ___ (see) a wonderful show last night. [填入正确形式]",
+            "answer": "saw",
+            "explanation_cn": "last night 过去时间，see 的过去式是 saw。"
+          },
+          {
+            "id": "sun-tn6",
+            "type": "fill",
+            "question": "The actors ___ (practise) singing for many years before they become famous. [填入正确形式]",
+            "answer": "practise",
+            "explanation_cn": "表示一般事实，用一般现在时 practise（主语复数）。"
+          },
+          {
+            "id": "sun-tn7",
+            "type": "fill",
+            "question": "I ___ (learn) Peking Opera since last September. [填入正确形式]",
+            "answer": "have learned",
+            "explanation_cn": "since last September 与现在完成时连用：have learned。"
+          },
+          {
+            "id": "sun-tn8",
+            "type": "fill",
+            "question": "More and more young people ___ (enjoy) the old art now. [填入正确形式]",
+            "answer": "enjoy",
+            "explanation_cn": "主语 people 是复数，now 表示现在，用原形 enjoy。"
+          },
+          {
+            "id": "sun-tn9",
+            "type": "fill",
+            "question": "She ___ (join) the opera club tomorrow. [填入正确形式]",
+            "answer": "will join",
+            "explanation_cn": "tomorrow 将来时间，用 will join。"
+          },
+          {
+            "id": "sun-tn10",
+            "type": "fill",
+            "question": "When I was young, my grandma often ___ (take) me to the theatre. [填入正确形式]",
+            "answer": "took",
+            "explanation_cn": "when I was young 过去时间，take 的过去式是 took。"
+          }
+        ]
+      },
+      {
+        "id": "sun-grammar",
+        "name_cn": "语法练习",
+        "type": "grammar",
+        "duration": 5,
+        "questions": [
+          {
+            "id": "sun-gr1",
+            "type": "choice",
+            "question": "Peking Opera is ___ old art form.",
+            "options": [
+              "a",
+              "an",
+              "the",
+              "/（不填）"
+            ],
+            "answer": 1,
+            "explanation_cn": "old 以元音音素开头，用 an。"
+          },
+          {
+            "id": "sun-gr2",
+            "type": "choice",
+            "question": "The actors' faces are painted ___ different colours.",
+            "options": [
+              "in",
+              "at",
+              "of",
+              "for"
+            ],
+            "answer": 0,
+            "explanation_cn": "「用…颜色」用 in different colours。"
+          },
+          {
+            "id": "sun-gr3",
+            "type": "choice",
+            "question": "Many old people love ___ TV.",
+            "options": [
+              "watching",
+              "watch",
+              "watches",
+              "watched"
+            ],
+            "answer": 0,
+            "explanation_cn": "love doing sth：喜欢看（电视）。"
+          },
+          {
+            "id": "sun-gr4",
+            "type": "choice",
+            "question": "___ great the actors' moves are!",
+            "options": [
+              "How",
+              "What",
+              "Where",
+              "When"
+            ],
+            "answer": 0,
+            "explanation_cn": "How + 形容词 + 主谓：How great…!"
+          },
+          {
+            "id": "sun-gr5",
+            "type": "choice",
+            "question": "An actor practises many years ___ he can sing well.",
+            "options": [
+              "before",
+              "after",
+              "because",
+              "but"
+            ],
+            "answer": 0,
+            "explanation_cn": "练很多年「才」能唱好 → before（在能唱好之前）。"
+          }
+        ]
+      },
+      {
+        "id": "sun-listening",
+        "name_cn": "听力练习",
+        "type": "listening",
+        "duration": 5,
+        "questions": [
+          {
+            "id": "sun-ls1",
+            "type": "choice",
+            "question": "听到的句子是什么？",
+            "audio_text": "Peking Opera is one of China's oldest folk arts.",
+            "options": [
+              "Peking Opera is one of China's oldest folk arts.",
+              "Peking Opera is one of China's newest folk arts.",
+              "Peking Opera is one of China's oldest folk dances.",
+              "Beijing duck is one of China's oldest folk arts."
+            ],
+            "answer": 0,
+            "explanation_cn": "关键词 oldest（最古老的）和 folk arts（民间艺术）。"
+          },
+          {
+            "id": "sun-ls2",
+            "type": "choice",
+            "question": "听到的句子是什么？",
+            "audio_text": "The actors paint their faces in different colours.",
+            "options": [
+              "The actors paint their faces in different colours.",
+              "The actors wear their hats in different colours.",
+              "The actors paint their houses in different colours.",
+              "The actors dance in different colours."
+            ],
+            "answer": 0,
+            "explanation_cn": "paint their faces（画脸），不是 hats 或 houses。"
+          },
+          {
+            "id": "sun-ls3",
+            "type": "choice",
+            "question": "听到的句子是什么？",
+            "audio_text": "A red face means a good and brave man.",
+            "options": [
+              "A red face means a good and brave man.",
+              "A white face means a good and brave man.",
+              "A red face means a bad and silly man.",
+              "A black face means a good and brave man."
+            ],
+            "answer": 0,
+            "explanation_cn": "red face（红脸）代表好人，white face 代表坏人。"
+          },
+          {
+            "id": "sun-ls4",
+            "type": "choice",
+            "question": "听到的句子是什么？",
+            "audio_text": "Many old people love to watch Peking Opera.",
+            "options": [
+              "Many old people love to watch Peking Opera.",
+              "Many young people love to watch Peking Opera.",
+              "Many old people hate to watch Peking Opera.",
+              "Many children love to draw Peking Opera."
+            ],
+            "answer": 0,
+            "explanation_cn": "主语是 old people（老人），动词是 love to watch。"
+          },
+          {
+            "id": "sun-ls5",
+            "type": "choice",
+            "question": "听到的句子是什么？",
+            "audio_text": "It is an important part of Chinese culture.",
+            "options": [
+              "It is an important part of Chinese culture.",
+              "It is an important part of American culture.",
+              "It is an impossible part of Chinese culture.",
+              "It is an important picture of Chinese culture."
+            ],
+            "answer": 0,
+            "explanation_cn": "关键词 important part（重要部分）和 Chinese culture（中国文化）。"
           }
         ]
       }
@@ -2915,47 +4688,12 @@ const WEEK1 = [
   }
 ];
 
-// ============================================================================
-// 多周轮换（v87）：每周 7 天一套内容，按自然周推进，难度逐周递增。
-//   第 1 周 = 2026-09-28 那一周（原题库）；第 2/3/4 周为全新内容。
-//   做过的题不再出现 —— 只要新增 WEEK5+，孩子的题库就一直往前走。
-//   全部周用完后停在最难的一周（而不是回头重复）。
-// HOMEWORK_DATA 仍然是一个 7 元素数组（周一..周日），app.js 其余代码零改动。
-// ============================================================================
-
-// 词汇条目生成器：把紧凑的词卡配置展开成完整的多阶段学习数据。
-// 与第 1 周手写的条目同构（8 个阶段：learn / 看图选词×2 / 选释义×2 /
-// 逐字母朗读 / 音节拼读 / 补全拼写），少写 90% 的重复 JSON。
-function vocabWord(c) {
-  const w = c.word;
-  const stages = [
-    { type: 'learn', instruction: '看图学单词' },
-    { type: 'image_choice', prompt: '听发音，选图片（1/2）',
-      options: [c.emoji, c.wrongEmoji[0], c.wrongEmoji[1], c.wrongEmoji[2]], answer: 0 },
-    { type: 'image_choice', prompt: '听发音，选图片（2/2）',
-      options: [c.wrongEmoji[2], c.wrongEmoji[0], c.emoji, c.wrongEmoji[1]], answer: 2 },
-    { type: 'meaning_choice', prompt: w + ' 是什么意思？（1/2）',
-      options: [c.wrongMeaning[0], c.wrongMeaning[1], c.meaning, c.wrongMeaning[2]], answer: 2 },
-    { type: 'meaning_choice', prompt: w + ' 是什么意思？（2/2）',
-      options: [c.meaning, c.wrongMeaning[2], c.wrongMeaning[0], c.wrongMeaning[1]], answer: 0 },
-    { type: 'letter_read', prompt: '跟读字母（每个字母读两遍）' },
-    { type: 'syllable_blend', prompt: '拼合音标（每个音节读两遍）' },
-    { type: 'spell_fill', prompt: '补全拼写: ' + c.spell[0], answer: c.spell[1] }
-  ];
-  return {
-    word: w, phonetic: c.phonetic, meaning: c.meaning, emoji: c.emoji,
-    example_en: c.example_en, example_cn: c.example_cn,
-    stages: stages, letters: w.split(''), syllables: c.syllables
-  };
-}
-
-// ===== 第 2 周（A2 · KET 入门巩固）：学校生活 / 动物农场 / 四季 =====
 const WEEK2 = [
   {
     "day_cn": "周一",
     "day_en": "Monday",
     "is_speaking_day": true,
-    "total_duration": 40,
+    "total_duration": 60,
     "theme_cn": "AI口语 + 高频词汇 + 阅读理解",
     "modules": [
       {
@@ -2977,7 +4715,14 @@ const WEEK2 = [
             "answer": 0,
             "pronunciation_tips": "注意 thirty /ˈθɜːti/ 的咬舌音 θ，six thirty 连读时 d 音轻过渡",
             "explanation_cn": "询问时间用 What time。回答用 I get up at + 时间。注意 get up 意为起床，at 用在具体时间点前面。",
-            "explanation_en": "Use 'What time' to ask about the clock. Answer with 'I get up at + time'. Note: 'get up' means to rise from bed, and 'at' goes before a specific time."
+            "explanation_en": "Use 'What time' to ask about the clock. Answer with 'I get up at + time'. Note: 'get up' means to rise from bed, and 'at' goes before a specific time.",
+            "answer_cn_hint": "它在问「几点起床」，答句要有具体时间，而且必须是起床这件事。",
+            "options_cn": [
+              "上学日我六点半起床。",
+              "我六点半睡觉。",
+              "我八点开始上课。",
+              "我十二点吃了午饭。"
+            ]
           },
           {
             "id": "w2-mon-sp2",
@@ -2992,7 +4737,14 @@ const WEEK2 = [
             "answer": 0,
             "pronunciation_tips": "注意 noodles /ˈnuːdlz/ 的长元音 uː，词尾 s 不要漏读",
             "explanation_cn": "favorite 意为最喜欢的，问食物答食物。B 和 C 答非所问（颜色、科目），D 时态不对。注意 My favorite food is... 是常用句型。",
-            "explanation_en": "'Favorite' means most liked. The question asks about food, so answer with a food. B and C answer different questions (color, subject); D uses the wrong tense. Pattern: 'My favorite food is...'"
+            "explanation_en": "'Favorite' means most liked. The question asks about food, so answer with a food. B and C answer different questions (color, subject); D uses the wrong tense. Pattern: 'My favorite food is...'",
+            "answer_cn_hint": "它在问「最喜欢的食物」，答句要说食物名，不要答颜色或者科目。",
+            "options_cn": [
+              "我最喜欢的食物是面条。",
+              "我最喜欢的颜色是蓝色。",
+              "我最喜欢的科目是美术。",
+              "我现在在看电视。"
+            ]
           },
           {
             "id": "w2-mon-sp3",
@@ -3007,7 +4759,14 @@ const WEEK2 = [
             "answer": 0,
             "pronunciation_tips": "usually /ˈjuːʒuəli/ 注意中间的 ʒ 音，不要读成 usually 中的 j 音",
             "explanation_cn": "usually 是频度副词，表示经常性习惯，用一般现在时。A 正确；B 是现在进行时（正在做）；C 是过去时；D 答非所问。",
-            "explanation_en": "'Usually' is an adverb of frequency, so the simple present tense is used. A is correct; B is present continuous, C is past tense, and D does not answer the question."
+            "explanation_en": "'Usually' is an adverb of frequency, so the simple present tense is used. A is correct; B is present continuous, C is past tense, and D does not answer the question.",
+            "answer_cn_hint": "它在问「通常做什么」（习惯），答句要用一般现在时，不能答\"正在做\"或\"昨天做\"。",
+            "options_cn": [
+              "我通常先做作业。",
+              "我现在正在做作业。",
+              "我昨天做了作业。",
+              "我明天要去上学。"
+            ]
           },
           {
             "id": "w2-mon-sp4",
@@ -3022,7 +4781,14 @@ const WEEK2 = [
             "answer": 0,
             "pronunciation_tips": "weather /ˈweðə/ 注意 th 读 /ð/ 不是 /θ/，sunny /ˈsʌni/ 双写 n",
             "explanation_cn": "问天气的固定句型是 What's the weather like? 回答用 It is + 天气形容词。B 时态是过去，C、D 答非所问。",
-            "explanation_en": "The fixed pattern for asking about weather is 'What's the weather like?' Answer with 'It is + weather adjective'. B uses past tense; C and D do not answer the question."
+            "explanation_en": "The fixed pattern for asking about weather is 'What's the weather like?' Answer with 'It is + weather adjective'. B uses past tense; C and D do not answer the question.",
+            "answer_cn_hint": "它在问「今天」的天气，答句要说今天，不能答昨天。",
+            "options_cn": [
+              "今天晴朗又暖和。",
+              "昨天下雨了。",
+              "今天是我妹妹的生日。",
+              "一个星期有七天。"
+            ]
           },
           {
             "id": "w2-mon-sp5",
@@ -3037,7 +4803,14 @@ const WEEK2 = [
             "answer": 0,
             "pronunciation_tips": "注意 wash /wɒʃ/ 的 ʃ 音，dishes 词尾 -es 读 /ɪz/",
             "explanation_cn": "问你怎么帮忙，回答要说自己做的事。A 我常洗碗，正确；B 说的是妈妈；C、D 都不是回答做家务。",
-            "explanation_en": "The question asks what YOU do, so the answer must be your own action. A (I often wash the dishes) is correct; B talks about mother; C and D do not answer the question."
+            "explanation_en": "The question asks what YOU do, so the answer must be your own action. A (I often wash the dishes) is correct; B talks about mother; C and D do not answer the question.",
+            "answer_cn_hint": "它问的是「你」怎么帮忙，答句的主语要是 I，不能答别人做家务。",
+            "options_cn": [
+              "我常常在晚饭后洗碗。",
+              "我妈妈给我们做晚饭。",
+              "厨房很干净。",
+              "晚饭六点做好。"
+            ]
           }
         ]
       },
@@ -3047,72 +4820,763 @@ const WEEK2 = [
         "type": "vocabulary_game",
         "duration": 5,
         "words": [
-          vocabWord({
-            "word": "breakfast", "phonetic": "/ˈbrekfəst/", "meaning": "早餐", "emoji": "🍳",
-            "example_en": "I have breakfast at seven.", "example_cn": "我七点吃早餐。",
-            "syllables": ["break", "fast"], "spell": ["br__kfast", "ea"],
-            "wrongEmoji": ["⭐", "🚗", "⚽"], "wrongMeaning": ["美味的", "蔬菜", "雨伞"]
-          }),
-          vocabWord({
-            "word": "delicious", "phonetic": "/dɪˈlɪʃəs/", "meaning": "美味的", "emoji": "😋",
-            "example_en": "The noodles are delicious.", "example_cn": "这面条很好吃。",
-            "syllables": ["de", "li", "cious"], "spell": ["deli__ous", "ci"],
-            "wrongEmoji": ["⭐", "🚲", "🌧️"], "wrongMeaning": ["早餐", "蔬菜", "雨伞"]
-          }),
-          vocabWord({
-            "word": "vegetable", "phonetic": "/ˈvedʒtəbl/", "meaning": "蔬菜", "emoji": "🥕",
-            "example_en": "Eat more vegetables every day.", "example_cn": "每天多吃蔬菜。",
-            "syllables": ["ve", "ge", "ta", "ble"], "spell": ["veg__able", "et"],
-            "wrongEmoji": ["⚽", "🎵", "🚗"], "wrongMeaning": ["早餐", "美味的", "雨伞"]
-          }),
-          vocabWord({
-            "word": "umbrella", "phonetic": "/ʌmˈbrelə/", "meaning": "雨伞", "emoji": "☂️",
-            "example_en": "Take an umbrella. It may rain.", "example_cn": "带上雨伞，可能会下雨。",
-            "syllables": ["um", "brel", "la"], "spell": ["um__ella", "br"],
-            "wrongEmoji": ["⭐", "🎶", "⚽"], "wrongMeaning": ["蔬菜", "美味的", "锻炼"]
-          }),
-          vocabWord({
-            "word": "exercise", "phonetic": "/ˈeksəsaɪz/", "meaning": "锻炼；练习", "emoji": "🏃",
-            "example_en": "Exercise makes you strong.", "example_cn": "锻炼让你强壮。",
-            "syllables": ["exer", "cise"], "spell": ["ex__cise", "er"],
-            "wrongEmoji": ["📖", "🍎", "☂️"], "wrongMeaning": ["雨伞", "蔬菜", "早餐"]
-          })
+          {
+            "word": "breakfast",
+            "phonetic": "/ˈbrekfəst/",
+            "meaning": "早餐",
+            "emoji": "🍳",
+            "example_en": "I have breakfast at seven.",
+            "example_cn": "我七点吃早餐。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "🍳",
+                  "⭐",
+                  "🚗",
+                  "⚽"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "⚽",
+                  "⭐",
+                  "🍳",
+                  "🚗"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "breakfast 是什么意思？（1/2）",
+                "options": [
+                  "美味的",
+                  "蔬菜",
+                  "早餐",
+                  "雨伞"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "breakfast 是什么意思？（2/2）",
+                "options": [
+                  "早餐",
+                  "雨伞",
+                  "美味的",
+                  "蔬菜"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: br__kfast",
+                "answer": "ea"
+              }
+            ],
+            "letters": [
+              "b",
+              "r",
+              "e",
+              "a",
+              "k",
+              "f",
+              "a",
+              "s",
+              "t"
+            ],
+            "syllables": [
+              "break",
+              "fast"
+            ],
+            "hint_cn": "早上刚起来吃的那一顿"
+          },
+          {
+            "word": "delicious",
+            "phonetic": "/dɪˈlɪʃəs/",
+            "meaning": "美味的",
+            "emoji": "😋",
+            "example_en": "The noodles are delicious.",
+            "example_cn": "这面条很好吃。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "😋",
+                  "⭐",
+                  "🚲",
+                  "🌧️"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "🌧️",
+                  "⭐",
+                  "😋",
+                  "🚲"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "delicious 是什么意思？（1/2）",
+                "options": [
+                  "早餐",
+                  "蔬菜",
+                  "美味的",
+                  "雨伞"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "delicious 是什么意思？（2/2）",
+                "options": [
+                  "美味的",
+                  "雨伞",
+                  "早餐",
+                  "蔬菜"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: deli__ous",
+                "answer": "ci"
+              }
+            ],
+            "letters": [
+              "d",
+              "e",
+              "l",
+              "i",
+              "c",
+              "i",
+              "o",
+              "u",
+              "s"
+            ],
+            "syllables": [
+              "de",
+              "li",
+              "cious"
+            ],
+            "hint_cn": "吃一口就忍不住想再吃一口"
+          },
+          {
+            "word": "vegetable",
+            "phonetic": "/ˈvedʒtəbl/",
+            "meaning": "蔬菜",
+            "emoji": "🥕",
+            "example_en": "Eat more vegetables every day.",
+            "example_cn": "每天多吃蔬菜。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "🥕",
+                  "⚽",
+                  "🎵",
+                  "🚗"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "🚗",
+                  "⚽",
+                  "🥕",
+                  "🎵"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "vegetable 是什么意思？（1/2）",
+                "options": [
+                  "早餐",
+                  "美味的",
+                  "蔬菜",
+                  "雨伞"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "vegetable 是什么意思？（2/2）",
+                "options": [
+                  "蔬菜",
+                  "雨伞",
+                  "早餐",
+                  "美味的"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: veg__able",
+                "answer": "et"
+              }
+            ],
+            "letters": [
+              "v",
+              "e",
+              "g",
+              "e",
+              "t",
+              "a",
+              "b",
+              "l",
+              "e"
+            ],
+            "syllables": [
+              "ve",
+              "ge",
+              "ta",
+              "ble"
+            ],
+            "hint_cn": "青菜、胡萝卜那一类，吃了对身体好"
+          },
+          {
+            "word": "umbrella",
+            "phonetic": "/ʌmˈbrelə/",
+            "meaning": "雨伞",
+            "emoji": "☂️",
+            "example_en": "Take an umbrella. It may rain.",
+            "example_cn": "带上雨伞，可能会下雨。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "☂️",
+                  "⭐",
+                  "🎶",
+                  "⚽"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "⚽",
+                  "⭐",
+                  "☂️",
+                  "🎶"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "umbrella 是什么意思？（1/2）",
+                "options": [
+                  "蔬菜",
+                  "美味的",
+                  "雨伞",
+                  "锻炼"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "umbrella 是什么意思？（2/2）",
+                "options": [
+                  "雨伞",
+                  "锻炼",
+                  "蔬菜",
+                  "美味的"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: um__ella",
+                "answer": "br"
+              }
+            ],
+            "letters": [
+              "u",
+              "m",
+              "b",
+              "r",
+              "e",
+              "l",
+              "l",
+              "a"
+            ],
+            "syllables": [
+              "um",
+              "brel",
+              "la"
+            ],
+            "hint_cn": "下雨天撑着它，就不会被淋湿"
+          },
+          {
+            "word": "exercise",
+            "phonetic": "/ˈeksəsaɪz/",
+            "meaning": "锻炼；练习",
+            "emoji": "🏃",
+            "example_en": "Exercise makes you strong.",
+            "example_cn": "锻炼让你强壮。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "🏃",
+                  "📖",
+                  "🍎",
+                  "☂️"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "☂️",
+                  "📖",
+                  "🏃",
+                  "🍎"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "exercise 是什么意思？（1/2）",
+                "options": [
+                  "雨伞",
+                  "蔬菜",
+                  "锻炼；练习",
+                  "早餐"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "exercise 是什么意思？（2/2）",
+                "options": [
+                  "锻炼；练习",
+                  "早餐",
+                  "雨伞",
+                  "蔬菜"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: ex__cise",
+                "answer": "er"
+              }
+            ],
+            "letters": [
+              "e",
+              "x",
+              "e",
+              "r",
+              "c",
+              "i",
+              "s",
+              "e"
+            ],
+            "syllables": [
+              "exer",
+              "cise"
+            ],
+            "hint_cn": "跑步、跳绳，让身体变棒"
+          }
         ]
       },
       {
         "id": "w2-mon-reading",
         "name_cn": "阅读理解",
         "type": "reading",
-        "duration": 5,
-        "passage": "Mia is a nine-year-old girl from Canada. Her school has a small garden behind the classroom. Every Monday, Mia waters the plants with her classmates. They grow tomatoes, carrots and beans. Last week, they picked their first carrots. The carrots were small but very sweet. Mia's teacher says vegetables from the garden taste better than those from the supermarket. Mia wants to grow strawberries next spring.",
-        "passage_cn": "米娅是一个来自加拿大的九岁女孩。她的学校在教室后面有一个小花园。每周一，米娅和同学们一起给植物浇水。他们种了西红柿、胡萝卜和豆子。上周，他们摘了第一茬胡萝卜。胡萝卜很小，但是非常甜。米娅的老师说，花园里种的蔬菜比超市买的味道更好。米娅想明年春天种草莓。",
+        "duration": 10,
+        "passage": "China's high-speed trains are famous around the world. They run at about 350 kilometres per hour. A trip from Beijing to Shanghai takes only about four and a half hours by high-speed train. Ten years ago, the same trip took more than ten hours. The trains are clean, quiet and always on time. You can buy tickets with a mobile phone and get on the train without paper tickets. People from many countries come to China to learn how to build their own high-speed railways.",
+        "passage_cn": "中国的高铁世界闻名。它们的时速大约是350公里。坐高铁从北京到上海只需要大约四个半小时。十年前，同样的路程要花十多个小时。高铁干净、安静，而且总是准点。你可以用手机买票，不用纸质车票就能上车。许多国家的人来中国学习如何修建自己的高速铁路。",
         "questions": [
           {
             "id": "w2-mon-rd1",
             "type": "choice",
-            "question": "Where is Mia from?",
-            "options": ["England", "Canada", "Australia", "America"],
-            "answer": 1,
-            "explanation_cn": "文章第一句说 Mia is a nine-year-old girl from Canada，所以米娅来自加拿大。注意 from 意为来自，be from = come from。",
-            "explanation_en": "The first sentence says 'Mia is a nine-year-old girl from Canada', so Mia is from Canada. Note: 'from' shows where someone comes from."
+            "question": "How fast do China's high-speed trains run?",
+            "options": [
+              "About 350 kilometres per hour",
+              "About 35 kilometres per hour",
+              "About 3500 kilometres per hour",
+              "About 35000 kilometres per hour"
+            ],
+            "answer": 0,
+            "explanation_cn": "第二句：about 350 kilometres per hour（时速约350公里）。"
           },
           {
             "id": "w2-mon-rd2",
             "type": "choice",
-            "question": "What did the class pick last week?",
-            "options": ["Some tomatoes", "Some beans", "Their first carrots", "Some strawberries"],
-            "answer": 2,
-            "explanation_cn": "文章说 Last week, they picked their first carrots。上周他们摘了第一茬胡萝卜。注意 pick 意为摘、采，strawberries 是他们明年才要种的。",
-            "explanation_en": "The text says 'Last week, they picked their first carrots.' Note: 'pick' means to take fruit or vegetables from the plant. Strawberries are what Mia wants to grow next spring."
+            "question": "How long does a trip from Beijing to Shanghai take now?",
+            "options": [
+              "About four and a half hours",
+              "About ten hours",
+              "About forty minutes",
+              "About one day"
+            ],
+            "answer": 0,
+            "explanation_cn": "现在坐高铁只要大约四个半小时。"
           },
           {
             "id": "w2-mon-rd3",
             "type": "choice",
-            "question": "What does Mia want to grow next spring?",
-            "options": ["Apples", "Potatoes", "Flowers", "Strawberries"],
-            "answer": 3,
-            "explanation_cn": "文章最后一句 Mia wants to grow strawberries next spring。米娅想明年春天种草莓。注意 want to do 意为想做某事，grow 意为种植。",
-            "explanation_en": "The last sentence says 'Mia wants to grow strawberries next spring.' Note: 'want to do' means to wish to do something, and 'grow' here means to plant and raise."
+            "question": "How long did the same trip take ten years ago?",
+            "options": [
+              "More than ten hours",
+              "Four and a half hours",
+              "Two hours",
+              "Half an hour"
+            ],
+            "answer": 0,
+            "explanation_cn": "十年前同样的路程要超过十个小时。"
+          },
+          {
+            "id": "w2-mon-rd4",
+            "type": "choice",
+            "question": "What are the trains like?",
+            "options": [
+              "Clean, quiet and always on time",
+              "Dirty and slow",
+              "Noisy and crowded",
+              "Old and small"
+            ],
+            "answer": 0,
+            "explanation_cn": "文中说高铁干净、安静、总是准点。"
+          },
+          {
+            "id": "w2-mon-rd5",
+            "type": "choice",
+            "question": "How can you buy a ticket now?",
+            "options": [
+              "With a mobile phone",
+              "Only at the station",
+              "From the conductor only",
+              "By letter"
+            ],
+            "answer": 0,
+            "explanation_cn": "可以用手机买票（buy tickets with a mobile phone）。"
+          },
+          {
+            "id": "w2-mon-rd6",
+            "type": "choice",
+            "question": "What do people from other countries come to China to learn?",
+            "options": [
+              "How to build their own high-speed railways",
+              "How to cook Chinese food",
+              "How to make trains by hand",
+              "How to drive trains fast"
+            ],
+            "answer": 0,
+            "explanation_cn": "他们来学习如何修建自己的高速铁路。"
+          },
+          {
+            "id": "w2-mon-rd7",
+            "type": "choice",
+            "question": "The word \"on time\" here means ___.",
+            "options": [
+              "准时",
+              "提前",
+              "迟到",
+              "在线"
+            ],
+            "answer": 0,
+            "explanation_cn": "on time 意思是「准时」。"
+          },
+          {
+            "id": "w2-mon-rd8",
+            "type": "choice",
+            "question": "Which is NOT true about high-speed trains?",
+            "options": [
+              "They are often late.",
+              "They are clean.",
+              "They are quiet.",
+              "They are fast."
+            ],
+            "answer": 0,
+            "explanation_cn": "文中说高铁总是准点（always on time），说它们经常晚点不对。"
+          },
+          {
+            "id": "w2-mon-rd9",
+            "type": "choice",
+            "question": "Going by high-speed train is ___ than going by old train.",
+            "options": [
+              "much faster",
+              "much slower",
+              "a little slower",
+              "the fastest"
+            ],
+            "answer": 0,
+            "explanation_cn": "四小时半对十多小时，高铁快得多（much faster）。"
+          },
+          {
+            "id": "w2-mon-rd10",
+            "type": "choice",
+            "question": "The best title for the passage about the fast trains is ___.",
+            "options": [
+              "China's High-speed Trains",
+              "A Trip to Shanghai",
+              "Trains in Old Times",
+              "How to Buy Tickets"
+            ],
+            "answer": 0,
+            "explanation_cn": "全文介绍中国高铁：速度、时间和便利。"
+          }
+        ]
+      },
+      {
+        "id": "w2-mon-mc",
+        "name_cn": "单项选择",
+        "type": "multiple_choice",
+        "duration": 10,
+        "questions": [
+          {
+            "id": "w2-mon-mc1",
+            "type": "choice",
+            "question": "The high-speed train ___ at about 350 kilometres per hour.",
+            "options": [
+              "runs",
+              "run",
+              "running",
+              "ran"
+            ],
+            "answer": 0,
+            "explanation_cn": "主语 the train 三单，一般现在时用 runs。"
+          },
+          {
+            "id": "w2-mon-mc2",
+            "type": "choice",
+            "question": "A trip to Shanghai ___ only four hours by high-speed train.",
+            "options": [
+              "takes",
+              "take",
+              "taking",
+              "took"
+            ],
+            "answer": 0,
+            "explanation_cn": "主语 a trip 是单数，用 takes（花费）。"
+          },
+          {
+            "id": "w2-mon-mc3",
+            "type": "choice",
+            "question": "We ___ tickets with a mobile phone now.",
+            "options": [
+              "can buy",
+              "can buys",
+              "can buying",
+              "can bought"
+            ],
+            "answer": 0,
+            "explanation_cn": "情态动词 can 后面用动词原形 buy。"
+          },
+          {
+            "id": "w2-mon-mc4",
+            "type": "choice",
+            "question": "The trains are clean, quiet and always ___ time.",
+            "options": [
+              "on",
+              "in",
+              "at",
+              "of"
+            ],
+            "answer": 0,
+            "explanation_cn": "on time 准时，固定搭配。"
+          },
+          {
+            "id": "w2-mon-mc5",
+            "type": "choice",
+            "question": "Travelling by high-speed train is ___ than by bus.",
+            "options": [
+              "faster",
+              "fast",
+              "fastest",
+              "more fast"
+            ],
+            "answer": 0,
+            "explanation_cn": "than 比较级用 faster。"
+          },
+          {
+            "id": "w2-mon-mc6",
+            "type": "choice",
+            "question": "My father went to Beijing ___ high-speed train last week.",
+            "options": [
+              "by",
+              "on",
+              "in",
+              "with"
+            ],
+            "answer": 0,
+            "explanation_cn": "「乘高铁」用 by high-speed train。"
+          },
+          {
+            "id": "w2-mon-mc7",
+            "type": "choice",
+            "question": "Ten years ago, the trip ___ more than ten hours.",
+            "options": [
+              "took",
+              "takes",
+              "take",
+              "taking"
+            ],
+            "answer": 0,
+            "explanation_cn": "ten years ago 过去时间，用过去式 took。"
+          },
+          {
+            "id": "w2-mon-mc8",
+            "type": "choice",
+            "question": "There ___ many new high-speed railways in China.",
+            "options": [
+              "are",
+              "is",
+              "am",
+              "be"
+            ],
+            "answer": 0,
+            "explanation_cn": "railways 复数，There be 用 are。"
+          },
+          {
+            "id": "w2-mon-mc9",
+            "type": "choice",
+            "question": "___ fast the high-speed train is!",
+            "options": [
+              "How",
+              "What",
+              "Where",
+              "When"
+            ],
+            "answer": 0,
+            "explanation_cn": "How + 形容词 + 主谓：How fast…!"
+          },
+          {
+            "id": "w2-mon-mc10",
+            "type": "choice",
+            "question": "The ticket is ___ cheaper on the phone.",
+            "options": [
+              "much",
+              "many",
+              "more",
+              "most"
+            ],
+            "answer": 0,
+            "explanation_cn": "much 修饰比较级 cheaper（便宜得多）。"
+          }
+        ]
+      },
+      {
+        "id": "w2-mon-tense2",
+        "name_cn": "时态练习",
+        "type": "tense",
+        "duration": 5,
+        "questions": [
+          {
+            "id": "w2-mon-tn21",
+            "type": "fill",
+            "question": "The high-speed train ___ (run) at 350 kilometres per hour. [填入正确形式]",
+            "answer": "runs",
+            "explanation_cn": "客观事实，主语三单，用 runs。"
+          },
+          {
+            "id": "w2-mon-tn22",
+            "type": "fill",
+            "question": "I ___ (take) the train to Beijing next Monday. [填入正确形式]",
+            "answer": "will take",
+            "explanation_cn": "next Monday 将来时间，用 will take。"
+          },
+          {
+            "id": "w2-mon-tn23",
+            "type": "fill",
+            "question": "The trip ___ (take) ten hours ten years ago. [填入正确形式]",
+            "answer": "took",
+            "explanation_cn": "ten years ago 过去时间，用过去式 took。"
+          },
+          {
+            "id": "w2-mon-tn24",
+            "type": "fill",
+            "question": "Look! The train ___ (arrive) at the station. [填入正确形式]",
+            "answer": "is arriving",
+            "explanation_cn": "Look! 提示正在进行，用 is arriving。"
+          },
+          {
+            "id": "w2-mon-tn25",
+            "type": "fill",
+            "question": "Trains ___ (be) much faster now than before. [填入正确形式]",
+            "answer": "are",
+            "explanation_cn": "主语 trains 复数，now 用 are。"
           }
         ]
       }
@@ -3130,35 +5594,138 @@ const WEEK2 = [
         "name_cn": "阅读理解",
         "type": "reading",
         "duration": 10,
-        "passage": "Ben has a small brown dog called Lucky. Every morning, Ben feeds Lucky before he goes to school. One rainy afternoon, Ben found a wet kitten under a tree. It was cold and hungry. Ben took it home and dried it with a towel. His mother made a warm bed for the kitten. Now the kitten drinks milk every day and sleeps next to Lucky. Ben says Lucky is a good big brother.",
-        "passage_cn": "本有一只叫 Lucky 的小棕狗。每天早上，本上学前先给 Lucky 喂食。一个下雨的下午，本在树下发现一只湿漉漉的小猫。它又冷又饿。本把它带回家，用毛巾把它擦干。妈妈为小猫做了一个温暖的窝。现在小猫每天喝牛奶，睡在 Lucky 旁边。本说 Lucky 是个好哥哥。",
+        "passage": "The Chinese space station Tiangong is like a home in space. It flies more than 300 kilometres above the earth. Astronauts live and work there for about six months at a time. They do science experiments and even give lessons to students from space! The astronauts exercise every day, because living in space makes bones and muscles weak. They eat special space food and sleep in small sleeping bags on the wall. In 2021, Chinese astronauts gave a science lesson from Tiangong, and millions of students watched it on TV.",
+        "passage_cn": "中国空间站「天宫」就像太空里的家。它在距离地球三百多公里的高空飞行。宇航员每次在那里生活和工作大约六个月。他们做科学实验，甚至还从太空给学生上课！宇航员每天都要锻炼，因为在太空生活会让骨骼和肌肉变弱。他们吃特制的太空食品，睡在墙上的小睡袋里。2021年，中国航天员在天宫上了一堂太空科学课，数百万学生通过电视观看了这堂课。",
         "questions": [
           {
             "id": "w2-tue-rd1",
             "type": "choice",
-            "question": "What does Ben do every morning?",
-            "options": ["He washes Lucky.", "He feeds Lucky.", "He walks Lucky in the park.", "He teaches Lucky tricks."],
-            "answer": 1,
-            "explanation_cn": "文章说 Every morning, Ben feeds Lucky before he goes to school。每天早上本先给 Lucky 喂食。注意 feed 意为喂食，before 引导时间状语从句。",
-            "explanation_en": "The text says 'Every morning, Ben feeds Lucky before he goes to school.' Note: 'feed' means to give food to, and 'before' introduces a time clause."
+            "question": "What is Tiangong?",
+            "options": [
+              "The Chinese space station",
+              "A high-speed train",
+              "A new airport",
+              "A big ship"
+            ],
+            "answer": 0,
+            "explanation_cn": "天宫是中国空间站（space station）。"
           },
           {
             "id": "w2-tue-rd2",
             "type": "choice",
-            "question": "Where did Ben find the kitten?",
-            "options": ["Under a tree", "In the garden", "Near the school", "On the road"],
+            "question": "How far does it fly above the earth?",
+            "options": [
+              "More than 300 kilometres",
+              "More than 3000 kilometres",
+              "About 30 kilometres",
+              "About 3 kilometres"
+            ],
             "answer": 0,
-            "explanation_cn": "文章说 Ben found a wet kitten under a tree。本在树下发现了小猫。注意 found 是 find 的过去式，wet 意为湿的。",
-            "explanation_en": "The text says 'Ben found a wet kitten under a tree.' Note: 'found' is the past form of 'find', and 'wet' means covered with water."
+            "explanation_cn": "它在距地球三百多公里的高空飞行。"
           },
           {
             "id": "w2-tue-rd3",
             "type": "choice",
-            "question": "What does the kitten do every day now?",
-            "options": ["It eats fish.", "It drinks milk.", "It plays in the garden.", "It sleeps all day."],
-            "answer": 1,
-            "explanation_cn": "文章说 Now the kitten drinks milk every day and sleeps next to Lucky。现在小猫每天喝牛奶，睡在 Lucky 旁边。C 选项 it sleeps next to Lucky 只对了半句，D all day（整天）不对。",
-            "explanation_en": "The text says 'Now the kitten drinks milk every day and sleeps next to Lucky.' Note: C is only half right — it sleeps next to Lucky, not all day."
+            "question": "How long do astronauts live there at a time?",
+            "options": [
+              "About six months",
+              "About six days",
+              "About six years",
+              "About six weeks"
+            ],
+            "answer": 0,
+            "explanation_cn": "宇航员每次在空间站待大约六个月。"
+          },
+          {
+            "id": "w2-tue-rd4",
+            "type": "choice",
+            "question": "What do astronauts do in space?",
+            "options": [
+              "They do science experiments and give lessons.",
+              "They cook for tourists.",
+              "They grow big trees.",
+              "They drive cars."
+            ],
+            "answer": 0,
+            "explanation_cn": "他们做科学实验，还从太空给学生上课。"
+          },
+          {
+            "id": "w2-tue-rd5",
+            "type": "choice",
+            "question": "Why do astronauts exercise every day?",
+            "options": [
+              "Because space makes bones and muscles weak.",
+              "Because they are bored.",
+              "Because they want to lose weight.",
+              "Because they sleep too much."
+            ],
+            "answer": 0,
+            "explanation_cn": "太空生活让骨骼和肌肉变弱，所以要每天锻炼。"
+          },
+          {
+            "id": "w2-tue-rd6",
+            "type": "choice",
+            "question": "Where do astronauts sleep?",
+            "options": [
+              "In sleeping bags on the wall",
+              "In big beds",
+              "On the floor",
+              "In chairs"
+            ],
+            "answer": 0,
+            "explanation_cn": "他们睡在固定在墙上的睡袋里。"
+          },
+          {
+            "id": "w2-tue-rd7",
+            "type": "choice",
+            "question": "When did astronauts give a science lesson from Tiangong?",
+            "options": [
+              "In 2021",
+              "In 2012",
+              "In 1990",
+              "In 2024"
+            ],
+            "answer": 0,
+            "explanation_cn": "2021年，中国航天员在天宫上了科学课。"
+          },
+          {
+            "id": "w2-tue-rd8",
+            "type": "choice",
+            "question": "Who watched that lesson?",
+            "options": [
+              "Millions of students",
+              "Only the astronauts' families",
+              "Only scientists",
+              "No one"
+            ],
+            "answer": 0,
+            "explanation_cn": "数百万学生通过电视观看了太空授课。"
+          },
+          {
+            "id": "w2-tue-rd9",
+            "type": "choice",
+            "question": "The word \"astronauts\" means ___.",
+            "options": [
+              "航天员",
+              "老师",
+              "农民",
+              "司机"
+            ],
+            "answer": 0,
+            "explanation_cn": "astronaut 意思是「航天员」，在空间站生活工作的人。"
+          },
+          {
+            "id": "w2-tue-rd10",
+            "type": "choice",
+            "question": "The best title for the space station passage is ___.",
+            "options": [
+              "Life on the Tiangong Space Station",
+              "How to Make Space Food",
+              "A Trip to Beijing",
+              "Sleeping in Space Hotels"
+            ],
+            "answer": 0,
+            "explanation_cn": "全文围绕天宫空间站上的生活展开。"
           }
         ]
       },
@@ -3171,45 +5738,132 @@ const WEEK2 = [
           {
             "id": "w2-tue-gr1",
             "type": "choice",
-            "question": "My sister ___ her teeth every morning.",
-            "options": ["brush", "brushes", "brushing", "brushed"],
-            "answer": 1,
-            "explanation_cn": "主语 My sister 是第三人称单数，every morning 表示习惯，用一般现在时三单形式。brush 以 sh 结尾，加 -es：brushes。",
-            "explanation_en": "'My sister' is third person singular and 'every morning' shows a habit, so the simple present with -s/-es is used. Verbs ending in -sh add -es: brush → brushes."
+            "question": "Tiangong ___ around the earth every 90 minutes.",
+            "options": [
+              "goes",
+              "go",
+              "going",
+              "went"
+            ],
+            "answer": 0,
+            "explanation_cn": "主语 Tiangong 三单，一般现在时用 goes。"
           },
           {
             "id": "w2-tue-gr2",
             "type": "choice",
-            "question": "Be quiet! The baby ___.",
-            "options": ["sleeps", "is sleeping", "slept", "sleep"],
-            "answer": 1,
-            "explanation_cn": "Be quiet! 提示动作正在进行，用现在进行时 is sleeping。注意进行时结构：be + 动词-ing。",
-            "explanation_en": "'Be quiet!' shows the action is happening now, so the present continuous is used: is sleeping. Structure: be + verb-ing."
+            "question": "The astronauts ___ to space by rocket last month.",
+            "options": [
+              "went",
+              "go",
+              "goes",
+              "going"
+            ],
+            "answer": 0,
+            "explanation_cn": "last month 过去时间，go 的过去式是 went。"
           },
           {
             "id": "w2-tue-gr3",
-            "type": "fill",
-            "question": "There ___ (be) some milk in the fridge. [填入正确形式]",
-            "answer": "is",
-            "explanation_cn": "There be 句型中动词和后面的名词一致。milk 是不可数名词，用 is。注意 some milk 表示一些牛奶，不可数名词没有复数形式。",
-            "explanation_en": "In the 'there be' pattern, the verb agrees with the following noun. 'Milk' is uncountable, so we use 'is'. Note: uncountable nouns like milk have no plural form."
+            "type": "choice",
+            "question": "Space food ___ different from our food.",
+            "options": [
+              "is",
+              "are",
+              "am",
+              "be"
+            ],
+            "answer": 0,
+            "explanation_cn": "主语 space food 不可数单数，用 is。"
           },
           {
             "id": "w2-tue-gr4",
             "type": "choice",
-            "question": "I ___ go swimming, because I can't swim.",
-            "options": ["always", "usually", "never", "often"],
-            "answer": 2,
-            "explanation_cn": "后半句说我不会游泳，所以是从不去游泳，选 never（从不）。注意频度副词位置在实义动词前面：never go。",
-            "explanation_en": "The second part says the speaker cannot swim, so the answer is 'never'. Note: adverbs of frequency come before the main verb: never go."
+            "question": "Astronauts must keep ___ in the station.",
+            "options": [
+              "healthy",
+              "health",
+              "healthly",
+              "healthful"
+            ],
+            "answer": 0,
+            "explanation_cn": "keep + 形容词：keep healthy 保持健康。"
           },
           {
             "id": "w2-tue-gr5",
-            "type": "fill",
-            "question": "Would you like ___ (some/any) orange juice? [填 some 或 any]",
-            "answer": "some",
-            "explanation_cn": "Would you like...? 是礼貌的邀请或提议，虽然形式是疑问句，但要用 some 表示希望得到肯定回答。这是常考点。",
-            "explanation_en": "'Would you like...?' is a polite offer. Although it looks like a question, we use 'some' because we expect the answer yes."
+            "type": "choice",
+            "question": "It is important ___ every day in space.",
+            "options": [
+              "to exercise",
+              "exercise",
+              "exercising",
+              "exercised"
+            ],
+            "answer": 0,
+            "explanation_cn": "It is important to do sth：用 to exercise。"
+          },
+          {
+            "id": "w2-tue-gr6",
+            "type": "choice",
+            "question": "The station has ___ rooms for work and sleep.",
+            "options": [
+              "several",
+              "much",
+              "a little",
+              "a lot"
+            ],
+            "answer": 0,
+            "explanation_cn": "rooms 可数复数，用 several（几个）。"
+          },
+          {
+            "id": "w2-tue-gr7",
+            "type": "choice",
+            "question": "___ a wonderful lesson it was!",
+            "options": [
+              "What",
+              "How",
+              "Where",
+              "When"
+            ],
+            "answer": 0,
+            "explanation_cn": "What + a + 形容词 + 名词：What a wonderful lesson!"
+          },
+          {
+            "id": "w2-tue-gr8",
+            "type": "choice",
+            "question": "Astronauts are ___ heroes in our hearts.",
+            "options": [
+              "real",
+              "really",
+              "reality",
+              "realer"
+            ],
+            "answer": 0,
+            "explanation_cn": "名词 heroes 前用形容词 real（真正的）。"
+          },
+          {
+            "id": "w2-tue-gr9",
+            "type": "choice",
+            "question": "China ___ its first space station in 2021.",
+            "options": [
+              "completed",
+              "completes",
+              "complete",
+              "completing"
+            ],
+            "answer": 0,
+            "explanation_cn": "in 2021 过去时间，用过去式 completed。"
+          },
+          {
+            "id": "w2-tue-gr10",
+            "type": "choice",
+            "question": "We are proud ___ our astronauts.",
+            "options": [
+              "of",
+              "at",
+              "for",
+              "with"
+            ],
+            "answer": 0,
+            "explanation_cn": "be proud of…：为…感到自豪。"
           }
         ]
       },
@@ -3222,47 +5876,132 @@ const WEEK2 = [
           {
             "id": "w2-tue-mc1",
             "type": "choice",
-            "question": "___ your brother like playing basketball?",
-            "options": ["Does", "Do", "Is", "Are"],
+            "question": "Tiangong is ___ home in space for astronauts.",
+            "options": [
+              "like a",
+              "like an",
+              "likes a",
+              "liking a"
+            ],
             "answer": 0,
-            "explanation_cn": "主语 your brother 是第三人称单数，like 是实义动词，疑问句用 Does + 主语 + 动词原形。Do 用于复数或 I/you；Is/Are 后面不能直接跟动词原形 like。",
-            "explanation_en": "'Your brother' is third person singular and 'like' is a main verb, so the question uses 'Does + subject + base verb'. 'Do' is for plurals and I/you; 'Is/Are' cannot be followed by the base verb 'like'."
+            "explanation_cn": "be like a home：像一个家。"
           },
           {
             "id": "w2-tue-mc2",
             "type": "choice",
-            "question": "The cat is sleeping ___ the sofa.",
-            "options": ["under", "in", "on", "behind"],
-            "answer": 2,
-            "explanation_cn": "猫睡在沙发上用 on the sofa。under 在下面，in 在里面，behind 在后面。注意 on 表示在物体表面上。",
-            "explanation_en": "Sleeping on a sofa uses 'on the sofa'. 'Under' = below, 'in' = inside, 'behind' = at the back. 'On' means on the surface of something."
+            "question": "It flies ___ 300 kilometres above the earth.",
+            "options": [
+              "more than",
+              "more then",
+              "much than",
+              "most than"
+            ],
+            "answer": 0,
+            "explanation_cn": "more than 300 km：三百多公里。"
           },
           {
             "id": "w2-tue-mc3",
             "type": "choice",
-            "question": "— ___ is the weather today? — It's cloudy.",
-            "options": ["What", "How", "Where", "Who"],
-            "answer": 1,
-            "explanation_cn": "问天气有两种句型：What's the weather like? 或 How is the weather? 本题空后面没有 like，所以选 How。注意两句意思完全一样。",
-            "explanation_en": "There are two patterns for asking about weather: 'What's the weather like?' and 'How is the weather?' Since there is no 'like' after the blank, 'How' is correct."
+            "question": "Astronauts ___ and work there for about six months.",
+            "options": [
+              "live",
+              "lives",
+              "living",
+              "lived"
+            ],
+            "answer": 0,
+            "explanation_cn": "and 并列 live and work，主语复数用原形。"
           },
           {
             "id": "w2-tue-mc4",
             "type": "choice",
-            "question": "We have no food at home. Let's buy ___.",
-            "options": ["some", "any", "many", "much"],
+            "question": "They do science ___ in space.",
+            "options": [
+              "experiments",
+              "experiment",
+              "experimenting",
+              "experimented"
+            ],
             "answer": 0,
-            "explanation_cn": "肯定句用 some；food 在这里泛指食物，是不可数名词，不能用 many。Let's 开头的句子是肯定祈使句，所以选 some。",
-            "explanation_en": "'Some' is used in affirmative sentences. Here 'food' means food in general (uncountable), so 'many' is wrong. 'Let's...' is affirmative, so 'some' is correct."
+            "explanation_cn": "do experiments 做实验，experiment 用复数。"
           },
           {
             "id": "w2-tue-mc5",
             "type": "choice",
-            "question": "My school bag is ___ than yours.",
-            "options": ["heavy", "heavier", "heaviest", "more heavy"],
-            "answer": 1,
-            "explanation_cn": "than 是比较级的标志。heavy 是重读闭音节结尾的形容词，变比较级把 y 变 i 加 er：heavier。注意不是 more heavy。",
-            "explanation_en": "'Than' is the marker of the comparative. Adjectives ending in consonant + y change y to i and add -er: heavy → heavier. Note: 'more heavy' is wrong."
+            "question": "Astronauts exercise every day ___ space makes them weak.",
+            "options": [
+              "because",
+              "so",
+              "but",
+              "or"
+            ],
+            "answer": 0,
+            "explanation_cn": "「因为」太空让骨骼变弱，用 because。"
+          },
+          {
+            "id": "w2-tue-mc6",
+            "type": "choice",
+            "question": "They sleep in small bags ___ the wall.",
+            "options": [
+              "on",
+              "in",
+              "under",
+              "between"
+            ],
+            "answer": 0,
+            "explanation_cn": "睡袋固定「在墙上」，用 on the wall。"
+          },
+          {
+            "id": "w2-tue-mc7",
+            "type": "choice",
+            "question": "In 2021, astronauts ___ a science lesson from space.",
+            "options": [
+              "gave",
+              "give",
+              "gives",
+              "giving"
+            ],
+            "answer": 0,
+            "explanation_cn": "in 2021 过去时间，用过去式 gave。"
+          },
+          {
+            "id": "w2-tue-mc8",
+            "type": "choice",
+            "question": "___ of students watched the lesson on TV.",
+            "options": [
+              "Millions",
+              "Million",
+              "Millions of million",
+              "Two millions"
+            ],
+            "answer": 0,
+            "explanation_cn": "Millions of + 复数名词：数百万的。"
+          },
+          {
+            "id": "w2-tue-mc9",
+            "type": "choice",
+            "question": "Living in space makes bones ___.",
+            "options": [
+              "weak",
+              "weakly",
+              "weaker than",
+              "weakest"
+            ],
+            "answer": 0,
+            "explanation_cn": "make + 宾语 + 形容词：make bones weak。"
+          },
+          {
+            "id": "w2-tue-mc10",
+            "type": "choice",
+            "question": "The astronauts must ___ every day in space.",
+            "options": [
+              "exercise",
+              "exercises",
+              "exercising",
+              "exercised"
+            ],
+            "answer": 0,
+            "explanation_cn": "must 后面用动词原形 exercise。"
           }
         ]
       }
@@ -3272,7 +6011,7 @@ const WEEK2 = [
     "day_cn": "周三",
     "day_en": "Wednesday",
     "is_speaking_day": true,
-    "total_duration": 40,
+    "total_duration": 60,
     "theme_cn": "AI口语 + 高频词汇 + 阅读理解",
     "modules": [
       {
@@ -3294,7 +6033,14 @@ const WEEK2 = [
             "answer": 0,
             "pronunciation_tips": "went 是 go 的过去式 /went/，zoo /zuː/ 长元音注意拉长",
             "explanation_cn": "last weekend 是过去时间，回答用过去式 went。B 是将来时，C 是习惯（一般现在时），D 是现在。",
-            "explanation_en": "'Last weekend' is past time, so the answer uses the past form 'went'. B is future, C is a habit (simple present), D is present."
+            "explanation_en": "'Last weekend' is past time, so the answer uses the past form 'went'. B is future, C is a habit (simple present), D is present.",
+            "answer_cn_hint": "它在问「去了哪里」（过去），答句要说一个地点，而且要用过去式。",
+            "options_cn": [
+              "我和爸爸妈妈去了动物园。",
+              "我明天要去动物园。",
+              "我常常去图书馆。",
+              "我现在在家。"
+            ]
           },
           {
             "id": "w2-wed-sp2",
@@ -3309,7 +6055,14 @@ const WEEK2 = [
             "answer": 0,
             "pronunciation_tips": "panda /ˈpændə/ 注意 æ 发饱满，animal /ˈænɪml/ 共三个音节",
             "explanation_cn": "问最喜欢的动物，A 直接回答，正确。B 答的是水果；C、D 是事实但不是对这个问题的回答。",
-            "explanation_en": "The question asks for your favorite animal. A answers directly; B answers about fruit; C and D are true facts but not answers to this question."
+            "explanation_en": "The question asks for your favorite animal. A answers directly; B answers about fruit; C and D are true facts but not answers to this question.",
+            "answer_cn_hint": "它在问「最喜欢的动物」，答句要说动物名，不能答水果、颜色或者几口人。",
+            "options_cn": [
+              "我最喜欢的动物是熊猫。",
+              "我最喜欢的水果是苹果。",
+              "我家里有两只猫。",
+              "熊猫生活在中国。"
+            ]
           },
           {
             "id": "w2-wed-sp3",
@@ -3324,7 +6077,14 @@ const WEEK2 = [
             "answer": 0,
             "pronunciation_tips": "注意 Do you like 连读成 /dʒuːlaɪk/ 的自然过渡，cooking /ˈkʊkɪŋ/",
             "explanation_cn": "Do 开头的一般疑问句用 Yes, I do 回答，不能用 Yes, I am。A 正确且补充了会做的东西；C 没有回答喜不喜欢。",
-            "explanation_en": "A 'Do...?' question is answered with 'Yes, I do', not 'Yes, I am'. A is correct and adds what the speaker can cook; C does not say whether the speaker likes cooking."
+            "explanation_en": "A 'Do...?' question is answered with 'Yes, I do', not 'Yes, I am'. A is correct and adds what the speaker can cook; C does not say whether the speaker likes cooking.",
+            "answer_cn_hint": "这是 Do you… 问句，答句要先说 Yes, I do. 或 No, I don't.，再补一句。",
+            "options_cn": [
+              "是的，我喜欢。我会做鸡蛋和薄饼。",
+              "是的，我是。我现在在做饭。",
+              "我昨晚做了鱼。",
+              "做饭要花很长时间。"
+            ]
           },
           {
             "id": "w2-wed-sp4",
@@ -3339,7 +6099,14 @@ const WEEK2 = [
             "answer": 0,
             "pronunciation_tips": "grow up 连读注意 /ɡrəʊ/ 的双元音要饱满，want to 口语中常读成 wanna",
             "explanation_cn": "问职业理想用 want to be + 职业。A 正确；B 用 buy（买）搭配错误；C a doctor's office 是地点；D 没回答理想职业。",
-            "explanation_en": "To talk about a dream job, use 'want to be + job'. A is correct; B uses the wrong verb (buy); C is a place; D does not answer the question."
+            "explanation_en": "To talk about a dream job, use 'want to be + job'. A is correct; B uses the wrong verb (buy); C is a place; D does not answer the question.",
+            "answer_cn_hint": "它在问「将来做什么职业」，答句要用 I want to be a … 说出一种职业。",
+            "options_cn": [
+              "我想当医生。",
+              "我想买一个医生。",
+              "我想当医生的办公室。",
+              "我现在是学生。"
+            ]
           },
           {
             "id": "w2-wed-sp5",
@@ -3354,7 +6121,14 @@ const WEEK2 = [
             "answer": 0,
             "pronunciation_tips": "autumn /ˈɔːtəm/ 注意 n 不发音，读作 /ˈɔːtəm/",
             "explanation_cn": "问最喜欢的季节，A 正确。B 答的是月份；C 说的是现在的季节；D 是常识但不是回答。",
-            "explanation_en": "The question asks for your favorite season. A answers it; B is about a month; C states the current season; D is a general fact, not an answer."
+            "explanation_en": "The question asks for your favorite season. A answers it; B is about a month; C states the current season; D is a general fact, not an answer.",
+            "answer_cn_hint": "它在问「最喜欢的季节」（春/夏/秋/冬），不要答月份。",
+            "options_cn": [
+              "我最喜欢的季节是秋天。",
+              "我最喜欢的月份是五月。",
+              "现在是秋天。",
+              "一年有四个季节。"
+            ]
           }
         ]
       },
@@ -3364,72 +6138,747 @@ const WEEK2 = [
         "type": "vocabulary_game",
         "duration": 5,
         "words": [
-          vocabWord({
-            "word": "panda", "phonetic": "/ˈpændə/", "meaning": "熊猫", "emoji": "🐼",
-            "example_en": "The panda is eating bamboo.", "example_cn": "熊猫正在吃竹子。",
-            "syllables": ["pan", "da"], "spell": ["p__nda", "a"],
-            "wrongEmoji": ["⭐", "🚗", "⚽"], "wrongMeaning": ["竹子", "森林", "聪明的"]
-          }),
-          vocabWord({
-            "word": "bamboo", "phonetic": "/bæmˈbuː/", "meaning": "竹子", "emoji": "🎋",
-            "example_en": "Pandas love bamboo.", "example_cn": "熊猫喜欢竹子。",
-            "syllables": ["bam", "boo"], "spell": ["ba__oo", "mb"],
-            "wrongEmoji": ["⭐", "🌳", "🌧️"], "wrongMeaning": ["熊猫", "森林", "友好的"]
-          }),
-          vocabWord({
-            "word": "forest", "phonetic": "/ˈfɒrɪst/", "meaning": "森林", "emoji": "🌲",
-            "example_en": "Many animals live in the forest.", "example_cn": "许多动物住在森林里。",
-            "syllables": ["fo", "rest"], "spell": ["fo__st", "re"],
-            "wrongEmoji": ["⚽", "🎵", "🚗"], "wrongMeaning": ["熊猫", "竹子", "友好的"]
-          }),
-          vocabWord({
-            "word": "clever", "phonetic": "/ˈklevə/", "meaning": "聪明的", "emoji": "💡",
-            "example_en": "The fox is very clever.", "example_cn": "狐狸非常聪明。",
-            "syllables": ["cle", "ver"], "spell": ["cle__er", "v"],
-            "wrongEmoji": ["⭐", "🌧️", "🎸"], "wrongMeaning": ["森林", "竹子", "友好的"]
-          }),
-          vocabWord({
-            "word": "friendly", "phonetic": "/ˈfrendli/", "meaning": "友好的", "emoji": "🤗",
-            "example_en": "My new classmate is friendly.", "example_cn": "我的新同学很友好。",
-            "syllables": ["friend", "ly"], "spell": ["frien__y", "dl"],
-            "wrongEmoji": ["⭐", "🚲", "🎲"], "wrongMeaning": ["聪明的", "森林", "竹子"]
-          })
+          {
+            "word": "panda",
+            "phonetic": "/ˈpændə/",
+            "meaning": "熊猫",
+            "emoji": "🐼",
+            "example_en": "The panda is eating bamboo.",
+            "example_cn": "熊猫正在吃竹子。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "🐼",
+                  "⭐",
+                  "🚗",
+                  "⚽"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "⚽",
+                  "⭐",
+                  "🐼",
+                  "🚗"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "panda 是什么意思？（1/2）",
+                "options": [
+                  "竹子",
+                  "森林",
+                  "熊猫",
+                  "聪明的"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "panda 是什么意思？（2/2）",
+                "options": [
+                  "熊猫",
+                  "聪明的",
+                  "竹子",
+                  "森林"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: p__nda",
+                "answer": "a"
+              }
+            ],
+            "letters": [
+              "p",
+              "a",
+              "n",
+              "d",
+              "a"
+            ],
+            "syllables": [
+              "pan",
+              "da"
+            ],
+            "hint_cn": "黑白两色、胖胖的，最爱吃竹子"
+          },
+          {
+            "word": "bamboo",
+            "phonetic": "/bæmˈbuː/",
+            "meaning": "竹子",
+            "emoji": "🎋",
+            "example_en": "Pandas love bamboo.",
+            "example_cn": "熊猫喜欢竹子。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "🎋",
+                  "⭐",
+                  "🌳",
+                  "🌧️"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "🌧️",
+                  "⭐",
+                  "🎋",
+                  "🌳"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "bamboo 是什么意思？（1/2）",
+                "options": [
+                  "熊猫",
+                  "森林",
+                  "竹子",
+                  "友好的"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "bamboo 是什么意思？（2/2）",
+                "options": [
+                  "竹子",
+                  "友好的",
+                  "熊猫",
+                  "森林"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: ba__oo",
+                "answer": "mb"
+              }
+            ],
+            "letters": [
+              "b",
+              "a",
+              "m",
+              "b",
+              "o",
+              "o"
+            ],
+            "syllables": [
+              "bam",
+              "boo"
+            ],
+            "hint_cn": "一节一节的，长得很高，熊猫最爱吃"
+          },
+          {
+            "word": "forest",
+            "phonetic": "/ˈfɒrɪst/",
+            "meaning": "森林",
+            "emoji": "🌲",
+            "example_en": "Many animals live in the forest.",
+            "example_cn": "许多动物住在森林里。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "🌲",
+                  "⚽",
+                  "🎵",
+                  "🚗"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "🚗",
+                  "⚽",
+                  "🌲",
+                  "🎵"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "forest 是什么意思？（1/2）",
+                "options": [
+                  "熊猫",
+                  "竹子",
+                  "森林",
+                  "友好的"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "forest 是什么意思？（2/2）",
+                "options": [
+                  "森林",
+                  "友好的",
+                  "熊猫",
+                  "竹子"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: fo__st",
+                "answer": "re"
+              }
+            ],
+            "letters": [
+              "f",
+              "o",
+              "r",
+              "e",
+              "s",
+              "t"
+            ],
+            "syllables": [
+              "fo",
+              "rest"
+            ],
+            "hint_cn": "树很多很多的地方，动物住在里面"
+          },
+          {
+            "word": "clever",
+            "phonetic": "/ˈklevə/",
+            "meaning": "聪明的",
+            "emoji": "💡",
+            "example_en": "The fox is very clever.",
+            "example_cn": "狐狸非常聪明。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "💡",
+                  "⭐",
+                  "🌧️",
+                  "🎸"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "🎸",
+                  "⭐",
+                  "💡",
+                  "🌧️"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "clever 是什么意思？（1/2）",
+                "options": [
+                  "森林",
+                  "竹子",
+                  "聪明的",
+                  "友好的"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "clever 是什么意思？（2/2）",
+                "options": [
+                  "聪明的",
+                  "友好的",
+                  "森林",
+                  "竹子"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: cle__er",
+                "answer": "v"
+              }
+            ],
+            "letters": [
+              "c",
+              "l",
+              "e",
+              "v",
+              "e",
+              "r"
+            ],
+            "syllables": [
+              "cle",
+              "ver"
+            ],
+            "hint_cn": "脑子转得快，一点就通"
+          },
+          {
+            "word": "friendly",
+            "phonetic": "/ˈfrendli/",
+            "meaning": "友好的",
+            "emoji": "🤗",
+            "example_en": "My new classmate is friendly.",
+            "example_cn": "我的新同学很友好。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "🤗",
+                  "⭐",
+                  "🚲",
+                  "🎲"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "🎲",
+                  "⭐",
+                  "🤗",
+                  "🚲"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "friendly 是什么意思？（1/2）",
+                "options": [
+                  "聪明的",
+                  "森林",
+                  "友好的",
+                  "竹子"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "friendly 是什么意思？（2/2）",
+                "options": [
+                  "友好的",
+                  "竹子",
+                  "聪明的",
+                  "森林"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: frien__y",
+                "answer": "dl"
+              }
+            ],
+            "letters": [
+              "f",
+              "r",
+              "i",
+              "e",
+              "n",
+              "d",
+              "l",
+              "y"
+            ],
+            "syllables": [
+              "friend",
+              "ly"
+            ],
+            "hint_cn": "见谁都笑眯眯，愿意和你一起玩"
+          }
         ]
       },
       {
         "id": "w2-wed-reading",
         "name_cn": "阅读理解",
         "type": "reading",
-        "duration": 5,
-        "passage": "Last Friday, Class 3 went to Green Farm by bus. The farmer, Mr Hill, showed them around. First, the children fed the hens and collected some eggs. Then they picked strawberries in the field. The strawberries were red and sweet. After lunch, Mr Hill let the children ride his old horse. It was slow but very gentle. On the way back, most of the children fell asleep on the bus. \"It was the best school trip ever,\" said Amy.",
-        "passage_cn": "上周五，三班坐公交车去了绿色农场。农场主希尔先生带他们四处参观。孩子们先喂了母鸡，捡了一些鸡蛋。然后他们在地里摘草莓。草莓又红又甜。午饭过后，希尔先生让孩子们骑他那匹老马。马走得很慢，但是非常温顺。回去的路上，大多数孩子都在公交车上睡着了。艾米说：这是有史以来最棒的学校旅行。",
+        "duration": 10,
+        "passage": "Mobile payment has changed the way Chinese people shop. Today, most people pay for things with a mobile phone. In shops, restaurants and even street markets, you just scan a QR code and the money goes to the seller in one second. Ten years ago, people carried cash everywhere and waited for change. Now many young people don't take any cash at all. Old people can learn it too — the steps are simple. Mobile payment makes shopping faster and safer, because you don't need to carry a lot of money with you.",
+        "passage_cn": "移动支付改变了中国人的购物方式。如今，大多数人用手机付款。在商店、餐馆甚至街边市场，你只需要扫一下二维码，钱一秒钟就到了卖家手里。十年前，人们到处带着现金，还要等找零。现在很多年轻人根本不带现金。老人也能学会——步骤很简单。移动支付让购物更快、更安全，因为你不用随身带很多钱。",
         "questions": [
           {
             "id": "w2-wed-rd1",
             "type": "choice",
-            "question": "How did Class 3 go to the farm?",
-            "options": ["On foot", "By bus", "By train", "By bike"],
-            "answer": 1,
-            "explanation_cn": "文章第一句 went to Green Farm by bus。坐公交车去的。注意 by + 交通工具表示出行方式：by bus/by car/by train。",
-            "explanation_en": "The first sentence says 'went to Green Farm by bus'. Note: 'by + vehicle' shows how someone travels: by bus, by car, by train."
+            "question": "What has changed the way Chinese people shop?",
+            "options": [
+              "Mobile payment",
+              "New buses",
+              "Big shops",
+              "Rainy days"
+            ],
+            "answer": 0,
+            "explanation_cn": "第一句：移动支付改变了人们的购物方式。"
           },
           {
             "id": "w2-wed-rd2",
             "type": "choice",
-            "question": "What did the children pick in the field?",
-            "options": ["Apples", "Eggs", "Strawberries", "Beans"],
-            "answer": 2,
-            "explanation_cn": "文章说 Then they picked strawberries in the field。他们在地里摘的是草莓。Eggs 是 collected（捡）的，不是 picked。",
-            "explanation_en": "The text says 'Then they picked strawberries in the field.' Eggs were 'collected', not picked."
+            "question": "How do most people pay today?",
+            "options": [
+              "With a mobile phone",
+              "With cash only",
+              "With bank cards only",
+              "They don't pay"
+            ],
+            "answer": 0,
+            "explanation_cn": "现在大多数人用手机付款。"
           },
           {
             "id": "w2-wed-rd3",
             "type": "choice",
-            "question": "What was the horse like?",
-            "options": ["Fast and strong", "Slow but gentle", "Young and cute", "Old but fast"],
-            "answer": 1,
-            "explanation_cn": "文章说 It was slow but very gentle。马很慢但是非常温顺。gentle 意为温顺的、温和的。",
-            "explanation_en": "The text says 'It was slow but very gentle.' Note: 'gentle' means kind and calm."
+            "question": "What do you scan to pay?",
+            "options": [
+              "A QR code",
+              "A photo",
+              "A book",
+              "A map"
+            ],
+            "answer": 0,
+            "explanation_cn": "扫二维码（QR code）就可以付款。"
+          },
+          {
+            "id": "w2-wed-rd4",
+            "type": "choice",
+            "question": "How fast does the money go to the seller?",
+            "options": [
+              "In one second",
+              "In one day",
+              "In one hour",
+              "In one week"
+            ],
+            "answer": 0,
+            "explanation_cn": "钱一秒钟就到卖家手里。"
+          },
+          {
+            "id": "w2-wed-rd5",
+            "type": "choice",
+            "question": "What did people do ten years ago?",
+            "options": [
+              "They carried cash and waited for change.",
+              "They used QR codes.",
+              "They paid by phone.",
+              "They had no money."
+            ],
+            "answer": 0,
+            "explanation_cn": "十年前人们带现金还要等找零。"
+          },
+          {
+            "id": "w2-wed-rd6",
+            "type": "choice",
+            "question": "Who can learn mobile payment?",
+            "options": [
+              "Everyone, because the steps are simple",
+              "Only young people",
+              "Only rich people",
+              "Only students"
+            ],
+            "answer": 0,
+            "explanation_cn": "步骤简单，老人也能学会。"
+          },
+          {
+            "id": "w2-wed-rd7",
+            "type": "choice",
+            "question": "Why is mobile payment safer?",
+            "options": [
+              "Because you don't carry much money.",
+              "Because it never makes mistakes.",
+              "Because it is slow.",
+              "Because it uses paper."
+            ],
+            "answer": 0,
+            "explanation_cn": "不用随身带很多钱，所以更安全。"
+          },
+          {
+            "id": "w2-wed-rd8",
+            "type": "choice",
+            "question": "The word \"cash\" here means ___.",
+            "options": [
+              "现金",
+              "卡片",
+              "硬币",
+              "货物"
+            ],
+            "answer": 0,
+            "explanation_cn": "cash 意思是「现金」。"
+          },
+          {
+            "id": "w2-wed-rd9",
+            "type": "choice",
+            "question": "Mobile payment makes shopping ___.",
+            "options": [
+              "faster and safer",
+              "slower and harder",
+              "more expensive",
+              "more difficult"
+            ],
+            "answer": 0,
+            "explanation_cn": "最后一句：更快、更安全（faster and safer）。"
+          },
+          {
+            "id": "w2-wed-rd10",
+            "type": "choice",
+            "question": "The best title for the passage about paying by phone is ___.",
+            "options": [
+              "Mobile Payment Changes Shopping",
+              "A Trip to the Bank",
+              "Cash Is the Best",
+              "How to Count Money"
+            ],
+            "answer": 0,
+            "explanation_cn": "全文讲移动支付如何改变购物。"
+          }
+        ]
+      },
+      {
+        "id": "w2-wed-mc",
+        "name_cn": "单项选择",
+        "type": "multiple_choice",
+        "duration": 10,
+        "questions": [
+          {
+            "id": "w2-wed-mc1",
+            "type": "choice",
+            "question": "Most people ___ for things with a mobile phone now.",
+            "options": [
+              "pay",
+              "pays",
+              "paying",
+              "paid"
+            ],
+            "answer": 0,
+            "explanation_cn": "people 作「人们」是复数，用原形 pay。"
+          },
+          {
+            "id": "w2-wed-mc2",
+            "type": "choice",
+            "question": "You just need ___ a QR code to pay.",
+            "options": [
+              "to scan",
+              "scan",
+              "scanning",
+              "scans"
+            ],
+            "answer": 0,
+            "explanation_cn": "need to do sth：需要扫码，用 to scan。"
+          },
+          {
+            "id": "w2-wed-mc3",
+            "type": "choice",
+            "question": "The money goes to the seller ___ one second.",
+            "options": [
+              "in",
+              "on",
+              "at",
+              "for"
+            ],
+            "answer": 0,
+            "explanation_cn": "「在一秒之内」用 in one second。"
+          },
+          {
+            "id": "w2-wed-mc4",
+            "type": "choice",
+            "question": "Ten years ago, people ___ cash everywhere.",
+            "options": [
+              "carried",
+              "carry",
+              "carries",
+              "carrying"
+            ],
+            "answer": 0,
+            "explanation_cn": "ten years ago 过去时间，用过去式 carried。"
+          },
+          {
+            "id": "w2-wed-mc5",
+            "type": "choice",
+            "question": "Now many young people don't take ___ cash.",
+            "options": [
+              "any",
+              "some",
+              "many",
+              "much of"
+            ],
+            "answer": 0,
+            "explanation_cn": "否定句用 any cash。"
+          },
+          {
+            "id": "w2-wed-mc6",
+            "type": "choice",
+            "question": "Mobile payment makes shopping ___ and safer.",
+            "options": [
+              "faster",
+              "fast",
+              "fastest",
+              "more fast"
+            ],
+            "answer": 0,
+            "explanation_cn": "and 连接并列比较级：faster and safer。"
+          },
+          {
+            "id": "w2-wed-mc7",
+            "type": "choice",
+            "question": "Old people can learn it because the steps are ___.",
+            "options": [
+              "simple",
+              "hard",
+              "difficult",
+              "slow"
+            ],
+            "answer": 0,
+            "explanation_cn": "后文说老人也能学会，因为步骤简单 simple。"
+          },
+          {
+            "id": "w2-wed-mc8",
+            "type": "choice",
+            "question": "You don't need to carry ___ money with you.",
+            "options": [
+              "a lot of",
+              "a lot",
+              "many of",
+              "lots"
+            ],
+            "answer": 0,
+            "explanation_cn": "money 不可数，用 a lot of money。"
+          },
+          {
+            "id": "w2-wed-mc9",
+            "type": "choice",
+            "question": "___ useful mobile payment is!",
+            "options": [
+              "How",
+              "What",
+              "Which",
+              "Who"
+            ],
+            "answer": 0,
+            "explanation_cn": "How + 形容词：How useful…!"
+          },
+          {
+            "id": "w2-wed-mc10",
+            "type": "choice",
+            "question": "Please show ___ your QR code.",
+            "options": [
+              "me",
+              "I",
+              "my",
+              "mine"
+            ],
+            "answer": 0,
+            "explanation_cn": "动词 show 后面用宾格 me。"
+          }
+        ]
+      },
+      {
+        "id": "w2-wed-tense2",
+        "name_cn": "时态练习",
+        "type": "tense",
+        "duration": 5,
+        "questions": [
+          {
+            "id": "w2-wed-tn21",
+            "type": "fill",
+            "question": "Most people ___ (pay) with phones in China now. [填入正确形式]",
+            "answer": "pay",
+            "explanation_cn": "people 复数，一般现在时用原形。"
+          },
+          {
+            "id": "w2-wed-tn22",
+            "type": "fill",
+            "question": "I ___ (buy) a gift online yesterday. [填入正确形式]",
+            "answer": "bought",
+            "explanation_cn": "yesterday 过去时间，buy 的过去式是 bought。"
+          },
+          {
+            "id": "w2-wed-tn23",
+            "type": "fill",
+            "question": "Look! The deliveryman ___ (scan) the parcel. [填入正确形式]",
+            "answer": "is scanning",
+            "explanation_cn": "Look! 提示正在进行，用 is scanning。"
+          },
+          {
+            "id": "w2-wed-tn24",
+            "type": "fill",
+            "question": "Mobile payment ___ (be) popular for about ten years. [填入正确形式]",
+            "answer": "has been",
+            "explanation_cn": "for about ten years 与现在完成时连用。"
+          },
+          {
+            "id": "w2-wed-tn25",
+            "type": "fill",
+            "question": "Grandma ___ (learn) to shop online next month. [填入正确形式]",
+            "answer": "will learn",
+            "explanation_cn": "next month 将来时间，用 will learn。"
           }
         ]
       }
@@ -3452,70 +6901,141 @@ const WEEK2 = [
             "id": "w2-thu-ls1",
             "type": "choice",
             "question": "听到的句子是什么？",
-            "audio_text": "My little sister can count from one to fifty.",
+            "audio_text": "China's high-speed trains run at about 350 kilometres per hour.",
             "options": [
-              "My little sister can count from one to fifty.",
-              "My little brother can count from one to fifty.",
-              "My little sister can count from one to fifteen.",
-              "My little sister can count from one to five."
+              "China's high-speed trains run at about 350 kilometres per hour.",
+              "China's high-speed trains run at about 3500 kilometres per hour.",
+              "China's high-speed buses run at about 350 kilometres per hour.",
+              "China's high-speed trains stop at 350 kilometres per hour."
             ],
             "answer": 0,
-            "explanation_cn": "听力关键词：sister（姐妹）和 fifty（50）。注意区分 fifty /ˈfɪfti/ 和 fifteen /ˌfɪfˈtiːn/：fifty 重音在前，fifteen 重音在后。",
-            "explanation_en": "Key words: 'sister' and 'fifty'. Note the difference: fifty /ˈfɪfti/ has stress on the first syllable; fifteen /ˌfɪfˈtiːn/ has stress on the second."
+            "explanation_cn": "数字 350（三百五），注意别听成 3500；主语是 trains。"
           },
           {
             "id": "w2-thu-ls2",
             "type": "choice",
             "question": "听到的句子是什么？",
-            "audio_text": "The museum opens at nine in the morning.",
+            "audio_text": "A trip from Beijing to Shanghai takes about four hours.",
             "options": [
-              "The museum opens at nine in the morning.",
-              "The museum opens at nine in the evening.",
-              "The museum closes at nine in the morning.",
-              "The park opens at nine in the morning."
+              "A trip from Beijing to Shanghai takes about four hours.",
+              "A trip from Beijing to Shanghai takes about fourteen hours.",
+              "A trip from Shanghai to Beijing takes about four days.",
+              "A trip from Beijing to Tianjin takes about four hours."
             ],
             "answer": 0,
-            "explanation_cn": "听力关键词：museum（博物馆）、opens（开门）、nine（九点）、morning（早上）。注意 opens 和 closes 是反义词，听清楚动词是关键。",
-            "explanation_en": "Key words: 'museum', 'opens', 'nine', 'morning'. Note that 'opens' and 'closes' are opposites — listen carefully for the verb."
+            "explanation_cn": "four（4）和 fourteen（14）要分清；地点是北京到上海。"
           },
           {
             "id": "w2-thu-ls3",
             "type": "choice",
             "question": "听到的句子是什么？",
-            "audio_text": "He is looking for his blue school bag.",
+            "audio_text": "You can buy tickets with a mobile phone.",
             "options": [
-              "He is looking for his blue school bag.",
-              "He is looking at his blue school bag.",
-              "He is looking for his black school bag.",
-              "She is looking for her blue school bag."
+              "You can buy tickets with a mobile phone.",
+              "You can buy chicken with a mobile phone.",
+              "You can buy tickets with paper money only.",
+              "You can sell tickets with a mobile phone."
             ],
             "answer": 0,
-            "explanation_cn": "听力关键词：looking for（在找）、blue（蓝色）、school bag（书包）。注意 look for 是寻找，look at 是看着，意思不同。blue /bluː/ 和 black /blæk/ 注意元音区别。",
-            "explanation_en": "Key words: 'looking for', 'blue', 'school bag'. Note: 'look for' means to search, while 'look at' means to direct your eyes at something."
+            "explanation_cn": "buy（买）不是 sell（卖）；工具是 mobile phone。"
           },
           {
             "id": "w2-thu-ls4",
-            "type": "fill",
-            "question": "听到的数字是什么？",
-            "audio_text": "The new bike costs two hundred and thirty yuan.",
-            "answer": "230",
-            "explanation_cn": "听力数字：two hundred and thirty (230)。注意 hundreds 百位的读法：two hundred + and + thirty。不要和 two thousand three hundred (2300) 混淆。",
-            "explanation_en": "Number: two hundred and thirty (230). Note the pattern for hundreds: two hundred + and + thirty. Don't confuse it with two thousand three hundred (2300)."
+            "type": "choice",
+            "question": "听到的句子是什么？",
+            "audio_text": "The trains are clean, quiet and always on time.",
+            "options": [
+              "The trains are clean, quiet and always on time.",
+              "The trains are clean, noisy and always late.",
+              "The buses are clean, quiet and always on time.",
+              "The trains are dirty, quiet and always on time."
+            ],
+            "answer": 0,
+            "explanation_cn": "quiet（安静）不是 noisy（吵闹）；on time（准点）不是 late。"
           },
           {
             "id": "w2-thu-ls5",
             "type": "choice",
             "question": "听到的句子是什么？",
-            "audio_text": "We are going to have a picnic this Saturday.",
+            "audio_text": "People from many countries come to learn from China.",
             "options": [
-              "We are going to have a picnic this Saturday.",
-              "We are going to have a party this Saturday.",
-              "We are going to have a picnic this Sunday.",
-              "We had a picnic last Saturday."
+              "People from many countries come to learn from China.",
+              "People from many countries come to teach in China.",
+              "People from my country come to learn from China.",
+              "People from many countries come to travel to China only."
             ],
             "answer": 0,
-            "explanation_cn": "听力关键词：picnic（野餐）、this Saturday（这周六）。注意 be going to 表示计划要做的事。picnic /ˈpɪknɪk/ 重音在第一个音节。",
-            "explanation_en": "Key words: 'picnic', 'this Saturday'. Note: 'be going to' shows a plan. Picnic /ˈpɪknɪk/ has stress on the first syllable."
+            "explanation_cn": "learn from China（向中国学习），不是 teach（教）。"
+          },
+          {
+            "id": "w2-thu-ls6",
+            "type": "choice",
+            "question": "听到的句子是什么？",
+            "audio_text": "The space station flies more than 300 kilometres above the earth.",
+            "options": [
+              "The space station flies more than 300 kilometres above the earth.",
+              "The space station flies more than 3000 kilometres above the earth.",
+              "The space station walks more than 300 kilometres above the sea.",
+              "The airplane flies more than 300 kilometres above the earth."
+            ],
+            "answer": 0,
+            "explanation_cn": "300（三百）不是 3000；主语是 space station（空间站）。"
+          },
+          {
+            "id": "w2-thu-ls7",
+            "type": "choice",
+            "question": "听到的句子是什么？",
+            "audio_text": "Astronauts live and work there for about six months.",
+            "options": [
+              "Astronauts live and work there for about six months.",
+              "Astronauts live and work there for about six weeks.",
+              "Astronauts play and sleep there for about six months.",
+              "Astronauts lived and worked there six years ago."
+            ],
+            "answer": 0,
+            "explanation_cn": "six months（六个月）不是 six weeks；动词 live and work。"
+          },
+          {
+            "id": "w2-thu-ls8",
+            "type": "choice",
+            "question": "听到的句子是什么？",
+            "audio_text": "They eat special space food and sleep in sleeping bags.",
+            "options": [
+              "They eat special space food and sleep in sleeping bags.",
+              "They eat special space noodles and sleep in big beds.",
+              "They cook special food and sleep on the floor.",
+              "They drink special juice and sleep in chairs."
+            ],
+            "answer": 0,
+            "explanation_cn": "space food（太空食品）和 sleeping bags（睡袋）。"
+          },
+          {
+            "id": "w2-thu-ls9",
+            "type": "choice",
+            "question": "听到的句子是什么？",
+            "audio_text": "Millions of students watched the space lesson on TV.",
+            "options": [
+              "Millions of students watched the space lesson on TV.",
+              "Millions of teachers watched the space lesson on TV.",
+              "Millions of students played the space game on TV.",
+              "Millions of students watched the space lesson on phones."
+            ],
+            "answer": 0,
+            "explanation_cn": "观看者是 students（学生），设备是 TV（电视）。"
+          },
+          {
+            "id": "w2-thu-ls10",
+            "type": "choice",
+            "question": "听到的句子是什么？",
+            "audio_text": "AI can recognize faces and answer questions.",
+            "options": [
+              "AI can recognize faces and answer questions.",
+              "AI can recognize voices and ask questions.",
+              "AI can draw faces and answer questions.",
+              "AI cannot recognize faces or answer questions."
+            ],
+            "answer": 0,
+            "explanation_cn": "recognize faces（识别人脸）+ answer（回答）不是 ask（提问）。"
           }
         ]
       },
@@ -3524,52 +7044,137 @@ const WEEK2 = [
         "name_cn": "完形填空",
         "type": "cloze",
         "duration": 10,
-        "passage": "It was sports day at Sunny School. The sun was 1___ in the blue sky. Lucy ran in the first race. She ran as 2___ as she could, and she won! Her classmates 3___ for her loudly. After the races, everyone watched the high jump. Tom jumped over the bar, but he 4___ the second time. He was a little sad. His teacher told him, \"Don't worry. You can win next 5___.\"",
+        "passage": "New energy cars are becoming more and more 1___ in China. They use electricity instead of petrol. They make 2___ pollution, so the air in big cities is getting 3___. The cars are also quiet. When you sit 4___ a new energy car, you can hardly hear the engine. Drivers can 5___ the cars at charging stations, just like charging a big phone. It 6___ about one hour to fill the battery. These cars are not 7___, and the government helps people buy them. In big cities, many families 8___ to buy new energy cars for their second car. More and more charging stations are 9___ up along the roads. In the future, most cars on the streets will 10___ electric ones.",
         "questions": [
           {
             "id": "w2-thu-cz1",
             "type": "choice",
             "question": "1___",
-            "options": ["bright", "rainy", "dark", "windy"],
+            "options": [
+              "popular",
+              "angry",
+              "salty",
+              "cloudy"
+            ],
             "answer": 0,
-            "explanation_cn": "前文说天气晴朗（blue sky），太阳是明亮的，用 bright。bright 意为明亮的，in the blue sky 意为在蓝天中。",
-            "explanation_en": "The sky is blue, so the sun is 'bright'. Note: 'bright' means giving a lot of light."
+            "explanation_cn": "越来越「受欢迎」，popular。"
           },
           {
             "id": "w2-thu-cz2",
             "type": "choice",
             "question": "2___",
-            "options": ["slowly", "high", "fast", "late"],
-            "answer": 2,
-            "explanation_cn": "赛跑要跑得快，而且她赢了，所以用 fast。as fast as she could 意为尽可能快地。注意 as...as 中间用原级。",
-            "explanation_en": "It is a race and she won, so she ran as 'fast' as she could. Note: the structure 'as...as' takes the base form of the adjective or adverb."
+            "options": [
+              "less",
+              "more",
+              "fewer",
+              "little"
+            ],
+            "answer": 0,
+            "explanation_cn": "电动车污染更「少」，用 less pollution。"
           },
           {
             "id": "w2-thu-cz3",
             "type": "choice",
             "question": "3___",
-            "options": ["asked", "cheered", "woke", "missed"],
-            "answer": 1,
-            "explanation_cn": "同学为她大声欢呼，用 cheered。cheer for sb 意为为某人加油欢呼。loudly 意为大声地。",
-            "explanation_en": "Her classmates 'cheered' for her loudly. Note: 'cheer for somebody' means to shout in support of them."
+            "options": [
+              "better",
+              "worse",
+              "darker",
+              "colder"
+            ],
+            "answer": 0,
+            "explanation_cn": "污染少了，空气变得更「好」，better。"
           },
           {
             "id": "w2-thu-cz4",
             "type": "choice",
             "question": "4___",
-            "options": ["won", "hit", "missed", "caught"],
-            "answer": 2,
-            "explanation_cn": "后文说他有点难过，说明第二次没跳过去，用 missed（未成功）。miss 意为未达到、错过。",
-            "explanation_en": "He was a little sad afterwards, so he 'missed' the second time. Note: 'miss' here means to fail to clear the bar."
+            "options": [
+              "in",
+              "on",
+              "at",
+              "under"
+            ],
+            "answer": 0,
+            "explanation_cn": "「坐在车里」用 in a car。"
           },
           {
             "id": "w2-thu-cz5",
             "type": "choice",
             "question": "5___",
-            "options": ["day", "time", "word", "year"],
-            "answer": 1,
-            "explanation_cn": "老师说下次你能赢，用 next time。next time 意为下一次，是常用搭配。",
-            "explanation_en": "The teacher says he can win 'next time'. Note: 'next time' is a common fixed phrase."
+            "options": [
+              "charge",
+              "change",
+              "choose",
+              "catch"
+            ],
+            "answer": 0,
+            "explanation_cn": "在充电站「充电」，charge。"
+          },
+          {
+            "id": "w2-thu-cz6",
+            "type": "choice",
+            "question": "6___",
+            "options": [
+              "takes",
+              "take",
+              "taking",
+              "took"
+            ],
+            "answer": 0,
+            "explanation_cn": "it takes + 时间：花大约一小时，主语 it 三单用 takes。"
+          },
+          {
+            "id": "w2-thu-cz7",
+            "type": "choice",
+            "question": "7___",
+            "options": [
+              "expensive",
+              "cheap",
+              "free",
+              "fast"
+            ],
+            "answer": 0,
+            "explanation_cn": "后面说政府补贴，说明车不「贵」，expensive。"
+          },
+          {
+            "id": "w2-thu-cz8",
+            "type": "choice",
+            "question": "8___",
+            "options": [
+              "choose",
+              "chooses",
+              "choosing",
+              "chose"
+            ],
+            "answer": 0,
+            "explanation_cn": "主语 many families 复数，一般现在时用原形 choose。"
+          },
+          {
+            "id": "w2-thu-cz9",
+            "type": "choice",
+            "question": "9___",
+            "options": [
+              "showing",
+              "putting",
+              "getting",
+              "standing"
+            ],
+            "answer": 0,
+            "explanation_cn": "charging stations are showing up：越来越多的充电站出现。"
+          },
+          {
+            "id": "w2-thu-cz10",
+            "type": "choice",
+            "question": "10___",
+            "options": [
+              "be",
+              "is",
+              "are",
+              "was"
+            ],
+            "answer": 0,
+            "explanation_cn": "will 后面用动词原形 be。"
           }
         ]
       },
@@ -3582,43 +7187,72 @@ const WEEK2 = [
           {
             "id": "w2-thu-tn1",
             "type": "fill",
-            "question": "We ___ (go) to the park yesterday afternoon. [填入正确形式]",
-            "answer": "went",
-            "explanation_cn": "yesterday afternoon 是过去时间标志，用一般过去时。go 的过去式是 went，是不规则变化，要背下来。",
-            "explanation_en": "'Yesterday afternoon' is a past time marker, so the simple past is used. 'Go' is irregular: go → went."
+            "question": "High-speed trains ___ (run) at 350 kilometres per hour. [填入正确形式]",
+            "answer": "run",
+            "explanation_cn": "表示客观事实，主语复数，用一般现在时 run。"
           },
           {
             "id": "w2-thu-tn2",
             "type": "fill",
-            "question": "___ (be) you at home last night? [填入正确形式]",
-            "answer": "Were",
-            "explanation_cn": "last night 是过去时间，be 动词用过去式。主语是 you，所以用 Were。注意句首大写。was 用于 I/he/she/it，were 用于 you/we/they。",
-            "explanation_en": "'Last night' is past time, so the past form of 'be' is needed. With the subject 'you', we use 'Were'. Note the capital letter at the start."
+            "question": "I ___ (take) the high-speed train to Shanghai last week. [填入正确形式]",
+            "answer": "took",
+            "explanation_cn": "last week 过去时间，take 的过去式是 took。"
           },
           {
             "id": "w2-thu-tn3",
             "type": "fill",
-            "question": "Listen! Someone ___ (sing) in the music room. [填入正确形式]",
-            "answer": "is singing",
-            "explanation_cn": "Listen! 是现在进行时标志词。结构 be + doing，主语 someone 是单数，用 is singing。",
-            "explanation_en": "'Listen!' is a marker of the present continuous. Structure: be + verb-ing. 'Someone' is singular, so 'is singing'."
+            "question": "Look! The robot ___ (clean) the street now. [填入正确形式]",
+            "answer": "is cleaning",
+            "explanation_cn": "Look! 提示正在进行，用 is cleaning。"
           },
           {
             "id": "w2-thu-tn4",
             "type": "fill",
-            "question": "I ___ (buy) a new dictionary tomorrow. [填入正确形式]",
-            "answer": "will buy",
-            "explanation_cn": "tomorrow 是将来时间标志，用 will + 动词原形：will buy。也可以说 am going to buy。buy 的过去式是 bought，注意区分。",
-            "explanation_en": "'Tomorrow' is a future time marker, so 'will + base verb' is used: will buy. 'Am going to buy' is also correct. Note: the past form of 'buy' is 'bought'."
+            "question": "Mobile payment ___ (change) our life a lot in the last ten years. [填入正确形式]",
+            "answer": "has changed",
+            "explanation_cn": "in the last ten years 与现在完成时连用：has changed。"
           },
           {
             "id": "w2-thu-tn5",
-            "type": "choice",
-            "question": "My parents ___ in Beijing in 2018.",
-            "options": ["live", "lives", "lived", "are living"],
-            "answer": 2,
-            "explanation_cn": "in 2018 是过去的时间点，用一般过去时 lived。live 的过去式直接加 d。注意 in + 年份 与过去时连用。",
-            "explanation_en": "'In 2018' is a point of time in the past, so the simple past 'lived' is used. Note: 'in + year' goes with the past tense."
+            "type": "fill",
+            "question": "People ___ (carry) cash everywhere ten years ago. [填入正确形式]",
+            "answer": "carried",
+            "explanation_cn": "ten years ago 过去时间，carry 的过去式是 carried。"
+          },
+          {
+            "id": "w2-thu-tn6",
+            "type": "fill",
+            "question": "Astronauts ___ (live) on Tiangong since June. [填入正确形式]",
+            "answer": "have lived",
+            "explanation_cn": "since June 与现在完成时连用：have lived。"
+          },
+          {
+            "id": "w2-thu-tn7",
+            "type": "fill",
+            "question": "We ___ (watch) a space lesson next Friday. [填入正确形式]",
+            "answer": "will watch",
+            "explanation_cn": "next Friday 将来时间，用 will watch。"
+          },
+          {
+            "id": "w2-thu-tn8",
+            "type": "fill",
+            "question": "While the train ___ (move), I read a book. [填入正确形式]",
+            "answer": "was moving",
+            "explanation_cn": "while 引导过去进行时：was moving。"
+          },
+          {
+            "id": "w2-thu-tn9",
+            "type": "fill",
+            "question": "QR codes ___ (use) everywhere in China now. [填入正确形式]",
+            "answer": "are used",
+            "explanation_cn": "二维码被使用，一般现在时被动：are used。"
+          },
+          {
+            "id": "w2-thu-tn10",
+            "type": "fill",
+            "question": "The engineer ___ (build) this railway for three years by last December. [填入正确形式]",
+            "answer": "had built",
+            "explanation_cn": "by last December 过去之前完成，用过去完成时 had built。"
           }
         ]
       }
@@ -3628,7 +7262,7 @@ const WEEK2 = [
     "day_cn": "周五",
     "day_en": "Friday",
     "is_speaking_day": false,
-    "total_duration": 30,
+    "total_duration": 40,
     "theme_cn": "模板写作 + KET/PET题型 + 语法复习",
     "modules": [
       {
@@ -3636,84 +7270,221 @@ const WEEK2 = [
         "name_cn": "写作练习",
         "type": "writing_template",
         "duration": 15,
-        "title": "My Favorite Animal",
+        "title": "My Favorite Invention",
         "requirement_cn": "请根据关键词提示完成作文，完成后请背诵全文。明天将进行挖空默写测试！",
         "keywords": [
-          "favorite animal",
-          "black and white",
-          "eat bamboo",
-          "climb trees",
-          "lovely"
+          "high-speed train",
+          "fast and safe",
+          "travel to Beijing",
+          "watch the scenery",
+          "wonderful"
         ],
         "keywords_cn": [
-          "最喜欢的动物",
-          "黑白相间",
-          "吃竹子",
-          "爬树",
-          "可爱的"
+          "高铁",
+          "又快又安全",
+          "去北京旅行",
+          "看沿途风景",
+          "太棒了"
         ],
-        "template": "My {{1}} is the panda. Pandas are {{2}}. They {{3}} every day. They can also {{4}}. I think pandas are very {{5}}.",
+        "template": "My favorite invention is the {{1}}. It is {{2}}. Last summer, I took it to {{3}} with my parents. On the way, we could {{4}} outside the window. What a {{5}} trip it was!",
         "blanks": [
-          { "id": 1, "hint_cn": "最喜欢的动物", "hint_en": "favorite animal", "answer": "favorite animal" },
-          { "id": 2, "hint_cn": "黑白相间", "hint_en": "black and white", "answer": "black and white" },
-          { "id": 3, "hint_cn": "吃竹子", "hint_en": "eat bamboo", "answer": "eat bamboo" },
-          { "id": 4, "hint_cn": "爬树", "hint_en": "climb trees", "answer": "climb trees" },
-          { "id": 5, "hint_cn": "可爱的", "hint_en": "lovely", "answer": "lovely" }
+          {
+            "id": 1,
+            "hint_cn": "高铁",
+            "hint_en": "high-speed train",
+            "answer": "high-speed train"
+          },
+          {
+            "id": 2,
+            "hint_cn": "又快又安全",
+            "hint_en": "fast and safe",
+            "answer": "fast and safe"
+          },
+          {
+            "id": 3,
+            "hint_cn": "去北京旅行",
+            "hint_en": "travel to Beijing",
+            "answer": "travel to Beijing"
+          },
+          {
+            "id": 4,
+            "hint_cn": "看沿途风景",
+            "hint_en": "watch the scenery",
+            "answer": "watch the scenery"
+          },
+          {
+            "id": 5,
+            "hint_cn": "太棒了",
+            "hint_en": "wonderful",
+            "answer": "wonderful"
+          }
         ],
-        "full_text": "My favorite animal is the panda. Pandas are black and white. They eat bamboo every day. They can also climb trees. I think pandas are very lovely.",
-        "full_text_cn": "我最喜欢的动物是熊猫。熊猫黑白相间。它们每天吃竹子。它们还会爬树。我觉得熊猫非常可爱。",
-        "explanation_cn": "这篇作文围绕最喜欢的动物展开，使用了5个关键词。注意：1) favorite animal 最喜欢的动物；2) black and white 用 and 连接两个颜色；3) eat bamboo 中 bamboo 是不可数名词；4) climb trees 会爬树，can 后面用动词原形；5) lovely 可爱的。整篇使用一般现在时。",
+        "full_text": "My favorite invention is the high-speed train. It is fast and safe. Last summer, I took it to travel to Beijing with my parents. On the way, we could watch the scenery outside the window. What a wonderful trip it was!",
+        "full_text_cn": "我最喜欢的发明是高铁。它又快又安全。去年夏天，我和父母坐高铁去北京旅行。一路上，我们可以看窗外的风景。多么棒的一次旅行啊！",
+        "explanation_cn": "这篇作文介绍自己最喜欢的发明。注意：1) high-speed train 高铁；2) fast and safe 又快又安全；3) travel to Beijing 去北京旅行；4) watch the scenery 看风景；5) What a + 名词短语 感叹句。全文用一般过去时讲一次旅行。",
         "explanation_en": "This essay is about a favorite animal, using 5 keywords. Notes: 1) 'favorite animal'; 2) 'black and white' joins two colors with 'and'; 3) 'bamboo' is uncountable; 4) after 'can', use the base verb 'climb trees'; 5) 'lovely' means cute. The whole essay uses the simple present tense."
       },
       {
         "id": "w2-fri-ket",
         "name_cn": "KET/PET题型",
         "type": "ket_pet",
-        "duration": 10,
+        "duration": 12,
         "questions": [
           {
             "id": "w2-fri-kp1",
             "type": "choice",
-            "question": "KET: Choose the correct answer. — ___ I borrow your pencil, please? — Sure, here you are.",
-            "options": ["Am", "May", "Does", "Was"],
-            "answer": 1,
-            "explanation_cn": "KET 交际用语。请求许可用 May I...? 意为我可以……吗？比 Can I 更礼貌。回答 Sure, here you are 意为当然可以，给你。",
-            "explanation_en": "KET communication item. Ask for permission with 'May I...?', which is more polite than 'Can I?'. The reply 'Sure, here you are' means yes, take it."
+            "question": "KET: — How did you go to Beijing? — I ___ the high-speed train.",
+            "options": [
+              "took",
+              "take",
+              "takes",
+              "taking"
+            ],
+            "answer": 0,
+            "explanation_cn": "问句是过去时 did，回答用过去式 took。"
           },
           {
             "id": "w2-fri-kp2",
             "type": "choice",
-            "question": "KET: Choose the correct answer. There are ___ clouds in the sky, but it isn't raining.",
-            "options": ["some", "any", "no", "much"],
+            "question": "KET: The train is ___ than the bus, so let's take it.",
+            "options": [
+              "faster",
+              "fast",
+              "fastest",
+              "more fast"
+            ],
             "answer": 0,
-            "explanation_cn": "clouds 是可数名词复数，肯定句用 some。any 用于否定和疑问；no 后面不能接复数名词表达有的意思时要小心：There are no clouds 意为没有云，和后半句矛盾。",
-            "explanation_en": "'Clouds' is a plural countable noun in an affirmative sentence, so 'some' is used. 'No clouds' would mean there are no clouds, which contradicts the second half."
+            "explanation_cn": "than 比较级用 faster。"
           },
           {
             "id": "w2-fri-kp3",
             "type": "choice",
-            "question": "KET: Choose the correct answer. — What ___ your mother do? — She is a nurse.",
-            "options": ["do", "does", "is", "has"],
-            "answer": 1,
-            "explanation_cn": "问职业的固定句型：What do/does + 主语 + do? 主语 your mother 是第三人称单数，用 does。回答 She is a nurse。",
-            "explanation_en": "The fixed pattern for asking about jobs is 'What do/does + subject + do?' With 'your mother' (third person singular), use 'does'."
+            "question": "KET: — ___ will the trip take? — About four hours.",
+            "options": [
+              "How long",
+              "How often",
+              "How much",
+              "How many"
+            ],
+            "answer": 0,
+            "explanation_cn": "问时间长度用 How long。"
           },
           {
             "id": "w2-fri-kp4",
             "type": "choice",
-            "question": "KET: Choose the correct answer. Tom is ___ than his brother.",
-            "options": ["tall", "taller", "tallest", "more tall"],
-            "answer": 1,
-            "explanation_cn": "than 是比较级标志，tall 的比较级直接加 er：taller。最高级 tallest 前面要加 the，且不和 than 连用。",
-            "explanation_en": "'Than' signals the comparative: tall → taller. The superlative 'tallest' needs 'the' and is not used with 'than'."
+            "question": "KET: You ___ use paper tickets any more.",
+            "options": [
+              "don't need to",
+              "needn't to",
+              "not need",
+              "don't need"
+            ],
+            "answer": 0,
+            "explanation_cn": "don't need to do sth：不再需要做某事。"
           },
           {
             "id": "w2-fri-kp5",
-            "type": "fill",
-            "question": "KET: Complete the sentence with one word. I go to school ___ bus every day.",
-            "answer": "by",
-            "explanation_cn": "KET 词汇题。by + 交通工具表示出行方式：by bus。注意 on foot 是步行，这是唯一不用 by 的常见表达。",
-            "explanation_en": "KET vocabulary item. 'By + vehicle' shows how someone travels: by bus. Note: 'on foot' is the common exception without 'by'."
+            "type": "choice",
+            "question": "KET: Remember ___ your ID card for the trip.",
+            "options": [
+              "to bring",
+              "bringing",
+              "bring",
+              "brings"
+            ],
+            "answer": 0,
+            "explanation_cn": "remember to do sth：记得带上身份证。"
+          },
+          {
+            "id": "w2-fri-kp6",
+            "type": "choice",
+            "question": "KET: — Whose phone is this? — It's ___.",
+            "options": [
+              "mine",
+              "my",
+              "me",
+              "I"
+            ],
+            "answer": 0,
+            "explanation_cn": "名词性物主代词 mine = my phone。"
+          },
+          {
+            "id": "w2-fri-kp7",
+            "type": "choice",
+            "question": "KET: There is ___ interesting AI show at the museum.",
+            "options": [
+              "an",
+              "a",
+              "the",
+              "/（不填）"
+            ],
+            "answer": 0,
+            "explanation_cn": "interesting 元音开头，用 an。"
+          },
+          {
+            "id": "w2-fri-kp8",
+            "type": "choice",
+            "question": "KET: The robots can work ___ people can rest.",
+            "options": [
+              "so that",
+              "so as",
+              "because of",
+              "instead"
+            ],
+            "answer": 0,
+            "explanation_cn": "so that 引导目的：机器人工作，以便人可以休息。"
+          },
+          {
+            "id": "w2-fri-kp9",
+            "type": "choice",
+            "question": "KET: — Do I have to pay now? — No, you ___.",
+            "options": [
+              "don't have to",
+              "mustn't",
+              "can't",
+              "shouldn't have"
+            ],
+            "answer": 0,
+            "explanation_cn": "have to 的否定回答：don't have to（不必）。"
+          },
+          {
+            "id": "w2-fri-kp10",
+            "type": "choice",
+            "question": "KET: This is ___ useful app for learning English.",
+            "options": [
+              "a",
+              "an",
+              "the",
+              "/（不填）"
+            ],
+            "answer": 0,
+            "explanation_cn": "useful 是辅音音素开头 /j/，用 a。"
+          },
+          {
+            "id": "w2-fri-kp11",
+            "type": "choice",
+            "question": "KET: The new train station ___ in 2023.",
+            "options": [
+              "opened",
+              "opens",
+              "is opening",
+              "open"
+            ],
+            "answer": 0,
+            "explanation_cn": "in 2023 过去时间，用过去式 opened。"
+          },
+          {
+            "id": "w2-fri-kp12",
+            "type": "choice",
+            "question": "KET: My brother is interested ___ robots.",
+            "options": [
+              "in",
+              "at",
+              "on",
+              "for"
+            ],
+            "answer": 0,
+            "explanation_cn": "be interested in…：对…感兴趣。"
           }
         ]
       },
@@ -3721,33 +7492,176 @@ const WEEK2 = [
         "id": "w2-fri-grammar",
         "name_cn": "语法复习",
         "type": "grammar",
-        "duration": 5,
+        "duration": 13,
         "questions": [
           {
             "id": "w2-fri-gr1",
             "type": "choice",
-            "question": "Lily and Lucy ___ twins.",
-            "options": ["is", "am", "are", "be"],
-            "answer": 2,
-            "explanation_cn": "主语 Lily and Lucy 是两个人，复数用 are。注意 and 连接两个主语时谓语用复数。",
-            "explanation_en": "'Lily and Lucy' are two people, so the plural 'are' is used. Note: subjects joined by 'and' take a plural verb."
+            "question": "China has built many ___ railways since 2008.",
+            "options": [
+              "high-speed",
+              "high speed",
+              "highly-speed",
+              "highest-speed"
+            ],
+            "answer": 0,
+            "explanation_cn": "high-speed train/railway 是固定说法，作定语。"
           },
           {
             "id": "w2-fri-gr2",
             "type": "choice",
-            "question": "— ___ do you like pandas? — Because they are cute.",
-            "options": ["Why", "What", "How", "Where"],
+            "question": "The train ___ at six every morning.",
+            "options": [
+              "leaves",
+              "left",
+              "leave",
+              "is leaving"
+            ],
             "answer": 0,
-            "explanation_cn": "回答用 Because（因为），提问就用 Why（为什么）。Why 和 Because 是一对。",
-            "explanation_en": "The answer starts with 'Because', so the question word is 'Why'. 'Why' and 'because' go together."
+            "explanation_cn": "时刻表用一般现在时，主语三单 leaves。"
           },
           {
             "id": "w2-fri-gr3",
-            "type": "fill",
-            "question": "How many ___ (box) are there on the desk? [填入正确形式]",
-            "answer": "boxes",
-            "explanation_cn": "How many 后面接可数名词复数。box 以 x 结尾，变复数加 -es：boxes。",
-            "explanation_en": "'How many' is followed by a plural countable noun. Nouns ending in -x add -es: box → boxes."
+            "type": "choice",
+            "question": "It used to ___ ten hours to get there.",
+            "options": [
+              "take",
+              "took",
+              "takes",
+              "taking"
+            ],
+            "answer": 0,
+            "explanation_cn": "used to do sth：过去常常，后面用原形 take。"
+          },
+          {
+            "id": "w2-fri-gr4",
+            "type": "choice",
+            "question": "The faster the train is, the ___ time we save.",
+            "options": [
+              "more",
+              "much",
+              "most",
+              "many"
+            ],
+            "answer": 0,
+            "explanation_cn": "the + 比较级…，the + 比较级…：越快省的时间越多，more time。"
+          },
+          {
+            "id": "w2-fri-gr5",
+            "type": "choice",
+            "question": "Neither the bus nor the train ___ fast enough.",
+            "options": [
+              "is",
+              "are",
+              "were",
+              "be"
+            ],
+            "answer": 0,
+            "explanation_cn": "neither…nor… 就近原则，the train 单数用 is。"
+          },
+          {
+            "id": "w2-fri-gr6",
+            "type": "choice",
+            "question": "The station is ___ from my home, so we take a taxi.",
+            "options": [
+              "far",
+              "far away than",
+              "farther most",
+              "farest"
+            ],
+            "answer": 0,
+            "explanation_cn": "far from…：离家远。"
+          },
+          {
+            "id": "w2-fri-gr7",
+            "type": "choice",
+            "question": "Astronauts must learn ___ with each other in space.",
+            "options": [
+              "to work",
+              "working",
+              "work",
+              "worked"
+            ],
+            "answer": 0,
+            "explanation_cn": "learn to do sth：学会在太空共事。"
+          },
+          {
+            "id": "w2-fri-gr8",
+            "type": "choice",
+            "question": "The space lesson was ___ interesting that we watched it twice.",
+            "options": [
+              "so",
+              "such",
+              "too",
+              "very"
+            ],
+            "answer": 0,
+            "explanation_cn": "so + 形容词 + that：如此…以至于。"
+          },
+          {
+            "id": "w2-fri-gr9",
+            "type": "choice",
+            "question": "AI helps doctors save ___ people's lives.",
+            "options": [
+              "many",
+              "much",
+              "a little",
+              "a lot of"
+            ],
+            "answer": 0,
+            "explanation_cn": "people 复数，用 many（句中 people's lives 前用 many）。"
+          },
+          {
+            "id": "w2-fri-gr10",
+            "type": "choice",
+            "question": "Robots can do the same job ___ than people, without rest.",
+            "options": [
+              "faster",
+              "fast",
+              "fastest",
+              "more fast"
+            ],
+            "answer": 0,
+            "explanation_cn": "than 提示比较级 faster。"
+          },
+          {
+            "id": "w2-fri-gr11",
+            "type": "choice",
+            "question": "You'd better ___ the answers before you hand them in.",
+            "options": [
+              "check",
+              "to check",
+              "checking",
+              "checked"
+            ],
+            "answer": 0,
+            "explanation_cn": "had better do sth：最好做某事，用原形 check。"
+          },
+          {
+            "id": "w2-fri-gr12",
+            "type": "choice",
+            "question": "The scientists are working ___ a new space lab.",
+            "options": [
+              "on",
+              "at",
+              "in",
+              "for"
+            ],
+            "answer": 0,
+            "explanation_cn": "work on…：从事、研制某个项目。"
+          },
+          {
+            "id": "w2-fri-gr13",
+            "type": "choice",
+            "question": "By 2030, China ___ more space stations in orbit.",
+            "options": [
+              "will have",
+              "had",
+              "has",
+              "having"
+            ],
+            "answer": 0,
+            "explanation_cn": "By 2030 将来时间，用一般将来时 will have。"
           }
         ]
       }
@@ -3757,7 +7671,7 @@ const WEEK2 = [
     "day_cn": "周六",
     "day_en": "Saturday",
     "is_speaking_day": true,
-    "total_duration": 40,
+    "total_duration": 60,
     "theme_cn": "AI口语 + 高频词汇 + 阅读理解",
     "modules": [
       {
@@ -3779,7 +7693,14 @@ const WEEK2 = [
             "answer": 0,
             "pronunciation_tips": "free time 注意 free /friː/ 长元音，storybooks 是复合词重音在 story",
             "explanation_cn": "问空闲做什么，用一般现在时回答习惯。A 正确；B 是过去；C、D 答非所问。",
-            "explanation_en": "The question asks about a habit, so use the simple present. A is correct; B is past; C and D do not answer the question."
+            "explanation_en": "The question asks about a habit, so use the simple present. A is correct; B is past; C and D do not answer the question.",
+            "answer_cn_hint": "它在问「空闲时间做什么」（习惯），答句要用一般现在时。",
+            "options_cn": [
+              "我空闲时间读故事书。",
+              "我昨天做了作业。",
+              "这个星期天我有空。",
+              "我的空闲时间很少。"
+            ]
           },
           {
             "id": "w2-sat-sp2",
@@ -3794,7 +7715,14 @@ const WEEK2 = [
             "answer": 0,
             "pronunciation_tips": "instruments /ˈɪnstrəmənts/ 词尾 -nts 要读清楚，piano /piˈænəʊ/ 重音在第二音节",
             "explanation_cn": "Can 开头的疑问句用 Yes, I can 回答。乐器前面要加 the：play the piano。B 喜欢音乐不等于会乐器。",
-            "explanation_en": "A 'Can...?' question is answered with 'Yes, I can'. Note: 'the' goes before instruments: play the piano. Liking music (B) is not the same as playing an instrument."
+            "explanation_en": "A 'Can...?' question is answered with 'Yes, I can'. Note: 'the' goes before instruments: play the piano. Liking music (B) is not the same as playing an instrument.",
+            "answer_cn_hint": "这是 Can you… 问句，答句要先说 Yes, I can. 或 No, I can't.，再补一句。",
+            "options_cn": [
+              "是的，我会弹钢琴。",
+              "是的，我很喜欢音乐。",
+              "我现在在听音乐。",
+              "钢琴很贵。"
+            ]
           },
           {
             "id": "w2-sat-sp3",
@@ -3809,7 +7737,14 @@ const WEEK2 = [
             "answer": 0,
             "pronunciation_tips": "best friend 注意 best /best/ 的短元音 e，friend /frend/ 的 ie 读 /e/",
             "explanation_cn": "Who 问人，回答要说出是谁。A 正确并说明了关系；B 只说了喜好；C、D 答非所问。",
-            "explanation_en": "'Who' asks about a person, so name the person. A is correct and adds the relationship; B only gives a fact; C and D do not answer the question."
+            "explanation_en": "'Who' asks about a person, so name the person. A is correct and adds the relationship; B only gives a fact; C and D do not answer the question.",
+            "answer_cn_hint": "它在问「谁」，答句要说出一个人的名字，不是说他喜欢什么、几岁。",
+            "options_cn": [
+              "我最好的朋友是艾玛，我们在同一个班。",
+              "我最好的朋友喜欢冰淇淋。",
+              "我骑自行车上学。",
+              "艾玛十岁。"
+            ]
           },
           {
             "id": "w2-sat-sp4",
@@ -3824,7 +7759,14 @@ const WEEK2 = [
             "answer": 0,
             "pronunciation_tips": "had 是 have 的过去式 /hæd/，注意和 hard /hɑːd/ 区分",
             "explanation_cn": "yesterday 是过去时间，用过去式 had。B 是现在时的习惯，C 是将来，D 没回答吃了什么。",
-            "explanation_en": "'Yesterday' requires the past form 'had'. B is a present habit; C is future; D does not say what was eaten."
+            "explanation_en": "'Yesterday' requires the past form 'had'. B is a present habit; C is future; D does not say what was eaten.",
+            "answer_cn_hint": "它在问「昨天吃了什么」（过去），答句要用过去式 had。",
+            "options_cn": [
+              "我吃了米饭和鱼。",
+              "我每天吃米饭和鱼。",
+              "我将要吃米饭和鱼。",
+              "我很喜欢鱼。"
+            ]
           },
           {
             "id": "w2-sat-sp5",
@@ -3839,7 +7781,14 @@ const WEEK2 = [
             "answer": 0,
             "pronunciation_tips": "shopping 双写 p 加 -ing，tiring /ˈtaɪərɪŋ/ 意为让人累的，注意和 tired（感到累的）区分",
             "explanation_cn": "Do 开头的疑问句要回答 yes/no 的态度。A Not really 意为不算喜欢，是自然回答；B 说的是过去的事；C、D 答非所问。注意 tiring 修饰事物，tired 修饰人。",
-            "explanation_en": "The question asks about your attitude, so answer with yes/no plus a reason. 'Not really' is a natural soft no. Note: 'tiring' describes the activity; 'tired' describes how a person feels."
+            "explanation_en": "The question asks about your attitude, so answer with yes/no plus a reason. 'Not really' is a natural soft no. Note: 'tiring' describes the activity; 'tired' describes how a person feels.",
+            "answer_cn_hint": "这是 Do you… 问句，答句要先说 Yes, I do. 或 No, I don't.，再补一句理由。",
+            "options_cn": [
+              "不太喜欢，我觉得很累人。",
+              "是的，我昨天去购物了。",
+              "商店九点开门。",
+              "我妈妈喜欢购物。"
+            ]
           }
         ]
       },
@@ -3849,77 +7798,745 @@ const WEEK2 = [
         "type": "vocabulary_game",
         "duration": 5,
         "words": [
-          vocabWord({
-            "word": "guitar", "phonetic": "/ɡɪˈtɑː/", "meaning": "吉他", "emoji": "🎸",
-            "example_en": "He plays the guitar very well.", "example_cn": "他吉他弹得很好。",
-            "syllables": ["gui", "tar"], "spell": ["g__tar", "ui"],
-            "wrongEmoji": ["⭐", "🚗", "⚽"], "wrongMeaning": ["绘画", "国际象棋", "相机"]
-          }),
-          vocabWord({
-            "word": "painting", "phonetic": "/ˈpeɪntɪŋ/", "meaning": "绘画；画作", "emoji": "🎨",
-            "example_en": "Her painting won a prize.", "example_cn": "她的画得奖了。",
-            "syllables": ["pain", "ting"], "spell": ["pa__ting", "in"],
-            "wrongEmoji": ["⭐", "🌧️", "🎲"], "wrongMeaning": ["吉他", "奖品", "国际象棋"]
-          }),
-          vocabWord({
-            "word": "chess", "phonetic": "/tʃes/", "meaning": "国际象棋", "emoji": "♟️",
-            "example_en": "My grandpa teaches me chess.", "example_cn": "爷爷教我下国际象棋。",
-            "syllables": ["chess"], "spell": ["ch__ss", "e"],
-            "wrongEmoji": ["⚽", "🎵", "🚲"], "wrongMeaning": ["绘画", "吉他", "相机"]
-          }),
-          vocabWord({
-            "word": "camera", "phonetic": "/ˈkæmrə/", "meaning": "相机", "emoji": "📷",
-            "example_en": "Don't forget your camera.", "example_cn": "别忘了带相机。",
-            "syllables": ["ca", "me", "ra"], "spell": ["ca__ra", "me"],
-            "wrongEmoji": ["⭐", "🎸", "🌧️"], "wrongMeaning": ["国际象棋", "绘画", "奖品"]
-          }),
-          vocabWord({
-            "word": "prize", "phonetic": "/praɪz/", "meaning": "奖品", "emoji": "🏆",
-            "example_en": "He got a prize for his painting.", "example_cn": "他的画得了奖。",
-            "syllables": ["prize"], "spell": ["pr__e", "iz"],
-            "wrongEmoji": ["⭐", "🎲", "🚲"], "wrongMeaning": ["相机", "国际象棋", "绘画"]
-          })
+          {
+            "word": "guitar",
+            "phonetic": "/ɡɪˈtɑː/",
+            "meaning": "吉他",
+            "emoji": "🎸",
+            "example_en": "He plays the guitar very well.",
+            "example_cn": "他吉他弹得很好。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "🎸",
+                  "⭐",
+                  "🚗",
+                  "⚽"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "⚽",
+                  "⭐",
+                  "🎸",
+                  "🚗"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "guitar 是什么意思？（1/2）",
+                "options": [
+                  "绘画",
+                  "国际象棋",
+                  "吉他",
+                  "相机"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "guitar 是什么意思？（2/2）",
+                "options": [
+                  "吉他",
+                  "相机",
+                  "绘画",
+                  "国际象棋"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: g__tar",
+                "answer": "ui"
+              }
+            ],
+            "letters": [
+              "g",
+              "u",
+              "i",
+              "t",
+              "a",
+              "r"
+            ],
+            "syllables": [
+              "gui",
+              "tar"
+            ],
+            "hint_cn": "有六根弦，抱着弹会叮咚响"
+          },
+          {
+            "word": "painting",
+            "phonetic": "/ˈpeɪntɪŋ/",
+            "meaning": "绘画；画作",
+            "emoji": "🎨",
+            "example_en": "Her painting won a prize.",
+            "example_cn": "她的画得奖了。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "🎨",
+                  "⭐",
+                  "🌧️",
+                  "🎲"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "🎲",
+                  "⭐",
+                  "🎨",
+                  "🌧️"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "painting 是什么意思？（1/2）",
+                "options": [
+                  "吉他",
+                  "奖品",
+                  "绘画；画作",
+                  "国际象棋"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "painting 是什么意思？（2/2）",
+                "options": [
+                  "绘画；画作",
+                  "国际象棋",
+                  "吉他",
+                  "奖品"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: pa__ting",
+                "answer": "in"
+              }
+            ],
+            "letters": [
+              "p",
+              "a",
+              "i",
+              "n",
+              "t",
+              "i",
+              "n",
+              "g"
+            ],
+            "syllables": [
+              "pain",
+              "ting"
+            ],
+            "hint_cn": "用画笔和颜料做出来的作品"
+          },
+          {
+            "word": "chess",
+            "phonetic": "/tʃes/",
+            "meaning": "国际象棋",
+            "emoji": "♟️",
+            "example_en": "My grandpa teaches me chess.",
+            "example_cn": "爷爷教我下国际象棋。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "♟️",
+                  "⚽",
+                  "🎵",
+                  "🚲"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "🚲",
+                  "⚽",
+                  "♟️",
+                  "🎵"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "chess 是什么意思？（1/2）",
+                "options": [
+                  "绘画",
+                  "吉他",
+                  "国际象棋",
+                  "相机"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "chess 是什么意思？（2/2）",
+                "options": [
+                  "国际象棋",
+                  "相机",
+                  "绘画",
+                  "吉他"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: ch__ss",
+                "answer": "e"
+              }
+            ],
+            "letters": [
+              "c",
+              "h",
+              "e",
+              "s",
+              "s"
+            ],
+            "syllables": [
+              "chess"
+            ],
+            "hint_cn": "黑白格子的棋盘，两个人你一步我一步"
+          },
+          {
+            "word": "camera",
+            "phonetic": "/ˈkæmrə/",
+            "meaning": "相机",
+            "emoji": "📷",
+            "example_en": "Don't forget your camera.",
+            "example_cn": "别忘了带相机。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "📷",
+                  "⭐",
+                  "🎸",
+                  "🌧️"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "🌧️",
+                  "⭐",
+                  "📷",
+                  "🎸"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "camera 是什么意思？（1/2）",
+                "options": [
+                  "国际象棋",
+                  "绘画",
+                  "相机",
+                  "奖品"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "camera 是什么意思？（2/2）",
+                "options": [
+                  "相机",
+                  "奖品",
+                  "国际象棋",
+                  "绘画"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: ca__ra",
+                "answer": "me"
+              }
+            ],
+            "letters": [
+              "c",
+              "a",
+              "m",
+              "e",
+              "r",
+              "a"
+            ],
+            "syllables": [
+              "ca",
+              "me",
+              "ra"
+            ],
+            "hint_cn": "咔嚓一下，把风景留下来"
+          },
+          {
+            "word": "prize",
+            "phonetic": "/praɪz/",
+            "meaning": "奖品",
+            "emoji": "🏆",
+            "example_en": "He got a prize for his painting.",
+            "example_cn": "他的画得了奖。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "🏆",
+                  "⭐",
+                  "🎲",
+                  "🚲"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "🚲",
+                  "⭐",
+                  "🏆",
+                  "🎲"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "prize 是什么意思？（1/2）",
+                "options": [
+                  "相机",
+                  "国际象棋",
+                  "奖品",
+                  "绘画"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "prize 是什么意思？（2/2）",
+                "options": [
+                  "奖品",
+                  "绘画",
+                  "相机",
+                  "国际象棋"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: pr__e",
+                "answer": "iz"
+              }
+            ],
+            "letters": [
+              "p",
+              "r",
+              "i",
+              "z",
+              "e"
+            ],
+            "syllables": [
+              "prize"
+            ],
+            "hint_cn": "比赛赢了以后，发给你的那样东西"
+          }
         ]
       },
       {
         "id": "w2-sat-reading",
         "name_cn": "阅读理解",
         "type": "reading",
-        "duration": 5,
-        "passage": "There was an art show at Rainbow School last Thursday. The hall was full of paintings and photos. Amy showed three paintings of the sea. She used blue, white and green. A judge from the city art club looked at every piece carefully. In the end, Amy won the first prize! She got a new set of colour pencils and a book about famous painters. \"Keep practising,\" the judge told her. \"You have a good eye for colour.\" Amy wants to be a painter like her uncle one day.",
-        "passage_cn": "上周四，彩虹学校举办了一场美术展。大厅里挂满了绘画和摄影作品。艾米展出了三幅海的画。她用了蓝色、白色和绿色。一位来自市艺术俱乐部的评委仔细看了每一件作品。最后，艾米获得了一等奖！她得到了一盒新彩铅和一本关于著名画家的书。评委对她说，要坚持练习。她夸艾米对色彩很有感觉。艾米想有一天成为像她叔叔一样的画家。",
+        "duration": 10,
+        "passage": "Artificial intelligence, or AI, is becoming a big part of our life. AI can recognize faces, translate languages and answer questions. Some students use AI tools to practise English — the AI listens and helps them correct their mistakes. In hospitals, AI helps doctors read X-ray pictures quickly. In factories, smart robots work day and night and never feel tired. But AI is not perfect. It sometimes makes mistakes, so people must check its answers. Scientists say AI is a good helper, but the most important thinking is still done by people. In the future, AI will do more and more jobs, and we should learn to work with it.",
+        "passage_cn": "人工智能（AI）正在成为我们生活中重要的一部分。AI 能识别人脸、翻译语言、回答问题。一些学生用 AI 工具练习英语——AI 会听他们朗读，帮他们纠正错误。在医院，AI 帮助医生快速看X光片。在工厂里，智能机器人昼夜工作，从不觉得累。但 AI 并不完美。它有时会出错，所以人们必须检查它的答案。科学家说 AI 是好帮手，但最重要的思考仍然由人来做。未来 AI 会做越来越多工作，我们要学会与它合作。",
         "questions": [
           {
             "id": "w2-sat-rd1",
             "type": "choice",
-            "question": "When was the art show?",
-            "options": ["Last Tuesday", "Last Thursday", "Last Saturday", "Last Sunday"],
-            "answer": 1,
-            "explanation_cn": "第一句 There was an art show... last Thursday。美术展是上周四举办的。注意 there was 是 there is 的过去式。",
-            "explanation_en": "The first sentence says the show was 'last Thursday'. Note: 'there was' is the past form of 'there is'."
+            "question": "What can AI do?",
+            "options": [
+              "Recognize faces, translate and answer questions",
+              "Cook all the meals",
+              "Go to school for kids",
+              "Sleep all day"
+            ],
+            "answer": 0,
+            "explanation_cn": "AI 能识别人脸、翻译语言、回答问题。"
           },
           {
             "id": "w2-sat-rd2",
             "type": "choice",
-            "question": "What did Amy paint?",
-            "options": ["The mountains", "Animals", "The sea", "Her school"],
-            "answer": 2,
-            "explanation_cn": "文章说 Amy showed three paintings of the sea。艾米画的是大海。注意 painting 意为画作，show 意为展出。",
-            "explanation_en": "The text says 'Amy showed three paintings of the sea.' Note: 'painting' means a picture made with paint."
+            "question": "What do some students use AI for?",
+            "options": [
+              "Practising English",
+              "Playing games all day",
+              "Watching TV",
+              "Doing nothing"
+            ],
+            "answer": 0,
+            "explanation_cn": "学生用 AI 工具练英语，AI 帮他们纠错。"
           },
           {
             "id": "w2-sat-rd3",
             "type": "choice",
-            "question": "What did Amy get as the prize?",
+            "question": "Where does AI help doctors?",
             "options": [
-              "A new set of colour pencils and a book",
-              "A new camera",
-              "A bag of paints",
-              "A gold medal"
+              "In hospitals",
+              "In parks",
+              "In shops",
+              "On farms"
             ],
             "answer": 0,
-            "explanation_cn": "文章说 She got a new set of colour pencils and a book about famous painters。奖品是一盒新彩铅和一本书。a set of 意为一套。",
-            "explanation_en": "The text says 'She got a new set of colour pencils and a book about famous painters.' Note: 'a set of' means one group of things."
+            "explanation_cn": "在医院，AI 帮医生快速看X光片。"
+          },
+          {
+            "id": "w2-sat-rd4",
+            "type": "choice",
+            "question": "What do smart robots do in factories?",
+            "options": [
+              "They work day and night.",
+              "They sleep at noon.",
+              "They feel tired easily.",
+              "They play with children."
+            ],
+            "answer": 0,
+            "explanation_cn": "智能机器人昼夜工作，从不觉得累。"
+          },
+          {
+            "id": "w2-sat-rd5",
+            "type": "choice",
+            "question": "Is AI perfect?",
+            "options": [
+              "No, it sometimes makes mistakes.",
+              "Yes, it is always right.",
+              "Yes, but it is slow.",
+              "No, it never works."
+            ],
+            "answer": 0,
+            "explanation_cn": "AI 不完美，有时会出错，要人工检查。"
+          },
+          {
+            "id": "w2-sat-rd6",
+            "type": "choice",
+            "question": "Who does the most important thinking?",
+            "options": [
+              "People",
+              "Robots",
+              "Computers",
+              "Phones"
+            ],
+            "answer": 0,
+            "explanation_cn": "最重要的思考仍然由人来完成。"
+          },
+          {
+            "id": "w2-sat-rd7",
+            "type": "choice",
+            "question": "What should we learn to do in the future?",
+            "options": [
+              "Work with AI",
+              "Stop using phones",
+              "Sell our computers",
+              "Sleep more"
+            ],
+            "answer": 0,
+            "explanation_cn": "未来要学会与 AI 合作。"
+          },
+          {
+            "id": "w2-sat-rd8",
+            "type": "choice",
+            "question": "The word \"recognize\" here means ___.",
+            "options": [
+              "识别",
+              "涂色",
+              "丢弃",
+              "购买"
+            ],
+            "answer": 0,
+            "explanation_cn": "recognize 意思是「识别、认出」。"
+          },
+          {
+            "id": "w2-sat-rd9",
+            "type": "choice",
+            "question": "Which is an example of AI in the passage?",
+            "options": [
+              "A robot working in a factory",
+              "A cat sleeping on a bed",
+              "A child riding a bike",
+              "A bird flying in the sky"
+            ],
+            "answer": 0,
+            "explanation_cn": "工厂里的智能机器人是 AI 的例子。"
+          },
+          {
+            "id": "w2-sat-rd10",
+            "type": "choice",
+            "question": "The best title for the passage about AI is ___.",
+            "options": [
+              "AI in Our Life",
+              "Robots Are Bad",
+              "How to Play Games",
+              "Doctors and Nurses"
+            ],
+            "answer": 0,
+            "explanation_cn": "全文介绍 AI 在生活各方面的应用与不足。"
+          }
+        ]
+      },
+      {
+        "id": "w2-sat-mc",
+        "name_cn": "单项选择",
+        "type": "multiple_choice",
+        "duration": 10,
+        "questions": [
+          {
+            "id": "w2-sat-mc1",
+            "type": "choice",
+            "question": "AI ___ recognize faces and translate languages.",
+            "options": [
+              "can",
+              "cans",
+              "is",
+              "are"
+            ],
+            "answer": 0,
+            "explanation_cn": "情态动词 can 后面用动词原形。"
+          },
+          {
+            "id": "w2-sat-mc2",
+            "type": "choice",
+            "question": "Some students use AI tools ___ English.",
+            "options": [
+              "to practise",
+              "practise",
+              "practising",
+              "practised"
+            ],
+            "answer": 0,
+            "explanation_cn": "use sth to do sth：用 AI 工具来练英语。"
+          },
+          {
+            "id": "w2-sat-mc3",
+            "type": "choice",
+            "question": "The AI listens and ___ them correct mistakes.",
+            "options": [
+              "helps",
+              "help",
+              "helping",
+              "helped"
+            ],
+            "answer": 0,
+            "explanation_cn": "主语 the AI 三单，用 helps。"
+          },
+          {
+            "id": "w2-sat-mc4",
+            "type": "choice",
+            "question": "In hospitals, AI helps doctors ___ X-ray pictures.",
+            "options": [
+              "read",
+              "reads",
+              "reading",
+              "readed"
+            ],
+            "answer": 0,
+            "explanation_cn": "help sb do sth：help 后面用动词原形 read。"
+          },
+          {
+            "id": "w2-sat-mc5",
+            "type": "choice",
+            "question": "Smart robots work day and night and never feel ___.",
+            "options": [
+              "tired",
+              "tiring",
+              "tire",
+              "tiredly"
+            ],
+            "answer": 0,
+            "explanation_cn": "feel 是系动词，后面用形容词 tired（累）。"
+          },
+          {
+            "id": "w2-sat-mc6",
+            "type": "choice",
+            "question": "AI is not ___, so we must check its answers.",
+            "options": [
+              "perfect",
+              "perfection",
+              "perfectly",
+              "more perfect"
+            ],
+            "answer": 0,
+            "explanation_cn": "系动词 is 后面用形容词 perfect（完美的）。"
+          },
+          {
+            "id": "w2-sat-mc7",
+            "type": "choice",
+            "question": "___ the answers carefully before you hand them in.",
+            "options": [
+              "Check",
+              "Checks",
+              "Checking",
+              "Checked"
+            ],
+            "answer": 0,
+            "explanation_cn": "祈使句用动词原形 Check。"
+          },
+          {
+            "id": "w2-sat-mc8",
+            "type": "choice",
+            "question": "People will work ___ AI in the future.",
+            "options": [
+              "with",
+              "at",
+              "for of",
+              "off"
+            ],
+            "answer": 0,
+            "explanation_cn": "work with AI：与 AI 一起工作。"
+          },
+          {
+            "id": "w2-sat-mc9",
+            "type": "choice",
+            "question": "AI is becoming a big ___ of our life.",
+            "options": [
+              "part",
+              "party",
+              "partly",
+              "partner"
+            ],
+            "answer": 0,
+            "explanation_cn": "a big part of our life：生活中重要的一部分。"
+          },
+          {
+            "id": "w2-sat-mc10",
+            "type": "choice",
+            "question": "The robots work ___ and never stop.",
+            "options": [
+              "day and night",
+              "day and day",
+              "night on night",
+              "day to night"
+            ],
+            "answer": 0,
+            "explanation_cn": "day and night 日夜不停地工作，固定短语。"
+          }
+        ]
+      },
+      {
+        "id": "w2-sat-tense2",
+        "name_cn": "时态练习",
+        "type": "tense",
+        "duration": 5,
+        "questions": [
+          {
+            "id": "w2-sat-tn21",
+            "type": "fill",
+            "question": "AI ___ (become) a big part of our life. [填入正确形式]",
+            "answer": "is becoming",
+            "explanation_cn": "正在成为，用现在进行时。"
+          },
+          {
+            "id": "w2-sat-tn22",
+            "type": "fill",
+            "question": "The robot ___ (work) day and night last month. [填入正确形式]",
+            "answer": "worked",
+            "explanation_cn": "last month 过去时间，用过去式 worked。"
+          },
+          {
+            "id": "w2-sat-tn23",
+            "type": "fill",
+            "question": "AI tools ___ (help) students since 2022. [填入正确形式]",
+            "answer": "have helped",
+            "explanation_cn": "since 2022 与现在完成时连用。"
+          },
+          {
+            "id": "w2-sat-tn24",
+            "type": "fill",
+            "question": "Look! The AI ___ (answer) the question now. [填入正确形式]",
+            "answer": "is answering",
+            "explanation_cn": "Look! 提示正在进行，用 is answering。"
+          },
+          {
+            "id": "w2-sat-tn25",
+            "type": "fill",
+            "question": "We ___ (work) with AI more in the future. [填入正确形式]",
+            "answer": "will work",
+            "explanation_cn": "in the future 将来时间，用 will work。"
           }
         ]
       }
@@ -3929,82 +8546,432 @@ const WEEK2 = [
     "day_cn": "周日",
     "day_en": "Sunday",
     "is_speaking_day": false,
-    "total_duration": 30,
+    "total_duration": 35,
     "theme_cn": "阅读理解 + 高频词汇 + 完形填空",
     "modules": [
-      {
-        "id": "w2-sun-reading",
-        "name_cn": "阅读理解",
-        "type": "reading",
-        "duration": 10,
-        "passage": "In my town, every season is different. Spring is warm and rainy. Flowers come out and birds sing in the trees. Summer is hot. Children love swimming in the river and eating ice cream. Autumn is my favorite season. It is cool and the leaves turn yellow and red. We often fly kites in the park. Winter is cold and it sometimes snows. My brother and I make a big snowman in front of our house. Which season do you like best?",
-        "passage_cn": "在我的小镇，每个季节都不一样。春天温暖多雨。花儿开放，鸟儿在树上唱歌。夏天很热。孩子们喜欢在河里游泳、吃冰淇淋。秋天是我最喜欢的季节。天气凉爽，树叶变成黄色和红色。我们常在公园里放风筝。冬天很冷，有时会下雪。我和哥哥在房前堆一个大雪人。你最喜欢哪个季节？",
-        "questions": [
-          {
-            "id": "w2-sun-rd1",
-            "type": "choice",
-            "question": "What is the weather like in spring?",
-            "options": ["Hot and dry", "Warm and rainy", "Cool and windy", "Cold and snowy"],
-            "answer": 1,
-            "explanation_cn": "文章说 Spring is warm and rainy。春天温暖多雨。注意 come out 意为（花）开放。",
-            "explanation_en": "The text says 'Spring is warm and rainy.' Note: 'come out' means flowers open."
-          },
-          {
-            "id": "w2-sun-rd2",
-            "type": "choice",
-            "question": "What is the writer's favorite season?",
-            "options": ["Spring", "Summer", "Autumn", "Winter"],
-            "answer": 2,
-            "explanation_cn": "文章说 Autumn is my favorite season。作者最喜欢的季节是秋天。fly kites 意为放风筝。",
-            "explanation_en": "The text says 'Autumn is my favorite season.' Note: 'fly kites' means to play with kites in the wind."
-          },
-          {
-            "id": "w2-sun-rd3",
-            "type": "choice",
-            "question": "What do the children do in winter?",
-            "options": ["Fly kites", "Swim in the river", "Make a snowman", "Eat ice cream"],
-            "answer": 2,
-            "explanation_cn": "文章说 My brother and I make a big snowman in front of our house。冬天孩子们堆雪人。注意 in front of 意为在……前面。",
-            "explanation_en": "The text says 'My brother and I make a big snowman in front of our house.' Note: 'in front of' means before something."
-          }
-        ]
-      },
       {
         "id": "w2-sun-vocab",
         "name_cn": "高频词汇",
         "type": "vocabulary_game",
         "duration": 5,
         "words": [
-          vocabWord({
-            "word": "spring", "phonetic": "/sprɪŋ/", "meaning": "春天", "emoji": "🌷",
-            "example_en": "Flowers come out in spring.", "example_cn": "春天花儿开放。",
-            "syllables": ["spring"], "spell": ["s__ing", "pr"],
-            "wrongEmoji": ["⭐", "⛄", "🍂"], "wrongMeaning": ["风筝", "雪人", "野餐"]
-          }),
-          vocabWord({
-            "word": "kite", "phonetic": "/kaɪt/", "meaning": "风筝", "emoji": "🪁",
-            "example_en": "Let's fly a kite in the park.", "example_cn": "我们去公园放风筝吧。",
-            "syllables": ["kite"], "spell": ["k__e", "it"],
-            "wrongEmoji": ["⭐", "🎵", "🚗"], "wrongMeaning": ["春天", "秋天", "野餐"]
-          }),
-          vocabWord({
-            "word": "autumn", "phonetic": "/ˈɔːtəm/", "meaning": "秋天", "emoji": "🍂",
-            "example_en": "Autumn is cool and golden.", "example_cn": "秋天凉爽，一片金黄。",
-            "syllables": ["au", "tumn"], "spell": ["au__mn", "tu"],
-            "wrongEmoji": ["⭐", "☂️", "⚽"], "wrongMeaning": ["风筝", "野餐", "雪人"]
-          }),
-          vocabWord({
-            "word": "snowman", "phonetic": "/ˈsnəʊmæn/", "meaning": "雪人", "emoji": "⛄",
-            "example_en": "We made a snowman yesterday.", "example_cn": "我们昨天堆了个雪人。",
-            "syllables": ["snow", "man"], "spell": ["snow__an", "m"],
-            "wrongEmoji": ["⭐", "🌷", "🚲"], "wrongMeaning": ["秋天", "春天", "野餐"]
-          }),
-          vocabWord({
-            "word": "picnic", "phonetic": "/ˈpɪknɪk/", "meaning": "野餐", "emoji": "🧺",
-            "example_en": "We had a picnic by the lake.", "example_cn": "我们在湖边野餐了。",
-            "syllables": ["pic", "nic"], "spell": ["pic__ic", "n"],
-            "wrongEmoji": ["⭐", "🎸", "🎲"], "wrongMeaning": ["雪人", "风筝", "秋天"]
-          })
+          {
+            "word": "spring",
+            "phonetic": "/sprɪŋ/",
+            "meaning": "春天",
+            "emoji": "🌷",
+            "example_en": "Flowers come out in spring.",
+            "example_cn": "春天花儿开放。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "🌷",
+                  "⭐",
+                  "⛄",
+                  "🍂"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "🍂",
+                  "⭐",
+                  "🌷",
+                  "⛄"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "spring 是什么意思？（1/2）",
+                "options": [
+                  "风筝",
+                  "雪人",
+                  "春天",
+                  "野餐"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "spring 是什么意思？（2/2）",
+                "options": [
+                  "春天",
+                  "野餐",
+                  "风筝",
+                  "雪人"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: s__ing",
+                "answer": "pr"
+              }
+            ],
+            "letters": [
+              "s",
+              "p",
+              "r",
+              "i",
+              "n",
+              "g"
+            ],
+            "syllables": [
+              "spring"
+            ],
+            "hint_cn": "一年开头的那一季，花会开、草会绿"
+          },
+          {
+            "word": "kite",
+            "phonetic": "/kaɪt/",
+            "meaning": "风筝",
+            "emoji": "🪁",
+            "example_en": "Let's fly a kite in the park.",
+            "example_cn": "我们去公园放风筝吧。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "🪁",
+                  "⭐",
+                  "🎵",
+                  "🚗"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "🚗",
+                  "⭐",
+                  "🪁",
+                  "🎵"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "kite 是什么意思？（1/2）",
+                "options": [
+                  "春天",
+                  "秋天",
+                  "风筝",
+                  "野餐"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "kite 是什么意思？（2/2）",
+                "options": [
+                  "风筝",
+                  "野餐",
+                  "春天",
+                  "秋天"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: k__e",
+                "answer": "it"
+              }
+            ],
+            "letters": [
+              "k",
+              "i",
+              "t",
+              "e"
+            ],
+            "syllables": [
+              "kite"
+            ],
+            "hint_cn": "有线牵着，能飞到天上去"
+          },
+          {
+            "word": "autumn",
+            "phonetic": "/ˈɔːtəm/",
+            "meaning": "秋天",
+            "emoji": "🍂",
+            "example_en": "Autumn is cool and golden.",
+            "example_cn": "秋天凉爽，一片金黄。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "🍂",
+                  "⭐",
+                  "☂️",
+                  "⚽"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "⚽",
+                  "⭐",
+                  "🍂",
+                  "☂️"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "autumn 是什么意思？（1/2）",
+                "options": [
+                  "风筝",
+                  "野餐",
+                  "秋天",
+                  "雪人"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "autumn 是什么意思？（2/2）",
+                "options": [
+                  "秋天",
+                  "雪人",
+                  "风筝",
+                  "野餐"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: au__mn",
+                "answer": "tu"
+              }
+            ],
+            "letters": [
+              "a",
+              "u",
+              "t",
+              "u",
+              "m",
+              "n"
+            ],
+            "syllables": [
+              "au",
+              "tumn"
+            ],
+            "hint_cn": "树叶变黄往下落的那一季"
+          },
+          {
+            "word": "snowman",
+            "phonetic": "/ˈsnəʊmæn/",
+            "meaning": "雪人",
+            "emoji": "⛄",
+            "example_en": "We made a snowman yesterday.",
+            "example_cn": "我们昨天堆了个雪人。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "⛄",
+                  "⭐",
+                  "🌷",
+                  "🚲"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "🚲",
+                  "⭐",
+                  "⛄",
+                  "🌷"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "snowman 是什么意思？（1/2）",
+                "options": [
+                  "秋天",
+                  "春天",
+                  "雪人",
+                  "野餐"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "snowman 是什么意思？（2/2）",
+                "options": [
+                  "雪人",
+                  "野餐",
+                  "秋天",
+                  "春天"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: snow__an",
+                "answer": "m"
+              }
+            ],
+            "letters": [
+              "s",
+              "n",
+              "o",
+              "w",
+              "m",
+              "a",
+              "n"
+            ],
+            "syllables": [
+              "snow",
+              "man"
+            ],
+            "hint_cn": "下雪天用雪堆出来的“人”"
+          },
+          {
+            "word": "picnic",
+            "phonetic": "/ˈpɪknɪk/",
+            "meaning": "野餐",
+            "emoji": "🧺",
+            "example_en": "We had a picnic by the lake.",
+            "example_cn": "我们在湖边野餐了。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "🧺",
+                  "⭐",
+                  "🎸",
+                  "🎲"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "🎲",
+                  "⭐",
+                  "🧺",
+                  "🎸"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "picnic 是什么意思？（1/2）",
+                "options": [
+                  "雪人",
+                  "风筝",
+                  "野餐",
+                  "秋天"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "picnic 是什么意思？（2/2）",
+                "options": [
+                  "野餐",
+                  "秋天",
+                  "雪人",
+                  "风筝"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: pic__ic",
+                "answer": "n"
+              }
+            ],
+            "letters": [
+              "p",
+              "i",
+              "c",
+              "n",
+              "i",
+              "c"
+            ],
+            "syllables": [
+              "pic",
+              "nic"
+            ],
+            "hint_cn": "带着好吃的，去草地上坐着吃"
+          }
         ]
       },
       {
@@ -4012,52 +8979,366 @@ const WEEK2 = [
         "name_cn": "完形填空",
         "type": "cloze",
         "duration": 10,
-        "passage": "Last summer, Jack's family spent a day at the beach. The sky was clear and the sea was 1___. Jack and his sister built a big sandcastle near the water. Then they 2___ shells on the sand. The shells were in many different 3___ — some were white and some were pink. At noon, they ate sandwiches 4___ a big umbrella. Before they left, Jack looked at the clean beach and 5___ happily. It was a perfect day.",
+        "passage": "Drones are small flying machines, and they are changing our 1___. A delivery company now sends parcels by drone. The drone 2___ the parcel from the sky and drops it at your door in minutes. Doctors in mountain villages also use drones to get medicine 3___. Before drones, the medicine took two days to arrive; now it 4___ only thirty minutes. Firefighters use drones to see where the fire is. Farmers use them to watch their 5___ from the sky. Drones are not very 6___, and more and more people can buy one. But there are rules: drones must not fly near 7___, and children need grown-ups 8___ them. Scientists are working 9___ bigger drones that can carry people. Maybe one day we will 10___ to school by drone taxi!",
         "questions": [
           {
             "id": "w2-sun-cz1",
             "type": "choice",
             "question": "1___",
-            "options": ["blue", "brown", "dark", "soft"],
+            "options": [
+              "life",
+              "lives",
+              "living",
+              "lives on"
+            ],
             "answer": 0,
-            "explanation_cn": "天空晴朗（clear），海水应该是蓝色的，用 blue。the sea was blue 意为海水是蓝色的。",
-            "explanation_en": "The sky was clear, so the sea was 'blue'. Note: 'clear' means without clouds."
+            "explanation_cn": "changing our life：改变我们的生活。"
           },
           {
             "id": "w2-sun-cz2",
             "type": "choice",
             "question": "2___",
-            "options": ["bought", "collected", "lost", "made"],
-            "answer": 1,
-            "explanation_cn": "他们在沙滩上捡贝壳，用 collected。collect shells 意为收集贝壳。bought 是买的，沙滩上的贝壳不用买。",
-            "explanation_en": "They gathered shells on the sand, so 'collected' is right. Note: 'collect' means to gather things; you don't buy shells on a beach."
+            "options": [
+              "carries",
+              "carry",
+              "carried",
+              "carrying"
+            ],
+            "answer": 0,
+            "explanation_cn": "主语 the drone 三单，一般现在时用 carries。"
           },
           {
             "id": "w2-sun-cz3",
             "type": "choice",
             "question": "3___",
-            "options": ["colours", "animals", "boats", "boxes"],
+            "options": [
+              "quickly",
+              "quick",
+              "quicker",
+              "quickest"
+            ],
             "answer": 0,
-            "explanation_cn": "后面说有的白有的粉，说的是颜色，用 colours。in many different colours 意为有各种不同的颜色。",
-            "explanation_en": "The next words say some were white and some were pink — those are 'colours'. Note: 'in many different colours' means in many different colours."
+            "explanation_cn": "修饰动词 get 用副词 quickly（快速地）。"
           },
           {
             "id": "w2-sun-cz4",
             "type": "choice",
             "question": "4___",
-            "options": ["under", "on", "behind", "into"],
+            "options": [
+              "takes",
+              "take",
+              "took",
+              "taking"
+            ],
             "answer": 0,
-            "explanation_cn": "在大伞下面吃三明治，用 under。under a big umbrella 意为在一把大伞下。",
-            "explanation_en": "They ate under a big umbrella, so 'under' is correct. 'Under' means directly below."
+            "explanation_cn": "it takes + 时间，主语 it 三单用 takes。"
           },
           {
             "id": "w2-sun-cz5",
             "type": "choice",
             "question": "5___",
-            "options": ["cried", "smiled", "forgot", "shouted"],
-            "answer": 1,
-            "explanation_cn": "后文说 It was a perfect day，杰克开心地看着干净的沙滩，用 smiled（微笑）。happily 意为开心地。",
-            "explanation_en": "It was a perfect day, so Jack 'smiled' happily. Note: 'smile' means to make a happy face."
+            "options": [
+              "crops",
+              "crop",
+              "croping",
+              "cropped"
+            ],
+            "answer": 0,
+            "explanation_cn": "农民从空中看「庄稼」，crops 复数。"
+          },
+          {
+            "id": "w2-sun-cz6",
+            "type": "choice",
+            "question": "6___",
+            "options": [
+              "expensive",
+              "cheap",
+              "free",
+              "heavy"
+            ],
+            "answer": 0,
+            "explanation_cn": "后面说更多人买得起，说明不「贵」，expensive。"
+          },
+          {
+            "id": "w2-sun-cz7",
+            "type": "choice",
+            "question": "7___",
+            "options": [
+              "airports",
+              "airport",
+              "airports'",
+              "the airports"
+            ],
+            "answer": 0,
+            "explanation_cn": "禁飞区：不能在「机场」附近飞，用复数泛指 airports。"
+          },
+          {
+            "id": "w2-sun-cz8",
+            "type": "choice",
+            "question": "8___",
+            "options": [
+              "to help",
+              "help",
+              "helping",
+              "helped"
+            ],
+            "answer": 0,
+            "explanation_cn": "need sb to do sth：需要大人帮忙，用 to help。"
+          },
+          {
+            "id": "w2-sun-cz9",
+            "type": "choice",
+            "question": "9___",
+            "options": [
+              "on",
+              "at",
+              "in",
+              "for"
+            ],
+            "answer": 0,
+            "explanation_cn": "work on…：研制更大的无人机。"
+          },
+          {
+            "id": "w2-sun-cz10",
+            "type": "choice",
+            "question": "10___",
+            "options": [
+              "fly",
+              "flew",
+              "flying",
+              "flies"
+            ],
+            "answer": 0,
+            "explanation_cn": "will 后面用动词原形 fly。"
+          }
+        ]
+      },
+      {
+        "id": "w2-sun-tense",
+        "name_cn": "时态练习",
+        "type": "tense",
+        "duration": 10,
+        "questions": [
+          {
+            "id": "w2-sun-tn1",
+            "type": "fill",
+            "question": "The drone ___ (carry) the parcel to our door just now. [填入正确形式]",
+            "answer": "carried",
+            "explanation_cn": "just now 刚才，carry 的过去式是 carried。"
+          },
+          {
+            "id": "w2-sun-tn2",
+            "type": "fill",
+            "question": "Drones ___ (become) popular in the last few years. [填入正确形式]",
+            "answer": "have become",
+            "explanation_cn": "in the last few years 与现在完成时连用。"
+          },
+          {
+            "id": "w2-sun-tn3",
+            "type": "fill",
+            "question": "Look! A drone ___ (fly) over our school. [填入正确形式]",
+            "answer": "is flying",
+            "explanation_cn": "Look! 提示正在进行，用 is flying。"
+          },
+          {
+            "id": "w2-sun-tn4",
+            "type": "fill",
+            "question": "Farmers ___ (use) drones to watch crops every day. [填入正确形式]",
+            "answer": "use",
+            "explanation_cn": "every day 习惯动作，主语复数用原形 use。"
+          },
+          {
+            "id": "w2-sun-tn5",
+            "type": "fill",
+            "question": "My uncle ___ (buy) a drone last month. [填入正确形式]",
+            "answer": "bought",
+            "explanation_cn": "last month 过去时间，buy 的过去式是 bought。"
+          },
+          {
+            "id": "w2-sun-tn6",
+            "type": "fill",
+            "question": "In the future, drone taxis ___ (take) us to school. [填入正确形式]",
+            "answer": "will take",
+            "explanation_cn": "in the future 将来时间，用 will take。"
+          },
+          {
+            "id": "w2-sun-tn7",
+            "type": "fill",
+            "question": "The company ___ (send) parcels by drone since 2022. [填入正确形式]",
+            "answer": "has sent",
+            "explanation_cn": "since 2022 与现在完成时连用。"
+          },
+          {
+            "id": "w2-sun-tn8",
+            "type": "fill",
+            "question": "While the drone ___ (drop) the box, the dog barked. [填入正确形式]",
+            "answer": "was dropping",
+            "explanation_cn": "while 引导过去进行时：was dropping。"
+          },
+          {
+            "id": "w2-sun-tn9",
+            "type": "fill",
+            "question": "Rules ___ (make) for drones last year. [填入正确形式]",
+            "answer": "were made",
+            "explanation_cn": "规则是被制定的，去年 → 一般过去时被动 were made。"
+          },
+          {
+            "id": "w2-sun-tn10",
+            "type": "fill",
+            "question": "Don't worry — the engineer ___ (fix) the drone already. [填入正确形式]",
+            "answer": "has fixed",
+            "explanation_cn": "already 与现在完成时连用：has fixed。"
+          }
+        ]
+      },
+      {
+        "id": "w2-sun-grammar",
+        "name_cn": "语法练习",
+        "type": "grammar",
+        "duration": 5,
+        "questions": [
+          {
+            "id": "w2-sun-gr1",
+            "type": "choice",
+            "question": "Drones are small ___ that can fly.",
+            "options": [
+              "machines",
+              "machine",
+              "machining",
+              "machined"
+            ],
+            "answer": 0,
+            "explanation_cn": "machines 用复数，后面 that can fly 作定语。"
+          },
+          {
+            "id": "w2-sun-gr2",
+            "type": "choice",
+            "question": "The medicine used to take two days ___ it arrives now.",
+            "options": [
+              "but now",
+              "and now",
+              "so now",
+              "or now"
+            ],
+            "answer": 0,
+            "explanation_cn": "以前要两天「但现在」30分钟，but now 表转折。"
+          },
+          {
+            "id": "w2-sun-gr3",
+            "type": "choice",
+            "question": "Children need grown-ups ___ them with drones.",
+            "options": [
+              "to help",
+              "help",
+              "helping",
+              "helped"
+            ],
+            "answer": 0,
+            "explanation_cn": "need sb to do sth：需要大人帮忙。"
+          },
+          {
+            "id": "w2-sun-gr4",
+            "type": "choice",
+            "question": "___ useful the drone is!",
+            "options": [
+              "How",
+              "What",
+              "Which",
+              "Who"
+            ],
+            "answer": 0,
+            "explanation_cn": "How + 形容词：How useful…!"
+          },
+          {
+            "id": "w2-sun-gr5",
+            "type": "choice",
+            "question": "Drones must not fly near ___.",
+            "options": [
+              "airports",
+              "airport's",
+              "the airport of",
+              "an airports"
+            ],
+            "answer": 0,
+            "explanation_cn": "airports 复数泛指机场。"
+          }
+        ]
+      },
+      {
+        "id": "w2-sun-listening",
+        "name_cn": "听力练习",
+        "type": "listening",
+        "duration": 5,
+        "questions": [
+          {
+            "id": "w2-sun-ls1",
+            "type": "choice",
+            "question": "听到的句子是什么？",
+            "audio_text": "The drone carries the parcel from the sky.",
+            "options": [
+              "The drone carries the parcel from the sky.",
+              "The drone carries the parcel from the shop.",
+              "The drone carries the basket from the sky.",
+              "The pilot carries the parcel from the sky."
+            ],
+            "answer": 0,
+            "explanation_cn": "主语是 drone（无人机），动词 carries（运送）。"
+          },
+          {
+            "id": "w2-sun-ls2",
+            "type": "choice",
+            "question": "听到的句子是什么？",
+            "audio_text": "Doctors in mountain villages use drones to get medicine.",
+            "options": [
+              "Doctors in mountain villages use drones to get medicine.",
+              "Doctors in city hospitals use drones to get medicine.",
+              "Doctors in mountain villages use drones to get money.",
+              "Teachers in mountain villages use drones to get medicine."
+            ],
+            "answer": 0,
+            "explanation_cn": "地点是 mountain villages（山村），物品是 medicine（药品）。"
+          },
+          {
+            "id": "w2-sun-ls3",
+            "type": "choice",
+            "question": "听到的句子是什么？",
+            "audio_text": "Drones must not fly near airports.",
+            "options": [
+              "Drones must not fly near airports.",
+              "Drones must fly near airports.",
+              "Drones must not fly near hospitals.",
+              "Birds must not fly near airports."
+            ],
+            "answer": 0,
+            "explanation_cn": "must not fly：禁止飞行；地点是 airports（机场）。"
+          },
+          {
+            "id": "w2-sun-ls4",
+            "type": "choice",
+            "question": "听到的句子是什么？",
+            "audio_text": "Firefighters use drones to see where the fire is.",
+            "options": [
+              "Firefighters use drones to see where the fire is.",
+              "Firemen use drones to see where the water is.",
+              "Farmers use drones to see where the fire is.",
+              "Firefighters use phones to see where the fire is."
+            ],
+            "answer": 0,
+            "explanation_cn": "使用者是 firefighters（消防员），目的是找火情。"
+          },
+          {
+            "id": "w2-sun-ls5",
+            "type": "choice",
+            "question": "听到的句子是什么？",
+            "audio_text": "Maybe one day we will fly to school by drone taxi.",
+            "options": [
+              "Maybe one day we will fly to school by drone taxi.",
+              "Maybe one day we will walk to school by drone taxi.",
+              "Maybe one day we will fly to work by drone taxi.",
+              "Maybe today we will fly to school by drone taxi."
+            ],
+            "answer": 0,
+            "explanation_cn": "fly to school（飞去上学），时间是 one day（将来某天）。"
           }
         ]
       }
@@ -4065,14 +9346,12 @@ const WEEK2 = [
   }
 ];
 
-
-// ===== 第 3 周（A2+ · KET 核心）：完成时入门 / 比较等级 / 探索与博物馆 =====
 const WEEK3 = [
   {
     "day_cn": "周一",
     "day_en": "Monday",
     "is_speaking_day": true,
-    "total_duration": 40,
+    "total_duration": 60,
     "theme_cn": "AI口语 + 高频词汇 + 阅读理解",
     "modules": [
       {
@@ -4094,7 +9373,14 @@ const WEEK3 = [
             "answer": 0,
             "pronunciation_tips": "注意 have lived 连读，for 弱读 /fə/，nine years 词尾 s 不要丢",
             "explanation_cn": "How long 问持续多久，用现在完成时 have lived + for + 时间段。B 是一般现在时（住在哪里）；C 是过去时间点；D 是将来。",
-            "explanation_en": "'How long' asks about a duration, so the present perfect 'have lived + for + period' is used. B answers a different question; C is a past point; D is future."
+            "explanation_en": "'How long' asks about a duration, so the present perfect 'have lived + for + period' is used. B answers a different question; C is a past point; D is future.",
+            "answer_cn_hint": "How long 问的是「多长时间」，答句要说 for nine years 这样的时间段。",
+            "options_cn": [
+              "我在这里住了九年了。",
+              "我和父母住在这里。",
+              "我 2020 年住在这里。",
+              "我明年会住在这里。"
+            ]
           },
           {
             "id": "w3-mon-sp2",
@@ -4109,7 +9395,14 @@ const WEEK3 = [
             "answer": 0,
             "pronunciation_tips": "be good at 中 at 弱读，swimming 双写 m 加 -ing",
             "explanation_cn": "be good at + 名词/动名词 意为擅长。A 正确；B be good to 意为对……好，搭配不对；C 是正在游泳；D 没回答。",
-            "explanation_en": "'Be good at + noun/verb-ing' means to be skilled at something. A is correct; B uses the wrong pattern ('good to' means kind to); C says what you are doing now; D does not answer."
+            "explanation_en": "'Be good at + noun/verb-ing' means to be skilled at something. A is correct; B uses the wrong pattern ('good to' means kind to); C says what you are doing now; D does not answer.",
+            "answer_cn_hint": "它在问「擅长什么」，答句要用 be good at 说出一件具体的事。",
+            "options_cn": [
+              "我擅长游泳。",
+              "我对我妹妹很好。",
+              "我现在正在游泳。",
+              "游泳很难。"
+            ]
           },
           {
             "id": "w3-mon-sp3",
@@ -4124,7 +9417,14 @@ const WEEK3 = [
             "answer": 0,
             "pronunciation_tips": "usually /ˈjuːʒuəli/ 注意 ʒ 音；have 意为吃，喝也用 have：have milk",
             "explanation_cn": "usually 表示习惯，用一般现在时。A 正确；B 答的是午饭；C 是过去；D 是将来。",
-            "explanation_en": "'Usually' means a habit, so the simple present is used. A is correct; B answers about lunch; C is past; D is future."
+            "explanation_en": "'Usually' means a habit, so the simple present is used. A is correct; B answers about lunch; C is past; D is future.",
+            "answer_cn_hint": "它在问「早餐吃什么」，答句要说早餐的食物，不能答午饭。",
+            "options_cn": [
+              "我早餐通常吃鸡蛋和牛奶。",
+              "我通常在学校吃午饭。",
+              "我昨天吃了鸡蛋。",
+              "我明天要吃面包。"
+            ]
           },
           {
             "id": "w3-mon-sp4",
@@ -4139,7 +9439,14 @@ const WEEK3 = [
             "answer": 0,
             "pronunciation_tips": "neighborhood /ˈneɪbəhʊd/ 注意重音在第一音节，quiet /ˈkwaɪət/ 两个音节",
             "explanation_cn": "What is...like? 问是什么样的。A 描述了环境，正确；B 答非所问；C 说的是家庭；D 只说了喜欢邻居。",
-            "explanation_en": "'What is...like?' asks for a description. A describes the area; B does not answer; C is about family; D only says you like your neighbors."
+            "explanation_en": "'What is...like?' asks for a description. A describes the area; B does not answer; C is about family; D only says you like your neighbors.",
+            "answer_cn_hint": "What … like 是在问「是什么样的」，答句要描述环境，比如安静、旁边有大公园。",
+            "options_cn": [
+              "那里很安静，附近有一个大公园。",
+              "这是我最喜欢的地方。",
+              "我家有四口人。",
+              "我很喜欢我的邻居。"
+            ]
           },
           {
             "id": "w3-mon-sp5",
@@ -4154,7 +9461,14 @@ const WEEK3 = [
             "answer": 0,
             "pronunciation_tips": "last birthday 注意 had /hæd/ 是 have 的过去式，party /ˈpɑːti/",
             "explanation_cn": "last birthday 是过去时间，用过去式 had。B 是现在的习惯；C 是将来；D 没回答做了什么。",
-            "explanation_en": "'Last birthday' is past time, so the past form 'had' is used. B is a present habit; C is future; D does not answer what you did."
+            "explanation_en": "'Last birthday' is past time, so the past form 'had' is used. B is a present habit; C is future; D does not answer what you did.",
+            "answer_cn_hint": "它在问「上个生日做了什么」（过去），答句要用过去式。",
+            "options_cn": [
+              "我和朋友们开了一个聚会。",
+              "我每年都开聚会。",
+              "我很快就会开聚会。",
+              "我的生日在五月。"
+            ]
           }
         ]
       },
@@ -4164,82 +9478,747 @@ const WEEK3 = [
         "type": "vocabulary_game",
         "duration": 5,
         "words": [
-          vocabWord({
-            "word": "journey", "phonetic": "/ˈdʒɜːni/", "meaning": "旅行；旅程", "emoji": "🧳",
-            "example_en": "The journey took three hours.", "example_cn": "这段旅程花了三个小时。",
-            "syllables": ["jour", "ney"], "spell": ["j__rney", "ou"],
-            "wrongEmoji": ["⭐", "🏝️", "💎"], "wrongMeaning": ["岛屿", "宝藏", "勇敢的"]
-          }),
-          vocabWord({
-            "word": "island", "phonetic": "/ˈaɪlənd/", "meaning": "岛屿", "emoji": "🏝️",
-            "example_en": "They sailed to a small island.", "example_cn": "他们航行到了一座小岛。",
-            "syllables": ["is", "land"], "spell": ["is__nd", "la"],
-            "wrongEmoji": ["⭐", "🧳", "🛟"], "wrongMeaning": ["旅程", "宝藏", "营救"]
-          }),
-          vocabWord({
-            "word": "treasure", "phonetic": "/ˈtreʒə/", "meaning": "宝藏；珍宝", "emoji": "💎",
-            "example_en": "The pirates looked for treasure.", "example_cn": "海盗们寻找宝藏。",
-            "syllables": ["trea", "sure"], "spell": ["tr__sure", "ea"],
-            "wrongEmoji": ["⭐", "🌧️", "🎲"], "wrongMeaning": ["岛屿", "旅程", "营救"]
-          }),
-          vocabWord({
-            "word": "brave", "phonetic": "/breɪv/", "meaning": "勇敢的", "emoji": "🦁",
-            "example_en": "The brave boy saved the cat.", "example_cn": "勇敢的男孩救了猫。",
-            "syllables": ["brave"], "spell": ["br__e", "av"],
-            "wrongEmoji": ["⭐", "🚗", "⚽"], "wrongMeaning": ["宝藏", "岛屿", "旅程"]
-          }),
-          vocabWord({
-            "word": "rescue", "phonetic": "/ˈreskjuː/", "meaning": "营救", "emoji": "🛟",
-            "example_en": "Firemen rescued the little dog.", "example_cn": "消防员救了小狗。",
-            "syllables": ["res", "cue"], "spell": ["res__e", "cu"],
-            "wrongEmoji": ["⭐", "🎸", "🚲"], "wrongMeaning": ["勇敢的", "宝藏", "岛屿"]
-          })
+          {
+            "word": "journey",
+            "phonetic": "/ˈdʒɜːni/",
+            "meaning": "旅行；旅程",
+            "emoji": "🧳",
+            "example_en": "The journey took three hours.",
+            "example_cn": "这段旅程花了三个小时。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "🧳",
+                  "⭐",
+                  "🏝️",
+                  "💎"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "💎",
+                  "⭐",
+                  "🧳",
+                  "🏝️"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "journey 是什么意思？（1/2）",
+                "options": [
+                  "岛屿",
+                  "宝藏",
+                  "旅行；旅程",
+                  "勇敢的"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "journey 是什么意思？（2/2）",
+                "options": [
+                  "旅行；旅程",
+                  "勇敢的",
+                  "岛屿",
+                  "宝藏"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: j__rney",
+                "answer": "ou"
+              }
+            ],
+            "letters": [
+              "j",
+              "o",
+              "u",
+              "r",
+              "n",
+              "e",
+              "y"
+            ],
+            "syllables": [
+              "jour",
+              "ney"
+            ],
+            "hint_cn": "从这儿到那儿，路上一整段"
+          },
+          {
+            "word": "island",
+            "phonetic": "/ˈaɪlənd/",
+            "meaning": "岛屿",
+            "emoji": "🏝️",
+            "example_en": "They sailed to a small island.",
+            "example_cn": "他们航行到了一座小岛。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "🏝️",
+                  "⭐",
+                  "🧳",
+                  "🛟"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "🛟",
+                  "⭐",
+                  "🏝️",
+                  "🧳"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "island 是什么意思？（1/2）",
+                "options": [
+                  "旅程",
+                  "宝藏",
+                  "岛屿",
+                  "营救"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "island 是什么意思？（2/2）",
+                "options": [
+                  "岛屿",
+                  "营救",
+                  "旅程",
+                  "宝藏"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: is__nd",
+                "answer": "la"
+              }
+            ],
+            "letters": [
+              "i",
+              "s",
+              "l",
+              "a",
+              "n",
+              "d"
+            ],
+            "syllables": [
+              "is",
+              "land"
+            ],
+            "hint_cn": "四面都是水，中间一块陆地"
+          },
+          {
+            "word": "treasure",
+            "phonetic": "/ˈtreʒə/",
+            "meaning": "宝藏；珍宝",
+            "emoji": "💎",
+            "example_en": "The pirates looked for treasure.",
+            "example_cn": "海盗们寻找宝藏。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "💎",
+                  "⭐",
+                  "🌧️",
+                  "🎲"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "🎲",
+                  "⭐",
+                  "💎",
+                  "🌧️"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "treasure 是什么意思？（1/2）",
+                "options": [
+                  "岛屿",
+                  "旅程",
+                  "宝藏；珍宝",
+                  "营救"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "treasure 是什么意思？（2/2）",
+                "options": [
+                  "宝藏；珍宝",
+                  "营救",
+                  "岛屿",
+                  "旅程"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: tr__sure",
+                "answer": "ea"
+              }
+            ],
+            "letters": [
+              "t",
+              "r",
+              "e",
+              "a",
+              "s",
+              "u",
+              "r",
+              "e"
+            ],
+            "syllables": [
+              "trea",
+              "sure"
+            ],
+            "hint_cn": "海盗箱子里那些金银宝贝"
+          },
+          {
+            "word": "brave",
+            "phonetic": "/breɪv/",
+            "meaning": "勇敢的",
+            "emoji": "🦁",
+            "example_en": "The brave boy saved the cat.",
+            "example_cn": "勇敢的男孩救了猫。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "🦁",
+                  "⭐",
+                  "🚗",
+                  "⚽"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "⚽",
+                  "⭐",
+                  "🦁",
+                  "🚗"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "brave 是什么意思？（1/2）",
+                "options": [
+                  "宝藏",
+                  "岛屿",
+                  "勇敢的",
+                  "旅程"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "brave 是什么意思？（2/2）",
+                "options": [
+                  "勇敢的",
+                  "旅程",
+                  "宝藏",
+                  "岛屿"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: br__e",
+                "answer": "av"
+              }
+            ],
+            "letters": [
+              "b",
+              "r",
+              "a",
+              "v",
+              "e"
+            ],
+            "syllables": [
+              "brave"
+            ],
+            "hint_cn": "心里不害怕，敢往前冲"
+          },
+          {
+            "word": "rescue",
+            "phonetic": "/ˈreskjuː/",
+            "meaning": "营救",
+            "emoji": "🛟",
+            "example_en": "Firemen rescued the little dog.",
+            "example_cn": "消防员救了小狗。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "🛟",
+                  "⭐",
+                  "🎸",
+                  "🚲"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "🚲",
+                  "⭐",
+                  "🛟",
+                  "🎸"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "rescue 是什么意思？（1/2）",
+                "options": [
+                  "勇敢的",
+                  "宝藏",
+                  "营救",
+                  "岛屿"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "rescue 是什么意思？（2/2）",
+                "options": [
+                  "营救",
+                  "岛屿",
+                  "勇敢的",
+                  "宝藏"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: res__e",
+                "answer": "cu"
+              }
+            ],
+            "letters": [
+              "r",
+              "e",
+              "s",
+              "c",
+              "u",
+              "e"
+            ],
+            "syllables": [
+              "res",
+              "cue"
+            ],
+            "hint_cn": "把遇到危险的人或小动物救出来"
+          }
         ]
       },
       {
         "id": "w3-mon-reading",
         "name_cn": "阅读理解",
         "type": "reading",
-        "duration": 5,
-        "passage": "Sam's grandfather lives in a lighthouse on a small island. Last summer, Sam took a boat to visit him. Every evening, Grandfather climbs the stairs and turns on the big light. It helps ships find their way in the dark. One stormy night, the big light stopped working. Grandfather was not worried. He lit an old lamp and hung it high on the balcony. The light was small, but the sailors could still see it. In the morning, a ship blew its horn to say thank you.",
-        "passage_cn": "萨姆的爷爷住在小岛上的一座灯塔里。去年夏天，萨姆坐船去看他。每天傍晚，爷爷爬上楼梯，打开那盏大灯。它帮助轮船在黑暗中找到方向。一个暴风雨的夜晚，大灯坏了。爷爷一点儿也不慌。他点亮一盏旧灯，挂在阳台的高处。灯光很小，但水手们仍然能看见。第二天早上，一艘轮船鸣笛表示感谢。",
+        "duration": 10,
+        "passage": "Online shopping is now a big part of family life in China. With a few taps on a mobile phone, people can buy clothes, food, books and even fruit from faraway farms. The things they order usually arrive in two or three days. Some big cities can deliver in half a day. If you don't like the thing you bought, you can send it back easily and get your money back. During big online shopping festivals, the prices are lower and people buy more than usual. Grandma Wang, who is seventy, also learned to shop online — now she buys vegetables for the whole family on her phone.",
+        "passage_cn": "网上购物现在是中国家庭生活的重要部分。在手机上点几下，人们就能买到衣服、食品、书籍，甚至远方农场的水果。买的东西通常两三天就送到。一些大城市半天就能送达。如果你不喜欢买到的商品，可以轻松退回并拿回钱。在大型网购节期间，价格更低，人们买得比平时更多。七十岁的王奶奶也学会了网购——现在她用手机给全家买菜。",
         "questions": [
           {
             "id": "w3-mon-rd1",
             "type": "choice",
-            "question": "How did Sam get to the island?",
-            "options": ["By train", "By plane", "By boat", "By car"],
-            "answer": 2,
-            "explanation_cn": "文章说 Sam took a boat to visit him。萨姆是坐船去的。注意 take a boat 意为乘船。",
-            "explanation_en": "The text says 'Sam took a boat to visit him.' Note: 'take a boat' means to travel by boat."
+            "question": "What can people buy online?",
+            "options": [
+              "Clothes, food, books and fruit",
+              "Only books",
+              "Only clothes",
+              "Nothing fresh"
+            ],
+            "answer": 0,
+            "explanation_cn": "第二句列出了衣服、食品、书和水果。"
           },
           {
             "id": "w3-mon-rd2",
             "type": "choice",
-            "question": "What happened on the stormy night?",
+            "question": "How fast does the order usually arrive?",
             "options": [
-              "The stairs broke.",
-              "The big light stopped working.",
-              "A ship hit the island.",
-              "The lamp fell down."
+              "In two or three days",
+              "In two or three weeks",
+              "In two months",
+              "Right now"
             ],
-            "answer": 1,
-            "explanation_cn": "文章说 One stormy night, the big light stopped working。大灯坏了。注意 stop doing 意为停止做某事，stormy 意为暴风雨的。",
-            "explanation_en": "The text says 'One stormy night, the big light stopped working.' Note: 'stormy' means with strong wind and rain."
+            "answer": 0,
+            "explanation_cn": "通常两三天送到。"
           },
           {
             "id": "w3-mon-rd3",
             "type": "choice",
-            "question": "What did Grandfather do to help the ships?",
+            "question": "How fast can some big cities deliver?",
             "options": [
-              "He lit an old lamp and hung it high.",
-              "He called the sailors on the phone.",
-              "He fixed the big light at once.",
-              "He asked Sam to climb the stairs."
+              "In half a day",
+              "In half a month",
+              "In half a year",
+              "In five days"
             ],
             "answer": 0,
-            "explanation_cn": "文章说 He lit an old lamp and hung it high on the balcony。他点亮旧灯挂到高处。light 的过去式是 lit，hang-hung 意为挂。",
-            "explanation_en": "The text says 'He lit an old lamp and hung it high on the balcony.' Note: 'lit' is the past of 'light', and 'hung' is the past of 'hang'."
+            "explanation_cn": "一些大城市半天就能送达。"
+          },
+          {
+            "id": "w3-mon-rd4",
+            "type": "choice",
+            "question": "What can you do if you don't like your order?",
+            "options": [
+              "Send it back and get the money back",
+              "Throw it away",
+              "Give it to the postman",
+              "Nothing at all"
+            ],
+            "answer": 0,
+            "explanation_cn": "不喜欢可以轻松退货退款。"
+          },
+          {
+            "id": "w3-mon-rd5",
+            "type": "choice",
+            "question": "What happens during big shopping festivals?",
+            "options": [
+              "The prices are lower.",
+              "The shops close.",
+              "The delivery stops.",
+              "The phones break."
+            ],
+            "answer": 0,
+            "explanation_cn": "购物节期间价格更低，人们买得更多。"
+          },
+          {
+            "id": "w3-mon-rd6",
+            "type": "choice",
+            "question": "Who learned to shop online?",
+            "options": [
+              "Grandma Wang, who is seventy",
+              "Only students",
+              "Only workers",
+              "Nobody old"
+            ],
+            "answer": 0,
+            "explanation_cn": "七十岁的王奶奶也学会了网购。"
+          },
+          {
+            "id": "w3-mon-rd7",
+            "type": "choice",
+            "question": "What does Grandma Wang buy online?",
+            "options": [
+              "Vegetables for the family",
+              "Toys for herself",
+              "Books for school",
+              "Nothing"
+            ],
+            "answer": 0,
+            "explanation_cn": "她现在用手机给全家买菜。"
+          },
+          {
+            "id": "w3-mon-rd8",
+            "type": "choice",
+            "question": "The word \"deliver\" here means ___.",
+            "options": [
+              "送货",
+              "做饭",
+              "扫地",
+              "上课"
+            ],
+            "answer": 0,
+            "explanation_cn": "deliver 意思是「投递、送货」。"
+          },
+          {
+            "id": "w3-mon-rd9",
+            "type": "choice",
+            "question": "The underlined word \"order\" here means ___.",
+            "options": [
+              "订购的东西",
+              "命令",
+              "顺序",
+              "办公室"
+            ],
+            "answer": 0,
+            "explanation_cn": "order 在这里是「订购的货品」。"
+          },
+          {
+            "id": "w3-mon-rd10",
+            "type": "choice",
+            "question": "The best title for the passage about buying things online is ___.",
+            "options": [
+              "Online Shopping in China",
+              "How to Cook Vegetables",
+              "Grandma's Farm",
+              "Shopping Streets"
+            ],
+            "answer": 0,
+            "explanation_cn": "全文介绍中国的网上购物。"
+          }
+        ]
+      },
+      {
+        "id": "w3-mon-mc",
+        "name_cn": "单项选择",
+        "type": "multiple_choice",
+        "duration": 10,
+        "questions": [
+          {
+            "id": "w3-mon-mc1",
+            "type": "choice",
+            "question": "With a few taps on the phone, people ___ buy almost everything.",
+            "options": [
+              "can",
+              "cans",
+              "is",
+              "are"
+            ],
+            "answer": 0,
+            "explanation_cn": "情态动词 can 后面用动词原形。"
+          },
+          {
+            "id": "w3-mon-mc2",
+            "type": "choice",
+            "question": "The things you order usually ___ in two or three days.",
+            "options": [
+              "arrive",
+              "arrives",
+              "arriving",
+              "arrived"
+            ],
+            "answer": 0,
+            "explanation_cn": "主语 the things 复数，一般现在时用 arrive。"
+          },
+          {
+            "id": "w3-mon-mc3",
+            "type": "choice",
+            "question": "If you don't like it, you can ___ it back easily.",
+            "options": [
+              "send",
+              "sending",
+              "sends",
+              "sent"
+            ],
+            "answer": 0,
+            "explanation_cn": "can 后面用动词原形 send。"
+          },
+          {
+            "id": "w3-mon-mc4",
+            "type": "choice",
+            "question": "During shopping festivals, the prices are ___ than usual.",
+            "options": [
+              "lower",
+              "low",
+              "lowest",
+              "more low"
+            ],
+            "answer": 0,
+            "explanation_cn": "than 比较级用 lower。"
+          },
+          {
+            "id": "w3-mon-mc5",
+            "type": "choice",
+            "question": "Grandma Wang learned ___ online last year.",
+            "options": [
+              "to shop",
+              "shopping",
+              "shop",
+              "shops"
+            ],
+            "answer": 0,
+            "explanation_cn": "learn to do sth：学会网购，用 to shop。"
+          },
+          {
+            "id": "w3-mon-mc6",
+            "type": "choice",
+            "question": "She buys vegetables ___ her phone.",
+            "options": [
+              "on",
+              "in",
+              "at",
+              "for"
+            ],
+            "answer": 0,
+            "explanation_cn": "「在手机上」用 on her phone。"
+          },
+          {
+            "id": "w3-mon-mc7",
+            "type": "choice",
+            "question": "There ___ many online shopping festivals in a year.",
+            "options": [
+              "are",
+              "is",
+              "am",
+              "be"
+            ],
+            "answer": 0,
+            "explanation_cn": "festivals 复数，There be 用 are。"
+          },
+          {
+            "id": "w3-mon-mc8",
+            "type": "choice",
+            "question": "___ convenient online shopping is!",
+            "options": [
+              "How",
+              "What",
+              "Where",
+              "When"
+            ],
+            "answer": 0,
+            "explanation_cn": "How + 形容词：How convenient…!"
+          },
+          {
+            "id": "w3-mon-mc9",
+            "type": "choice",
+            "question": "The fruit comes from farms far ___ from the city.",
+            "options": [
+              "away",
+              "away from",
+              "far of",
+              "farthest"
+            ],
+            "answer": 0,
+            "explanation_cn": "far away from the city：离城市很远。"
+          },
+          {
+            "id": "w3-mon-mc10",
+            "type": "choice",
+            "question": "Please ___ the box when it arrives.",
+            "options": [
+              "open",
+              "opens",
+              "opening",
+              "opened"
+            ],
+            "answer": 0,
+            "explanation_cn": "祈使句用动词原形 open。"
+          }
+        ]
+      },
+      {
+        "id": "w3-mon-tense2",
+        "name_cn": "时态练习",
+        "type": "tense",
+        "duration": 5,
+        "questions": [
+          {
+            "id": "w3-mon-tn21",
+            "type": "fill",
+            "question": "Online shopping ___ (change) our life a lot. [填入正确形式]",
+            "answer": "has changed",
+            "explanation_cn": "表示已经产生的影响，用现在完成时。"
+          },
+          {
+            "id": "w3-mon-tn22",
+            "type": "fill",
+            "question": "Grandma Wang ___ (start) to shop online last year. [填入正确形式]",
+            "answer": "started",
+            "explanation_cn": "last year 过去时间，用过去式 started。"
+          },
+          {
+            "id": "w3-mon-tn23",
+            "type": "fill",
+            "question": "Look! The postman ___ (deliver) the boxes. [填入正确形式]",
+            "answer": "is delivering",
+            "explanation_cn": "Look! 提示正在进行，用 is delivering。"
+          },
+          {
+            "id": "w3-mon-tn24",
+            "type": "fill",
+            "question": "The things usually ___ (arrive) in two days. [填入正确形式]",
+            "answer": "arrive",
+            "explanation_cn": "usually 习惯动作，主语复数用原形。"
+          },
+          {
+            "id": "w3-mon-tn25",
+            "type": "fill",
+            "question": "People ___ (buy) more during the festival next month. [填入正确形式]",
+            "answer": "will buy",
+            "explanation_cn": "next month 将来时间，用 will buy。"
           }
         ]
       }
@@ -4257,50 +10236,138 @@ const WEEK3 = [
         "name_cn": "阅读理解",
         "type": "reading",
         "duration": 10,
-        "passage": "On her way home, Lily saw a wallet lying on the ground. She picked it up and opened it. There was a lot of money and an ID card inside. The card showed a man's name and address. Lily went to the address with her mother. The man was very surprised and thankful. He offered Lily some money, but she said no. \"It is not my money,\" she said. The next day, a letter from the man arrived at Lily's school. Her teacher read it to the whole class. Everyone clapped for Lily.",
-        "passage_cn": "在回家路上，莉莉看见地上有一个钱包。她捡起来打开了钱包。里面有很多钱和一张身份证。身份证上写着一位男士的姓名和地址。莉莉和妈妈一起去了那个地址。那位男士又惊讶又感激。他要给莉莉一些钱，但她拒绝了。她说，这不是我的钱。第二天，那位男士的一封信寄到了莉莉的学校。她的老师把信念给全班听。大家都为莉莉鼓掌。",
+        "passage": "Shared bikes are everywhere in Chinese cities. You can find them near bus stops, schools and shopping centres. To use one, you just open an app on your phone and scan the code on the bike. It costs only one yuan for thirty minutes. Shared bikes help people go the last kilometre between the bus stop and their homes. They are also good for the environment because riding a bike makes no pollution. But there is a problem: some people park the bikes in wrong places, and the streets become messy. Now the cities have new rules, and riders must park the bikes in special areas.",
+        "passage_cn": "共享单车在中国城市里随处可见。在公交站、学校和购物中心附近都能找到。使用时只需打开手机App，扫一下车上的码。三十分钟只要一块钱。共享单车帮助人们解决公交站到家之间「最后一公里」。骑车不产生污染，也很环保。但也有问题：有些人把车停在错误的地方，街道变得乱糟糟。现在城市出台了新规，骑车人必须把车停到专门区域。",
         "questions": [
           {
             "id": "w3-tue-rd1",
             "type": "choice",
-            "question": "What was inside the wallet?",
+            "question": "Where can you find shared bikes?",
             "options": [
-              "A lot of money and an ID card",
-              "A letter and some photos",
-              "A student card and some money",
-              "Nothing but a name"
+              "Near bus stops, schools and shopping centres",
+              "Only at train stations",
+              "Only in villages",
+              "Inside museums"
             ],
             "answer": 0,
-            "explanation_cn": "文章说 There was a lot of money and an ID card inside。钱包里有很多钱和一张身份证。inside 意为在里面。",
-            "explanation_en": "The text says 'There was a lot of money and an ID card inside.' Note: 'inside' means in the inner part."
+            "explanation_cn": "公交站、学校、购物中心附近都有。"
           },
           {
             "id": "w3-tue-rd2",
             "type": "choice",
-            "question": "Why did Lily go to the address?",
+            "question": "How do you unlock a shared bike?",
             "options": [
-              "To visit her friend",
-              "To return the wallet to its owner",
-              "To buy something for her mother",
-              "To look for her lost money"
+              "Scan the code with an app",
+              "Ask a policeman",
+              "Use a key",
+              "Shout at it"
             ],
-            "answer": 1,
-            "explanation_cn": "身份证上有男士的姓名和地址，莉莉去那里是为了把钱包还给失主。注意 owner 意为失主、主人，return 意为归还。",
-            "explanation_en": "The card showed the owner's name and address, so Lily went to give the wallet back. Note: 'owner' means the person something belongs to, and 'return' means to give back."
+            "answer": 0,
+            "explanation_cn": "打开手机App扫车上的码即可解锁。"
           },
           {
             "id": "w3-tue-rd3",
             "type": "choice",
-            "question": "What can we learn from the story?",
+            "question": "How much does it cost for thirty minutes?",
             "options": [
-              "Lily kept the money for herself.",
-              "Lily was honest and did not want a reward.",
-              "The man was angry with Lily.",
-              "The teacher gave Lily a prize."
+              "One yuan",
+              "Ten yuan",
+              "One hundred yuan",
+              "Nothing at all"
             ],
-            "answer": 1,
-            "explanation_cn": "莉莉拒绝了钱（It is not my money），说明她诚实、不图回报。reward 意为报酬，honest 意为诚实的。",
-            "explanation_en": "Lily refused the money ('It is not my money'), so she was honest and did not want a reward. Note: 'honest' and 'reward' are the key words here."
+            "answer": 0,
+            "explanation_cn": "三十分钟只要一块钱。"
+          },
+          {
+            "id": "w3-tue-rd4",
+            "type": "choice",
+            "question": "What problem do shared bikes solve?",
+            "options": [
+              "The last kilometre between the bus stop and home",
+              "Long trips to other cities",
+              "Carrying heavy boxes",
+              "Crossing big rivers"
+            ],
+            "answer": 0,
+            "explanation_cn": "解决公交站到家的最后一公里。"
+          },
+          {
+            "id": "w3-tue-rd5",
+            "type": "choice",
+            "question": "Why are shared bikes good for the environment?",
+            "options": [
+              "Riding makes no pollution.",
+              "They are new.",
+              "They are expensive.",
+              "They are big."
+            ],
+            "answer": 0,
+            "explanation_cn": "骑车不产生污染，所以环保。"
+          },
+          {
+            "id": "w3-tue-rd6",
+            "type": "choice",
+            "question": "What problem do shared bikes bring?",
+            "options": [
+              "Some people park them in wrong places.",
+              "They are too fast.",
+              "They cost too much.",
+              "They are too heavy."
+            ],
+            "answer": 0,
+            "explanation_cn": "问题在于乱停乱放，街道变乱。"
+          },
+          {
+            "id": "w3-tue-rd7",
+            "type": "choice",
+            "question": "What must riders do now?",
+            "options": [
+              "Park the bikes in special areas",
+              "Buy their own bikes",
+              "Ride only at night",
+              "Stop riding bikes"
+            ],
+            "answer": 0,
+            "explanation_cn": "新规要求停到专门区域。"
+          },
+          {
+            "id": "w3-tue-rd8",
+            "type": "choice",
+            "question": "The word \"messy\" here means ___.",
+            "options": [
+              "乱糟糟的",
+              "干净的",
+              "安静的",
+              "空荡的"
+            ],
+            "answer": 0,
+            "explanation_cn": "messy 意思是「乱的」。"
+          },
+          {
+            "id": "w3-tue-rd9",
+            "type": "choice",
+            "question": "Riding a shared bike is ___ than driving a car.",
+            "options": [
+              "greener",
+              "greenerest",
+              "more green than",
+              "greenest"
+            ],
+            "answer": 0,
+            "explanation_cn": "骑车更环保，than 句子里用比较级 greener。"
+          },
+          {
+            "id": "w3-tue-rd10",
+            "type": "choice",
+            "question": "The best title for the passage about shared bikes is ___.",
+            "options": [
+              "Shared Bikes in Chinese Cities",
+              "How to Buy a Bike",
+              "Buses and Trains",
+              "A Bike Race"
+            ],
+            "answer": 0,
+            "explanation_cn": "全文介绍共享单车的使用、好处和新规。"
           }
         ]
       },
@@ -4313,44 +10380,132 @@ const WEEK3 = [
           {
             "id": "w3-tue-gr1",
             "type": "choice",
-            "question": "This story is ___ than that one.",
-            "options": ["interesting", "more interesting", "most interesting", "the most interesting"],
-            "answer": 1,
-            "explanation_cn": "than 是比较级标志。多音节形容词变比较级加 more：more interesting。注意最高级要加 the most 且不与 than 连用。",
-            "explanation_en": "'Than' signals the comparative. Longer adjectives take 'more': more interesting. The superlative 'the most interesting' is not used with 'than'."
+            "question": "There ___ a shared bike station near our school.",
+            "options": [
+              "is",
+              "are",
+              "am",
+              "be"
+            ],
+            "answer": 0,
+            "explanation_cn": "a station 单数，There be 用 is。"
           },
           {
             "id": "w3-tue-gr2",
-            "type": "fill",
-            "question": "Shanghai is one of ___ (big) cities in China. [填入正确形式]",
-            "answer": "the biggest",
-            "explanation_cn": "one of the + 最高级 + 名词复数 意为最……之一。big 是重读闭音节，双写 g 加 est：the biggest。",
-            "explanation_en": "'One of the + superlative + plural noun' means among the most. Note the double g: big → biggest."
+            "type": "choice",
+            "question": "I ___ a shared bike to the bookstore yesterday.",
+            "options": [
+              "rode",
+              "ride",
+              "rides",
+              "riding"
+            ],
+            "answer": 0,
+            "explanation_cn": "yesterday 过去时间，ride 的过去式是 rode。"
           },
           {
             "id": "w3-tue-gr3",
-            "type": "fill",
-            "question": "I have already ___ (finish) my homework. [填入正确形式]",
-            "answer": "finished",
-            "explanation_cn": "have already + 过去分词，构成现在完成时。finish 的过去分词是 finished。already 常放在 have/has 后面。",
-            "explanation_en": "'Have already + past participle' makes the present perfect. The participle of 'finish' is 'finished'. 'Already' usually goes after 'have/has'."
+            "type": "choice",
+            "question": "Bikes are ___ than cars in busy streets.",
+            "options": [
+              "quicker",
+              "quickest",
+              "quickly",
+              "more quick"
+            ],
+            "answer": 0,
+            "explanation_cn": "than 比较级用 quicker。"
           },
           {
             "id": "w3-tue-gr4",
             "type": "choice",
-            "question": "My uncle ___ in this hospital since 2015.",
-            "options": ["works", "has worked", "worked", "is working"],
-            "answer": 1,
-            "explanation_cn": "since 2015 表示从过去持续到现在，用现在完成时 has worked。主语第三人称单数用 has。注意 since + 时间点，for + 时间段。",
-            "explanation_en": "'Since 2015' shows an action from the past until now, so the present perfect 'has worked' is used. Note: 'since' + point of time, 'for' + period."
+            "question": "Everyone should ___ the rules when riding.",
+            "options": [
+              "follow",
+              "follows",
+              "following",
+              "followed"
+            ],
+            "answer": 0,
+            "explanation_cn": "should 后面用动词原形 follow。"
           },
           {
             "id": "w3-tue-gr5",
-            "type": "fill",
-            "question": "How long ___ you ___ (learn) English? — For five years. [填入正确形式]",
-            "answer": "have learned",
-            "explanation_cn": "How long 与现在完成时连用：have learned。for five years 是时间段，和完成时是固定搭配。learn 的过去分词也可以是 learnt。",
-            "explanation_en": "'How long' goes with the present perfect: 'have learned'. 'For five years' is a period, which fits the present perfect. 'Learnt' is also a valid participle."
+            "type": "choice",
+            "question": "The bike app shows ___ the nearest bike is.",
+            "options": [
+              "where",
+              "what",
+              "who",
+              "which of"
+            ],
+            "answer": 0,
+            "explanation_cn": "「最近的 bike 在哪」用 where。"
+          },
+          {
+            "id": "w3-tue-gr6",
+            "type": "choice",
+            "question": "Riding is good exercise ___ it makes no pollution.",
+            "options": [
+              "and",
+              "but",
+              "or",
+              "so that"
+            ],
+            "answer": 0,
+            "explanation_cn": "两个优点并列用 and。"
+          },
+          {
+            "id": "w3-tue-gr7",
+            "type": "choice",
+            "question": "Please put the bikes ___ after using them.",
+            "options": [
+              "back",
+              "up",
+              "off",
+              "away of"
+            ],
+            "answer": 0,
+            "explanation_cn": "put…back：把车放回原处。"
+          },
+          {
+            "id": "w3-tue-gr8",
+            "type": "choice",
+            "question": "It was ___ hot day, so we rode slowly.",
+            "options": [
+              "a",
+              "an",
+              "the",
+              "/（不填）"
+            ],
+            "answer": 0,
+            "explanation_cn": "hot 辅音音素开头，用 a。"
+          },
+          {
+            "id": "w3-tue-gr9",
+            "type": "choice",
+            "question": "The riders ___ park in the special area from now on.",
+            "options": [
+              "will",
+              "wills",
+              "will to",
+              "will be"
+            ],
+            "answer": 0,
+            "explanation_cn": "will 后面用动词原形 park。"
+          },
+          {
+            "id": "w3-tue-gr10",
+            "type": "choice",
+            "question": "___ polite to park the bike in the right place.",
+            "options": [
+              "It's",
+              "Its",
+              "It",
+              "This is"
+            ],
+            "answer": 0,
+            "explanation_cn": "It's + 形容词 + to do：把车停对位置是有礼貌的。"
           }
         ]
       },
@@ -4363,47 +10518,132 @@ const WEEK3 = [
           {
             "id": "w3-tue-mc1",
             "type": "choice",
-            "question": "He is ___ honest boy. Everyone trusts him.",
-            "options": ["a", "an", "the", "不填"],
-            "answer": 1,
-            "explanation_cn": "honest 的 h 不发音，读音以元音 /ɒ/ 开头，所以用 an。这是 KET 常考点：看发音不看字母。",
-            "explanation_en": "The 'h' in 'honest' is silent, so the word starts with a vowel sound. Use 'an'. Note: go by the sound, not the letter."
+            "question": "Shared bikes ___ everywhere in Chinese cities now.",
+            "options": [
+              "are",
+              "is",
+              "was",
+              "be"
+            ],
+            "answer": 0,
+            "explanation_cn": "bikes 复数，now 用 are。"
           },
           {
             "id": "w3-tue-mc2",
             "type": "choice",
-            "question": "The Yellow River is ___ second longest river in China.",
-            "options": ["a", "an", "the", "不填"],
-            "answer": 2,
-            "explanation_cn": "序数词前面要加 the：the second longest。注意最高级和序数词前都用 the。",
-            "explanation_en": "Ordinal numbers take 'the': the second longest. Note: both superlatives and ordinals use 'the'."
+            "question": "You just open an app and ___ the code.",
+            "options": [
+              "scan",
+              "scans",
+              "scanning",
+              "scanned"
+            ],
+            "answer": 0,
+            "explanation_cn": "and 并列 open 和 scan，用动词原形。"
           },
           {
             "id": "w3-tue-mc3",
             "type": "choice",
-            "question": "Neither of the answers ___ right.",
-            "options": ["is", "are", "am", "be"],
+            "question": "It costs one yuan ___ thirty minutes.",
+            "options": [
+              "for",
+              "at",
+              "since",
+              "from"
+            ],
             "answer": 0,
-            "explanation_cn": "neither of + 名词复数 作主语时，谓语用单数：neither of... is。neither 意为两者都不。",
-            "explanation_en": "'Neither of + plural noun' takes a singular verb: 'neither of... is'. Note: 'neither' means not one and not the other."
+            "explanation_cn": "「三十分钟只要一块钱」用 for thirty minutes。"
           },
           {
             "id": "w3-tue-mc4",
             "type": "choice",
-            "question": "You'd better ___ too much junk food.",
-            "options": ["not eat", "don't eat", "not eating", "not to eat"],
+            "question": "Riding makes no pollution, ___ it is good for the environment.",
+            "options": [
+              "so",
+              "but",
+              "or",
+              "though"
+            ],
             "answer": 0,
-            "explanation_cn": "had better + 动词原形，否定是 had better not + 动词原形。You'd better not eat 意为你最好不要吃。",
-            "explanation_en": "'Had better + base verb' is the pattern; the negative is 'had better not + base verb'. So: You'd better not eat."
+            "explanation_cn": "「所以」环保，用 so。"
           },
           {
             "id": "w3-tue-mc5",
             "type": "choice",
-            "question": "I want to know ___ she will come tomorrow.",
-            "options": ["that", "if", "what", "who"],
-            "answer": 1,
-            "explanation_cn": "句意是不确定她明天来不来，用 if（是否）引导宾语从句。注意从句要用陈述语序 if she will come。",
-            "explanation_en": "The meaning is uncertain, so 'if' (whether) introduces the object clause. Note: the clause keeps statement word order: if she will come."
+            "question": "Some people park bikes in wrong places, and the streets become ___.",
+            "options": [
+              "messy",
+              "mess",
+              "messily",
+              "a mess of"
+            ],
+            "answer": 0,
+            "explanation_cn": "become 后用形容词 messy。"
+          },
+          {
+            "id": "w3-tue-mc6",
+            "type": "choice",
+            "question": "The cities have new ___ about parking.",
+            "options": [
+              "rules",
+              "rule",
+              "ruling",
+              "ruled"
+            ],
+            "answer": 0,
+            "explanation_cn": "new rules 新规，rule 用复数。"
+          },
+          {
+            "id": "w3-tue-mc7",
+            "type": "choice",
+            "question": "We should park the bikes in ___ areas.",
+            "options": [
+              "special",
+              "specially",
+              "specials",
+              "speciality"
+            ],
+            "answer": 0,
+            "explanation_cn": "areas 名词前用形容词 special。"
+          },
+          {
+            "id": "w3-tue-mc8",
+            "type": "choice",
+            "question": "It is faster ___ ride a shared bike for short trips.",
+            "options": [
+              "to",
+              "for",
+              "of",
+              "at"
+            ],
+            "answer": 0,
+            "explanation_cn": "It is faster to do sth：短途骑车更快。"
+          },
+          {
+            "id": "w3-tue-mc9",
+            "type": "choice",
+            "question": "Don't forget ___ the bike when you arrive.",
+            "options": [
+              "to lock",
+              "locking",
+              "lock",
+              "locks"
+            ],
+            "answer": 0,
+            "explanation_cn": "forget to do sth：记得要锁车。"
+          },
+          {
+            "id": "w3-tue-mc10",
+            "type": "choice",
+            "question": "Shared bikes make city life ___ easier.",
+            "options": [
+              "much",
+              "many",
+              "more",
+              "most"
+            ],
+            "answer": 0,
+            "explanation_cn": "much 修饰比较级 easier。"
           }
         ]
       }
@@ -4413,7 +10653,7 @@ const WEEK3 = [
     "day_cn": "周三",
     "day_en": "Wednesday",
     "is_speaking_day": true,
-    "total_duration": 40,
+    "total_duration": 60,
     "theme_cn": "AI口语 + 高频词汇 + 阅读理解",
     "modules": [
       {
@@ -4435,7 +10675,14 @@ const WEEK3 = [
             "answer": 0,
             "pronunciation_tips": "the best gift 注意 have ever got 连读，got /ɡɒt/ 短促有力",
             "explanation_cn": "you have ever got 是现在完成时，回答也用完成时呼应。A 正确；B 是将来；C、D 答非所问。",
-            "explanation_en": "'You have ever got' is present perfect, so the answer echoes it. A is correct; B is future; C and D do not answer."
+            "explanation_en": "'You have ever got' is present perfect, so the answer echoes it. A is correct; B is future; C and D do not answer.",
+            "answer_cn_hint": "它在问「收到过的最好的礼物」，答句要说出一样东西。",
+            "options_cn": [
+              "我收到过最好的礼物是一辆自行车。",
+              "我下周会收到一份礼物。",
+              "礼物很贵。",
+              "我喜欢收礼物。"
+            ]
           },
           {
             "id": "w3-wed-sp2",
@@ -4450,7 +10697,14 @@ const WEEK3 = [
             "answer": 0,
             "pronunciation_tips": "It takes me 注意 takes /teɪks/ 词尾 s，minutes /ˈmɪnɪts/",
             "explanation_cn": "It takes sb + 时间 + to do 是固定句型。A 正确；B 句子结构不对；C 说的是坐公交但没回答时间；D 没回答。",
-            "explanation_en": "'It takes somebody + time + to do' is the fixed pattern. A answers with the time; B is not a correct structure; C and D do not answer."
+            "explanation_en": "'It takes somebody + time + to do' is the fixed pattern. A answers with the time; B is not a correct structure; C and D do not answer.",
+            "answer_cn_hint": "How long does it take 问的是「花多长时间」，答句要用 It takes me … 加时间段。",
+            "options_cn": [
+              "我坐公交车大约要十五分钟。",
+              "它有十五分钟长。",
+              "我坐公交车去上学。",
+              "我的学校离家很近。"
+            ]
           },
           {
             "id": "w3-wed-sp3",
@@ -4465,7 +10719,14 @@ const WEEK3 = [
             "answer": 0,
             "pronunciation_tips": "going to 口语常读作 gonna /ˈɡənə/，visit /ˈvɪzɪt/ 重音在第一音节",
             "explanation_cn": "be going to 表示计划打算。A 正确；B 是过去；C 与周末无关；D 没回答自己的打算。",
-            "explanation_en": "'Be going to' expresses a plan. A is correct; B is past; C is unrelated; D does not answer."
+            "explanation_en": "'Be going to' expresses a plan. A is correct; B is past; C is unrelated; D does not answer.",
+            "answer_cn_hint": "它在问「打算做什么」（将来），答句要用 be going to 或 will。",
+            "options_cn": [
+              "我打算去看望爷爷奶奶。",
+              "我上周末去看他们了。",
+              "我每天去上学。",
+              "他们住在乡下。"
+            ]
           },
           {
             "id": "w3-wed-sp4",
@@ -4480,7 +10741,14 @@ const WEEK3 = [
             "answer": 0,
             "pronunciation_tips": "favorite /ˈfeɪvərɪt/ 美音常读三音节，book /bʊk/ 短元音",
             "explanation_cn": "A 直接回答书名，正确。B 是读书时间；C 是比喻；D 只说买了书。",
-            "explanation_en": "A names the book directly. B says when you read; C is a metaphor; D only says you bought one."
+            "explanation_en": "A names the book directly. B says when you read; C is a metaphor; D only says you bought one.",
+            "answer_cn_hint": "它在问「最喜欢的书」，答句要说出书名。",
+            "options_cn": [
+              "我最喜欢的书是《哈利·波特》。",
+              "我在晚上读书。",
+              "书是我的朋友。",
+              "我昨天买了一本书。"
+            ]
           },
           {
             "id": "w3-wed-sp5",
@@ -4495,7 +10763,14 @@ const WEEK3 = [
             "answer": 0,
             "pronunciation_tips": "housework /ˈhaʊswɜːk/ 复合词重音在前，clean /kliːn/ 长元音",
             "explanation_cn": "often 问频率习惯，A 用 every day 呼应，正确。B 说的是父母做；C 评价家务；D 是现在进行时，不是习惯。",
-            "explanation_en": "The question asks about a habit, so A ('every day') fits. B is about the parents; C is an opinion; D is happening now, not a habit."
+            "explanation_en": "The question asks about a habit, so A ('every day') fits. B is about the parents; C is an opinion; D is happening now, not a habit.",
+            "answer_cn_hint": "这是 Do you… 问句，答句要先说 Yes, I do. 或 No, I don't.，再说你做什么。",
+            "options_cn": [
+              "是的，我每天打扫我的房间。",
+              "是的，我父母打扫房子。",
+              "家务不轻松。",
+              "我现在在打扫厨房。"
+            ]
           }
         ]
       },
@@ -4505,87 +10780,754 @@ const WEEK3 = [
         "type": "vocabulary_game",
         "duration": 5,
         "words": [
-          vocabWord({
-            "word": "museum", "phonetic": "/mjuˈziːəm/", "meaning": "博物馆", "emoji": "🏛️",
-            "example_en": "We visited the science museum.", "example_cn": "我们参观了科学博物馆。",
-            "syllables": ["mu", "se", "um"], "spell": ["mu__um", "se"],
-            "wrongEmoji": ["⭐", "🦕", "🪐"], "wrongMeaning": ["恐龙", "行星", "望远镜"]
-          }),
-          vocabWord({
-            "word": "dinosaur", "phonetic": "/ˈdaɪnəsɔː/", "meaning": "恐龙", "emoji": "🦕",
-            "example_en": "Dinosaurs lived long ago.", "example_cn": "恐龙生活在很久以前。",
-            "syllables": ["di", "no", "saur"], "spell": ["di__saur", "no"],
-            "wrongEmoji": ["⭐", "🏛️", "🚀"], "wrongMeaning": ["博物馆", "火箭", "行星"]
-          }),
-          vocabWord({
-            "word": "planet", "phonetic": "/ˈplænɪt/", "meaning": "行星", "emoji": "🪐",
-            "example_en": "The Earth is a planet.", "example_cn": "地球是一颗行星。",
-            "syllables": ["plan", "et"], "spell": ["pl__et", "an"],
-            "wrongEmoji": ["⭐", "🔭", "🎲"], "wrongMeaning": ["恐龙", "望远镜", "博物馆"]
-          }),
-          vocabWord({
-            "word": "telescope", "phonetic": "/ˈtelɪskəʊp/", "meaning": "望远镜", "emoji": "🔭",
-            "example_en": "Look at the stars through the telescope.", "example_cn": "通过望远镜看星星。",
-            "syllables": ["te", "le", "scope"], "spell": ["te__scope", "le"],
-            "wrongEmoji": ["⭐", "🚀", "🌧️"], "wrongMeaning": ["行星", "火箭", "博物馆"]
-          }),
-          vocabWord({
-            "word": "rocket", "phonetic": "/ˈrɒkɪt/", "meaning": "火箭", "emoji": "🚀",
-            "example_en": "The rocket flew into space.", "example_cn": "火箭飞向了太空。",
-            "syllables": ["rock", "et"], "spell": ["ro__et", "ck"],
-            "wrongEmoji": ["⭐", "🚲", "🦕"], "wrongMeaning": ["望远镜", "行星", "博物馆"]
-          })
+          {
+            "word": "museum",
+            "phonetic": "/mjuˈziːəm/",
+            "meaning": "博物馆",
+            "emoji": "🏛️",
+            "example_en": "We visited the science museum.",
+            "example_cn": "我们参观了科学博物馆。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "🏛️",
+                  "⭐",
+                  "🦕",
+                  "🪐"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "🪐",
+                  "⭐",
+                  "🏛️",
+                  "🦕"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "museum 是什么意思？（1/2）",
+                "options": [
+                  "恐龙",
+                  "行星",
+                  "博物馆",
+                  "望远镜"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "museum 是什么意思？（2/2）",
+                "options": [
+                  "博物馆",
+                  "望远镜",
+                  "恐龙",
+                  "行星"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: mu__um",
+                "answer": "se"
+              }
+            ],
+            "letters": [
+              "m",
+              "u",
+              "s",
+              "e",
+              "u",
+              "m"
+            ],
+            "syllables": [
+              "mu",
+              "se",
+              "um"
+            ],
+            "hint_cn": "一个地方，里面摆着很多老东西给人看"
+          },
+          {
+            "word": "dinosaur",
+            "phonetic": "/ˈdaɪnəsɔː/",
+            "meaning": "恐龙",
+            "emoji": "🦕",
+            "example_en": "Dinosaurs lived long ago.",
+            "example_cn": "恐龙生活在很久以前。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "🦕",
+                  "⭐",
+                  "🏛️",
+                  "🚀"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "🚀",
+                  "⭐",
+                  "🦕",
+                  "🏛️"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "dinosaur 是什么意思？（1/2）",
+                "options": [
+                  "博物馆",
+                  "火箭",
+                  "恐龙",
+                  "行星"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "dinosaur 是什么意思？（2/2）",
+                "options": [
+                  "恐龙",
+                  "行星",
+                  "博物馆",
+                  "火箭"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: di__saur",
+                "answer": "no"
+              }
+            ],
+            "letters": [
+              "d",
+              "i",
+              "n",
+              "o",
+              "s",
+              "a",
+              "u",
+              "r"
+            ],
+            "syllables": [
+              "di",
+              "no",
+              "saur"
+            ],
+            "hint_cn": "很久很久以前的大动物，现在早就没有了"
+          },
+          {
+            "word": "planet",
+            "phonetic": "/ˈplænɪt/",
+            "meaning": "行星",
+            "emoji": "🪐",
+            "example_en": "The Earth is a planet.",
+            "example_cn": "地球是一颗行星。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "🪐",
+                  "⭐",
+                  "🔭",
+                  "🎲"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "🎲",
+                  "⭐",
+                  "🪐",
+                  "🔭"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "planet 是什么意思？（1/2）",
+                "options": [
+                  "恐龙",
+                  "望远镜",
+                  "行星",
+                  "博物馆"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "planet 是什么意思？（2/2）",
+                "options": [
+                  "行星",
+                  "博物馆",
+                  "恐龙",
+                  "望远镜"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: pl__et",
+                "answer": "an"
+              }
+            ],
+            "letters": [
+              "p",
+              "l",
+              "a",
+              "n",
+              "e",
+              "t"
+            ],
+            "syllables": [
+              "plan",
+              "et"
+            ],
+            "hint_cn": "天上绕着太阳转的大球，地球就是其中一个"
+          },
+          {
+            "word": "telescope",
+            "phonetic": "/ˈtelɪskəʊp/",
+            "meaning": "望远镜",
+            "emoji": "🔭",
+            "example_en": "Look at the stars through the telescope.",
+            "example_cn": "通过望远镜看星星。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "🔭",
+                  "⭐",
+                  "🚀",
+                  "🌧️"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "🌧️",
+                  "⭐",
+                  "🔭",
+                  "🚀"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "telescope 是什么意思？（1/2）",
+                "options": [
+                  "行星",
+                  "火箭",
+                  "望远镜",
+                  "博物馆"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "telescope 是什么意思？（2/2）",
+                "options": [
+                  "望远镜",
+                  "博物馆",
+                  "行星",
+                  "火箭"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: te__scope",
+                "answer": "le"
+              }
+            ],
+            "letters": [
+              "t",
+              "e",
+              "l",
+              "e",
+              "s",
+              "c",
+              "o",
+              "p",
+              "e"
+            ],
+            "syllables": [
+              "te",
+              "le",
+              "scope"
+            ],
+            "hint_cn": "用它看，很远的星星会变得很大"
+          },
+          {
+            "word": "rocket",
+            "phonetic": "/ˈrɒkɪt/",
+            "meaning": "火箭",
+            "emoji": "🚀",
+            "example_en": "The rocket flew into space.",
+            "example_cn": "火箭飞向了太空。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "🚀",
+                  "⭐",
+                  "🚲",
+                  "🦕"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "🦕",
+                  "⭐",
+                  "🚀",
+                  "🚲"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "rocket 是什么意思？（1/2）",
+                "options": [
+                  "望远镜",
+                  "行星",
+                  "火箭",
+                  "博物馆"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "rocket 是什么意思？（2/2）",
+                "options": [
+                  "火箭",
+                  "博物馆",
+                  "望远镜",
+                  "行星"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: ro__et",
+                "answer": "ck"
+              }
+            ],
+            "letters": [
+              "r",
+              "o",
+              "c",
+              "k",
+              "e",
+              "t"
+            ],
+            "syllables": [
+              "rock",
+              "et"
+            ],
+            "hint_cn": "点着火，一下就冲到天上去"
+          }
         ]
       },
       {
         "id": "w3-wed-reading",
         "name_cn": "阅读理解",
         "type": "reading",
-        "duration": 5,
-        "passage": "Last month, our class slept overnight in the city science museum. Yes — we took our sleeping bags to a museum! After dark, a guide showed us the stars through a big telescope. I saw Saturn's rings with my own eyes. Then we watched a short film about dinosaurs. At eleven o'clock, we lay down in the hall next to a model rocket. Nobody really wanted to sleep. In the morning, we got a badge that says \"Young Scientist\". It was the most exciting night of the term.",
-        "passage_cn": "上个月，我们全班在城市科学博物馆里过夜。没错——我们带着睡袋去了博物馆！天黑后，一位讲解员用大望远镜给我们看星星。我亲眼看到了土星的光环。然后我们看了一部关于恐龙的短片。十一点钟，我们在大厅里一个火箭模型旁躺下。没有人真的想睡。早上，我们得到了写着小小科学家的徽章。这是这学期最激动人心的一夜。",
+        "duration": 10,
+        "passage": "Short videos are very popular now, and some teachers use them to help students learn. In one popular kind of video, a teacher explains a maths problem in just one minute. Students can watch it again and again until they understand. Many museums also make short videos to show their treasures, so children can enjoy them at home. But watching too many short videos is bad for the eyes, and some videos are not useful at all. Doctors say students should watch screens for less than two hours a day. The best way is to pick good videos, watch for a short time, and then go outside to play.",
+        "passage_cn": "短视频现在非常流行，一些老师用它们帮助学生学习。在一种热门视频里，老师只用一分钟讲解一道数学题。学生可以反复观看，直到看懂为止。很多博物馆也拍短视频展示馆藏珍宝，孩子们在家就能欣赏。但看太多短视频伤眼睛，而且有些视频完全没用。医生建议学生每天看屏幕不要超过两小时。最好的办法是：挑好视频、短时间观看，然后出门去玩。",
         "questions": [
           {
             "id": "w3-wed-rd1",
             "type": "choice",
-            "question": "Where did the class sleep?",
+            "question": "What do some teachers use to help students learn?",
             "options": [
-              "In their school",
-              "In the science museum",
-              "In a hotel",
-              "At the teacher's home"
+              "Short videos",
+              "Long films",
+              "Radio shows",
+              "Paper cards"
             ],
-            "answer": 1,
-            "explanation_cn": "文章第一句说全班在科学博物馆过夜。overnight 意为过夜、一整晚。",
-            "explanation_en": "The first sentence says the class slept overnight in the science museum. Note: 'overnight' means for the whole night."
+            "answer": 0,
+            "explanation_cn": "老师用短视频辅助教学。"
           },
           {
             "id": "w3-wed-rd2",
             "type": "choice",
-            "question": "What did the guide show the students?",
+            "question": "How long does the maths video take?",
             "options": [
-              "A film about rockets",
-              "The stars through a telescope",
-              "A model of Saturn",
-              "Dinosaur bones"
+              "One minute",
+              "One hour",
+              "One day",
+              "Ten seconds"
             ],
-            "answer": 1,
-            "explanation_cn": "文章说 a guide showed us the stars through a big telescope。讲解员用望远镜给他们看星星。film 是后来才看的。",
-            "explanation_en": "The text says 'a guide showed us the stars through a big telescope.' The film came later."
+            "answer": 0,
+            "explanation_cn": "老师只用一分钟讲一道数学题。"
           },
           {
             "id": "w3-wed-rd3",
             "type": "choice",
-            "question": "What did the students get in the morning?",
+            "question": "What can students do if they don't understand?",
             "options": [
-              "A Young Scientist badge",
-              "A model rocket",
-              "A book about stars",
-              "New sleeping bags"
+              "Watch the video again and again",
+              "Do nothing",
+              "Buy a new phone",
+              "Stop learning"
             ],
             "answer": 0,
-            "explanation_cn": "文章说 we got a badge that says Young Scientist。他们得到了小小科学家徽章。badge 意为徽章。",
-            "explanation_en": "The text says 'we got a badge that says Young Scientist.' Note: 'badge' means a small pin worn to show something."
+            "explanation_cn": "可以反复观看直到看懂。"
+          },
+          {
+            "id": "w3-wed-rd4",
+            "type": "choice",
+            "question": "What do museums make short videos for?",
+            "options": [
+              "Showing their treasures",
+              "Selling tickets",
+              "Finding workers",
+              "Playing games"
+            ],
+            "answer": 0,
+            "explanation_cn": "博物馆用短视频展示馆藏珍宝。"
+          },
+          {
+            "id": "w3-wed-rd5",
+            "type": "choice",
+            "question": "What is bad about watching too many short videos?",
+            "options": [
+              "It is bad for the eyes.",
+              "It makes people taller.",
+              "It costs a lot of money.",
+              "It is too slow."
+            ],
+            "answer": 0,
+            "explanation_cn": "看太多伤眼睛。"
+          },
+          {
+            "id": "w3-wed-rd6",
+            "type": "choice",
+            "question": "How long should students watch screens a day?",
+            "options": [
+              "Less than two hours",
+              "More than two hours",
+              "All day",
+              "Six hours"
+            ],
+            "answer": 0,
+            "explanation_cn": "医生建议每天看屏幕不超过两小时。"
+          },
+          {
+            "id": "w3-wed-rd7",
+            "type": "choice",
+            "question": "What is the best way to watch short videos?",
+            "options": [
+              "Pick good ones, watch for a short time, then go outside",
+              "Watch all night",
+              "Only watch funny ones",
+              "Never watch any"
+            ],
+            "answer": 0,
+            "explanation_cn": "最后一句：挑好视频、短时间看，再出去玩。"
+          },
+          {
+            "id": "w3-wed-rd8",
+            "type": "choice",
+            "question": "The word \"treasures\" here means ___.",
+            "options": [
+              "珍宝",
+              "垃圾",
+              "门票",
+              "桌椅"
+            ],
+            "answer": 0,
+            "explanation_cn": "treasures 意思是「珍宝」，指博物馆里的文物。"
+          },
+          {
+            "id": "w3-wed-rd9",
+            "type": "choice",
+            "question": "Which one is NOT talked about in the short video passage?",
+            "options": [
+              "Short videos can cook dinner.",
+              "Teachers use short videos.",
+              "Museums make short videos.",
+              "Too many videos hurt eyes."
+            ],
+            "answer": 0,
+            "explanation_cn": "短视频不能做饭，其余三项都在文中。"
+          },
+          {
+            "id": "w3-wed-rd10",
+            "type": "choice",
+            "question": "The best title for the passage about short videos is ___.",
+            "options": [
+              "Short Videos: Good and Bad",
+              "How to Be a Star",
+              "TV in the Past",
+              "Eyes and Glasses"
+            ],
+            "answer": 0,
+            "explanation_cn": "全文讲了短视频的好处和坏处。"
+          }
+        ]
+      },
+      {
+        "id": "w3-wed-mc",
+        "name_cn": "单项选择",
+        "type": "multiple_choice",
+        "duration": 10,
+        "questions": [
+          {
+            "id": "w3-wed-mc1",
+            "type": "choice",
+            "question": "Short videos ___ very popular now.",
+            "options": [
+              "are",
+              "is",
+              "am",
+              "be"
+            ],
+            "answer": 0,
+            "explanation_cn": "videos 复数，be 动词用 are。"
+          },
+          {
+            "id": "w3-wed-mc2",
+            "type": "choice",
+            "question": "Some teachers use them ___ students learn.",
+            "options": [
+              "to help",
+              "help",
+              "helping",
+              "helped"
+            ],
+            "answer": 0,
+            "explanation_cn": "use sth to do sth：用短视频帮学生学习。"
+          },
+          {
+            "id": "w3-wed-mc3",
+            "type": "choice",
+            "question": "Students can watch it again and again ___ they understand.",
+            "options": [
+              "until",
+              "because",
+              "so",
+              "but"
+            ],
+            "answer": 0,
+            "explanation_cn": "「直到」看懂为止，用 until。"
+          },
+          {
+            "id": "w3-wed-mc4",
+            "type": "choice",
+            "question": "Many museums make short videos ___ their treasures.",
+            "options": [
+              "to show",
+              "show",
+              "showing",
+              "showed"
+            ],
+            "answer": 0,
+            "explanation_cn": "目的用 to show。"
+          },
+          {
+            "id": "w3-wed-mc5",
+            "type": "choice",
+            "question": "Watching too many videos is bad ___ the eyes.",
+            "options": [
+              "for",
+              "at",
+              "with",
+              "of"
+            ],
+            "answer": 0,
+            "explanation_cn": "be bad for…：对…有害。"
+          },
+          {
+            "id": "w3-wed-mc6",
+            "type": "choice",
+            "question": "Doctors say students should watch screens for ___ two hours a day.",
+            "options": [
+              "less than",
+              "less then",
+              "least than",
+              "little than"
+            ],
+            "answer": 0,
+            "explanation_cn": "less than two hours：不到两小时。"
+          },
+          {
+            "id": "w3-wed-mc7",
+            "type": "choice",
+            "question": "The best way is ___ good videos first.",
+            "options": [
+              "to pick",
+              "pick",
+              "picking",
+              "picked"
+            ],
+            "answer": 0,
+            "explanation_cn": "is 后面用不定式 to pick 作表语。"
+          },
+          {
+            "id": "w3-wed-mc8",
+            "type": "choice",
+            "question": "Then go outside ___ instead of watching more.",
+            "options": [
+              "to play",
+              "play",
+              "playing",
+              "played"
+            ],
+            "answer": 0,
+            "explanation_cn": "出门「去玩」，目的用 to play。"
+          },
+          {
+            "id": "w3-wed-mc9",
+            "type": "choice",
+            "question": "Some videos are not useful ___ all.",
+            "options": [
+              "at",
+              "in",
+              "on",
+              "of"
+            ],
+            "answer": 0,
+            "explanation_cn": "not…at all：一点也不。"
+          },
+          {
+            "id": "w3-wed-mc10",
+            "type": "choice",
+            "question": "___ interesting the museum videos are!",
+            "options": [
+              "How",
+              "What",
+              "Where",
+              "Why"
+            ],
+            "answer": 0,
+            "explanation_cn": "How + 形容词：How interesting…!"
+          }
+        ]
+      },
+      {
+        "id": "w3-wed-tense2",
+        "name_cn": "时态练习",
+        "type": "tense",
+        "duration": 5,
+        "questions": [
+          {
+            "id": "w3-wed-tn21",
+            "type": "fill",
+            "question": "Short videos ___ (be) very popular now. [填入正确形式]",
+            "answer": "are",
+            "explanation_cn": "videos 复数，now 用 are。"
+          },
+          {
+            "id": "w3-wed-tn22",
+            "type": "fill",
+            "question": "The teacher ___ (explain) the problem in one minute yesterday. [填入正确形式]",
+            "answer": "explained",
+            "explanation_cn": "yesterday 过去时间，用过去式 explained。"
+          },
+          {
+            "id": "w3-wed-tn23",
+            "type": "fill",
+            "question": "Look! The kids ___ (watch) a science video. [填入正确形式]",
+            "answer": "are watching",
+            "explanation_cn": "Look! 提示正在进行，用 are watching。"
+          },
+          {
+            "id": "w3-wed-tn24",
+            "type": "fill",
+            "question": "Museums ___ (make) short videos since 2020. [填入正确形式]",
+            "answer": "have made",
+            "explanation_cn": "since 2020 与现在完成时连用。"
+          },
+          {
+            "id": "w3-wed-tn25",
+            "type": "fill",
+            "question": "We ___ (pick) good videos and watch less from today. [填入正确形式]",
+            "answer": "will pick",
+            "explanation_cn": "from today 表示从今往后，用 will pick。"
           }
         ]
       }
@@ -4608,70 +11550,141 @@ const WEEK3 = [
             "id": "w3-thu-ls1",
             "type": "choice",
             "question": "听到的句子是什么？",
-            "audio_text": "The train to London leaves from Platform Three.",
+            "audio_text": "With a few taps on the phone, you can buy almost everything.",
             "options": [
-              "The train to London leaves from Platform Three.",
-              "The train to London leaves from Platform Five.",
-              "The train to Leeds leaves from Platform Three.",
-              "The train to London arrives at Platform Three."
+              "With a few taps on the phone, you can buy almost everything.",
+              "With a few calls on the phone, you can buy almost everything.",
+              "With a few taps on the phone, you can sell almost everything.",
+              "With a few taps on the door, you can buy almost everything."
             ],
             "answer": 0,
-            "explanation_cn": "听力关键词：London（伦敦）、Platform Three（三号站台）。注意 leaves（离开）和 arrives（到达）方向相反；three /θriː/ 和 five /faɪv/ 区分。",
-            "explanation_en": "Key words: 'London', 'Platform Three'. Note: 'leaves' and 'arrives' are opposite directions; listen carefully for the verb."
+            "explanation_cn": "taps（点几下）不是 calls（打电话）；buy（买）不是 sell。"
           },
           {
             "id": "w3-thu-ls2",
             "type": "choice",
             "question": "听到的句子是什么？",
-            "audio_text": "Emma has already finished her science project.",
+            "audio_text": "The things you order usually arrive in two or three days.",
             "options": [
-              "Emma has already finished her science project.",
-              "Emma has not finished her science project.",
-              "Emma has already started her science project.",
-              "Emma will finish her science project soon."
+              "The things you order usually arrive in two or three days.",
+              "The things you order usually arrive in two or three weeks.",
+              "The things you make usually arrive in two or three days.",
+              "The things you order never arrive on time."
             ],
             "answer": 0,
-            "explanation_cn": "听力关键词：has already finished（已经完成）。注意 already 和 not 意思相反，听清楚有没有 not。",
-            "explanation_en": "Key words: 'has already finished'. Note: 'already' and 'not' are opposites — listen for 'not'."
+            "explanation_cn": "时间长度是 two or three days（两三天）。"
           },
           {
             "id": "w3-thu-ls3",
             "type": "choice",
             "question": "听到的句子是什么？",
-            "audio_text": "There will be a heavy rain tomorrow afternoon.",
+            "audio_text": "Grandma Wang buys vegetables on her phone.",
             "options": [
-              "There will be a heavy rain tomorrow afternoon.",
-              "There will be a strong wind tomorrow afternoon.",
-              "There was a heavy rain yesterday afternoon.",
-              "There will be a light rain tomorrow morning."
+              "Grandma Wang buys vegetables on her phone.",
+              "Grandma Wang sells vegetables on her phone.",
+              "Grandma Wang buys flowers on her phone.",
+              "Uncle Wang buys vegetables on his phone."
             ],
             "answer": 0,
-            "explanation_cn": "听力关键词：heavy rain（大雨）、tomorrow afternoon（明天下午）。注意 heavy 意为大（量多），和 light（小的）相反。",
-            "explanation_en": "Key words: 'heavy rain', 'tomorrow afternoon'. Note: 'heavy' means a lot; 'light' means a little."
+            "explanation_cn": "buy（买）不是 sell（卖）；人物是 Grandma Wang。"
           },
           {
             "id": "w3-thu-ls4",
-            "type": "fill",
-            "question": "听到的数字是什么？",
-            "audio_text": "Our school library has more than twelve thousand books.",
-            "answer": "12000",
-            "explanation_cn": "听力数字：twelve thousand (12000)。注意 thousand 千位的读法：twelve thousand 就是 12 加 thousand。不要和 twelve hundred (1200) 混淆。",
-            "explanation_en": "Number: twelve thousand (12,000). Note the pattern: twelve + thousand. Don't confuse it with twelve hundred (1,200)."
+            "type": "choice",
+            "question": "听到的句子是什么？",
+            "audio_text": "You can find shared bikes near the bus stop.",
+            "options": [
+              "You can find shared bikes near the bus stop.",
+              "You can find shared cars near the bus stop.",
+              "You can find shared bikes near the airport.",
+              "You can find buses near the shared bike station."
+            ],
+            "answer": 0,
+            "explanation_cn": "shared bikes（共享单车）在公交站附近。"
           },
           {
             "id": "w3-thu-ls5",
             "type": "choice",
             "question": "听到的句子是什么？",
-            "audio_text": "My cousin has lived in Canada since 2019.",
+            "audio_text": "It costs one yuan for thirty minutes.",
             "options": [
-              "My cousin has lived in Canada since 2019.",
-              "My cousin moved to Canada in 2019.",
-              "My cousin will live in Canada in 2019.",
-              "My uncle has lived in Canada since 2019."
+              "It costs one yuan for thirty minutes.",
+              "It costs ten yuan for thirty minutes.",
+              "It costs one yuan for thirteen minutes.",
+              "It takes one yuan for thirty minutes."
             ],
             "answer": 0,
-            "explanation_cn": "听力关键词：has lived（一直住在）、since 2019（从2019年起）。注意 cousin 意为表/堂兄弟姐妹，uncle 是叔叔舅舅。since 和完成时连用。",
-            "explanation_en": "Key words: 'has lived', 'since 2019'. Note: 'since' + a point of time goes with the present perfect. 'Cousin' is not 'uncle'."
+            "explanation_cn": "价格是 one yuan（一元），时间 thirty minutes；costs 不是 takes。"
+          },
+          {
+            "id": "w3-thu-ls6",
+            "type": "choice",
+            "question": "听到的句子是什么？",
+            "audio_text": "Some people park the bikes in wrong places.",
+            "options": [
+              "Some people park the bikes in wrong places.",
+              "Some people ride the bikes in wrong places.",
+              "All people park the bikes in right places.",
+              "Some people paint the bikes in wrong places."
+            ],
+            "answer": 0,
+            "explanation_cn": "park（停放）不是 ride（骑）；wrong places（错误地方）。"
+          },
+          {
+            "id": "w3-thu-ls7",
+            "type": "choice",
+            "question": "听到的句子是什么？",
+            "audio_text": "Students should watch screens for less than two hours a day.",
+            "options": [
+              "Students should watch screens for less than two hours a day.",
+              "Students should watch screens for more than two hours a day.",
+              "Students should watch films for less than two hours a day.",
+              "Teachers should watch screens for less than two hours a day."
+            ],
+            "answer": 0,
+            "explanation_cn": "less than（少于）不是 more than；对象是 students。"
+          },
+          {
+            "id": "w3-thu-ls8",
+            "type": "choice",
+            "question": "听到的句子是什么？",
+            "audio_text": "The museum uses lights and big screens to show old things.",
+            "options": [
+              "The museum uses lights and big screens to show old things.",
+              "The museum uses lights and big screens to sell old things.",
+              "The library uses lights and big screens to show old things.",
+              "The museum uses candles and paper to show old things."
+            ],
+            "answer": 0,
+            "explanation_cn": "lights and big screens（灯光和大屏幕），动词 show。"
+          },
+          {
+            "id": "w3-thu-ls9",
+            "type": "choice",
+            "question": "听到的句子是什么？",
+            "audio_text": "Young people like sharing museum photos online.",
+            "options": [
+              "Young people like sharing museum photos online.",
+              "Young people like drawing museum photos online.",
+              "Old people like sharing museum photos online.",
+              "Young people like sharing school photos online."
+            ],
+            "answer": 0,
+            "explanation_cn": "like sharing（喜欢分享），地点 online（网上）。"
+          },
+          {
+            "id": "w3-thu-ls10",
+            "type": "choice",
+            "question": "听到的句子是什么？",
+            "audio_text": "The doctors say watching too many videos hurts the eyes.",
+            "options": [
+              "The doctors say watching too many videos hurts the eyes.",
+              "The doctors say watching too many videos helps the eyes.",
+              "The teacher says reading too many books hurts the eyes.",
+              "The doctors say watching too many films hurts the ears."
+            ],
+            "answer": 0,
+            "explanation_cn": "hurts（伤害）不是 helps；伤的是 eyes（眼睛）。"
           }
         ]
       },
@@ -4680,52 +11693,137 @@ const WEEK3 = [
         "name_cn": "完形填空",
         "type": "cloze",
         "duration": 10,
-        "passage": "Grandpa Wang lives near a small lake. When he was young, the water was so clean that people could 1___ fish in it. Later, a factory was built nearby, and the lake became dirty. Few birds came back any more. Grandpa Wang decided to do something. Every morning, he picked up the rubbish near the lake and told people to 2___ the water. Year after year, he never stopped. Now the lake is clean again. Fish swim here and there, and birds 3___ their nests by the water. \"The lake is like a friend,\" he says. \"You 4___ take care of it, and it will make you 5___.\"",
+        "passage": "Garbage sorting is an important habit in Chinese cities now. In Shanghai and many other cities, people must 1___ their garbage into four kinds: dry, wet, recyclable and harmful. Kitchen waste like banana skins is 2___ garbage. Bottles, paper and old clothes are 3___, because they can be made into new things. Batteries and old medicine are 4___ garbage, so we need 5___ care with them. At first, many people found 6___ hard to remember the four kinds, but now most people do it well. Some neighborhoods give small 7___ to people who sort well, like soap and eggs. Children also learn sorting at 8___ and teach their parents at home. Sorting garbage 9___ only one minute every day, but it helps the earth a lot. If everyone takes part, our cities will become 10___ cleaner and more beautiful.",
         "questions": [
           {
             "id": "w3-thu-cz1",
             "type": "choice",
             "question": "1___",
-            "options": ["catch", "cook", "sell", "buy"],
+            "options": [
+              "divide",
+              "divides",
+              "dividing",
+              "divided"
+            ],
             "answer": 0,
-            "explanation_cn": "水很干净，人们能在里面钓鱼，用 catch（捕）。catch fish 意为捕鱼。",
-            "explanation_en": "The water was so clean that people could 'catch' fish in it. Note: 'catch fish' means to take fish out of the water."
+            "explanation_cn": "must 后面用动词原形 divide（把垃圾分成四类）。"
           },
           {
             "id": "w3-thu-cz2",
             "type": "choice",
             "question": "2___",
-            "options": ["pollute", "protect", "forget", "cover"],
-            "answer": 1,
-            "explanation_cn": "爷爷捡垃圾、劝大家保护湖水，用 protect（保护）。pollute 意为污染，意思相反。",
-            "explanation_en": "Grandpa Wang asked people to 'protect' the water. Note: 'pollute' means to make dirty — the opposite of what he wanted."
+            "options": [
+              "wet",
+              "dry",
+              "harmful",
+              "recyclable"
+            ],
+            "answer": 0,
+            "explanation_cn": "香蕉皮等厨余是「湿垃圾」，wet。"
           },
           {
             "id": "w3-thu-cz3",
             "type": "choice",
             "question": "3___",
-            "options": ["build", "break", "lose", "find"],
+            "options": [
+              "recyclable",
+              "wet",
+              "harmful",
+              "dry"
+            ],
             "answer": 0,
-            "explanation_cn": "鸟在湖边筑巢，用 build their nests。build nests 意为筑巢。",
-            "explanation_en": "Birds 'build' their nests by the water. Note: 'build a nest' means to make a nest."
+            "explanation_cn": "瓶子纸张旧衣服可回收，recyclable。"
           },
           {
             "id": "w3-thu-cz4",
             "type": "choice",
             "question": "4___",
-            "options": ["must", "needn't", "never", "hardly"],
+            "options": [
+              "harmful",
+              "wet",
+              "dry",
+              "tasty"
+            ],
             "answer": 0,
-            "explanation_cn": "湖像朋友，你必须照顾它，用 must（必须）。needn't 意为不必，意思不对。",
-            "explanation_en": "'The lake is like a friend. You must take care of it.' Note: 'must' means have to."
+            "explanation_cn": "电池和过期药是「有害垃圾」，harmful。"
           },
           {
             "id": "w3-thu-cz5",
             "type": "choice",
             "question": "5___",
-            "options": ["happy", "sad", "angry", "tired"],
+            "options": [
+              "special",
+              "happily",
+              "slowly",
+              "loudly"
+            ],
             "answer": 0,
-            "explanation_cn": "你照顾它，它让你开心，用 happy。make sb happy 意为让某人开心。",
-            "explanation_en": "Take care of it, and it will make you 'happy'. Note: 'make somebody happy' means to bring joy to someone."
+            "explanation_cn": "和第 4 空同一句：有害垃圾需要「特别的」处理，special。"
+          },
+          {
+            "id": "w3-thu-cz6",
+            "type": "choice",
+            "question": "6___",
+            "options": [
+              "it",
+              "them",
+              "its",
+              "they"
+            ],
+            "answer": 0,
+            "explanation_cn": "found it hard to do sth：it 作形式宾语。"
+          },
+          {
+            "id": "w3-thu-cz7",
+            "type": "choice",
+            "question": "7___",
+            "options": [
+              "gifts",
+              "gift",
+              "gifts'",
+              "a gift"
+            ],
+            "answer": 0,
+            "explanation_cn": "some gifts：一些小礼物，用复数。"
+          },
+          {
+            "id": "w3-thu-cz8",
+            "type": "choice",
+            "question": "8___",
+            "options": [
+              "school",
+              "schools'",
+              "the school of",
+              "schooling"
+            ],
+            "answer": 0,
+            "explanation_cn": "「在学校」at school，固定搭配。"
+          },
+          {
+            "id": "w3-thu-cz9",
+            "type": "choice",
+            "question": "9___",
+            "options": [
+              "takes",
+              "take",
+              "taking",
+              "took"
+            ],
+            "answer": 0,
+            "explanation_cn": "动名词短语作主语按单数算，takes。"
+          },
+          {
+            "id": "w3-thu-cz10",
+            "type": "choice",
+            "question": "10___",
+            "options": [
+              "much",
+              "many",
+              "most",
+              "more"
+            ],
+            "answer": 0,
+            "explanation_cn": "much 修饰比较级：much cleaner 干净得多。"
           }
         ]
       },
@@ -4738,45 +11836,72 @@ const WEEK3 = [
           {
             "id": "w3-thu-tn1",
             "type": "fill",
-            "question": "They ___ (know) each other for ten years. [填入正确形式]",
-            "answer": "have known",
-            "explanation_cn": "for ten years 是时间段，用现在完成时。know 的过去分词是 known（know-knew-known），是不规则变化。",
-            "explanation_en": "'For ten years' is a period, so the present perfect is used. 'Know' is irregular: know-knew-known."
+            "question": "People in Shanghai ___ (start) garbage sorting in 2019. [填入正确形式]",
+            "answer": "started",
+            "explanation_cn": "in 2019 过去时间，用过去式 started。"
           },
           {
             "id": "w3-thu-tn2",
             "type": "fill",
-            "question": "I ___ (read) this book twice already. [填入正确形式]",
-            "answer": "have read",
-            "explanation_cn": "already 和 twice 表示到目前为止的经历，用现在完成时 have read。注意 read 的过去分词拼写不变，读音变：/red/。",
-            "explanation_en": "'Already' and 'twice' show experience up to now, so the present perfect 'have read' is used. Note: the participle 'read' is spelled the same but pronounced /red/."
+            "question": "My family ___ (sort) the garbage every evening now. [填入正确形式]",
+            "answer": "sorts",
+            "explanation_cn": "my family 视为整体，every evening 习惯动作，用 sorts。"
           },
           {
             "id": "w3-thu-tn3",
-            "type": "choice",
-            "question": "While I ___ dinner, the phone rang.",
-            "options": ["cook", "cooked", "was cooking", "am cooking"],
-            "answer": 2,
-            "explanation_cn": "while 引导的从句表示过去正在进行的动作，用过去进行时 was cooking。主句 the phone rang 是一般过去时。",
-            "explanation_en": "'While' introduces an ongoing past action, so the past continuous 'was cooking' is used. The main clause uses the simple past 'rang'."
+            "type": "fill",
+            "question": "Look! The volunteers ___ (teach) people how to sort. [填入正确形式]",
+            "answer": "are teaching",
+            "explanation_cn": "Look! 提示正在进行，用 are teaching。"
           },
           {
             "id": "w3-thu-tn4",
-            "type": "choice",
-            "question": "Look at the black clouds! It ___ rain.",
-            "options": ["is going to", "was going to", "goes to", "went to"],
-            "answer": 0,
-            "explanation_cn": "乌云密布说明马上要下雨，有迹象的将来用 be going to。look 提示是现在，所以 is going to rain。",
-            "explanation_en": "Black clouds are a sign, so 'be going to' is used for the near future: 'is going to rain'."
+            "type": "fill",
+            "question": "We ___ (learn) sorting for two years. [填入正确形式]",
+            "answer": "have learned",
+            "explanation_cn": "for two years 与现在完成时连用。"
           },
           {
             "id": "w3-thu-tn5",
-            "type": "choice",
-            "question": "— ___ you ever ___ to Beijing? — Yes, twice.",
-            "options": ["Did; go", "Have; been", "Have; gone", "Do; go"],
-            "answer": 1,
-            "explanation_cn": "ever（曾经）和 twice 是经历，用现在完成时 Have you ever been to...? 注意 have been to 去过（已回来），have gone to 去了（还没回来）。",
-            "explanation_en": "'Ever' and 'twice' ask about experience, so the present perfect is used: 'Have you ever been to...?' Note: 'have been to' means went and came back; 'have gone to' means went and is still there."
+            "type": "fill",
+            "question": "The city ___ (give) small gifts to good sorters since 2020. [填入正确形式]",
+            "answer": "has given",
+            "explanation_cn": "since 2020 与现在完成时连用。"
+          },
+          {
+            "id": "w3-thu-tn6",
+            "type": "fill",
+            "question": "Bottles ___ (make) into new things every day. [填入正确形式]",
+            "answer": "are made",
+            "explanation_cn": "瓶子被做成新东西，一般现在时被动 are made。"
+          },
+          {
+            "id": "w3-thu-tn7",
+            "type": "fill",
+            "question": "I ___ (finish) sorting before mom came home. [填入正确形式]",
+            "answer": "had finished",
+            "explanation_cn": "mom 回来之前已完成，用过去完成时 had finished。"
+          },
+          {
+            "id": "w3-thu-tn8",
+            "type": "fill",
+            "question": "Tomorrow our class ___ (visit) the recycling centre. [填入正确形式]",
+            "answer": "will visit",
+            "explanation_cn": "tomorrow 将来时间，用 will visit。"
+          },
+          {
+            "id": "w3-thu-tn9",
+            "type": "fill",
+            "question": "While dad ___ (clean) the kitchen, I sorted the bottles. [填入正确形式]",
+            "answer": "was cleaning",
+            "explanation_cn": "while 引导过去进行时：was cleaning。"
+          },
+          {
+            "id": "w3-thu-tn10",
+            "type": "fill",
+            "question": "Don't forget ___ (wash) your hands after sorting. [填入正确形式]",
+            "answer": "to wash",
+            "explanation_cn": "remember/forget to do sth：别忘了洗手。"
           }
         ]
       }
@@ -4786,7 +11911,7 @@ const WEEK3 = [
     "day_cn": "周五",
     "day_en": "Friday",
     "is_speaking_day": false,
-    "total_duration": 30,
+    "total_duration": 40,
     "theme_cn": "模板写作 + KET/PET题型 + 语法复习",
     "modules": [
       {
@@ -4794,84 +11919,221 @@ const WEEK3 = [
         "name_cn": "写作练习",
         "type": "writing_template",
         "duration": 15,
-        "title": "My Weekend Plan",
+        "title": "Shopping Online",
         "requirement_cn": "请根据关键词提示完成作文，完成后请背诵全文。明天将进行挖空默写测试！",
         "keywords": [
-          "this weekend",
-          "visit the park",
-          "fly kites",
-          "eat sandwiches",
-          "exciting"
+          "mobile phone",
+          "a few taps",
+          "two days",
+          "cheaper",
+          "careful"
         ],
         "keywords_cn": [
-          "这周末",
-          "去公园",
-          "放风筝",
-          "吃三明治",
-          "令人兴奋的"
+          "手机",
+          "点几下",
+          "两天",
+          "更便宜的",
+          "细心的"
         ],
-        "template": "{{1}} I am going to {{2}} with my family. We will {{3}} on the grass. Then we are going to {{4}} together. What an {{5}} day it will be!",
+        "template": "Now I often shop online with my {{1}}. I just make {{2}} and pay on the screen. The things arrive in about {{3}}. The prices are often {{4}} than in shops. But we must be {{5}} and pick good shops.",
         "blanks": [
-          { "id": 1, "hint_cn": "这周末", "hint_en": "this weekend", "answer": "this weekend" },
-          { "id": 2, "hint_cn": "去公园", "hint_en": "visit the park", "answer": "visit the park" },
-          { "id": 3, "hint_cn": "放风筝", "hint_en": "fly kites", "answer": "fly kites" },
-          { "id": 4, "hint_cn": "吃三明治", "hint_en": "eat sandwiches", "answer": "eat sandwiches" },
-          { "id": 5, "hint_cn": "令人兴奋的", "hint_en": "exciting", "answer": "exciting" }
+          {
+            "id": 1,
+            "hint_cn": "手机",
+            "hint_en": "mobile phone",
+            "answer": "mobile phone"
+          },
+          {
+            "id": 2,
+            "hint_cn": "点几下",
+            "hint_en": "a few taps",
+            "answer": "a few taps"
+          },
+          {
+            "id": 3,
+            "hint_cn": "两天",
+            "hint_en": "two days",
+            "answer": "two days"
+          },
+          {
+            "id": 4,
+            "hint_cn": "更便宜的",
+            "hint_en": "cheaper",
+            "answer": "cheaper"
+          },
+          {
+            "id": 5,
+            "hint_cn": "细心的",
+            "hint_en": "careful",
+            "answer": "careful"
+          }
         ],
-        "full_text": "This weekend I am going to visit the park with my family. We will fly kites on the grass. Then we are going to eat sandwiches together. What an exciting day it will be!",
-        "full_text_cn": "这周末我要和家人去公园。我们要在草地上放风筝。然后我们一起吃三明治。那将是多么令人兴奋的一天啊！",
-        "explanation_cn": "这篇作文围绕周末计划展开，使用了5个关键词。注意：1) this weekend 放句首作时间状语；2) be going to + 动词原形表示计划；3) will + 动词原形表示将来；4) fly kites 放风筝；5) What an + 形容词 + 名词 是感叹句，exciting 修饰事物。整篇用一般将来时。",
+        "full_text": "Now I often shop online with my mobile phone. I just make a few taps and pay on the screen. The things arrive in about two days. The prices are often cheaper than in shops. But we must be careful and pick good shops.",
+        "full_text_cn": "现在我常常用手机网购。我只需点几下，在屏幕上付款。东西大约两天送到。价格常常比店里更便宜。但我们必须细心，挑选好店铺。",
+        "explanation_cn": "这篇作文介绍网购的步骤和注意点。注意：1) with my mobile phone 用手机；2) a few taps 点几下；3) arrive in two days 两天内到达；4) cheaper than 比较级；5) be careful 细心。全文用一般现在时。",
         "explanation_en": "This essay is about a weekend plan, using 5 keywords. Notes: 1) 'this weekend' at the start as a time adverbial; 2) 'be going to + base verb' for plans; 3) 'will + base verb' for the future; 4) 'fly kites'; 5) 'What an + adjective + noun' is the exclamation pattern; 'exciting' describes things. The essay uses the simple future tense."
       },
       {
         "id": "w3-fri-ket",
         "name_cn": "KET/PET题型",
         "type": "ket_pet",
-        "duration": 10,
+        "duration": 12,
         "questions": [
           {
             "id": "w3-fri-kp1",
             "type": "choice",
-            "question": "KET: Choose the correct answer. I have lived in this town ___ I was born.",
-            "options": ["since", "for", "when", "from"],
+            "question": "KET: — ___ did you pay for the bag? — Fifty yuan.",
+            "options": [
+              "How much",
+              "How many",
+              "How long",
+              "How often"
+            ],
             "answer": 0,
-            "explanation_cn": "since + 过去的时间点（I was born 是一个时间点），和现在完成时连用。for 后面接时间段，比如 for ten years。",
-            "explanation_en": "'Since' + a point of time goes with the present perfect. 'For' takes a period, like 'for ten years'."
+            "explanation_cn": "问价钱用 How much。"
           },
           {
             "id": "w3-fri-kp2",
             "type": "choice",
-            "question": "KET: Choose the correct answer. — Must I finish the homework today? — No, you ___. You can do it tomorrow.",
-            "options": ["mustn't", "needn't", "can't", "shouldn't"],
-            "answer": 1,
-            "explanation_cn": "Must I...? 的否定回答用 needn't（不必）。mustn't 意为禁止，语气完全不同。这是 KET 高频考点。",
-            "explanation_en": "The negative answer to 'Must I...?' is 'needn't' (no need). 'Mustn't' means it is forbidden — a completely different meaning. A common KET trap."
+            "question": "KET: The delivery arrives ___ two days.",
+            "options": [
+              "in",
+              "on",
+              "at",
+              "for"
+            ],
+            "answer": 0,
+            "explanation_cn": "「两天之内到达」用 in two days。"
           },
           {
             "id": "w3-fri-kp3",
             "type": "choice",
-            "question": "KET: Choose the correct answer. She is good ___ maths.",
-            "options": ["at", "in", "on", "for"],
+            "question": "KET: There isn't ___ milk at home. Let's buy some online.",
+            "options": [
+              "any",
+              "some",
+              "many",
+              "a"
+            ],
             "answer": 0,
-            "explanation_cn": "be good at + 学科/事情 意为擅长。固定搭配：be good at maths。注意 be good for 意为对……有好处。",
-            "explanation_en": "'Be good at + subject/skill' means to be skilled at it. Note: 'be good for' means to be healthy or useful for."
+            "explanation_cn": "否定句用 any。"
           },
           {
             "id": "w3-fri-kp4",
-            "type": "fill",
-            "question": "PET: Complete the second sentence so that it means the same as the first. 'This bike is too expensive for me to buy.' = This bike isn't ___ for me to buy.",
-            "answer": "cheap enough",
-            "explanation_cn": "PET 句型转换。too...to（太……而不能）可换成 not...enough to（不够……而不能）。too expensive = not cheap enough。注意 enough 放在形容词后面。",
-            "explanation_en": "PET transformation. 'Too...to' can be rewritten as 'not...enough to'. too expensive = not cheap enough. Note: 'enough' comes after the adjective."
+            "type": "choice",
+            "question": "KET: — ___ bike is that? — It's my shared bike.",
+            "options": [
+              "Whose",
+              "Who",
+              "Who's",
+              "Which of"
+            ],
+            "answer": 0,
+            "explanation_cn": "问「谁的」用 Whose。"
           },
           {
             "id": "w3-fri-kp5",
             "type": "choice",
-            "question": "KET: Choose the correct answer. There ___ a football match on TV tonight.",
-            "options": ["is going to be", "are going to be", "is going to have", "will have"],
+            "question": "KET: Online shopping is ___ popular than before.",
+            "options": [
+              "more",
+              "much",
+              "most",
+              "many"
+            ],
             "answer": 0,
-            "explanation_cn": "There be 句型的将来时：There is going to be / There will be。a football match 是单数，用 is。注意 there be 句型不能说 there will have。",
-            "explanation_en": "The future of 'there be' is 'There is going to be / There will be'. 'A football match' is singular, so 'is'. Note: never say 'there will have'."
+            "explanation_cn": "popular 多音节，比较级 more popular。"
+          },
+          {
+            "id": "w3-fri-kp6",
+            "type": "choice",
+            "question": "KET: You'd better ___ the box with scissors, not teeth.",
+            "options": [
+              "open",
+              "to open",
+              "opening",
+              "opened"
+            ],
+            "answer": 0,
+            "explanation_cn": "had better do sth：最好用剪刀拆箱。"
+          },
+          {
+            "id": "w3-fri-kp7",
+            "type": "choice",
+            "question": "KET: The museum is free ___ children under six.",
+            "options": [
+              "for",
+              "at",
+              "with",
+              "of"
+            ],
+            "answer": 0,
+            "explanation_cn": "「对六岁以下儿童免费」用 for。"
+          },
+          {
+            "id": "w3-fri-kp8",
+            "type": "choice",
+            "question": "KET: — Must I sort the garbage now? — Yes, you ___.",
+            "options": [
+              "must",
+              "mustn't",
+              "needn't",
+              "can't"
+            ],
+            "answer": 0,
+            "explanation_cn": "Must 开头的问句肯定回答用 must。"
+          },
+          {
+            "id": "w3-fri-kp9",
+            "type": "choice",
+            "question": "KET: Riding shared bikes is good ___ our health.",
+            "options": [
+              "for",
+              "at",
+              "with",
+              "in"
+            ],
+            "answer": 0,
+            "explanation_cn": "be good for…：对健康有好处。"
+          },
+          {
+            "id": "w3-fri-kp10",
+            "type": "choice",
+            "question": "KET: The robot can answer questions ___ than the old one.",
+            "options": [
+              "better",
+              "good",
+              "best",
+              "well"
+            ],
+            "answer": 0,
+            "explanation_cn": "than 比较级：better（well 的比较级）。"
+          },
+          {
+            "id": "w3-fri-kp11",
+            "type": "choice",
+            "question": "KET: My sister enjoys ___ short videos about science.",
+            "options": [
+              "watching",
+              "to watch",
+              "watch",
+              "watches"
+            ],
+            "answer": 0,
+            "explanation_cn": "enjoy doing sth：喜欢看科普短视频。"
+          },
+          {
+            "id": "w3-fri-kp12",
+            "type": "choice",
+            "question": "KET: — Where did you buy the model? — I ___ it on the internet.",
+            "options": [
+              "bought",
+              "buy",
+              "buys",
+              "buying"
+            ],
+            "answer": 0,
+            "explanation_cn": "问句过去时 did，回答用过去式 bought。"
           }
         ]
       },
@@ -4879,33 +12141,176 @@ const WEEK3 = [
         "id": "w3-fri-grammar",
         "name_cn": "语法复习",
         "type": "grammar",
-        "duration": 5,
+        "duration": 13,
         "questions": [
           {
             "id": "w3-fri-gr1",
             "type": "choice",
-            "question": "Tom as well as his friends ___ playing football now.",
-            "options": ["is", "are", "am", "be"],
+            "question": "Neither online shopping ___ street markets are going away.",
+            "options": [
+              "nor",
+              "or",
+              "either",
+              "and"
+            ],
             "answer": 0,
-            "explanation_cn": "as well as 连接主语时，谓语和最前面的主语一致。主语是 Tom（单数），所以用 is。",
-            "explanation_en": "With 'as well as', the verb agrees with the first subject. The subject is 'Tom' (singular), so 'is'."
+            "explanation_cn": "neither…nor…：两者都不会消失。"
           },
           {
             "id": "w3-fri-gr2",
             "type": "choice",
-            "question": "The film ___ by the time we got to the cinema.",
-            "options": ["already began", "had already begun", "has already begun", "begins"],
-            "answer": 1,
-            "explanation_cn": "by the time + 过去时，主句用过去完成时 had begun。表示到过去某个时间点之前已经发生。",
-            "explanation_en": "'By the time + past clause' takes the past perfect in the main clause: 'had already begun'."
+            "question": "The more you sort, the ___ rubbish the earth gets.",
+            "options": [
+              "less",
+              "little",
+              "least",
+              "fewer than"
+            ],
+            "answer": 0,
+            "explanation_cn": "the + 比较级：分得越多，垃圾越少（rubbish 不可数用 less）。"
           },
           {
             "id": "w3-fri-gr3",
-            "type": "fill",
-            "question": "Jim runs ___ (fast) than any other boy in his class. [填入正确形式]",
-            "answer": "faster",
-            "explanation_cn": "than 是比较级标志。fast 的比较级是 faster。than any other boy 意为比班里其他任何男孩都快。",
-            "explanation_en": "'Than' signals the comparative: fast → faster. 'Than any other boy' means faster than all the others."
+            "type": "choice",
+            "question": "It takes the deliveryman half a day ___ in big cities.",
+            "options": [
+              "to deliver",
+              "deliver",
+              "delivering",
+              "delivered"
+            ],
+            "answer": 0,
+            "explanation_cn": "It takes sb time to do sth：用 to deliver。"
+          },
+          {
+            "id": "w3-fri-gr4",
+            "type": "choice",
+            "question": "The parcels ___ to our door by drones in some places.",
+            "options": [
+              "are carried",
+              "carried",
+              "carry",
+              "carries"
+            ],
+            "answer": 0,
+            "explanation_cn": "包裹被运送，一般现在时被动 are carried。"
+          },
+          {
+            "id": "w3-fri-gr5",
+            "type": "choice",
+            "question": "My grandma is used ___ online now.",
+            "options": [
+              "to shopping",
+              "to shop",
+              "shopping",
+              "shop"
+            ],
+            "answer": 0,
+            "explanation_cn": "be used to doing sth：习惯于网购。"
+          },
+          {
+            "id": "w3-fri-gr6",
+            "type": "choice",
+            "question": "The prices during shopping festivals are much ___.",
+            "options": [
+              "lower",
+              "low",
+              "lowest",
+              "more low"
+            ],
+            "answer": 0,
+            "explanation_cn": "much 修饰比较级 lower。"
+          },
+          {
+            "id": "w3-fri-gr7",
+            "type": "choice",
+            "question": "Sorting garbage is a habit ___ everyone should have.",
+            "options": [
+              "that",
+              "who",
+              "what",
+              "whose"
+            ],
+            "answer": 0,
+            "explanation_cn": "先行词是 habit（物），关系词用 that。"
+          },
+          {
+            "id": "w3-fri-gr8",
+            "type": "choice",
+            "question": "The bikes ___ in special areas from next month.",
+            "options": [
+              "will park",
+              "will be parked",
+              "will parked",
+              "will parking"
+            ],
+            "answer": 0,
+            "explanation_cn": "车被停放，将来时被动 will be parked。"
+          },
+          {
+            "id": "w3-fri-gr9",
+            "type": "choice",
+            "question": "Not all short videos ___ good for children.",
+            "options": [
+              "are",
+              "is",
+              "was",
+              "be"
+            ],
+            "answer": 0,
+            "explanation_cn": "videos 复数，主语是 Not all…，用 are。"
+          },
+          {
+            "id": "w3-fri-gr10",
+            "type": "choice",
+            "question": "The teacher asked us ___ too much time on videos.",
+            "options": [
+              "not to spend",
+              "don't spend",
+              "not spending",
+              "to not spend"
+            ],
+            "answer": 0,
+            "explanation_cn": "ask sb not to do sth：叫我们别花太多时间。"
+          },
+          {
+            "id": "w3-fri-gr11",
+            "type": "choice",
+            "question": "By the time we arrived, the museum tickets ___ sold out.",
+            "options": [
+              "had been",
+              "have been",
+              "were being",
+              "are"
+            ],
+            "answer": 0,
+            "explanation_cn": "到达之前已卖完，过去完成时 had been。"
+          },
+          {
+            "id": "w3-fri-gr12",
+            "type": "choice",
+            "question": "The number of museum visitors ___ growing every year.",
+            "options": [
+              "is",
+              "are",
+              "were",
+              "be"
+            ],
+            "answer": 0,
+            "explanation_cn": "the number of… 作主语按单数，is growing。"
+          },
+          {
+            "id": "w3-fri-gr13",
+            "type": "choice",
+            "question": "Remember ___ your own bag when you go shopping.",
+            "options": [
+              "to take",
+              "taking",
+              "take",
+              "takes"
+            ],
+            "answer": 0,
+            "explanation_cn": "remember to do sth：记得自带购物袋。"
           }
         ]
       }
@@ -4915,7 +12320,7 @@ const WEEK3 = [
     "day_cn": "周六",
     "day_en": "Saturday",
     "is_speaking_day": true,
-    "total_duration": 40,
+    "total_duration": 60,
     "theme_cn": "AI口语 + 高频词汇 + 阅读理解",
     "modules": [
       {
@@ -4937,7 +12342,14 @@ const WEEK3 = [
             "answer": 0,
             "pronunciation_tips": "helped 词尾 -ed 读 /t/，clean the house 注意 th /ð/ 咬舌",
             "explanation_cn": "last Sunday 是过去时间，用过去式 helped。B 是现在的习惯；C 是将来；D 主语不对。",
-            "explanation_en": "'Last Sunday' is past time, so the past form 'helped' is used. B is a present habit; C is future; D changes the subject."
+            "explanation_en": "'Last Sunday' is past time, so the past form 'helped' is used. B is a present habit; C is future; D changes the subject.",
+            "answer_cn_hint": "它在问「上周日做了什么」（过去），答句要用过去式。",
+            "options_cn": [
+              "我帮妈妈打扫了房子。",
+              "我每个星期天都帮她。",
+              "我明天要打扫房子。",
+              "我妈妈打扫房子。"
+            ]
           },
           {
             "id": "w3-sat-sp2",
@@ -4952,7 +12364,14 @@ const WEEK3 = [
             "answer": 0,
             "pronunciation_tips": "cartoons /kɑːˈtuːnz/ 重音在第二音节，kind of 连读",
             "explanation_cn": "what kind 问种类，A 回答种类（卡通片），正确。B 说的是看过的电影；C 是放映时间；D 说的是零食。",
-            "explanation_en": "'What kind' asks for a type. A answers with a type (cartoons); B talks about one film; C is about the time; D is about popcorn."
+            "explanation_en": "'What kind' asks for a type. A answers with a type (cartoons); B talks about one film; C is about the time; D is about popcorn.",
+            "answer_cn_hint": "它在问「哪种」，答句要说出电影的类型，比如卡通片、动作片。",
+            "options_cn": [
+              "我最喜欢卡通片。",
+              "我昨晚看了一部电影。",
+              "电影七点开始。",
+              "我很喜欢爆米花。"
+            ]
           },
           {
             "id": "w3-sat-sp3",
@@ -4967,7 +12386,14 @@ const WEEK3 = [
             "answer": 0,
             "pronunciation_tips": "How often 注意 often 的 t 可以不发音读 /ˈɒfn/，three times 词尾 s",
             "explanation_cn": "How often 问频率，回答用次数：three times a week。注意 once 一次，twice 两次，三次以上用 times。",
-            "explanation_en": "'How often' asks about frequency, so answer with how many times: 'three times a week'. Note: once, twice, then 'times'."
+            "explanation_en": "'How often' asks about frequency, so answer with how many times: 'three times a week'. Note: once, twice, then 'times'.",
+            "answer_cn_hint": "How often 问的是「多久一次」，答句要用 once a week、three times a week 这类说法。",
+            "options_cn": [
+              "我一周运动三次。",
+              "我昨天打了篮球。",
+              "我篮球打得很好。",
+              "运动对我们有好处。"
+            ]
           },
           {
             "id": "w3-sat-sp4",
@@ -4982,7 +12408,14 @@ const WEEK3 = [
             "answer": 0,
             "pronunciation_tips": "library /ˈlaɪbrəri/ 注意 br 的连读，city /ˈsɪti/",
             "explanation_cn": "A 直接回答地点，正确。B 说的是住处；C 评价城市；D 没说是哪里。",
-            "explanation_en": "A names the place directly. B is about where you live; C describes the city; D does not name a place."
+            "explanation_en": "A names the place directly. B is about where you live; C describes the city; D does not name a place.",
+            "answer_cn_hint": "它在问「哪个地方」，答句要说出一个地点的名字。",
+            "options_cn": [
+              "我最喜欢的地方是城市图书馆。",
+              "我住在图书馆附近。",
+              "这个城市很大。",
+              "我每个周末都去那里。"
+            ]
           },
           {
             "id": "w3-sat-sp5",
@@ -4997,7 +12430,14 @@ const WEEK3 = [
             "answer": 0,
             "pronunciation_tips": "traveling 美式只写一个 l，visiting /ˈvɪzɪtɪŋ/ 注意重音",
             "explanation_cn": "Do you like...? 用 Yes, I do 回答并说明原因，A 正确。B 只说了过去的经历；C、D 答非所问。",
-            "explanation_en": "Answer 'Do you like...?' with 'Yes, I do' plus a reason. B only gives a past fact; C and D do not answer."
+            "explanation_en": "Answer 'Do you like...?' with 'Yes, I do' plus a reason. B only gives a past fact; C and D do not answer.",
+            "answer_cn_hint": "这是 Do you… 问句，答句要先说 Yes, I do. 或 No, I don't.，再补一句理由。",
+            "options_cn": [
+              "是的，我喜欢。我很爱去新的地方。",
+              "是的，我 2023 年去北京旅行了。",
+              "旅行要花很多钱。",
+              "我爸爸因为工作经常出差。"
+            ]
           }
         ]
       },
@@ -5007,82 +12447,749 @@ const WEEK3 = [
         "type": "vocabulary_game",
         "duration": 5,
         "words": [
-          vocabWord({
-            "word": "beach", "phonetic": "/biːtʃ/", "meaning": "沙滩", "emoji": "🏖️",
-            "example_en": "We played on the beach all day.", "example_cn": "我们一整天都在沙滩上玩。",
-            "syllables": ["beach"], "spell": ["be__h", "ac"],
-            "wrongEmoji": ["⭐", "🐬", "⛰️"], "wrongMeaning": ["海浪", "海豚", "阳光"]
-          }),
-          vocabWord({
-            "word": "wave", "phonetic": "/weɪv/", "meaning": "海浪", "emoji": "🌊",
-            "example_en": "The waves are big today.", "example_cn": "今天海浪很大。",
-            "syllables": ["wave"], "spell": ["w__e", "av"],
-            "wrongEmoji": ["⭐", "🚗", "🎲"], "wrongMeaning": ["沙滩", "海豚", "沙堡"]
-          }),
-          vocabWord({
-            "word": "sandcastle", "phonetic": "/ˈsændkɑːsl/", "meaning": "沙堡", "emoji": "🏰",
-            "example_en": "The children built a sandcastle.", "example_cn": "孩子们堆了一座沙堡。",
-            "syllables": ["sand", "cas", "tle"], "spell": ["sandcas__e", "tl"],
-            "wrongEmoji": ["⭐", "🌧️", "🏀"], "wrongMeaning": ["沙滩", "阳光", "海浪"]
-          }),
-          vocabWord({
-            "word": "sunshine", "phonetic": "/ˈsʌnʃaɪn/", "meaning": "阳光", "emoji": "☀️",
-            "example_en": "We sat in the warm sunshine.", "example_cn": "我们坐在温暖的阳光里。",
-            "syllables": ["sun", "shine"], "spell": ["sun__ine", "sh"],
-            "wrongEmoji": ["⭐", "☂️", "🚲"], "wrongMeaning": ["沙堡", "沙滩", "海豚"]
-          }),
-          vocabWord({
-            "word": "dolphin", "phonetic": "/ˈdɒlfɪn/", "meaning": "海豚", "emoji": "🐬",
-            "example_en": "A dolphin jumped out of the water.", "example_cn": "一只海豚跳出了水面。",
-            "syllables": ["dol", "phin"], "spell": ["do__hin", "lp"],
-            "wrongEmoji": ["⭐", "🎸", "☂️"], "wrongMeaning": ["阳光", "海浪", "沙堡"]
-          })
+          {
+            "word": "beach",
+            "phonetic": "/biːtʃ/",
+            "meaning": "沙滩",
+            "emoji": "🏖️",
+            "example_en": "We played on the beach all day.",
+            "example_cn": "我们一整天都在沙滩上玩。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "🏖️",
+                  "⭐",
+                  "🐬",
+                  "⛰️"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "⛰️",
+                  "⭐",
+                  "🏖️",
+                  "🐬"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "beach 是什么意思？（1/2）",
+                "options": [
+                  "海浪",
+                  "海豚",
+                  "沙滩",
+                  "阳光"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "beach 是什么意思？（2/2）",
+                "options": [
+                  "沙滩",
+                  "阳光",
+                  "海浪",
+                  "海豚"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: be__h",
+                "answer": "ac"
+              }
+            ],
+            "letters": [
+              "b",
+              "e",
+              "a",
+              "c",
+              "h"
+            ],
+            "syllables": [
+              "beach"
+            ],
+            "hint_cn": "海边的沙子地，可以光着脚踩"
+          },
+          {
+            "word": "wave",
+            "phonetic": "/weɪv/",
+            "meaning": "海浪",
+            "emoji": "🌊",
+            "example_en": "The waves are big today.",
+            "example_cn": "今天海浪很大。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "🌊",
+                  "⭐",
+                  "🚗",
+                  "🎲"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "🎲",
+                  "⭐",
+                  "🌊",
+                  "🚗"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "wave 是什么意思？（1/2）",
+                "options": [
+                  "沙滩",
+                  "海豚",
+                  "海浪",
+                  "沙堡"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "wave 是什么意思？（2/2）",
+                "options": [
+                  "海浪",
+                  "沙堡",
+                  "沙滩",
+                  "海豚"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: w__e",
+                "answer": "av"
+              }
+            ],
+            "letters": [
+              "w",
+              "a",
+              "v",
+              "e"
+            ],
+            "syllables": [
+              "wave"
+            ],
+            "hint_cn": "海里一层一层涌过来的水"
+          },
+          {
+            "word": "sandcastle",
+            "phonetic": "/ˈsændkɑːsl/",
+            "meaning": "沙堡",
+            "emoji": "🏰",
+            "example_en": "The children built a sandcastle.",
+            "example_cn": "孩子们堆了一座沙堡。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "🏰",
+                  "⭐",
+                  "🌧️",
+                  "🏀"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "🏀",
+                  "⭐",
+                  "🏰",
+                  "🌧️"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "sandcastle 是什么意思？（1/2）",
+                "options": [
+                  "沙滩",
+                  "阳光",
+                  "沙堡",
+                  "海浪"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "sandcastle 是什么意思？（2/2）",
+                "options": [
+                  "沙堡",
+                  "海浪",
+                  "沙滩",
+                  "阳光"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: sandcas__e",
+                "answer": "tl"
+              }
+            ],
+            "letters": [
+              "s",
+              "a",
+              "n",
+              "d",
+              "c",
+              "a",
+              "s",
+              "t",
+              "l",
+              "e"
+            ],
+            "syllables": [
+              "sand",
+              "cas",
+              "tle"
+            ],
+            "hint_cn": "用湿沙子堆出来的小城堡"
+          },
+          {
+            "word": "sunshine",
+            "phonetic": "/ˈsʌnʃaɪn/",
+            "meaning": "阳光",
+            "emoji": "☀️",
+            "example_en": "We sat in the warm sunshine.",
+            "example_cn": "我们坐在温暖的阳光里。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "☀️",
+                  "⭐",
+                  "☂️",
+                  "🚲"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "🚲",
+                  "⭐",
+                  "☀️",
+                  "☂️"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "sunshine 是什么意思？（1/2）",
+                "options": [
+                  "沙堡",
+                  "沙滩",
+                  "阳光",
+                  "海豚"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "sunshine 是什么意思？（2/2）",
+                "options": [
+                  "阳光",
+                  "海豚",
+                  "沙堡",
+                  "沙滩"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: sun__ine",
+                "answer": "sh"
+              }
+            ],
+            "letters": [
+              "s",
+              "u",
+              "n",
+              "s",
+              "h",
+              "i",
+              "n",
+              "e"
+            ],
+            "syllables": [
+              "sun",
+              "shine"
+            ],
+            "hint_cn": "太阳照下来的、暖暖的光"
+          },
+          {
+            "word": "dolphin",
+            "phonetic": "/ˈdɒlfɪn/",
+            "meaning": "海豚",
+            "emoji": "🐬",
+            "example_en": "A dolphin jumped out of the water.",
+            "example_cn": "一只海豚跳出了水面。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "🐬",
+                  "⭐",
+                  "🎸",
+                  "☂️"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "☂️",
+                  "⭐",
+                  "🐬",
+                  "🎸"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "dolphin 是什么意思？（1/2）",
+                "options": [
+                  "阳光",
+                  "海浪",
+                  "海豚",
+                  "沙堡"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "dolphin 是什么意思？（2/2）",
+                "options": [
+                  "海豚",
+                  "沙堡",
+                  "阳光",
+                  "海浪"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: do__hin",
+                "answer": "lp"
+              }
+            ],
+            "letters": [
+              "d",
+              "o",
+              "l",
+              "p",
+              "h",
+              "i",
+              "n"
+            ],
+            "syllables": [
+              "dol",
+              "phin"
+            ],
+            "hint_cn": "海里的动物，会跳出水面，特别聪明"
+          }
         ]
       },
       {
         "id": "w3-sat-reading",
         "name_cn": "阅读理解",
         "type": "reading",
-        "duration": 5,
-        "passage": "During the summer holidays, Kate's family took a boat trip along the coast. The sea was calm and the sunshine was warm. Suddenly, Kate saw something jump out of the water. \"Dolphins!\" she shouted. Three dolphins swam next to the boat for ten minutes. They jumped and played like children. The captain stopped the boat so everyone could watch. Kate took many photos with her camera. \"This is the best day of my holiday,\" she said. On the way home, she decided to learn more about sea animals.",
-        "passage_cn": "暑假里，凯特一家沿着海岸坐船游玩。海面平静，阳光温暖。突然，凯特看见有什么东西跃出水面。海豚！她喊道。三只海豚在船边游了十分钟。它们像孩子一样又跳又玩。船长停船让大家观看。凯特用相机拍了很多照片。这是假期里最好的一天，她说。回家的路上，她决定多了解海洋动物。",
+        "duration": 10,
+        "passage": "More and more young people love visiting museums in China. On weekends, many museums are full of students and families. Some famous museums are so popular that people must book tickets days before. Why are museums hot now? First, museums look more beautiful and friendly than before. Many of them use lights, sounds and big screens to show old things in new ways. Second, museums make lovely ice cream, books and toys with pictures of their treasures. Third, taking photos in museums is fun, and young people like sharing them online. Museums are no longer quiet and boring places — they are becoming the most fashionable classrooms in China.",
+        "passage_cn": "在中国，越来越多的年轻人喜欢参观博物馆。周末许多博物馆满是学生和家庭。一些著名博物馆太火了，人们要提前好几天预约门票。为什么博物馆现在这么火？第一，博物馆比以前更漂亮、更亲民。很多用灯光、声音和大屏幕，用新方式展示古老文物。第二，博物馆用馆藏形象做出可爱的冰淇淋、书和玩具。第三，在博物馆拍照很好玩，年轻人喜欢把照片分享到网上。博物馆不再是安静无聊的地方——它们正成为中国最时髦的课堂。",
         "questions": [
           {
             "id": "w3-sat-rd1",
             "type": "choice",
-            "question": "What did Kate see in the water?",
-            "options": ["Three sharks", "Three dolphins", "Three whales", "Three boats"],
-            "answer": 1,
-            "explanation_cn": "文章说 Three dolphins swam next to the boat。三只海豚在船边游。dolphin 意为海豚。",
-            "explanation_en": "The text says 'Three dolphins swam next to the boat.' Note: 'dolphin' means a clever sea animal that jumps."
+            "question": "Who loves visiting museums now?",
+            "options": [
+              "More and more young people",
+              "Only old people",
+              "Only tourists from abroad",
+              "Nobody"
+            ],
+            "answer": 0,
+            "explanation_cn": "第一句：越来越多的年轻人爱逛博物馆。"
           },
           {
             "id": "w3-sat-rd2",
             "type": "choice",
-            "question": "Why did the captain stop the boat?",
+            "question": "What must people do for famous museums?",
             "options": [
-              "Because the sea was dangerous",
-              "Because everyone wanted to watch the dolphins",
-              "Because the boat was broken",
-              "Because it was time for lunch"
+              "Book tickets days before",
+              "Pay a lot of money",
+              "Wear special clothes",
+              "Take an exam"
             ],
-            "answer": 1,
-            "explanation_cn": "文章说 The captain stopped the boat so everyone could watch。船长停船是为了让大家观看海豚。captain 意为船长。",
-            "explanation_en": "The text says 'The captain stopped the boat so everyone could watch.' Note: 'captain' means the leader of the boat."
+            "answer": 0,
+            "explanation_cn": "热门博物馆要提前几天预约。"
           },
           {
             "id": "w3-sat-rd3",
             "type": "choice",
-            "question": "What did Kate decide to do after the trip?",
+            "question": "How do museums show old things in new ways?",
             "options": [
-              "To buy a bigger boat",
-              "To take photos every day",
-              "To learn more about sea animals",
-              "To swim with dolphins"
+              "With lights, sounds and big screens",
+              "By hiding them",
+              "Only on paper",
+              "By selling them"
             ],
-            "answer": 2,
-            "explanation_cn": "文章最后说 she decided to learn more about sea animals。她决定多了解海洋动物。decide to do 意为决定做某事。",
-            "explanation_en": "The last line says 'she decided to learn more about sea animals.' Note: 'decide to do' means to make a choice to do something."
+            "answer": 0,
+            "explanation_cn": "用灯光、声音和大屏幕展示。"
+          },
+          {
+            "id": "w3-sat-rd4",
+            "type": "choice",
+            "question": "What do museums make with pictures of treasures?",
+            "options": [
+              "Ice cream, books and toys",
+              "Shoes and hats",
+              "Phones and computers",
+              "Bikes and cars"
+            ],
+            "answer": 0,
+            "explanation_cn": "博物馆文创：冰淇淋、书和玩具。"
+          },
+          {
+            "id": "w3-sat-rd5",
+            "type": "choice",
+            "question": "What do young people like doing in museums?",
+            "options": [
+              "Taking photos and sharing them online",
+              "Sleeping on benches",
+              "Running and shouting",
+              "Cooking dinner"
+            ],
+            "answer": 0,
+            "explanation_cn": "拍照并分享到网上。"
+          },
+          {
+            "id": "w3-sat-rd6",
+            "type": "choice",
+            "question": "What were museums like before?",
+            "options": [
+              "Quiet and boring",
+              "Noisy and crowded",
+              "Full of games",
+              "Closed all day"
+            ],
+            "answer": 0,
+            "explanation_cn": "最后说博物馆「不再」安静无聊，说明以前是那样。"
+          },
+          {
+            "id": "w3-sat-rd7",
+            "type": "choice",
+            "question": "The passage calls museums the most fashionable ___.",
+            "options": [
+              "classrooms",
+              "playgrounds",
+              "cinemas",
+              "restaurants"
+            ],
+            "answer": 0,
+            "explanation_cn": "最后一句：最时髦的课堂（classrooms）。"
+          },
+          {
+            "id": "w3-sat-rd8",
+            "type": "choice",
+            "question": "The word \"book\" in \"book tickets\" means ___.",
+            "options": [
+              "预约",
+              "书本",
+              "账本",
+              "书店"
+            ],
+            "answer": 0,
+            "explanation_cn": "这里的 book 是动词「预订」。"
+          },
+          {
+            "id": "w3-sat-rd9",
+            "type": "choice",
+            "question": "How many reasons does the passage give?",
+            "options": [
+              "Three",
+              "Two",
+              "Four",
+              "Five"
+            ],
+            "answer": 0,
+            "explanation_cn": "First、Second、Third — 共三个原因。"
+          },
+          {
+            "id": "w3-sat-rd10",
+            "type": "choice",
+            "question": "The best title for the passage about museums is ___.",
+            "options": [
+              "Museums Become Hot",
+              "Old Things Are Bad",
+              "How to Make Ice Cream",
+              "Photos Online"
+            ],
+            "answer": 0,
+            "explanation_cn": "全文讲博物馆为什么受欢迎。"
+          }
+        ]
+      },
+      {
+        "id": "w3-sat-mc",
+        "name_cn": "单项选择",
+        "type": "multiple_choice",
+        "duration": 10,
+        "questions": [
+          {
+            "id": "w3-sat-mc1",
+            "type": "choice",
+            "question": "More and more young people love ___ museums.",
+            "options": [
+              "visiting",
+              "visit",
+              "visits",
+              "visited"
+            ],
+            "answer": 0,
+            "explanation_cn": "love doing sth：喜欢参观博物馆。"
+          },
+          {
+            "id": "w3-sat-mc2",
+            "type": "choice",
+            "question": "The museums are full ___ students on weekends.",
+            "options": [
+              "of",
+              "in",
+              "at",
+              "with"
+            ],
+            "answer": 0,
+            "explanation_cn": "be full of…：满是学生。"
+          },
+          {
+            "id": "w3-sat-mc3",
+            "type": "choice",
+            "question": "People ___ book tickets days before for famous museums.",
+            "options": [
+              "must",
+              "musts",
+              "must to",
+              "musting"
+            ],
+            "answer": 0,
+            "explanation_cn": "must 后面用动词原形 book。"
+          },
+          {
+            "id": "w3-sat-mc4",
+            "type": "choice",
+            "question": "Many museums use big screens ___ old things in new ways.",
+            "options": [
+              "to show",
+              "show",
+              "showing",
+              "showed"
+            ],
+            "answer": 0,
+            "explanation_cn": "目的用不定式 to show。"
+          },
+          {
+            "id": "w3-sat-mc5",
+            "type": "choice",
+            "question": "The museums make lovely toys ___ pictures of treasures.",
+            "options": [
+              "with",
+              "in",
+              "at",
+              "of"
+            ],
+            "answer": 0,
+            "explanation_cn": "「带有…图案的」玩具，用 with。"
+          },
+          {
+            "id": "w3-sat-mc6",
+            "type": "choice",
+            "question": "Young people like ___ the photos online.",
+            "options": [
+              "sharing",
+              "share",
+              "shares",
+              "shared"
+            ],
+            "answer": 0,
+            "explanation_cn": "like doing sth：喜欢分享照片。"
+          },
+          {
+            "id": "w3-sat-mc7",
+            "type": "choice",
+            "question": "Museums are no longer quiet and ___.",
+            "options": [
+              "boring",
+              "bored",
+              "bore",
+              "boringly"
+            ],
+            "answer": 0,
+            "explanation_cn": "修饰地方用 -ing 形容词 boring（无聊的）。"
+          },
+          {
+            "id": "w3-sat-mc8",
+            "type": "choice",
+            "question": "They are becoming the most ___ classrooms.",
+            "options": [
+              "fashionable",
+              "fashion",
+              "fashionably",
+              "more fashionable"
+            ],
+            "answer": 0,
+            "explanation_cn": "the most + 多音节形容词：最时髦的。"
+          },
+          {
+            "id": "w3-sat-mc9",
+            "type": "choice",
+            "question": "___ wonderful the new museum looks!",
+            "options": [
+              "How",
+              "What",
+              "Which",
+              "Who"
+            ],
+            "answer": 0,
+            "explanation_cn": "How + 形容词：How wonderful…!"
+          },
+          {
+            "id": "w3-sat-mc10",
+            "type": "choice",
+            "question": "The museum is open ___ nine in the morning.",
+            "options": [
+              "at",
+              "in",
+              "on",
+              "for"
+            ],
+            "answer": 0,
+            "explanation_cn": "具体时刻前用 at：at nine。"
+          }
+        ]
+      },
+      {
+        "id": "w3-sat-tense2",
+        "name_cn": "时态练习",
+        "type": "tense",
+        "duration": 5,
+        "questions": [
+          {
+            "id": "w3-sat-tn21",
+            "type": "fill",
+            "question": "More and more people ___ (visit) museums every year. [填入正确形式]",
+            "answer": "visit",
+            "explanation_cn": "every year 习惯动作，主语复数用原形。"
+          },
+          {
+            "id": "w3-sat-tn22",
+            "type": "fill",
+            "question": "The museum ___ (open) a new hall last month. [填入正确形式]",
+            "answer": "opened",
+            "explanation_cn": "last month 过去时间，用过去式 opened。"
+          },
+          {
+            "id": "w3-sat-tn23",
+            "type": "fill",
+            "question": "Look! The students ___ (take) photos of the treasures. [填入正确形式]",
+            "answer": "are taking",
+            "explanation_cn": "Look! 提示正在进行，用 are taking。"
+          },
+          {
+            "id": "w3-sat-tn24",
+            "type": "fill",
+            "question": "Museums ___ (become) the fashionable classrooms already. [填入正确形式]",
+            "answer": "have become",
+            "explanation_cn": "already 与现在完成时连用。"
+          },
+          {
+            "id": "w3-sat-tn25",
+            "type": "fill",
+            "question": "Our class ___ (go) to the museum next Saturday. [填入正确形式]",
+            "answer": "will go",
+            "explanation_cn": "next Saturday 将来时间，用 will go。"
           }
         ]
       }
@@ -5092,87 +13199,443 @@ const WEEK3 = [
     "day_cn": "周日",
     "day_en": "Sunday",
     "is_speaking_day": false,
-    "total_duration": 30,
+    "total_duration": 35,
     "theme_cn": "阅读理解 + 高频词汇 + 完形填空",
     "modules": [
-      {
-        "id": "w3-sun-reading",
-        "name_cn": "阅读理解",
-        "type": "reading",
-        "duration": 10,
-        "passage": "Mike is only ten, but he is already the best chess player in his school. He learned chess from his grandfather when he was six. Now he practises for an hour every evening. Last month, Mike took part in a city competition. There were more than fifty players, and most of them were older than him. Mike lost his second game and felt nervous. But he calmed down and won the next four games. In the end, he finished third and got a bronze medal. \"Losing is not the end,\" Mike says. \"It teaches me where I am weak.\"",
-        "passage_cn": "迈克只有十岁，却已经是他学校里最好的棋手。他六岁时跟爷爷学会了下棋。现在他每天晚上练习一小时。上个月，迈克参加了市里的比赛。参赛的有五十多名选手，大多数比他年纪大。迈克输了第二局，感到紧张。但他冷静下来，赢了接下来的四局。最后他获得第三名，拿到一枚铜牌。输了不是终点，迈克说。它让我知道自己哪里弱。",
-        "questions": [
-          {
-            "id": "w3-sun-rd1",
-            "type": "choice",
-            "question": "Who taught Mike to play chess?",
-            "options": ["His father", "His grandfather", "His teacher", "A city coach"],
-            "answer": 1,
-            "explanation_cn": "文章说 He learned chess from his grandfather when he was six。爷爷教的。learn from 意为向……学习。",
-            "explanation_en": "The text says 'He learned chess from his grandfather when he was six.' Note: 'learn from somebody' means somebody taught you."
-          },
-          {
-            "id": "w3-sun-rd2",
-            "type": "choice",
-            "question": "How many players took part in the competition?",
-            "options": ["More than fifteen", "More than fifty", "Less than fifteen", "Exactly fifty"],
-            "answer": 1,
-            "explanation_cn": "文章说 There were more than fifty players。有五十多名选手。注意 fifty（50）和 fifteen（15）重音位置不同。",
-            "explanation_en": "The text says 'There were more than fifty players.' Note: fifty /ˈfɪfti/ and fifteen /ˌfɪfˈtiːn/ differ in stress."
-          },
-          {
-            "id": "w3-sun-rd3",
-            "type": "choice",
-            "question": "What did Mike learn from losing?",
-            "options": [
-              "Chess is too hard for him.",
-              "He should stop playing chess.",
-              "It shows him where he is weak.",
-              "Older players always win."
-            ],
-            "answer": 2,
-            "explanation_cn": "Mike 说 Losing is not the end. It teaches me where I am weak。失败让他知道自己哪里弱。weak 意为弱的、不足的。",
-            "explanation_en": "Mike says losing 'teaches me where I am weak'. Note: 'weak' means not strong — here, a weak point in his play."
-          }
-        ]
-      },
       {
         "id": "w3-sun-vocab",
         "name_cn": "高频词汇",
         "type": "vocabulary_game",
         "duration": 5,
         "words": [
-          vocabWord({
-            "word": "competition", "phonetic": "/ˌkɒmpəˈtɪʃn/", "meaning": "比赛；竞赛", "emoji": "🏅",
-            "example_en": "He took part in a chess competition.", "example_cn": "他参加了象棋比赛。",
-            "syllables": ["com", "pe", "ti", "tion"], "spell": ["competi__on", "ti"],
-            "wrongEmoji": ["⭐", "😰", "🥇"], "wrongMeaning": ["紧张的", "奖牌", "练习"]
-          }),
-          vocabWord({
-            "word": "nervous", "phonetic": "/ˈnɜːvəs/", "meaning": "紧张的", "emoji": "😰",
-            "example_en": "I felt nervous before the test.", "example_cn": "考试前我很紧张。",
-            "syllables": ["ner", "vous"], "spell": ["ner__ous", "v"],
-            "wrongEmoji": ["⭐", "🏅", "🎲"], "wrongMeaning": ["比赛", "奖牌", "青铜的"]
-          }),
-          vocabWord({
-            "word": "medal", "phonetic": "/ˈmedl/", "meaning": "奖牌", "emoji": "🥇",
-            "example_en": "She won a gold medal.", "example_cn": "她赢得了一枚金牌。",
-            "syllables": ["me", "dal"], "spell": ["me__l", "da"],
-            "wrongEmoji": ["⭐", "🚗", "🌧️"], "wrongMeaning": ["比赛", "紧张的", "练习"]
-          }),
-          vocabWord({
-            "word": "bronze", "phonetic": "/brɒnz/", "meaning": "青铜；铜牌", "emoji": "🥉",
-            "example_en": "He got a bronze medal.", "example_cn": "他获得了一枚铜牌。",
-            "syllables": ["bronze"], "spell": ["br__ze", "on"],
-            "wrongEmoji": ["⭐", "🥇", "🎸"], "wrongMeaning": ["奖牌", "比赛", "练习"]
-          }),
-          vocabWord({
-            "word": "practise", "phonetic": "/ˈpræktɪs/", "meaning": "练习", "emoji": "🖊️",
-            "example_en": "Practice makes perfect.", "example_cn": "熟能生巧。",
-            "syllables": ["prac", "tise"], "spell": ["pra__ise", "ct"],
-            "wrongEmoji": ["⭐", "🥉", "☂️"], "wrongMeaning": ["铜牌", "紧张的", "奖牌"]
-          })
+          {
+            "word": "competition",
+            "phonetic": "/ˌkɒmpəˈtɪʃn/",
+            "meaning": "比赛；竞赛",
+            "emoji": "🏅",
+            "example_en": "He took part in a chess competition.",
+            "example_cn": "他参加了象棋比赛。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "🏅",
+                  "⭐",
+                  "😰",
+                  "🥇"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "🥇",
+                  "⭐",
+                  "🏅",
+                  "😰"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "competition 是什么意思？（1/2）",
+                "options": [
+                  "紧张的",
+                  "奖牌",
+                  "比赛；竞赛",
+                  "练习"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "competition 是什么意思？（2/2）",
+                "options": [
+                  "比赛；竞赛",
+                  "练习",
+                  "紧张的",
+                  "奖牌"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: competi__on",
+                "answer": "ti"
+              }
+            ],
+            "letters": [
+              "c",
+              "o",
+              "m",
+              "p",
+              "e",
+              "t",
+              "i",
+              "t",
+              "i",
+              "o",
+              "n"
+            ],
+            "syllables": [
+              "com",
+              "pe",
+              "ti",
+              "tion"
+            ],
+            "hint_cn": "大家比一比，看谁做得更好"
+          },
+          {
+            "word": "nervous",
+            "phonetic": "/ˈnɜːvəs/",
+            "meaning": "紧张的",
+            "emoji": "😰",
+            "example_en": "I felt nervous before the test.",
+            "example_cn": "考试前我很紧张。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "😰",
+                  "⭐",
+                  "🏅",
+                  "🎲"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "🎲",
+                  "⭐",
+                  "😰",
+                  "🏅"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "nervous 是什么意思？（1/2）",
+                "options": [
+                  "比赛",
+                  "奖牌",
+                  "紧张的",
+                  "青铜的"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "nervous 是什么意思？（2/2）",
+                "options": [
+                  "紧张的",
+                  "青铜的",
+                  "比赛",
+                  "奖牌"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: ner__ous",
+                "answer": "v"
+              }
+            ],
+            "letters": [
+              "n",
+              "e",
+              "r",
+              "v",
+              "o",
+              "u",
+              "s"
+            ],
+            "syllables": [
+              "ner",
+              "vous"
+            ],
+            "hint_cn": "心里怦怦跳，手心都出汗了"
+          },
+          {
+            "word": "medal",
+            "phonetic": "/ˈmedl/",
+            "meaning": "奖牌",
+            "emoji": "🥇",
+            "example_en": "She won a gold medal.",
+            "example_cn": "她赢得了一枚金牌。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "🥇",
+                  "⭐",
+                  "🚗",
+                  "🌧️"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "🌧️",
+                  "⭐",
+                  "🥇",
+                  "🚗"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "medal 是什么意思？（1/2）",
+                "options": [
+                  "比赛",
+                  "紧张的",
+                  "奖牌",
+                  "练习"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "medal 是什么意思？（2/2）",
+                "options": [
+                  "奖牌",
+                  "练习",
+                  "比赛",
+                  "紧张的"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: me__l",
+                "answer": "da"
+              }
+            ],
+            "letters": [
+              "m",
+              "e",
+              "d",
+              "a",
+              "l"
+            ],
+            "syllables": [
+              "me",
+              "dal"
+            ],
+            "hint_cn": "挂在脖子上的那块小圆牌"
+          },
+          {
+            "word": "bronze",
+            "phonetic": "/brɒnz/",
+            "meaning": "青铜；铜牌",
+            "emoji": "🥉",
+            "example_en": "He got a bronze medal.",
+            "example_cn": "他获得了一枚铜牌。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "🥉",
+                  "⭐",
+                  "🥇",
+                  "🎸"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "🎸",
+                  "⭐",
+                  "🥉",
+                  "🥇"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "bronze 是什么意思？（1/2）",
+                "options": [
+                  "奖牌",
+                  "比赛",
+                  "青铜；铜牌",
+                  "练习"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "bronze 是什么意思？（2/2）",
+                "options": [
+                  "青铜；铜牌",
+                  "练习",
+                  "奖牌",
+                  "比赛"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: br__ze",
+                "answer": "on"
+              }
+            ],
+            "letters": [
+              "b",
+              "r",
+              "o",
+              "n",
+              "z",
+              "e"
+            ],
+            "syllables": [
+              "bronze"
+            ],
+            "hint_cn": "颜色像旧铜，得第三名拿到的那种牌"
+          },
+          {
+            "word": "practise",
+            "phonetic": "/ˈpræktɪs/",
+            "meaning": "练习",
+            "emoji": "🖊️",
+            "example_en": "Practice makes perfect.",
+            "example_cn": "熟能生巧。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "🖊️",
+                  "⭐",
+                  "🥉",
+                  "☂️"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "☂️",
+                  "⭐",
+                  "🖊️",
+                  "🥉"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "practise 是什么意思？（1/2）",
+                "options": [
+                  "铜牌",
+                  "紧张的",
+                  "练习",
+                  "奖牌"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "practise 是什么意思？（2/2）",
+                "options": [
+                  "练习",
+                  "奖牌",
+                  "铜牌",
+                  "紧张的"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: pra__ise",
+                "answer": "ct"
+              }
+            ],
+            "letters": [
+              "p",
+              "r",
+              "a",
+              "c",
+              "t",
+              "i",
+              "s",
+              "e"
+            ],
+            "syllables": [
+              "prac",
+              "tise"
+            ],
+            "hint_cn": "一遍一遍地做，做到很熟"
+          }
         ]
       },
       {
@@ -5180,52 +13643,366 @@ const WEEK3 = [
         "name_cn": "完形填空",
         "type": "cloze",
         "duration": 10,
-        "passage": "Anna and Rita have been friends since Grade One. One day, there was a maths 1___ at school. Anna got the highest mark, but Rita failed. Rita felt sad and stopped 2___ to Anna. Anna didn't get angry. She made a beautiful card for Rita. On it she wrote, \"You helped me when I was 3___. Now let me help you.\" Every day after school, Anna taught Rita maths for an hour. A month later, Rita passed the 4___ test. \"Thank you for not giving up on 5___,\" Rita said with tears in her eyes.",
+        "passage": "More and more people in China love running, and city marathon races are everywhere now. Every year, big cities like Beijing and Shanghai hold marathon 1___. Tens of thousands of people join them. Runners wear sports 2___ and numbers on their backs. The race 3___ about forty-two kilometres, and it usually starts early in the morning. Many people are not fast, 4___ they keep running to the end. Doctors and volunteers stand along the 5___ to help. Water and fruit are 6___ at rest points every few kilometres. Running is good 7___ the heart, and it also makes people feel happy. Children can join the short 8___, maybe three kilometres. To run well, you must 9___ every day for months before the race. Marathon is not just a race — it is a 10___ of never giving up.",
         "questions": [
           {
             "id": "w3-sun-cz1",
             "type": "choice",
             "question": "1___",
-            "options": ["test", "race", "party", "game"],
+            "options": [
+              "races",
+              "race",
+              "racing",
+              "raced"
+            ],
             "answer": 0,
-            "explanation_cn": "后面说分数（mark），说明是考试，用 test。a maths test 意为数学考试。",
-            "explanation_en": "Marks are mentioned later, so it was a maths 'test'. Note: 'mark' means a score."
+            "explanation_cn": "hold marathon races：举办马拉松比赛，用复数。"
           },
           {
             "id": "w3-sun-cz2",
             "type": "choice",
             "question": "2___",
-            "options": ["talking", "listening", "coming", "running"],
+            "options": [
+              "clothes",
+              "cloths",
+              "clothing of",
+              "cloths'"
+            ],
             "answer": 0,
-            "explanation_cn": "丽塔难过，不再和安娜说话，用 stopped talking to。stop doing 意为停止做某事。",
-            "explanation_en": "Rita was sad and stopped 'talking' to Anna. Note: 'stop doing' means to not do it any more."
+            "explanation_cn": "运动服装 clothes，本身就是复数形式。"
           },
           {
             "id": "w3-sun-cz3",
             "type": "choice",
             "question": "3___",
-            "options": ["tall", "sick", "strong", "rich"],
-            "answer": 1,
-            "explanation_cn": "你在我生病时帮助过我，用 sick。when I was sick 意为当我生病的时候。",
-            "explanation_en": "'You helped me when I was sick.' Note: 'sick' means ill."
+            "options": [
+              "is",
+              "are",
+              "am",
+              "be"
+            ],
+            "answer": 0,
+            "explanation_cn": "主语 the race 单数，用 is（全长约42公里）。"
           },
           {
             "id": "w3-sun-cz4",
             "type": "choice",
             "question": "4___",
-            "options": ["first", "next", "last", "only"],
-            "answer": 1,
-            "explanation_cn": "一个月后丽塔通过了下一次考试，用 next test（下一次考试）。",
-            "explanation_en": "A month later Rita passed the 'next' test. Note: 'next' means the one that comes after."
+            "options": [
+              "but",
+              "and",
+              "so",
+              "or"
+            ],
+            "answer": 0,
+            "explanation_cn": "「虽然」跑得不快「但是」坚持到终点，but。"
           },
           {
             "id": "w3-sun-cz5",
             "type": "choice",
             "question": "5___",
-            "options": ["her", "me", "him", "them"],
-            "answer": 1,
-            "explanation_cn": "丽塔在说话，谢谢安娜没有放弃我，用 me。give up on sb 意为对某人不抱希望、放弃某人。",
-            "explanation_en": "Rita is speaking, so she thanks Anna for not giving up on 'me'. Note: 'give up on somebody' means to stop believing in them."
+            "options": [
+              "way",
+              "road of",
+              "ways",
+              "roadside of"
+            ],
+            "answer": 0,
+            "explanation_cn": "along the way：沿路。"
+          },
+          {
+            "id": "w3-sun-cz6",
+            "type": "choice",
+            "question": "6___",
+            "options": [
+              "free",
+              "freely",
+              "freer",
+              "freedom"
+            ],
+            "answer": 0,
+            "explanation_cn": "水是「免费」提供的，形容词 free。"
+          },
+          {
+            "id": "w3-sun-cz7",
+            "type": "choice",
+            "question": "7___",
+            "options": [
+              "for",
+              "at",
+              "with",
+              "of"
+            ],
+            "answer": 0,
+            "explanation_cn": "be good for the heart：对心脏有好处。"
+          },
+          {
+            "id": "w3-sun-cz8",
+            "type": "choice",
+            "question": "8___",
+            "options": [
+              "race",
+              "races",
+              "racing",
+              "raced"
+            ],
+            "answer": 0,
+            "explanation_cn": "the short race 短程赛，特指用单数。"
+          },
+          {
+            "id": "w3-sun-cz9",
+            "type": "choice",
+            "question": "9___",
+            "options": [
+              "practise",
+              "practises",
+              "practising",
+              "practised"
+            ],
+            "answer": 0,
+            "explanation_cn": "must 后面用动词原形 practise。"
+          },
+          {
+            "id": "w3-sun-cz10",
+            "type": "choice",
+            "question": "10___",
+            "options": [
+              "lesson",
+              "lesson's",
+              "lessons of",
+              "lessoning"
+            ],
+            "answer": 0,
+            "explanation_cn": "a lesson of never giving up：一堂「永不放弃」的课。"
+          }
+        ]
+      },
+      {
+        "id": "w3-sun-tense",
+        "name_cn": "时态练习",
+        "type": "tense",
+        "duration": 10,
+        "questions": [
+          {
+            "id": "w3-sun-tn1",
+            "type": "fill",
+            "question": "Our city ___ (hold) a marathon race last autumn. [填入正确形式]",
+            "answer": "held",
+            "explanation_cn": "last autumn 过去时间，hold 的过去式是 held。"
+          },
+          {
+            "id": "w3-sun-tn2",
+            "type": "fill",
+            "question": "Look! The runners ___ (pass) our street now. [填入正确形式]",
+            "answer": "are passing",
+            "explanation_cn": "Look! 提示正在进行，用 are passing。"
+          },
+          {
+            "id": "w3-sun-tn3",
+            "type": "fill",
+            "question": "Running ___ (be) good for the heart. [填入正确形式]",
+            "answer": "is",
+            "explanation_cn": "动名词作主语按单数，用 is。"
+          },
+          {
+            "id": "w3-sun-tn4",
+            "type": "fill",
+            "question": "My uncle ___ (run) marathons since 2020. [填入正确形式]",
+            "answer": "has run",
+            "explanation_cn": "since 2020 与现在完成时连用，run 的过去分词是 run。"
+          },
+          {
+            "id": "w3-sun-tn5",
+            "type": "fill",
+            "question": "The volunteers ___ (give) out water at every rest point tomorrow. [填入正确形式]",
+            "answer": "will give",
+            "explanation_cn": "tomorrow 将来时间，用 will give。"
+          },
+          {
+            "id": "w3-sun-tn6",
+            "type": "fill",
+            "question": "She ___ (practise) running every morning last year. [填入正确形式]",
+            "answer": "practised",
+            "explanation_cn": "last year 过去时间，practise 的过去式是 practised。"
+          },
+          {
+            "id": "w3-sun-tn7",
+            "type": "fill",
+            "question": "Thousands of people ___ (join) the race every year. [填入正确形式]",
+            "answer": "join",
+            "explanation_cn": "every year 习惯动作，主语复数用原形 join。"
+          },
+          {
+            "id": "w3-sun-tn8",
+            "type": "fill",
+            "question": "While I ___ (wait) at the rest point, I saw an old runner. [填入正确形式]",
+            "answer": "was waiting",
+            "explanation_cn": "while 引导过去进行时：was waiting。"
+          },
+          {
+            "id": "w3-sun-tn9",
+            "type": "fill",
+            "question": "The race ___ (start) early in the morning every time. [填入正确形式]",
+            "answer": "starts",
+            "explanation_cn": "every time 习惯动作，主语三单用 starts。"
+          },
+          {
+            "id": "w3-sun-tn10",
+            "type": "fill",
+            "question": "By nine o'clock, the first runner ___ (finish) the race. [填入正确形式]",
+            "answer": "had finished",
+            "explanation_cn": "九点之前已完成，过去完成时 had finished。"
+          }
+        ]
+      },
+      {
+        "id": "w3-sun-grammar",
+        "name_cn": "语法练习",
+        "type": "grammar",
+        "duration": 5,
+        "questions": [
+          {
+            "id": "w3-sun-gr1",
+            "type": "choice",
+            "question": "Tens of thousands ___ people join the race.",
+            "options": [
+              "of",
+              "off",
+              "for",
+              "with"
+            ],
+            "answer": 0,
+            "explanation_cn": "tens of thousands of people：数以万计的人。"
+          },
+          {
+            "id": "w3-sun-gr2",
+            "type": "choice",
+            "question": "The runners wear numbers ___ their backs.",
+            "options": [
+              "on",
+              "in",
+              "at",
+              "under"
+            ],
+            "answer": 0,
+            "explanation_cn": "「背在背上」用 on their backs。"
+          },
+          {
+            "id": "w3-sun-gr3",
+            "type": "choice",
+            "question": "Keep ___ and you will reach the end.",
+            "options": [
+              "running",
+              "run",
+              "runs",
+              "ran"
+            ],
+            "answer": 0,
+            "explanation_cn": "keep doing sth：坚持跑下去。"
+          },
+          {
+            "id": "w3-sun-gr4",
+            "type": "choice",
+            "question": "Marathon is a lesson of never ___ up.",
+            "options": [
+              "giving",
+              "give",
+              "gives",
+              "gave"
+            ],
+            "answer": 0,
+            "explanation_cn": "of 后面用动名词 giving up。"
+          },
+          {
+            "id": "w3-sun-gr5",
+            "type": "choice",
+            "question": "___ exciting the marathon finish is!",
+            "options": [
+              "How",
+              "What",
+              "Where",
+              "When"
+            ],
+            "answer": 0,
+            "explanation_cn": "How + 形容词：How exciting…!"
+          }
+        ]
+      },
+      {
+        "id": "w3-sun-listening",
+        "name_cn": "听力练习",
+        "type": "listening",
+        "duration": 5,
+        "questions": [
+          {
+            "id": "w3-sun-ls1",
+            "type": "choice",
+            "question": "听到的句子是什么？",
+            "audio_text": "Every year, big cities hold marathon races.",
+            "options": [
+              "Every year, big cities hold marathon races.",
+              "Every year, small villages hold marathon races.",
+              "Every year, big cities hold football matches.",
+              "Next year, big cities hold marathon races."
+            ],
+            "answer": 0,
+            "explanation_cn": "主语 big cities（大城市），hold（举办）marathon races。"
+          },
+          {
+            "id": "w3-sun-ls2",
+            "type": "choice",
+            "question": "听到的句子是什么？",
+            "audio_text": "The race is about forty-two kilometres long.",
+            "options": [
+              "The race is about forty-two kilometres long.",
+              "The race is about twenty-four kilometres long.",
+              "The race is about forty-two metres long.",
+              "The road is about forty-two kilometres long."
+            ],
+            "answer": 0,
+            "explanation_cn": "数字 forty-two（42），单位 kilometres；注意 forty-two 和 twenty-four。"
+          },
+          {
+            "id": "w3-sun-ls3",
+            "type": "choice",
+            "question": "听到的句子是什么？",
+            "audio_text": "Water and fruit are free at rest points.",
+            "options": [
+              "Water and fruit are free at rest points.",
+              "Water and fruit are sold at rest points.",
+              "Water and bread are free at rest points.",
+              "Water and fruit are free at supermarkets."
+            ],
+            "answer": 0,
+            "explanation_cn": "free（免费）不是 sold（出售）；物品是 water and fruit。"
+          },
+          {
+            "id": "w3-sun-ls4",
+            "type": "choice",
+            "question": "听到的句子是什么？",
+            "audio_text": "Many people keep running to the end.",
+            "options": [
+              "Many people keep running to the end.",
+              "Many people keep walking to the end.",
+              "Many people stop running at the end.",
+              "Few people keep running to the end."
+            ],
+            "answer": 0,
+            "explanation_cn": "keep running（坚持跑），不是 stop 或 walk。"
+          },
+          {
+            "id": "w3-sun-ls5",
+            "type": "choice",
+            "question": "听到的句子是什么？",
+            "audio_text": "Marathon teaches us never to give up.",
+            "options": [
+              "Marathon teaches us never to give up.",
+              "Marathon tells us never to get up.",
+              "Marathon teaches us how to give up.",
+              "The teacher teaches us never to give up."
+            ],
+            "answer": 0,
+            "explanation_cn": "give up（放弃）不是 get up（起床）；主语是 Marathon。"
           }
         ]
       }
@@ -5233,14 +14010,12 @@ const WEEK3 = [
   }
 ];
 
-
-// ===== 第 4 周（B1 · KET 冲刺 / PET 衔接）：被动语态 / 过去完成 / 科学与文明 =====
 const WEEK4 = [
   {
     "day_cn": "周一",
     "day_en": "Monday",
     "is_speaking_day": true,
-    "total_duration": 40,
+    "total_duration": 60,
     "theme_cn": "AI口语 + 高频词汇 + 阅读理解",
     "modules": [
       {
@@ -5262,7 +14037,14 @@ const WEEK4 = [
             "answer": 0,
             "pronunciation_tips": "虚拟语气 would /wʊd/ 不要读成 will，won /wʌn/ 和 one 同音",
             "explanation_cn": "对将来的假设用虚拟语气：If I won..., I would...。从句用过去式，主句用 would + 动词原形。B 时态搭配错误。",
-            "explanation_en": "For an imagined future, use the second conditional: 'If I won..., I would...'. The if-clause uses the past form and the main clause uses 'would + base verb'. B mixes the tenses wrongly."
+            "explanation_en": "For an imagined future, use the second conditional: 'If I won..., I would...'. The if-clause uses the past form and the main clause uses 'would + base verb'. B mixes the tenses wrongly.",
+            "answer_cn_hint": "这是假设句，答句要用 If … I would … 说出你会做的事。",
+            "options_cn": [
+              "如果我赢了大奖，我会环游世界。",
+              "如果我将会得奖，我很开心。",
+              "我去年得过一次奖。",
+              "奖品是给小朋友的。"
+            ]
           },
           {
             "id": "w4-mon-sp2",
@@ -5277,7 +14059,14 @@ const WEEK4 = [
             "answer": 0,
             "pronunciation_tips": "uniform /ˈjuːnɪfɔːm/ 注意 u 读 /juː/，should 词尾 d 不发音",
             "explanation_cn": "问观点，回答要给出看法和理由。A 正确（neat 整洁的）；B 说的是正在穿；C、D 答非所问。",
-            "explanation_en": "The question asks for an opinion, so give a view with a reason. A does ('neat' means tidy); B says what you are wearing now; C and D do not answer."
+            "explanation_en": "The question asks for an opinion, so give a view with a reason. A does ('neat' means tidy); B says what you are wearing now; C and D do not answer.",
+            "answer_cn_hint": "这是在问你的看法，答句要先说 Yes/No 或者 I think…，再说一句理由。",
+            "options_cn": [
+              "是的，我认为校服让我们看起来整洁。",
+              "是的，我现在穿着校服。",
+              "校服是棉花做的。",
+              "我的校服对我来说太大了。"
+            ]
           },
           {
             "id": "w4-mon-sp3",
@@ -5292,7 +14081,14 @@ const WEEK4 = [
             "answer": 0,
             "pronunciation_tips": "invention /ɪnˈvenʃn/ 注意重音在第二音节，most useful 连读",
             "explanation_cn": "A 用最高级 the most useful 回答最有用，正确。B 说的是自己发明东西；C、D 答非所问。",
-            "explanation_en": "A answers with the superlative 'the most useful'; B talks about making something yourself; C and D do not answer."
+            "explanation_en": "A answers with the superlative 'the most useful'; B talks about making something yourself; C and D do not answer.",
+            "answer_cn_hint": "它在问「哪个发明」，答句要说出一样东西，比如手机、电灯。",
+            "options_cn": [
+              "我认为最有用的发明是手机。",
+              "我昨天发明了一架纸飞机。",
+              "发明很有趣。",
+              "我的手机是新的。"
+            ]
           },
           {
             "id": "w4-mon-sp4",
@@ -5307,7 +14103,14 @@ const WEEK4 = [
             "answer": 0,
             "pronunciation_tips": "environment /ɪnˈvaɪrənmənt/ 音节多，注意中间 /raɪn/，sort /sɔːt/",
             "explanation_cn": "how 问方法，A 说出具体做法（垃圾分类、节约用水），正确。B 是观点；C、D 答非所问。",
-            "explanation_en": "'How' asks for a way or method. A gives concrete actions (sorting rubbish, saving water); B is an opinion; C and D do not answer."
+            "explanation_en": "'How' asks for a way or method. A gives concrete actions (sorting rubbish, saving water); B is an opinion; C and D do not answer.",
+            "answer_cn_hint": "它在问「怎么保护环境」，答句要说出具体做法，比如垃圾分类、节约用水。",
+            "options_cn": [
+              "我们在家给垃圾分类，还节约用水。",
+              "环境非常重要。",
+              "我家在一个公园附近。",
+              "外面污染很严重。"
+            ]
           },
           {
             "id": "w4-mon-sp5",
@@ -5322,7 +14125,14 @@ const WEEK4 = [
             "answer": 0,
             "pronunciation_tips": "difficult /ˈdɪfɪkəlt/ 注意中间的 k 音，maths 词尾 ths 咬舌",
             "explanation_cn": "A 说出科目并补充自己在进步，正确。B find 在这里是发现的意思被误解为找到；C、D 答非所问。",
-            "explanation_en": "A names the subject and adds progress; B misunderstands 'find' (here it means to think something is hard, not to locate); C and D do not answer."
+            "explanation_en": "A names the subject and adds progress; B misunderstands 'find' (here it means to think something is hard, not to locate); C and D do not answer.",
+            "answer_cn_hint": "Which 是在几门科目里选一门，答句要说出科目名，再加上一句感受。",
+            "options_cn": [
+              "数学。不过我在进步。",
+              "我在书桌上找到了我的数学书。",
+              "数学是我今天的第一节课。",
+              "我喜欢所有的老师。"
+            ]
           }
         ]
       },
@@ -5332,82 +14142,759 @@ const WEEK4 = [
         "type": "vocabulary_game",
         "duration": 5,
         "words": [
-          vocabWord({
-            "word": "invent", "phonetic": "/ɪnˈvent/", "meaning": "发明", "emoji": "💡",
-            "example_en": "Who invented the telephone?", "example_cn": "谁发明了电话？",
-            "syllables": ["in", "vent"], "spell": ["in__nt", "ve"],
-            "wrongEmoji": ["⭐", "🔬", "♻️"], "wrongMeaning": ["实验", "回收利用", "污染"]
-          }),
-          vocabWord({
-            "word": "experiment", "phonetic": "/ɪkˈsperɪmənt/", "meaning": "实验", "emoji": "🔬",
-            "example_en": "We did an experiment in class.", "example_cn": "我们在课堂上做了一个实验。",
-            "syllables": ["ex", "pe", "ri", "ment"], "spell": ["expe__ment", "ri"],
-            "wrongEmoji": ["⭐", "💡", "⚡"], "wrongMeaning": ["发明", "能量", "回收利用"]
-          }),
-          vocabWord({
-            "word": "recycle", "phonetic": "/ˌriːˈsaɪkl/", "meaning": "回收利用", "emoji": "♻️",
-            "example_en": "Please recycle the plastic bottles.", "example_cn": "请回收塑料瓶。",
-            "syllables": ["re", "cy", "cle"], "spell": ["rec__cle", "y"],
-            "wrongEmoji": ["⭐", "🏭", "🎲"], "wrongMeaning": ["污染", "实验", "发明"]
-          }),
-          vocabWord({
-            "word": "pollution", "phonetic": "/pəˈluːʃn/", "meaning": "污染", "emoji": "🏭",
-            "example_en": "Air pollution is bad for our health.", "example_cn": "空气污染有害健康。",
-            "syllables": ["po", "llu", "tion"], "spell": ["pol__tion", "lu"],
-            "wrongEmoji": ["⭐", "🔬", "☂️"], "wrongMeaning": ["回收利用", "实验", "能量"]
-          }),
-          vocabWord({
-            "word": "energy", "phonetic": "/ˈenədʒi/", "meaning": "能量；能源", "emoji": "⚡",
-            "example_en": "The sun gives us energy.", "example_cn": "太阳给我们能量。",
-            "syllables": ["en", "er", "gy"], "spell": ["en__gy", "er"],
-            "wrongEmoji": ["⭐", "💡", "🎸"], "wrongMeaning": ["发明", "污染", "实验"]
-          })
+          {
+            "word": "invent",
+            "phonetic": "/ɪnˈvent/",
+            "meaning": "发明",
+            "emoji": "💡",
+            "example_en": "Who invented the telephone?",
+            "example_cn": "谁发明了电话？",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "💡",
+                  "⭐",
+                  "🔬",
+                  "♻️"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "♻️",
+                  "⭐",
+                  "💡",
+                  "🔬"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "invent 是什么意思？（1/2）",
+                "options": [
+                  "实验",
+                  "回收利用",
+                  "发明",
+                  "污染"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "invent 是什么意思？（2/2）",
+                "options": [
+                  "发明",
+                  "污染",
+                  "实验",
+                  "回收利用"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: in__nt",
+                "answer": "ve"
+              }
+            ],
+            "letters": [
+              "i",
+              "n",
+              "v",
+              "e",
+              "n",
+              "t"
+            ],
+            "syllables": [
+              "in",
+              "vent"
+            ],
+            "hint_cn": "想出一个新东西，以前从来没有过"
+          },
+          {
+            "word": "experiment",
+            "phonetic": "/ɪkˈsperɪmənt/",
+            "meaning": "实验",
+            "emoji": "🔬",
+            "example_en": "We did an experiment in class.",
+            "example_cn": "我们在课堂上做了一个实验。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "🔬",
+                  "⭐",
+                  "💡",
+                  "⚡"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "⚡",
+                  "⭐",
+                  "🔬",
+                  "💡"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "experiment 是什么意思？（1/2）",
+                "options": [
+                  "发明",
+                  "能量",
+                  "实验",
+                  "回收利用"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "experiment 是什么意思？（2/2）",
+                "options": [
+                  "实验",
+                  "回收利用",
+                  "发明",
+                  "能量"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: expe__ment",
+                "answer": "ri"
+              }
+            ],
+            "letters": [
+              "e",
+              "x",
+              "p",
+              "e",
+              "r",
+              "i",
+              "m",
+              "e",
+              "n",
+              "t"
+            ],
+            "syllables": [
+              "ex",
+              "pe",
+              "ri",
+              "ment"
+            ],
+            "hint_cn": "动手试一试，看看会发生什么"
+          },
+          {
+            "word": "recycle",
+            "phonetic": "/ˌriːˈsaɪkl/",
+            "meaning": "回收利用",
+            "emoji": "♻️",
+            "example_en": "Please recycle the plastic bottles.",
+            "example_cn": "请回收塑料瓶。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "♻️",
+                  "⭐",
+                  "🏭",
+                  "🎲"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "🎲",
+                  "⭐",
+                  "♻️",
+                  "🏭"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "recycle 是什么意思？（1/2）",
+                "options": [
+                  "污染",
+                  "实验",
+                  "回收利用",
+                  "发明"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "recycle 是什么意思？（2/2）",
+                "options": [
+                  "回收利用",
+                  "发明",
+                  "污染",
+                  "实验"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: rec__cle",
+                "answer": "y"
+              }
+            ],
+            "letters": [
+              "r",
+              "e",
+              "c",
+              "y",
+              "c",
+              "l",
+              "e"
+            ],
+            "syllables": [
+              "re",
+              "cy",
+              "cle"
+            ],
+            "hint_cn": "用过的瓶子纸箱送回去，重新做成新东西"
+          },
+          {
+            "word": "pollution",
+            "phonetic": "/pəˈluːʃn/",
+            "meaning": "污染",
+            "emoji": "🏭",
+            "example_en": "Air pollution is bad for our health.",
+            "example_cn": "空气污染有害健康。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "🏭",
+                  "⭐",
+                  "🔬",
+                  "☂️"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "☂️",
+                  "⭐",
+                  "🏭",
+                  "🔬"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "pollution 是什么意思？（1/2）",
+                "options": [
+                  "回收利用",
+                  "实验",
+                  "污染",
+                  "能量"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "pollution 是什么意思？（2/2）",
+                "options": [
+                  "污染",
+                  "能量",
+                  "回收利用",
+                  "实验"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: pol__tion",
+                "answer": "lu"
+              }
+            ],
+            "letters": [
+              "p",
+              "o",
+              "l",
+              "l",
+              "u",
+              "t",
+              "i",
+              "o",
+              "n"
+            ],
+            "syllables": [
+              "po",
+              "llu",
+              "tion"
+            ],
+            "hint_cn": "水变黑了、天变灰了，就是因为这个"
+          },
+          {
+            "word": "energy",
+            "phonetic": "/ˈenədʒi/",
+            "meaning": "能量；能源",
+            "emoji": "⚡",
+            "example_en": "The sun gives us energy.",
+            "example_cn": "太阳给我们能量。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "⚡",
+                  "⭐",
+                  "💡",
+                  "🎸"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "🎸",
+                  "⭐",
+                  "⚡",
+                  "💡"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "energy 是什么意思？（1/2）",
+                "options": [
+                  "发明",
+                  "污染",
+                  "能量；能源",
+                  "实验"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "energy 是什么意思？（2/2）",
+                "options": [
+                  "能量；能源",
+                  "实验",
+                  "发明",
+                  "污染"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: en__gy",
+                "answer": "er"
+              }
+            ],
+            "letters": [
+              "e",
+              "n",
+              "e",
+              "r",
+              "g",
+              "y"
+            ],
+            "syllables": [
+              "en",
+              "er",
+              "gy"
+            ],
+            "hint_cn": "让灯亮起来、让车跑起来的“力气”"
+          }
         ]
       },
       {
         "id": "w4-mon-reading",
         "name_cn": "阅读理解",
         "type": "reading",
-        "duration": 5,
-        "passage": "Last year, the students of Greenfield Middle School started a special project. They noticed that people in their town threw away plastic bottles every day. The students set up bottle bins around the streets and made posters about recycling. At first, only a few people used the bins. The students didn't give up. They visited the local radio station and talked about their project on air. Soon more and more people joined in. After six months, the town had collected over two million bottles. The money from recycling was used to build a small library for the school. \"Children can change the world too,\" the mayor said when she opened the library.",
-        "passage_cn": "去年，绿田中学的学生们启动了一个特别的项目。他们注意到镇上的人每天扔掉塑料瓶。学生们在街头设置了瓶子回收箱，还制作了关于回收利用的海报。起初，只有少数人使用回收箱。但学生们没有放弃。他们去了本地广播电台，在节目里介绍他们的项目。很快越来越多的人加入了。六个月后，全镇收集了超过两百万个瓶子。回收换来的钱被用来给学校建了一座小图书馆。市长在图书馆启用时说，孩子们也能改变世界。",
+        "duration": 10,
+        "passage": "The Palace Museum, also known as the Forbidden City, stands in the heart of Beijing. Emperors of the Ming and Qing dynasties lived and worked there for almost 500 years. The palace has about 9000 rooms, and the buildings are made of wood without a single nail. Red walls and golden roofs shine under the blue sky. Today it is one of the most popular museums in the world, and over seventeen million people visit it every year. The museum now uses apps and online tours, so people can enjoy the palace without leaving home. On snowy days, photos of the red palace in white snow spread quickly on the internet, and people say it becomes the Forbidden City of six hundred years ago again.",
+        "passage_cn": "故宫博物院，又叫紫禁城，坐落在北京市中心。明清两代的皇帝在这里生活、理政近五百年。故宫有大约九千间房，建筑全部用木头建成，不用一根钉子。红墙金瓦在蓝天下闪闪发光。今天它是世界上最受欢迎的博物馆之一，每年有一千七百多万人前来参观。故宫现在还推出了App和线上游览，人们足不出户也能欣赏故宫。下雪天，红墙白雪的照片在网上迅速传播，人们说它又变成了六百年前的紫禁城。",
         "questions": [
           {
             "id": "w4-mon-rd1",
             "type": "choice",
-            "question": "What did the students set up around the streets?",
-            "options": ["Plastic factories", "Bottle bins", "Small libraries", "Radio stations"],
-            "answer": 1,
-            "explanation_cn": "文章说 The students set up bottle bins around the streets。学生们设置的是瓶子回收箱。set up 意为设立、建立。",
-            "explanation_en": "The text says 'The students set up bottle bins around the streets.' Note: 'set up' means to establish or place."
+            "question": "What is the Forbidden City also called?",
+            "options": [
+              "The Palace Museum",
+              "The Summer Palace",
+              "The Great Wall",
+              "Tian'anmen Square"
+            ],
+            "answer": 0,
+            "explanation_cn": "第一句：also known as the Palace Museum（又叫故宫博物院）。"
           },
           {
             "id": "w4-mon-rd2",
             "type": "choice",
-            "question": "How did more people learn about the project?",
+            "question": "Who lived in the Forbidden City?",
             "options": [
-              "From the students' posters on TV",
-              "From the radio programme",
-              "From the mayor's letter",
-              "From a book about recycling"
+              "Emperors of the Ming and Qing dynasties",
+              "Kings of England",
+              "Famous scientists",
+              "Ancient fighters"
             ],
-            "answer": 1,
-            "explanation_cn": "文章说 They visited the local radio station and talked about their project on air。他们通过广播节目让更多人知道。on air 意为在广播中。",
-            "explanation_en": "The text says they talked about the project 'on air' at the local radio station. Note: 'on air' means being broadcast."
+            "answer": 0,
+            "explanation_cn": "明清两代的皇帝在这里生活理政。"
           },
           {
             "id": "w4-mon-rd3",
             "type": "choice",
-            "question": "What was the recycling money used for?",
+            "question": "How long did emperors live and work there?",
             "options": [
-              "Buying more bottle bins",
-              "Making new posters",
-              "Building a small library",
-              "Paying the students"
+              "For almost 500 years",
+              "For almost 5000 years",
+              "For almost 50 years",
+              "For almost 15 years"
             ],
-            "answer": 2,
-            "explanation_cn": "文章说 The money from recycling was used to build a small library。钱被用来建小图书馆。注意这是被动语态：was used to do。",
-            "explanation_en": "The text says 'The money from recycling was used to build a small library.' Note the passive voice: was used to do."
+            "answer": 0,
+            "explanation_cn": "近五百年（almost 500 years）。"
+          },
+          {
+            "id": "w4-mon-rd4",
+            "type": "choice",
+            "question": "How many rooms does the palace have?",
+            "options": [
+              "About 9000",
+              "About 900",
+              "About 90000",
+              "About 90"
+            ],
+            "answer": 0,
+            "explanation_cn": "大约九千间房。"
+          },
+          {
+            "id": "w4-mon-rd5",
+            "type": "choice",
+            "question": "What are the buildings made of?",
+            "options": [
+              "Wood without a single nail",
+              "Stone and iron",
+              "Glass and steel",
+              "Paper and bamboo"
+            ],
+            "answer": 0,
+            "explanation_cn": "全木结构，不用一根钉子。"
+          },
+          {
+            "id": "w4-mon-rd6",
+            "type": "choice",
+            "question": "How many people visit the museum every year?",
+            "options": [
+              "Over seventeen million",
+              "Over seven thousand",
+              "Over seventy thousand",
+              "Over seven million"
+            ],
+            "answer": 0,
+            "explanation_cn": "每年超过一千七百万人参观。"
+          },
+          {
+            "id": "w4-mon-rd7",
+            "type": "choice",
+            "question": "How can people enjoy the palace without leaving home?",
+            "options": [
+              "Through apps and online tours",
+              "By reading letters",
+              "By watching films only",
+              "They can't"
+            ],
+            "answer": 0,
+            "explanation_cn": "用App和线上游览。"
+          },
+          {
+            "id": "w4-mon-rd8",
+            "type": "choice",
+            "question": "What happens on snowy days?",
+            "options": [
+              "Photos of the red palace spread quickly online.",
+              "The palace closes early.",
+              "People stop visiting.",
+              "The roofs turn white forever."
+            ],
+            "answer": 0,
+            "explanation_cn": "雪天红墙白雪的照片在网上迅速传播。"
+          },
+          {
+            "id": "w4-mon-rd9",
+            "type": "choice",
+            "question": "The word \"nail\" here means ___.",
+            "options": [
+              "钉子",
+              "指甲",
+              "门钉",
+              "锤子"
+            ],
+            "answer": 0,
+            "explanation_cn": "nail 在建筑里指「钉子」。"
+          },
+          {
+            "id": "w4-mon-rd10",
+            "type": "choice",
+            "question": "The best title for the passage about the old palace is ___.",
+            "options": [
+              "The Palace Museum, Old and New",
+              "Snow in Beijing",
+              "How to Build a Palace",
+              "Emperors' Food"
+            ],
+            "answer": 0,
+            "explanation_cn": "全文介绍故宫的历史与今天的新面貌。"
+          }
+        ]
+      },
+      {
+        "id": "w4-mon-mc",
+        "name_cn": "单项选择",
+        "type": "multiple_choice",
+        "duration": 10,
+        "questions": [
+          {
+            "id": "w4-mon-mc1",
+            "type": "choice",
+            "question": "The Palace Museum ___ in the heart of Beijing.",
+            "options": [
+              "stands",
+              "stand",
+              "standing",
+              "stood"
+            ],
+            "answer": 0,
+            "explanation_cn": "主语单数，一般现在时用 stands。"
+          },
+          {
+            "id": "w4-mon-mc2",
+            "type": "choice",
+            "question": "Emperors ___ there for almost 500 years.",
+            "options": [
+              "lived",
+              "live",
+              "lives",
+              "living"
+            ],
+            "answer": 0,
+            "explanation_cn": "for almost 500 years 过去时间段，用过去式 lived。"
+          },
+          {
+            "id": "w4-mon-mc3",
+            "type": "choice",
+            "question": "The buildings are made ___ wood without a single nail.",
+            "options": [
+              "of",
+              "from",
+              "in",
+              "with"
+            ],
+            "answer": 0,
+            "explanation_cn": "be made of 用原材料（看得出原料）用 of。"
+          },
+          {
+            "id": "w4-mon-mc4",
+            "type": "choice",
+            "question": "___ beautiful the red walls are!",
+            "options": [
+              "How",
+              "What",
+              "Where",
+              "When"
+            ],
+            "answer": 0,
+            "explanation_cn": "How + 形容词：How beautiful…!"
+          },
+          {
+            "id": "w4-mon-mc5",
+            "type": "choice",
+            "question": "Over seventeen ___ people visit it every year.",
+            "options": [
+              "million",
+              "millions",
+              "million of",
+              "millions of"
+            ],
+            "answer": 0,
+            "explanation_cn": "数词 + million 单数：seventeen million。"
+          },
+          {
+            "id": "w4-mon-mc6",
+            "type": "choice",
+            "question": "People can enjoy the palace ___ leaving home.",
+            "options": [
+              "without",
+              "with",
+              "in",
+              "for"
+            ],
+            "answer": 0,
+            "explanation_cn": "without doing sth：足不出户。"
+          },
+          {
+            "id": "w4-mon-mc7",
+            "type": "choice",
+            "question": "The museum now ___ apps and online tours.",
+            "options": [
+              "uses",
+              "use",
+              "used",
+              "using"
+            ],
+            "answer": 0,
+            "explanation_cn": "主语三单，now 一般现在时用 uses。"
+          },
+          {
+            "id": "w4-mon-mc8",
+            "type": "choice",
+            "question": "There are about ___ rooms in the palace.",
+            "options": [
+              "nine thousand",
+              "ninety thousand",
+              "nine hundreds",
+              "nineteen thousand"
+            ],
+            "answer": 0,
+            "explanation_cn": "大约九千间：nine thousand。"
+          },
+          {
+            "id": "w4-mon-mc9",
+            "type": "choice",
+            "question": "Photos of the palace ___ quickly on the internet.",
+            "options": [
+              "spread",
+              "spreads",
+              "spreading",
+              "spreaded"
+            ],
+            "answer": 0,
+            "explanation_cn": "photos 复数，spread 过去式和原形同形，这里一般现在时用原形。"
+          },
+          {
+            "id": "w4-mon-mc10",
+            "type": "choice",
+            "question": "It becomes the Forbidden City ___ 600 years ago again.",
+            "options": [
+              "of",
+              "from",
+              "at",
+              "since"
+            ],
+            "answer": 0,
+            "explanation_cn": "「六百年前的」紫禁城，用 of 600 years ago。"
+          }
+        ]
+      },
+      {
+        "id": "w4-mon-tense2",
+        "name_cn": "时态练习",
+        "type": "tense",
+        "duration": 5,
+        "questions": [
+          {
+            "id": "w4-mon-tn21",
+            "type": "fill",
+            "question": "Emperors ___ (live) there for almost 500 years. [填入正确形式]",
+            "answer": "lived",
+            "explanation_cn": "for almost 500 years 过去时间段，用过去式 lived。"
+          },
+          {
+            "id": "w4-mon-tn22",
+            "type": "fill",
+            "question": "Look! Visitors ___ (take) photos of the red walls. [填入正确形式]",
+            "answer": "are taking",
+            "explanation_cn": "Look! 提示正在进行，用 are taking。"
+          },
+          {
+            "id": "w4-mon-tn23",
+            "type": "fill",
+            "question": "The museum ___ (use) apps for a few years. [填入正确形式]",
+            "answer": "has used",
+            "explanation_cn": "for a few years 与现在完成时连用。"
+          },
+          {
+            "id": "w4-mon-tn24",
+            "type": "fill",
+            "question": "The photos ___ (spread) quickly online last night. [填入正确形式]",
+            "answer": "spread",
+            "explanation_cn": "last night 过去时间，spread 的过去式还是 spread。"
+          },
+          {
+            "id": "w4-mon-tn25",
+            "type": "fill",
+            "question": "More people ___ (visit) the palace next year. [填入正确形式]",
+            "answer": "will visit",
+            "explanation_cn": "next year 将来时间，用 will visit。"
           }
         ]
       }
@@ -5425,35 +14912,138 @@ const WEEK4 = [
         "name_cn": "阅读理解",
         "type": "reading",
         "duration": 10,
-        "passage": "Do you know how tea travelled around the world? Tea was first grown in China thousands of years ago. At that time, it was used as a medicine. Later, people began to drink it for pleasure. In the seventeenth century, ships carried tea from China to Europe. It quickly became popular in England. Tea houses opened in big cities, and drinking tea became an important part of daily life. Today, millions of cups of tea are drunk around the world every day. In England, people often add milk to their tea. In China, many people drink it plain. Different countries, different habits — but the same little leaf.",
-        "passage_cn": "你知道茶叶是如何传遍世界的吗？茶最早种植于几千年前的中国。那时它被当作药用。后来人们开始把它当作饮品享用。十七世纪，商船把茶叶从中国运到欧洲。它在英格兰迅速流行起来。大城市里茶馆开张，喝茶成为日常生活的重要部分。如今全世界每天要喝掉数百万杯茶。在英格兰，人们常往茶里加牛奶。在中国，很多人喝清茶。国家不同，习惯不同——但都是同一种小小的叶子。",
+        "passage": "Chang'e is the name of China's moon exploration programme, taken from a goddess in an old Chinese story. In 2020, Chang'e-5 flew to the moon, collected moon soil and brought it back to the earth. It was the first time in over forty years that any country had brought moon rocks home. In 2024, Chang'e-6 did something even more amazing — it brought back soil from the far side of the moon, the side we can never see from the earth. Chinese scientists also sent a small robot car to drive on the moon and take photos. The moon soil helps scientists learn how the moon was born. One day, Chinese astronauts may walk on the moon and build a moon research station, and children watching today may become the builders of tomorrow.",
+        "passage_cn": "「嫦娥」是中国探月工程的名字，取自古代神话里的仙女。2020年，嫦娥五号飞向月球，采集月壤并带回地球。这是四十多年来人类首次把月岩带回。2024年，嫦娥六号完成了一项更了不起的任务——带回了月球背面的土壤，那是我们从地球上永远看不到的一面。中国科学家还把一台小小的月球车送上月球，在月面行驶拍照。月壤帮助科学家研究月球是怎样诞生的。将来某一天，中国航天员也许会在月面行走、建立月球科研站，今天观看发射的孩子们，可能就是明天的建设者。",
         "questions": [
           {
             "id": "w4-tue-rd1",
             "type": "choice",
-            "question": "What was tea first used as?",
-            "options": ["A drink", "A medicine", "A gift", "Money"],
-            "answer": 1,
-            "explanation_cn": "文章说 At that time, it was used as a medicine。茶最早被当作药用。注意这是被动语态：was used as。",
-            "explanation_en": "The text says 'At that time, it was used as a medicine.' Note the passive voice: was used as."
+            "question": "Where does the name Chang'e come from?",
+            "options": [
+              "A goddess in an old Chinese story",
+              "A famous scientist",
+              "A mountain in China",
+              "An old song"
+            ],
+            "answer": 0,
+            "explanation_cn": "名字取自古代神话中的仙女。"
           },
           {
             "id": "w4-tue-rd2",
             "type": "choice",
-            "question": "Who carried tea to Europe in the seventeenth century?",
-            "options": ["English farmers", "Chinese students", "Ships from China", "European doctors"],
-            "answer": 2,
-            "explanation_cn": "文章说 ships carried tea from China to Europe。是船把茶运到欧洲的。seventeenth century 意为十七世纪。",
-            "explanation_en": "The text says 'ships carried tea from China to Europe.' Note: 'century' means a hundred years."
+            "question": "What did Chang'e-5 do in 2020?",
+            "options": [
+              "It brought moon soil back to the earth.",
+              "It planted trees on the moon.",
+              "It found water on Mars.",
+              "It took tourists to space."
+            ],
+            "answer": 0,
+            "explanation_cn": "嫦娥五号采集月壤并带回地球。"
           },
           {
             "id": "w4-tue-rd3",
             "type": "choice",
-            "question": "How do many people in China drink their tea?",
-            "options": ["With milk", "With sugar", "Plain", "Cold with ice"],
-            "answer": 2,
-            "explanation_cn": "文章说 In China, many people drink it plain。中国人喝清茶。plain 这里意为不加东西的、清的。",
-            "explanation_en": "The text says 'In China, many people drink it plain.' Note: 'plain' here means without adding anything."
+            "question": "How long had it been since moon rocks were last brought home?",
+            "options": [
+              "Over forty years",
+              "Over four years",
+              "Over fourteen years",
+              "Over four hundred years"
+            ],
+            "answer": 0,
+            "explanation_cn": "这是四十多年来人类首次。"
+          },
+          {
+            "id": "w4-tue-rd4",
+            "type": "choice",
+            "question": "What was special about Chang'e-6?",
+            "options": [
+              "It brought back soil from the far side of the moon.",
+              "It carried astronauts.",
+              "It stayed on the moon for years.",
+              "It flew to Mars."
+            ],
+            "answer": 0,
+            "explanation_cn": "嫦娥六号带回了月球背面的土壤。"
+          },
+          {
+            "id": "w4-tue-rd5",
+            "type": "choice",
+            "question": "What can we see from the earth?",
+            "options": [
+              "Only one side of the moon",
+              "Both sides of the moon",
+              "No side of the moon",
+              "The inside of the moon"
+            ],
+            "answer": 0,
+            "explanation_cn": "月球背面是我们从地球上永远看不到的一面。"
+          },
+          {
+            "id": "w4-tue-rd6",
+            "type": "choice",
+            "question": "What did the small robot car do on the moon?",
+            "options": [
+              "It drove around and took photos.",
+              "It built a house.",
+              "It planted flowers.",
+              "It played football."
+            ],
+            "answer": 0,
+            "explanation_cn": "月球车在月面行驶、拍照。"
+          },
+          {
+            "id": "w4-tue-rd7",
+            "type": "choice",
+            "question": "Why is moon soil important?",
+            "options": [
+              "It helps scientists learn how the moon was born.",
+              "It can be sold for money.",
+              "It makes plants grow fast.",
+              "It is used to build roads."
+            ],
+            "answer": 0,
+            "explanation_cn": "月壤帮助科学家研究月球的诞生。"
+          },
+          {
+            "id": "w4-tue-rd8",
+            "type": "choice",
+            "question": "What may happen one day?",
+            "options": [
+              "Chinese astronauts may build a moon research station.",
+              "Astronauts may live on the sun.",
+              "The moon may fly away.",
+              "Chang'e may come back as a goddess."
+            ],
+            "answer": 0,
+            "explanation_cn": "将来中国航天员也许会建月球科研站。"
+          },
+          {
+            "id": "w4-tue-rd9",
+            "type": "choice",
+            "question": "The word \"exploration\" here means ___.",
+            "options": [
+              "探测、探索",
+              "爆炸",
+              "旅游",
+              "种植"
+            ],
+            "answer": 0,
+            "explanation_cn": "exploration 意思是「探索、探测」。"
+          },
+          {
+            "id": "w4-tue-rd10",
+            "type": "choice",
+            "question": "The best title for the passage about going to the moon is ___.",
+            "options": [
+              "Chang'e: China's Moon Journey",
+              "Stories of Goddesses",
+              "Life on the Moon",
+              "Rocks and Stones"
+            ],
+            "answer": 0,
+            "explanation_cn": "全文围绕中国探月工程展开。"
           }
         ]
       },
@@ -5466,45 +15056,132 @@ const WEEK4 = [
           {
             "id": "w4-tue-gr1",
             "type": "choice",
-            "question": "English ___ by millions of people around the world.",
-            "options": ["speaks", "is spoken", "spoke", "is speaking"],
-            "answer": 1,
-            "explanation_cn": "English 和 speak 是被动关系（英语被说），用被动语态 is spoken。被动结构：be + 过去分词。",
-            "explanation_en": "'English' receives the action, so the passive voice is used: 'is spoken'. Structure: be + past participle."
+            "question": "The programme ___ in 2004, and it has grown fast.",
+            "options": [
+              "started",
+              "starts",
+              "starting",
+              "start"
+            ],
+            "answer": 0,
+            "explanation_cn": "in 2004 过去时间，用过去式 started。"
           },
           {
             "id": "w4-tue-gr2",
-            "type": "fill",
-            "question": "The classroom ___ (clean) every day. [填入正确形式]",
-            "answer": "is cleaned",
-            "explanation_cn": "教室是被打扫的，用被动语态 is cleaned。every day 是一般现在时标志，所以用 is + 过去分词。",
-            "explanation_en": "The classroom is cleaned by someone, so the passive is used. 'Every day' signals the simple present: is + cleaned."
+            "type": "choice",
+            "question": "Moon soil is different ___ the soil on the earth.",
+            "options": [
+              "from",
+              "with",
+              "at",
+              "of"
+            ],
+            "answer": 0,
+            "explanation_cn": "be different from…：与…不同。"
           },
           {
             "id": "w4-tue-gr3",
             "type": "choice",
-            "question": "The photos ___ on the Great Wall last summer.",
-            "options": ["took", "were taken", "was taken", "take"],
-            "answer": 1,
-            "explanation_cn": "photos 是被拍的，用被动语态。photos 是复数，所以用 were taken。注意主谓数的一致。",
-            "explanation_en": "The photos were taken by someone, and 'photos' is plural, so 'were taken' is correct. Watch the subject-verb agreement."
+            "question": "The robot car can work ___ nobody is there.",
+            "options": [
+              "when",
+              "because",
+              "so",
+              "but"
+            ],
+            "answer": 0,
+            "explanation_cn": "「在没有人时」也能工作，when。"
           },
           {
             "id": "w4-tue-gr4",
-            "type": "fill",
-            "question": "Paper ___ (invent) in China. [填入正确形式]",
-            "answer": "was invented",
-            "explanation_cn": "纸是被发明的，且发生在过去，用一般过去时的被动：was invented。四大发明之一的说法：Paper was invented in China.",
-            "explanation_en": "Paper was invented in the past by someone, so the past passive 'was invented' is used."
+            "type": "choice",
+            "question": "It took the scientists years ___ the mission.",
+            "options": [
+              "to prepare",
+              "prepare",
+              "preparing",
+              "prepared"
+            ],
+            "answer": 0,
+            "explanation_cn": "It takes sb time to do sth：花多年准备。"
           },
           {
             "id": "w4-tue-gr5",
             "type": "choice",
-            "question": "A new school ___ in our town next year.",
-            "options": ["will build", "will be built", "is built", "was built"],
-            "answer": 1,
-            "explanation_cn": "next year 是将来，学校是被建的，用将来时被动：will be built。结构 will + be + 过去分词。",
-            "explanation_en": "'Next year' is future and the school is built by someone, so the future passive is used: 'will be built'. Structure: will + be + past participle."
+            "question": "The moon is about 380000 kilometres ___ from the earth.",
+            "options": [
+              "away",
+              "far",
+              "long",
+              "away from"
+            ],
+            "answer": 0,
+            "explanation_cn": "数字 + away：三十八万公里之远。"
+          },
+          {
+            "id": "w4-tue-gr6",
+            "type": "choice",
+            "question": "Neither the soil ___ the photos can tell us everything.",
+            "options": [
+              "nor",
+              "or",
+              "either",
+              "and"
+            ],
+            "answer": 0,
+            "explanation_cn": "neither…nor…：土壤和照片都不能告诉我们全部。"
+          },
+          {
+            "id": "w4-tue-gr7",
+            "type": "choice",
+            "question": "Astronauts must keep ___ in space, too.",
+            "options": [
+              "healthy",
+              "health",
+              "healthly",
+              "healthful"
+            ],
+            "answer": 0,
+            "explanation_cn": "keep + 形容词：保持健康。"
+          },
+          {
+            "id": "w4-tue-gr8",
+            "type": "choice",
+            "question": "The launch was shown ___ TV all over the world.",
+            "options": [
+              "on",
+              "in",
+              "at",
+              "by"
+            ],
+            "answer": 0,
+            "explanation_cn": "「在电视上」用 on TV。"
+          },
+          {
+            "id": "w4-tue-gr9",
+            "type": "choice",
+            "question": "Everyone watched the rocket ___ into the sky.",
+            "options": [
+              "fly",
+              "flew",
+              "flying",
+              "to fly"
+            ],
+            "answer": 0,
+            "explanation_cn": "watch sth do sth：看火箭飞上天空，用原形 fly（强调全过程）。"
+          },
+          {
+            "id": "w4-tue-gr10",
+            "type": "choice",
+            "question": "The children dream of ___ on the moon one day.",
+            "options": [
+              "walking",
+              "walk",
+              "walks",
+              "walked"
+            ],
+            "answer": 0,
+            "explanation_cn": "dream of doing sth：梦想在月球上行走。"
           }
         ]
       },
@@ -5517,47 +15194,132 @@ const WEEK4 = [
           {
             "id": "w4-tue-mc1",
             "type": "choice",
-            "question": "If it ___ tomorrow, we will stay at home.",
-            "options": ["rains", "will rain", "rained", "would rain"],
+            "question": "The programme ___ its name from an old story.",
+            "options": [
+              "took",
+              "takes",
+              "take",
+              "taking"
+            ],
             "answer": 0,
-            "explanation_cn": "主将从现：主句用将来（will stay），if 从句用一般现在时（rains）。这是 KET/PET 高频考点。",
-            "explanation_en": "'If' clause for a real future possibility uses the present tense, while the main clause uses 'will': If it rains, we will stay. A key exam point."
+            "explanation_cn": "讲述已完成的事实用过去式 took。"
           },
           {
             "id": "w4-tue-mc2",
             "type": "choice",
-            "question": "This is the boy ___ won the first prize.",
-            "options": ["which", "who", "whose", "whom"],
-            "answer": 1,
-            "explanation_cn": "先行词是 the boy（人），且在从句中作主语（won 的主语），用 who。which 指物；whom 作宾语；whose 表所属。",
-            "explanation_en": "The antecedent is a person doing the action, so 'who' is used. 'Which' is for things; 'whom' is an object; 'whose' shows possession."
+            "question": "Chang'e-5 ___ the moon in 2020.",
+            "options": [
+              "reached",
+              "reaches",
+              "reaching",
+              "reach"
+            ],
+            "answer": 0,
+            "explanation_cn": "in 2020 过去时间，用过去式 reached。"
           },
           {
             "id": "w4-tue-mc3",
             "type": "choice",
-            "question": "He asked me ___ I could help him with his English.",
-            "options": ["that", "what", "if", "who"],
-            "answer": 2,
-            "explanation_cn": "ask 后接一般疑问句内容的宾语从句用 if/whether（是否）。从句用陈述语序：if I could help。",
-            "explanation_en": "After 'ask', a yes/no question becomes a clause with 'if/whether'. Statement word order: 'if I could help'."
+            "question": "It was the first time that any country ___ moon rocks home in forty years.",
+            "options": [
+              "had brought",
+              "brought",
+              "has brought",
+              "brings"
+            ],
+            "answer": 0,
+            "explanation_cn": "It was the first time that + 过去完成时：had brought。"
           },
           {
             "id": "w4-tue-mc4",
             "type": "choice",
-            "question": "Not only my parents but also my sister ___ the film.",
-            "options": ["like", "likes", "liking", "liked"],
-            "answer": 1,
-            "explanation_cn": "not only...but also... 连接主语时遵循就近原则，谓语和最近的主语 my sister 一致，用单数 likes。注意时态是一般现在时。",
-            "explanation_en": "With 'not only... but also...', the verb agrees with the nearest subject: 'my sister' (singular), so 'likes'."
+            "question": "The far side is the side we ___ never see from the earth.",
+            "options": [
+              "can",
+              "cans",
+              "may be",
+              "are"
+            ],
+            "answer": 0,
+            "explanation_cn": "can 后面用动词原形 see。"
           },
           {
             "id": "w4-tue-mc5",
             "type": "choice",
-            "question": "It is ___ useful book that I have read it twice.",
-            "options": ["such a", "so a", "such", "so"],
+            "question": "Scientists study the soil ___ how the moon was born.",
+            "options": [
+              "to learn",
+              "learn",
+              "learning",
+              "learned"
+            ],
             "answer": 0,
-            "explanation_cn": "such + a + 形容词 + 名词：such a useful book。so 后面直接跟形容词：so useful a book。注意 useful 是辅音音素开头，用 a 不用 an。",
-            "explanation_en": "The pattern is 'such + a + adjective + noun': such a useful book. With 'so', the order changes: so useful a book. Note: 'useful' starts with a consonant sound /j/, so 'a'."
+            "explanation_cn": "目的状语用 to learn。"
+          },
+          {
+            "id": "w4-tue-mc6",
+            "type": "choice",
+            "question": "A small robot car ___ on the moon and took photos.",
+            "options": [
+              "drove",
+              "drives",
+              "driving",
+              "driven"
+            ],
+            "answer": 0,
+            "explanation_cn": "and 并列过去动作，drove（drive 的过去式）。"
+          },
+          {
+            "id": "w4-tue-mc7",
+            "type": "choice",
+            "question": "Chinese astronauts ___ walk on the moon one day.",
+            "options": [
+              "may",
+              "mays",
+              "may be",
+              "maybe"
+            ],
+            "answer": 0,
+            "explanation_cn": "may + 动词原形：may walk。maybe 是副词，不能加动词。"
+          },
+          {
+            "id": "w4-tue-mc8",
+            "type": "choice",
+            "question": "The moon travels ___ the earth.",
+            "options": [
+              "around",
+              "round of",
+              "around of",
+              "to around"
+            ],
+            "answer": 0,
+            "explanation_cn": "月球绕着地球转：travels around the earth。"
+          },
+          {
+            "id": "w4-tue-mc9",
+            "type": "choice",
+            "question": "The mission was ___ success.",
+            "options": [
+              "a",
+              "an",
+              "the",
+              "/（不填）"
+            ],
+            "answer": 0,
+            "explanation_cn": "a success：一件成功的事，success 可数时用 a。"
+          },
+          {
+            "id": "w4-tue-mc10",
+            "type": "choice",
+            "question": "We are proud ___ Chang'e.",
+            "options": [
+              "of",
+              "with",
+              "at",
+              "for"
+            ],
+            "answer": 0,
+            "explanation_cn": "be proud of…：为嫦娥感到骄傲。"
           }
         ]
       }
@@ -5567,7 +15329,7 @@ const WEEK4 = [
     "day_cn": "周三",
     "day_en": "Wednesday",
     "is_speaking_day": true,
-    "total_duration": 40,
+    "total_duration": 60,
     "theme_cn": "AI口语 + 高频词汇 + 阅读理解",
     "modules": [
       {
@@ -5589,7 +15351,14 @@ const WEEK4 = [
             "answer": 0,
             "pronunciation_tips": "would like to 中 would 弱读 /wəd/，medicine /ˈmedsn/ 英式可读两音节",
             "explanation_cn": "would like to + 动词原形 意为想要做。A 正确；B would like to 后面接了过去式，错误；C、D 答非所问。",
-            "explanation_en": "'Would like to + base verb' means to want to do. A is correct; B wrongly uses the past form after 'to'; C and D do not answer."
+            "explanation_en": "'Would like to + base verb' means to want to do. A is correct; B wrongly uses the past form after 'to'; C and D do not answer.",
+            "answer_cn_hint": "它在问「毕业后想做什么」（将来的打算），答句要用 would like to / want to 加动词。",
+            "options_cn": [
+              "我想在大学学医。",
+              "我想完成了我的作业。",
+              "我去年毕业了。",
+              "学校很有趣。"
+            ]
           },
           {
             "id": "w4-wed-sp2",
@@ -5604,7 +15373,14 @@ const WEEK4 = [
             "answer": 0,
             "pronunciation_tips": "admire /ədˈmaɪə/ 重音在第二音节，gives up 连读",
             "explanation_cn": "A 说出人并给出敬佩的原因（从不放弃），完整。B admire 后面搭配错误；C 只是事实；D 答非所问。",
-            "explanation_en": "A names the person and gives the reason ('never gives up'); B uses a wrong pattern after 'admire'; C is just a fact; D does not answer."
+            "explanation_en": "A names the person and gives the reason ('never gives up'); B uses a wrong pattern after 'admire'; C is just a fact; D does not answer.",
+            "answer_cn_hint": "这是请你介绍一个人，答句要说他是谁，再说你敬佩他什么。",
+            "options_cn": [
+              "我敬佩我的体育老师，因为他从不放弃。",
+              "我敬佩他跑得快。",
+              "我的体育老师也教数学。",
+              "我把书给了他。"
+            ]
           },
           {
             "id": "w4-wed-sp3",
@@ -5619,7 +15395,14 @@ const WEEK4 = [
             "answer": 0,
             "pronunciation_tips": "healthy /ˈhelθi/ 注意 th 咬舌，go to bed early 连读",
             "explanation_cn": "how 问做法，A 说出两件具体的事，正确。B 只说状态；C 是观点；D 说的是妈妈。",
-            "explanation_en": "'What do you do' asks for actions. A gives two concrete habits; B states a fact about yourself; C is an opinion; D is about mother."
+            "explanation_en": "'What do you do' asks for actions. A gives two concrete habits; B states a fact about yourself; C is an opinion; D is about mother.",
+            "answer_cn_hint": "它在问「怎么保持健康」，答句要说出具体做法，比如跑步、早睡。",
+            "options_cn": [
+              "我每天早上跑步，而且睡得早。",
+              "我很健康。",
+              "健康非常重要。",
+              "我妈妈做的饭很健康。"
+            ]
           },
           {
             "id": "w4-wed-sp4",
@@ -5634,7 +15417,14 @@ const WEEK4 = [
             "answer": 0,
             "pronunciation_tips": "superpower /ˈsuːpəpaʊə/ 复合词重音在前，could /kʊd/ 不要读成 /kʌd/",
             "explanation_cn": "could 开头的虚拟问句，回答用 would。A 正确且补充了理由；B 用了 will，时态不对；C、D 答非所问。",
-            "explanation_en": "An imagined situation with 'could' is answered with 'would'. A is correct and adds a reason; B wrongly uses 'will'; C and D do not answer."
+            "explanation_en": "An imagined situation with 'could' is answered with 'would'. A is correct and adds a reason; B wrongly uses 'will'; C and D do not answer.",
+            "answer_cn_hint": "这是假设句，答句要用 I would like to … 说出你想要的超能力，最好再说为什么。",
+            "options_cn": [
+              "我想飞，这样就能看到整个世界。",
+              "我明年会有超能力。",
+              "超能力不是真实的东西。",
+              "我能跑得很快。"
+            ]
           },
           {
             "id": "w4-wed-sp5",
@@ -5649,7 +15439,14 @@ const WEEK4 = [
             "answer": 0,
             "pronunciation_tips": "have ever taken 注意 taken /ˈteɪkən/ 是 take 的过去分词，Xi'an 读作 /ʃiːˈæn/",
             "explanation_cn": "have ever taken 是完成时，A 回答了最好的一次经历，正确。B 是将来；C 是评价；D 是日常通勤不是旅行。",
-            "explanation_en": "A answers with the best trip experience; B is future; C is an opinion; D describes a daily commute, not a trip."
+            "explanation_en": "A answers with the best trip experience; B is future; C is an opinion; D describes a daily commute, not a trip.",
+            "answer_cn_hint": "它在问「最好的一次旅行」，答句要说出去了哪里。",
+            "options_cn": [
+              "最好的一次旅行是和同学去西安。",
+              "今年夏天我要去旅行。",
+              "旅行总是很累。",
+              "我坐公交车上学。"
+            ]
           }
         ]
       },
@@ -5659,87 +15456,742 @@ const WEEK4 = [
         "type": "vocabulary_game",
         "duration": 5,
         "words": [
-          vocabWord({
-            "word": "soldier", "phonetic": "/ˈsəʊldʒə/", "meaning": "士兵", "emoji": "🪖",
-            "example_en": "The soldiers stood on the wall.", "example_cn": "士兵们站在城墙上。",
-            "syllables": ["sol", "dier"], "spell": ["sol__er", "di"],
-            "wrongEmoji": ["⭐", "🏯", "🧵"], "wrongMeaning": ["宫殿", "丝绸", "贸易"]
-          }),
-          vocabWord({
-            "word": "palace", "phonetic": "/ˈpæləs/", "meaning": "宫殿", "emoji": "🏯",
-            "example_en": "The palace has a long history.", "example_cn": "这座宫殿历史悠久。",
-            "syllables": ["pal", "ace"], "spell": ["pal__e", "ac"],
-            "wrongEmoji": ["⭐", "🪖", "🚢"], "wrongMeaning": ["士兵", "奇迹", "贸易"]
-          }),
-          vocabWord({
-            "word": "silk", "phonetic": "/sɪlk/", "meaning": "丝绸", "emoji": "🧵",
-            "example_en": "This scarf is made of silk.", "example_cn": "这条围巾是丝绸做的。",
-            "syllables": ["silk"], "spell": ["s__lk", "i"],
-            "wrongEmoji": ["⭐", "🚗", "🗻"], "wrongMeaning": ["宫殿", "贸易", "士兵"]
-          }),
-          vocabWord({
-            "word": "trade", "phonetic": "/treɪd/", "meaning": "贸易；买卖", "emoji": "🚢",
-            "example_en": "Ships carried goods for trade.", "example_cn": "轮船运送货物做贸易。",
-            "syllables": ["trade"], "spell": ["tr__e", "ad"],
-            "wrongEmoji": ["⭐", "🧵", "☂️"], "wrongMeaning": ["丝绸", "宫殿", "奇迹"]
-          }),
-          vocabWord({
-            "word": "wonder", "phonetic": "/ˈwʌndə/", "meaning": "奇迹；奇观", "emoji": "🗿",
-            "example_en": "The Great Wall is a wonder of the world.", "example_cn": "长城是世界奇迹之一。",
-            "syllables": ["won", "der"], "spell": ["wo__er", "nd"],
-            "wrongEmoji": ["⭐", "🚢", "🎲"], "wrongMeaning": ["贸易", "丝绸", "宫殿"]
-          })
+          {
+            "word": "soldier",
+            "phonetic": "/ˈsəʊldʒə/",
+            "meaning": "士兵",
+            "emoji": "🪖",
+            "example_en": "The soldiers stood on the wall.",
+            "example_cn": "士兵们站在城墙上。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "🪖",
+                  "⭐",
+                  "🏯",
+                  "🧵"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "🧵",
+                  "⭐",
+                  "🪖",
+                  "🏯"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "soldier 是什么意思？（1/2）",
+                "options": [
+                  "宫殿",
+                  "丝绸",
+                  "士兵",
+                  "贸易"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "soldier 是什么意思？（2/2）",
+                "options": [
+                  "士兵",
+                  "贸易",
+                  "宫殿",
+                  "丝绸"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: sol__er",
+                "answer": "di"
+              }
+            ],
+            "letters": [
+              "s",
+              "o",
+              "l",
+              "d",
+              "i",
+              "e",
+              "r"
+            ],
+            "syllables": [
+              "sol",
+              "dier"
+            ],
+            "hint_cn": "穿军装、保卫国家的人"
+          },
+          {
+            "word": "palace",
+            "phonetic": "/ˈpæləs/",
+            "meaning": "宫殿",
+            "emoji": "🏯",
+            "example_en": "The palace has a long history.",
+            "example_cn": "这座宫殿历史悠久。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "🏯",
+                  "⭐",
+                  "🪖",
+                  "🚢"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "🚢",
+                  "⭐",
+                  "🏯",
+                  "🪖"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "palace 是什么意思？（1/2）",
+                "options": [
+                  "士兵",
+                  "奇迹",
+                  "宫殿",
+                  "贸易"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "palace 是什么意思？（2/2）",
+                "options": [
+                  "宫殿",
+                  "贸易",
+                  "士兵",
+                  "奇迹"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: pal__e",
+                "answer": "ac"
+              }
+            ],
+            "letters": [
+              "p",
+              "a",
+              "l",
+              "a",
+              "c",
+              "e"
+            ],
+            "syllables": [
+              "pal",
+              "ace"
+            ],
+            "hint_cn": "古代国王住的那种大房子"
+          },
+          {
+            "word": "silk",
+            "phonetic": "/sɪlk/",
+            "meaning": "丝绸",
+            "emoji": "🧵",
+            "example_en": "This scarf is made of silk.",
+            "example_cn": "这条围巾是丝绸做的。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "🧵",
+                  "⭐",
+                  "🚗",
+                  "🗻"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "🗻",
+                  "⭐",
+                  "🧵",
+                  "🚗"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "silk 是什么意思？（1/2）",
+                "options": [
+                  "宫殿",
+                  "贸易",
+                  "丝绸",
+                  "士兵"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "silk 是什么意思？（2/2）",
+                "options": [
+                  "丝绸",
+                  "士兵",
+                  "宫殿",
+                  "贸易"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: s__lk",
+                "answer": "i"
+              }
+            ],
+            "letters": [
+              "s",
+              "i",
+              "l",
+              "k"
+            ],
+            "syllables": [
+              "silk"
+            ],
+            "hint_cn": "摸起来滑滑的、亮亮的布"
+          },
+          {
+            "word": "trade",
+            "phonetic": "/treɪd/",
+            "meaning": "贸易；买卖",
+            "emoji": "🚢",
+            "example_en": "Ships carried goods for trade.",
+            "example_cn": "轮船运送货物做贸易。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "🚢",
+                  "⭐",
+                  "🧵",
+                  "☂️"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "☂️",
+                  "⭐",
+                  "🚢",
+                  "🧵"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "trade 是什么意思？（1/2）",
+                "options": [
+                  "丝绸",
+                  "宫殿",
+                  "贸易；买卖",
+                  "奇迹"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "trade 是什么意思？（2/2）",
+                "options": [
+                  "贸易；买卖",
+                  "奇迹",
+                  "丝绸",
+                  "宫殿"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: tr__e",
+                "answer": "ad"
+              }
+            ],
+            "letters": [
+              "t",
+              "r",
+              "a",
+              "d",
+              "e"
+            ],
+            "syllables": [
+              "trade"
+            ],
+            "hint_cn": "你有我需要的，我有你需要的，换一换"
+          },
+          {
+            "word": "wonder",
+            "phonetic": "/ˈwʌndə/",
+            "meaning": "奇迹；奇观",
+            "emoji": "🗿",
+            "example_en": "The Great Wall is a wonder of the world.",
+            "example_cn": "长城是世界奇迹之一。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "🗿",
+                  "⭐",
+                  "🚢",
+                  "🎲"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "🎲",
+                  "⭐",
+                  "🗿",
+                  "🚢"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "wonder 是什么意思？（1/2）",
+                "options": [
+                  "贸易",
+                  "丝绸",
+                  "奇迹；奇观",
+                  "宫殿"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "wonder 是什么意思？（2/2）",
+                "options": [
+                  "奇迹；奇观",
+                  "宫殿",
+                  "贸易",
+                  "丝绸"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: wo__er",
+                "answer": "nd"
+              }
+            ],
+            "letters": [
+              "w",
+              "o",
+              "n",
+              "d",
+              "e",
+              "r"
+            ],
+            "syllables": [
+              "won",
+              "der"
+            ],
+            "hint_cn": "看到会“哇”一声的东西，比如长城"
+          }
         ]
       },
       {
         "id": "w4-wed-reading",
         "name_cn": "阅读理解",
         "type": "reading",
-        "duration": 5,
-        "passage": "The Great Wall is one of the greatest wonders of the world. It winds like a giant dragon across the mountains of northern China. The wall was first built more than two thousand years ago. Different states built walls to protect their land. Later, they were joined together. The wall that we see today was mostly built in the Ming Dynasty. In the past, soldiers stood on the wall and watched for enemies. Beacons were lit to send messages quickly over long distances. Today, the wall is no longer used for war. Millions of visitors climb it every year and enjoy the amazing views. As an old saying goes, \"He who has never been to the Great Wall is not a true man.\"",
-        "passage_cn": "长城是世界上最伟大的奇迹之一。它像一条巨龙蜿蜒穿过中国北方的群山。长城最早建于两千多年前。不同的诸侯国修筑城墙来保护自己的土地。后来，这些城墙被连接起来。我们今天看到的长城大部分建于明代。过去，士兵们站在城墙上瞭望敌情。他们点燃烽火台，把消息快速传到远方。如今，长城不再用于战争。每年数百万游客登上长城，欣赏壮丽的景色。正如古语所说，不到长城非好汉。",
+        "duration": 10,
+        "passage": "C919 is China's first big passenger plane made by itself. The letter C stands for China, and 919 sounds like \"jiu jiu\" in Chinese, which means a long, long time — people hope the plane will fly safely forever. The plane can carry about 160 passengers and fly over five thousand kilometres without stopping. Its first passenger flight was in May 2023, from Shanghai to Beijing. Many parts of the plane, like the wings and the body, are made in Chinese factories. Sitting inside, passengers find wide seats, big windows and quiet engines. More and more airlines are choosing C919 for busy lines between big cities. The sky used to belong to planes from other countries, but now China has its own big plane, and it is flying higher and higher.",
+        "passage_cn": "C919是中国自主制造的第一架大型客机。字母C代表中国，919在中文里谐音「久久」，寓意长长久久——人们希望这架飞机永远安全飞行。这架飞机可以载约160名乘客，不休息能飞五千多公里。它的首次商业飞行在2023年5月，从上海到北京。飞机的机翼、机身等许多部件都是中国工厂制造的。坐在里面，乘客能看到宽大的座椅、大窗户和安静的发动机。越来越多的航空公司选择C919执飞大城市之间的繁忙航线。天空曾经属于别国的飞机，现在中国有了自己的大飞机，而且飞得越来越高。",
         "questions": [
           {
             "id": "w4-wed-rd1",
             "type": "choice",
-            "question": "Why were the first walls built?",
+            "question": "What does the letter C in C919 stand for?",
             "options": [
-              "To welcome visitors",
-              "To protect the land",
-              "To watch the stars",
-              "To send letters"
+              "China",
+              "Chang'e",
+              "Clean",
+              "Cloud"
             ],
-            "answer": 1,
-            "explanation_cn": "文章说 Different states built walls to protect their land。修墙是为了保护土地。注意文中用被动语态 was first built。",
-            "explanation_en": "The text says 'Different states built walls to protect their land.' Note the passive form 'was first built' earlier in the sentence."
+            "answer": 0,
+            "explanation_cn": "字母 C 代表中国（China）。"
           },
           {
             "id": "w4-wed-rd2",
             "type": "choice",
-            "question": "When was most of today's wall built?",
+            "question": "What does 919 sound like in Chinese?",
             "options": [
-              "Two thousand years ago",
-              "In the seventeenth century",
-              "In the Ming Dynasty",
-              "Last century"
+              "\"Jiu jiu\", meaning a long, long time",
+              "\"Jiu wu\", meaning save me",
+              "\"Yi jiu\", meaning first",
+              "Nothing special"
             ],
-            "answer": 2,
-            "explanation_cn": "文章说 The wall that we see today was mostly built in the Ming Dynasty。今天的长城大部分建于明代。Ming Dynasty 意为明朝。",
-            "explanation_en": "The text says 'The wall that we see today was mostly built in the Ming Dynasty.' Note: 'Dynasty' means a period ruled by one family."
+            "answer": 0,
+            "explanation_cn": "919 谐音「久久」，寓意长长久久。"
           },
           {
             "id": "w4-wed-rd3",
             "type": "choice",
-            "question": "How were messages sent quickly in the past?",
+            "question": "How many passengers can C919 carry?",
             "options": [
-              "By birds",
-              "By lighting beacons",
-              "By horses at night",
-              "By drums on the wall"
+              "About 160",
+              "About 1600",
+              "About 16",
+              "About 60"
             ],
-            "answer": 1,
-            "explanation_cn": "文章说 Beacons were lit to send messages quickly over long distances。点燃烽火传讯。beacon 意为烽火、信号灯。",
-            "explanation_en": "The text says 'Beacons were lit to send messages quickly over long distances.' Note: 'beacon' means a fire or light used as a signal."
+            "answer": 0,
+            "explanation_cn": "可载约160名乘客。"
+          },
+          {
+            "id": "w4-wed-rd4",
+            "type": "choice",
+            "question": "How far can it fly without stopping?",
+            "options": [
+              "Over five thousand kilometres",
+              "Over five hundred kilometres",
+              "Over fifty kilometres",
+              "Over five kilometres"
+            ],
+            "answer": 0,
+            "explanation_cn": "不休息能飞五千多公里。"
+          },
+          {
+            "id": "w4-wed-rd5",
+            "type": "choice",
+            "question": "When was its first passenger flight?",
+            "options": [
+              "In May 2023",
+              "In May 2020",
+              "In March 2013",
+              "In May 2033"
+            ],
+            "answer": 0,
+            "explanation_cn": "首次商业飞行在2023年5月。"
+          },
+          {
+            "id": "w4-wed-rd6",
+            "type": "choice",
+            "question": "Where was the first flight from and to?",
+            "options": [
+              "From Shanghai to Beijing",
+              "From Beijing to Shanghai",
+              "From Shanghai to Guangzhou",
+              "From Chengdu to Beijing"
+            ],
+            "answer": 0,
+            "explanation_cn": "首航从上海到北京。"
+          },
+          {
+            "id": "w4-wed-rd7",
+            "type": "choice",
+            "question": "What are the seats like?",
+            "options": [
+              "Wide",
+              "Narrow",
+              "Hard",
+              "Small and dark"
+            ],
+            "answer": 0,
+            "explanation_cn": "乘客发现座椅宽大。"
+          },
+          {
+            "id": "w4-wed-rd8",
+            "type": "choice",
+            "question": "Who is choosing C919 for busy lines?",
+            "options": [
+              "More and more airlines",
+              "No one yet",
+              "Only foreign airlines",
+              "Only the army"
+            ],
+            "answer": 0,
+            "explanation_cn": "越来越多航空公司选择C919。"
+          },
+          {
+            "id": "w4-wed-rd9",
+            "type": "choice",
+            "question": "The word \"passenger\" here means ___.",
+            "options": [
+              "乘客",
+              "飞行员",
+              "司机",
+              "工程师"
+            ],
+            "answer": 0,
+            "explanation_cn": "passenger 意思是「乘客」。"
+          },
+          {
+            "id": "w4-wed-rd10",
+            "type": "choice",
+            "question": "The best title for the passage about the big plane is ___.",
+            "options": [
+              "C919, China's Own Big Plane",
+              "How to Fly a Plane",
+              "A Trip to Shanghai",
+              "Planes in the Past"
+            ],
+            "answer": 0,
+            "explanation_cn": "全文介绍国产大飞机C919。"
+          }
+        ]
+      },
+      {
+        "id": "w4-wed-mc",
+        "name_cn": "单项选择",
+        "type": "multiple_choice",
+        "duration": 10,
+        "questions": [
+          {
+            "id": "w4-wed-mc1",
+            "type": "choice",
+            "question": "C919 is China's first big passenger plane ___ by itself.",
+            "options": [
+              "made",
+              "make",
+              "makes",
+              "making"
+            ],
+            "answer": 0,
+            "explanation_cn": "过去分词 made 作后置定语：中国自主制造的。"
+          },
+          {
+            "id": "w4-wed-mc2",
+            "type": "choice",
+            "question": "The plane can carry about ___ passengers.",
+            "options": [
+              "160",
+              "1600",
+              "16",
+              "60"
+            ],
+            "answer": 0,
+            "explanation_cn": "约160名乘客。"
+          },
+          {
+            "id": "w4-wed-mc3",
+            "type": "choice",
+            "question": "It can fly over five ___ kilometres without stopping.",
+            "options": [
+              "thousand",
+              "thousands",
+              "thousand of",
+              "thousands of"
+            ],
+            "answer": 0,
+            "explanation_cn": "数词 + thousand 单数：five thousand。"
+          },
+          {
+            "id": "w4-wed-mc4",
+            "type": "choice",
+            "question": "Its first passenger flight ___ in May 2023.",
+            "options": [
+              "was",
+              "is",
+              "were",
+              "be"
+            ],
+            "answer": 0,
+            "explanation_cn": "in May 2023 过去时间，用 was。"
+          },
+          {
+            "id": "w4-wed-mc5",
+            "type": "choice",
+            "question": "Passengers find wide seats and ___ windows.",
+            "options": [
+              "big",
+              "small",
+              "broken",
+              "dark"
+            ],
+            "answer": 0,
+            "explanation_cn": "宽大的座椅、大窗户，big windows。"
+          },
+          {
+            "id": "w4-wed-mc6",
+            "type": "choice",
+            "question": "More and more airlines ___ choosing C919.",
+            "options": [
+              "are",
+              "is",
+              "am",
+              "be"
+            ],
+            "answer": 0,
+            "explanation_cn": "airlines 复数，现在进行时用 are choosing。"
+          },
+          {
+            "id": "w4-wed-mc7",
+            "type": "choice",
+            "question": "The sky used to ___ to planes from other countries.",
+            "options": [
+              "belong",
+              "belongs",
+              "belonging",
+              "belonged"
+            ],
+            "answer": 0,
+            "explanation_cn": "used to do sth：过去常常，用原形 belong。"
+          },
+          {
+            "id": "w4-wed-mc8",
+            "type": "choice",
+            "question": "Now China has its ___ big plane.",
+            "options": [
+              "own",
+              "owns",
+              "owning",
+              "owned"
+            ],
+            "answer": 0,
+            "explanation_cn": "its own big plane：自己的大飞机。"
+          },
+          {
+            "id": "w4-wed-mc9",
+            "type": "choice",
+            "question": "The plane flies ___ and higher.",
+            "options": [
+              "higher",
+              "highest",
+              "high",
+              "more high"
+            ],
+            "answer": 0,
+            "explanation_cn": "比较级 and 比较级：higher and higher 越来越高。"
+          },
+          {
+            "id": "w4-wed-mc10",
+            "type": "choice",
+            "question": "919 sounds ___ \"jiu jiu\" in Chinese.",
+            "options": [
+              "like",
+              "likes",
+              "liking",
+              "liked"
+            ],
+            "answer": 0,
+            "explanation_cn": "sound like：听起来像。"
+          }
+        ]
+      },
+      {
+        "id": "w4-wed-tense2",
+        "name_cn": "时态练习",
+        "type": "tense",
+        "duration": 5,
+        "questions": [
+          {
+            "id": "w4-wed-tn21",
+            "type": "fill",
+            "question": "C919 ___ (make) its first flight in May 2023. [填入正确形式]",
+            "answer": "made",
+            "explanation_cn": "in May 2023 过去时间，make 的过去式是 made。"
+          },
+          {
+            "id": "w4-wed-tn22",
+            "type": "fill",
+            "question": "Look! The big plane ___ (fly) higher and higher. [填入正确形式]",
+            "answer": "is flying",
+            "explanation_cn": "Look! 提示正在进行，用 is flying。"
+          },
+          {
+            "id": "w4-wed-tn23",
+            "type": "fill",
+            "question": "More airlines ___ (choose) C919 since 2023. [填入正确形式]",
+            "answer": "have chosen",
+            "explanation_cn": "since 2023 与现在完成时连用。"
+          },
+          {
+            "id": "w4-wed-tn24",
+            "type": "fill",
+            "question": "The plane ___ (carry) about 160 passengers. [填入正确形式]",
+            "answer": "carries",
+            "explanation_cn": "客观能力，主语三单用 carries。"
+          },
+          {
+            "id": "w4-wed-tn25",
+            "type": "fill",
+            "question": "Chinese factories ___ (build) more C919s in the future. [填入正确形式]",
+            "answer": "will build",
+            "explanation_cn": "in the future 将来时间，用 will build。"
           }
         ]
       }
@@ -5762,70 +16214,141 @@ const WEEK4 = [
             "id": "w4-thu-ls1",
             "type": "choice",
             "question": "听到的句子是什么？",
-            "audio_text": "The concert has been put off until next Friday because of the storm.",
+            "audio_text": "The Palace Museum stands in the heart of Beijing.",
             "options": [
-              "The concert has been put off until next Friday because of the storm.",
-              "The concert has been put on until next Friday because of the storm.",
-              "The concert was cancelled because of the rain.",
-              "The concert will start earlier because of the storm."
+              "The Palace Museum stands in the heart of Beijing.",
+              "The Palace Museum stands in the south of Beijing.",
+              "The Palace Museum stood in the heart of Nanjing.",
+              "The Palace Museum stands in the heart of Shanghai."
             ],
             "answer": 0,
-            "explanation_cn": "听力关键词：has been put off（被推迟）。put off 意为推迟，put on 意为上演。because of 后面接名词或名词短语。",
-            "explanation_en": "Key phrase: 'has been put off' (postponed). Note: 'put off' means to delay, 'put on' means to stage a show. 'Because of' is followed by a noun phrase."
+            "explanation_cn": "stands（坐落）在北京市中心，不是南方或南京。"
           },
           {
             "id": "w4-thu-ls2",
             "type": "choice",
             "question": "听到的句子是什么？",
-            "audio_text": "More than three hundred students joined the reading club this year.",
+            "audio_text": "The buildings are made of wood without a single nail.",
             "options": [
-              "More than three hundred students joined the reading club this year.",
-              "More than thirteen students joined the reading club this year.",
-              "More than three hundred students joined the singing club this year.",
-              "Three students joined the reading club last year."
+              "The buildings are made of wood without a single nail.",
+              "The buildings are made of stone without a single nail.",
+              "The buildings are made of wood with many nails.",
+              "The buildings were made of glass without nails."
             ],
             "answer": 0,
-            "explanation_cn": "听力关键词：three hundred（300）、reading club（阅读社）。注意 hundred /ˈhʌndrəd/ 和 thirteen /ˌfɜːˈtiːn/ 数字差别大，抓住重音。",
-            "explanation_en": "Key words: 'three hundred', 'reading club'. Note the stress difference between 'hundred' and 'thirteen'."
+            "explanation_cn": "材料是 wood（木头），without a nail（不用钉子）。"
           },
           {
             "id": "w4-thu-ls3",
             "type": "choice",
             "question": "听到的句子是什么？",
-            "audio_text": "You'd better take an umbrella with you when you go out.",
+            "audio_text": "Over seventeen million people visit it every year.",
             "options": [
-              "You'd better take an umbrella with you when you go out.",
-              "You'd better take off your umbrella when you go out.",
-              "You'd better bring a raincoat with you when you go out.",
-              "You must buy an umbrella before you go out."
+              "Over seventeen million people visit it every year.",
+              "Over seven million people visit it every year.",
+              "Over seventeen million people visited it last year.",
+              "Over seventeen million people work there every year."
             ],
             "answer": 0,
-            "explanation_cn": "听力关键词：You'd better（你最好）、take an umbrella（带伞）。注意 take an umbrella 和 take off（脱下）意思相反。",
-            "explanation_en": "Key phrases: 'You'd better', 'take an umbrella'. Note: 'take off' means to remove — the opposite action here."
+            "explanation_cn": "seventeen million（一千七百万），注意 seventeen 和 seven。"
           },
           {
             "id": "w4-thu-ls4",
-            "type": "fill",
-            "question": "听到的数字是什么？",
-            "audio_text": "The Great Wall is about twenty-one thousand kilometres long.",
-            "answer": "21000",
-            "explanation_cn": "听力数字：twenty-one thousand (21000)。注意 twenty-one（21）加 thousand（千），合起来是两万一千。kilometre 意为千米。",
-            "explanation_en": "Number: twenty-one thousand (21,000). Note: twenty-one + thousand. 'Kilometre' means one thousand metres."
+            "type": "choice",
+            "question": "听到的句子是什么？",
+            "audio_text": "People can enjoy the palace without leaving home.",
+            "options": [
+              "People can enjoy the palace without leaving home.",
+              "People can enjoy the palace by leaving home.",
+              "People can clean the palace without leaving home.",
+              "People can enjoy the park without leaving school."
+            ],
+            "answer": 0,
+            "explanation_cn": "without leaving home（足不出户）。"
           },
           {
             "id": "w4-thu-ls5",
             "type": "choice",
             "question": "听到的句子是什么？",
-            "audio_text": "Mr Green has taught at this school for twenty years.",
+            "audio_text": "Photos of the red palace in white snow spread quickly online.",
             "options": [
-              "Mr Green has taught at this school for twenty years.",
-              "Mr Green taught at this school twenty years ago.",
-              "Mr Green has learned at this school for twenty years.",
-              "Mr Green will teach at this school for twenty years."
+              "Photos of the red palace in white snow spread quickly online.",
+              "Photos of the red palace in white snow spread slowly online.",
+              "Photos of the old park in white snow spread quickly online.",
+              "Photos of the red palace in heavy rain spread quickly online."
             ],
             "answer": 0,
-            "explanation_cn": "听力关键词：has taught（一直教）、for twenty years（二十年）。for + 时间段和现在完成时连用。注意 taught /tɔːt/ 是 teach 的过去分词。",
-            "explanation_en": "Key words: 'has taught', 'for twenty years'. 'For' + period goes with the present perfect. 'Taught' is the participle of 'teach'."
+            "explanation_cn": "white snow（白雪）不是 rain；spread quickly（迅速传播）。"
+          },
+          {
+            "id": "w4-thu-ls6",
+            "type": "choice",
+            "question": "听到的句子是什么？",
+            "audio_text": "C919 can carry about 160 passengers.",
+            "options": [
+              "C919 can carry about 160 passengers.",
+              "C919 can carry about 1060 passengers.",
+              "C919 can carry about 60 passengers.",
+              "C919 could carry about 160 passengers long ago."
+            ],
+            "answer": 0,
+            "explanation_cn": "数字 160（一百六），别听成 1060。"
+          },
+          {
+            "id": "w4-thu-ls7",
+            "type": "choice",
+            "question": "听到的句子是什么？",
+            "audio_text": "Its first passenger flight was from Shanghai to Beijing.",
+            "options": [
+              "Its first passenger flight was from Shanghai to Beijing.",
+              "Its first passenger flight was from Beijing to Shanghai.",
+              "Its first test flight was from Shanghai to Beijing.",
+              "Its last passenger flight was from Shanghai to Beijing."
+            ],
+            "answer": 0,
+            "explanation_cn": "first（首次）flight，方向 Shanghai → Beijing。"
+          },
+          {
+            "id": "w4-thu-ls8",
+            "type": "choice",
+            "question": "听到的句子是什么？",
+            "audio_text": "Chang'e-5 brought moon soil back to the earth in 2020.",
+            "options": [
+              "Chang'e-5 brought moon soil back to the earth in 2020.",
+              "Chang'e-6 brought moon soil back to the earth in 2020.",
+              "Chang'e-5 brought moon rocks back to the moon in 2020.",
+              "Chang'e-5 brought moon soil back to the earth in 2024."
+            ],
+            "answer": 0,
+            "explanation_cn": "是 Chang'e-5（五号），2020年，带回了月壤。"
+          },
+          {
+            "id": "w4-thu-ls9",
+            "type": "choice",
+            "question": "听到的句子是什么？",
+            "audio_text": "Astronauts may build a research station on the moon.",
+            "options": [
+              "Astronauts may build a research station on the moon.",
+              "Astronauts may build a research station on Mars.",
+              "Astronauts may buy a research station on the moon.",
+              "Scientists may build a research station under the sea."
+            ],
+            "answer": 0,
+            "explanation_cn": "主语 astronauts，地点 the moon，建 research station（科研站）。"
+          },
+          {
+            "id": "w4-thu-ls10",
+            "type": "choice",
+            "question": "听到的句子是什么？",
+            "audio_text": "Paper cutting connects China and the world.",
+            "options": [
+              "Paper cutting connects China and the world.",
+              "Paper cutting divides China and the world.",
+              "Paper cutting connects the past and the world only.",
+              "Paper cutting connects Beijing and Shanghai."
+            ],
+            "answer": 0,
+            "explanation_cn": "connects（连接）不是 divides（分开）。"
           }
         ]
       },
@@ -5834,52 +16357,137 @@ const WEEK4 = [
         "name_cn": "完形填空",
         "type": "cloze",
         "duration": 10,
-        "passage": "When Jack was eight, his grandfather's legs became weak, and he could not 1___ up the stairs easily. Jack wanted to help. He watched, drew pictures and tried again and again. A year later, he invented a small 2___ that carries things up and down the stairs. His grandfather was very 3___. Now the little machine is used in many homes in Jack's town. Last month, Jack 4___ a prize at a national invention competition. \"Don't wait until you grow up,\" Jack tells other children. \"If you see a 5___, try to solve it.\"",
+        "passage": "The Hong Kong-Zhuhai-Macao Bridge is a wonder of modern engineering. It is the longest sea crossing bridge in the world, with a total 1___ of 55 kilometres. The bridge 2___ Hong Kong, Zhuhai and Macao like a dragon on the sea. Before the bridge, a trip between Hong Kong and Zhuhai 3___ about four hours by road. Now it takes only forty-five 4___. The bridge has to fight the sea wind and heavy storms, so engineers 5___ it for 120 years of use. It can also stand strong 6___. The tunnel in the middle runs 7___ the sea, so big ships can pass above it. The bridge 8___ in October 2018 after nine years of building. Workers used more than 400000 tons of steel, enough to 9___ sixty Eiffel Towers. Today, thousands of cars cross the bridge every day, and people say it 10___ the three cities into one big family.",
         "questions": [
           {
             "id": "w4-thu-cz1",
             "type": "choice",
             "question": "1___",
-            "options": ["walk", "run", "jump", "look"],
+            "options": [
+              "length",
+              "long",
+              "longer",
+              "longest"
+            ],
             "answer": 0,
-            "explanation_cn": "腿脚不便，上楼困难，用 walk up the stairs（走上楼梯）。run 和 jump 与腿脚不便矛盾。",
-            "explanation_en": "His legs were weak, so he could not 'walk' up the stairs easily. 'Run' and 'jump' contradict weak legs."
+            "explanation_cn": "a total length of：总长度，用名词 length。"
           },
           {
             "id": "w4-thu-cz2",
             "type": "choice",
             "question": "2___",
-            "options": ["bicycle", "machine", "phone", "computer"],
-            "answer": 1,
-            "explanation_cn": "后文说 the little machine，所以发明的是小机器，用 machine。machine 意为机器。",
-            "explanation_en": "The text later says 'the little machine', so he invented a 'machine'."
+            "options": [
+              "connects",
+              "connect",
+              "connected",
+              "connecting"
+            ],
+            "answer": 0,
+            "explanation_cn": "主语 the bridge 三单，一般现在时用 connects。"
           },
           {
             "id": "w4-thu-cz3",
             "type": "choice",
             "question": "3___",
-            "options": ["proud", "sorry", "worried", "afraid"],
+            "options": [
+              "took",
+              "takes",
+              "take",
+              "taking"
+            ],
             "answer": 0,
-            "explanation_cn": "孙子发明了帮他的机器，爷爷非常自豪，用 proud。be proud 意为感到自豪。",
-            "explanation_en": "His grandson invented a machine to help him, so he was very 'proud'. Note: 'proud' means pleased about something done well."
+            "explanation_cn": "before 提示过去，用过去式 took。"
           },
           {
             "id": "w4-thu-cz4",
             "type": "choice",
             "question": "4___",
-            "options": ["lost", "won", "missed", "gave"],
-            "answer": 1,
-            "explanation_cn": "在全国发明比赛中获奖，用 won a prize。win-won-won，win a prize 意为获奖。",
-            "explanation_en": "He got a prize at the competition, so he 'won' a prize. Note: win-won-won."
+            "options": [
+              "minutes",
+              "minute",
+              "minutes'",
+              "minute's"
+            ],
+            "answer": 0,
+            "explanation_cn": "forty-five minutes：四十五分钟，复数。"
           },
           {
             "id": "w4-thu-cz5",
             "type": "choice",
             "question": "5___",
-            "options": ["problem", "dream", "game", "toy"],
+            "options": [
+              "made",
+              "make",
+              "makes",
+              "making"
+            ],
             "answer": 0,
-            "explanation_cn": "看到问题就试着解决它，用 problem。solve a problem 意为解决问题，是固定搭配。",
-            "explanation_en": "'If you see a problem, try to solve it.' Note: 'solve a problem' is a fixed collocation."
+            "explanation_cn": "工程师把它「设计建造」为可使用120年，made it for…。"
+          },
+          {
+            "id": "w4-thu-cz6",
+            "type": "choice",
+            "question": "6___",
+            "options": [
+              "earthquakes",
+              "earthquake",
+              "the earthquake of",
+              "an earthquakes"
+            ],
+            "answer": 0,
+            "explanation_cn": "stand strong earthquakes：抵御强震，复数泛指。"
+          },
+          {
+            "id": "w4-thu-cz7",
+            "type": "choice",
+            "question": "7___",
+            "options": [
+              "under",
+              "on",
+              "over",
+              "above"
+            ],
+            "answer": 0,
+            "explanation_cn": "海底隧道在海「下面」穿过，under the sea。"
+          },
+          {
+            "id": "w4-thu-cz8",
+            "type": "choice",
+            "question": "8___",
+            "options": [
+              "opened",
+              "opens",
+              "opening",
+              "open"
+            ],
+            "answer": 0,
+            "explanation_cn": "in October 2018 过去时间，用过去式 opened。"
+          },
+          {
+            "id": "w4-thu-cz9",
+            "type": "choice",
+            "question": "9___",
+            "options": [
+              "build",
+              "builds",
+              "building",
+              "built"
+            ],
+            "answer": 0,
+            "explanation_cn": "enough to build：足以建造六十座埃菲尔铁塔，to 后面用原形。"
+          },
+          {
+            "id": "w4-thu-cz10",
+            "type": "choice",
+            "question": "10___",
+            "options": [
+              "turns",
+              "turn",
+              "turning",
+              "turned"
+            ],
+            "answer": 0,
+            "explanation_cn": "主语 it 三单，turn…into…：把三座城市连成一个大家庭。"
           }
         ]
       },
@@ -5892,44 +16500,72 @@ const WEEK4 = [
           {
             "id": "w4-thu-tn1",
             "type": "fill",
-            "question": "The bridge ___ (build) in 1937. [填入正确形式]",
-            "answer": "was built",
-            "explanation_cn": "桥是被建的，且 1937 是过去时间，用一般过去时的被动：was built。build-built-built。",
-            "explanation_en": "The bridge was built by people in the past, so the past passive 'was built' is used. Note: build-built-built."
+            "question": "The bridge ___ (open) in October 2018. [填入正确形式]",
+            "answer": "opened",
+            "explanation_cn": "in October 2018 过去时间，用过去式 opened。"
           },
           {
             "id": "w4-thu-tn2",
-            "type": "choice",
-            "question": "By the time we arrived, the film ___ for ten minutes.",
-            "options": ["began", "had begun", "has begun", "was beginning"],
-            "answer": 1,
-            "explanation_cn": "by the time + 过去时，主句用过去完成时 had begun。电影开始发生在到达之前，是过去的过去。",
-            "explanation_en": "'By the time + past' takes the past perfect: 'had begun'. The film started before they arrived — the past of the past."
+            "type": "fill",
+            "question": "Look! Cars ___ (cross) the sea bridge now. [填入正确形式]",
+            "answer": "are crossing",
+            "explanation_cn": "Look! 提示正在进行，用 are crossing。"
           },
           {
             "id": "w4-thu-tn3",
             "type": "fill",
-            "question": "If it ___ (be) sunny tomorrow, we will climb the mountain. [填入正确形式]",
-            "answer": "is",
-            "explanation_cn": "主将从现：主句用 will climb，if 从句用一般现在时。主语 it 用 is。",
-            "explanation_en": "The main clause uses 'will climb', so the if-clause uses the simple present: 'is'."
+            "question": "The bridge ___ (stand) there for six years. [填入正确形式]",
+            "answer": "has stood",
+            "explanation_cn": "for six years 与现在完成时连用。"
           },
           {
             "id": "w4-thu-tn4",
-            "type": "choice",
-            "question": "He ___ his keys, so he couldn't open the door.",
-            "options": ["lost", "has lost", "had lost", "loses"],
-            "answer": 2,
-            "explanation_cn": "丢钥匙发生在打不开门之前，是过去的过去，用过去完成时 had lost。注意结果 couldn't open 是一般过去时。",
-            "explanation_en": "Losing the keys happened before he couldn't open the door — the past of the past — so 'had lost' is used."
+            "type": "fill",
+            "question": "Workers ___ (build) it for nine years before it opened. [填入正确形式]",
+            "answer": "had built",
+            "explanation_cn": "通车之前已建了九年，过去完成时 had built。"
           },
           {
             "id": "w4-thu-tn5",
             "type": "fill",
-            "question": "I ___ (not see) her since she moved to Shanghai. [填入正确形式]",
-            "answer": "haven't seen",
-            "explanation_cn": "since 引导从她搬家到现在，用现在完成时否定式 haven't seen。since 从句用过去式 moved。",
-            "explanation_en": "'Since she moved' connects the past to now, so the present perfect negative 'haven't seen' is used."
+            "question": "A trip ___ (take) only forty-five minutes now. [填入正确形式]",
+            "answer": "takes",
+            "explanation_cn": "now 一般现在时，主语单数用 takes。"
+          },
+          {
+            "id": "w4-thu-tn6",
+            "type": "fill",
+            "question": "Engineers ___ (design) the bridge to last 120 years. [填入正确形式]",
+            "answer": "designed",
+            "explanation_cn": "叙述设计事实，用过去式 designed。"
+          },
+          {
+            "id": "w4-thu-tn7",
+            "type": "fill",
+            "question": "Big ships ___ (pass) over the tunnel every day. [填入正确形式]",
+            "answer": "pass",
+            "explanation_cn": "every day 习惯动作，主语复数用原形 pass。"
+          },
+          {
+            "id": "w4-thu-tn8",
+            "type": "fill",
+            "question": "While the tunnel ___ (build), engineers met many problems. [填入正确形式]",
+            "answer": "was being built",
+            "explanation_cn": "隧道「被建造」的过程，过去进行时被动 was being built。"
+          },
+          {
+            "id": "w4-thu-tn9",
+            "type": "fill",
+            "question": "By 2030, the bridge ___ (serve) for over twelve years. [填入正确形式]",
+            "answer": "will have served",
+            "explanation_cn": "by + 将来时间，用将来完成时 will have served。"
+          },
+          {
+            "id": "w4-thu-tn10",
+            "type": "fill",
+            "question": "More bridges like this ___ (build) in the future. [填入正确形式]",
+            "answer": "will be built",
+            "explanation_cn": "将来会被建造，将来时被动 will be built。"
           }
         ]
       }
@@ -5939,7 +16575,7 @@ const WEEK4 = [
     "day_cn": "周五",
     "day_en": "Friday",
     "is_speaking_day": false,
-    "total_duration": 40,
+    "total_duration": 45,
     "theme_cn": "模板写作 + KET/PET题型 + 语法复习",
     "modules": [
       {
@@ -5965,11 +16601,36 @@ const WEEK4 = [
         ],
         "template": "We have only {{1}}. At home, we {{2}} every day. We also {{3}} by turning off the tap. Every spring, our class goes to the hills to {{4}}. If everyone does something small, the world will become a {{5}}.",
         "blanks": [
-          { "id": 1, "hint_cn": "一个地球", "hint_en": "one earth", "answer": "one earth" },
-          { "id": 2, "hint_cn": "垃圾分类", "hint_en": "sort the rubbish", "answer": "sort the rubbish" },
-          { "id": 3, "hint_cn": "节约用水", "hint_en": "save water", "answer": "save water" },
-          { "id": 4, "hint_cn": "植树", "hint_en": "plant trees", "answer": "plant trees" },
-          { "id": 5, "hint_cn": "更好的地方", "hint_en": "better place", "answer": "better place" }
+          {
+            "id": 1,
+            "hint_cn": "一个地球",
+            "hint_en": "one earth",
+            "answer": "one earth"
+          },
+          {
+            "id": 2,
+            "hint_cn": "垃圾分类",
+            "hint_en": "sort the rubbish",
+            "answer": "sort the rubbish"
+          },
+          {
+            "id": 3,
+            "hint_cn": "节约用水",
+            "hint_en": "save water",
+            "answer": "save water"
+          },
+          {
+            "id": 4,
+            "hint_cn": "植树",
+            "hint_en": "plant trees",
+            "answer": "plant trees"
+          },
+          {
+            "id": 5,
+            "hint_cn": "更好的地方",
+            "hint_en": "better place",
+            "answer": "better place"
+          }
         ],
         "full_text": "We have only one earth. At home, we sort the rubbish every day. We also save water by turning off the tap. Every spring, our class goes to the hills to plant trees. If everyone does something small, the world will become a better place.",
         "full_text_cn": "我们只有一个地球。在家里，我们每天做垃圾分类。我们还通过关掉水龙头来节约用水。每年春天，我们班去山上植树。如果每个人做一点小事，世界会变得更美好。",
@@ -5986,7 +16647,12 @@ const WEEK4 = [
             "id": "w4-fri-kp1",
             "type": "choice",
             "question": "PET: Choose the correct answer. This is the museum ___ we visited last year.",
-            "options": ["where", "which", "when", "whose"],
+            "options": [
+              "where",
+              "which",
+              "when",
+              "whose"
+            ],
             "answer": 1,
             "explanation_cn": "定语从句。visit 是及物动词，缺宾语，先行词是物（museum），用 which/that。where 只能作状语（visited there 就不缺宾语了）。",
             "explanation_en": "Relative clause: 'visited' is missing an object, and the antecedent is a thing, so 'which/that' is used. 'Where' would leave 'visited' without an object."
@@ -5995,7 +16661,12 @@ const WEEK4 = [
             "id": "w4-fri-kp2",
             "type": "choice",
             "question": "PET: Choose the correct answer. I ___ getting up early because I run every morning.",
-            "options": ["am used to", "used to", "was used to", "use to"],
+            "options": [
+              "am used to",
+              "used to",
+              "was used to",
+              "use to"
+            ],
             "answer": 0,
             "explanation_cn": "be used to doing 意为习惯于做某事，to 是介词后面接动名词。used to do 意为过去常常做（现在不做了），意思不同。",
             "explanation_en": "'Be used to doing' means to be accustomed to doing. 'Used to do' means did it in the past but not now — a different meaning."
@@ -6012,7 +16683,12 @@ const WEEK4 = [
             "id": "w4-fri-kp4",
             "type": "choice",
             "question": "PET: Choose the correct answer. I don't know ___ to deal with this problem.",
-            "options": ["how", "what", "which", "why"],
+            "options": [
+              "how",
+              "what",
+              "which",
+              "why"
+            ],
             "answer": 0,
             "explanation_cn": "deal with（处理）的搭配是 how to deal with。what 常和 do with 搭配：what to do with。这两个搭配不要混。",
             "explanation_en": "'Deal with' goes with 'how': how to deal with. 'Do with' goes with 'what'. Don't mix the two pairs."
@@ -6021,7 +16697,12 @@ const WEEK4 = [
             "id": "w4-fri-kp5",
             "type": "choice",
             "question": "PET: Choose the correct answer. By the end of last year, they ___ five thousand trees.",
-            "options": ["planted", "had planted", "have planted", "will plant"],
+            "options": [
+              "planted",
+              "had planted",
+              "have planted",
+              "will plant"
+            ],
             "answer": 1,
             "explanation_cn": "by the end of + 过去时间（last year），用过去完成时 had planted。表示到过去某个时间点为止已完成。",
             "explanation_en": "'By the end of + past time' takes the past perfect: 'had planted'. It shows the action was complete before that past point."
@@ -6032,11 +16713,7 @@ const WEEK4 = [
         "id": "w4-fri-grammar",
         "name_cn": "语法复习",
         "type": "grammar",
-        "duration": 5,
-        "id": "w4-fri-grammar",
-        "name_cn": "语法复习",
-        "type": "grammar",
-        "duration": 15,
+        "duration": 20,
         "questions": [
           {
             "id": "w4-fri-gr1",
@@ -6215,192 +16892,6 @@ const WEEK4 = [
             "answer": 3,
             "explanation_cn": "country 是「辅音+y」结尾，变 y 为 i 加 es：countries。同类的还有 city→cities。",
             "explanation_en": "Country: consonant + y becomes countries (y → i, add -es)."
-          },
-          {
-            "id": "w4-fri-gr21",
-            "type": "choice",
-            "question": "Look! Two ___ are playing in the garden.（狐狸）",
-            "options": [
-              "fox",
-              "foxes",
-              "foxs",
-              "foxies"
-            ],
-            "answer": 1,
-            "explanation_cn": "fox 以 x 结尾，复数加 -es：foxes。x 结尾的词都要加 es，不能只加 s。",
-            "explanation_en": "Fox ends in -x, so the plural is foxes."
-          },
-          {
-            "id": "w4-fri-gr22",
-            "type": "choice",
-            "question": "The story is about two ___ .（女巫）",
-            "options": [
-              "witch",
-              "witchs",
-              "witchies",
-              "witches"
-            ],
-            "answer": 3,
-            "explanation_cn": "witch 以 tch 结尾，复数加 -es：witches。",
-            "explanation_en": "Witch ends in -tch, so the plural is witches."
-          },
-          {
-            "id": "w4-fri-gr23",
-            "type": "choice",
-            "question": "Put the toys into two ___ .（箱子）",
-            "options": [
-              "boxs",
-              "boxes",
-              "box",
-              "boxies"
-            ],
-            "answer": 1,
-            "explanation_cn": "box 以 x 结尾，复数加 -es：boxes。和 fox 一样。",
-            "explanation_en": "Box ends in -x, so the plural is boxes."
-          },
-          {
-            "id": "w4-fri-gr24",
-            "type": "choice",
-            "question": "I can't find the ___ to my bike.（钥匙）",
-            "options": [
-              "keyes",
-              "keys",
-              "keies",
-              "keyies"
-            ],
-            "answer": 1,
-            "explanation_cn": "key 是「元音+y」结尾，复数直接加 s：keys。不是 keyes 也不是 keies。",
-            "explanation_en": "Key ends in vowel + y: plural is keys."
-          },
-          {
-            "id": "w4-fri-gr25",
-            "type": "choice",
-            "question": "The forest is home to ___ .（狼）",
-            "options": [
-              "wolfs",
-              "wolves",
-              "wolfes",
-              "wolfies"
-            ],
-            "answer": 1,
-            "explanation_cn": "wolf 是「f/fe」结尾，变 f 为 ves：wolves。同类：leaf→leaves，knife→knives。",
-            "explanation_en": "Wolf becomes wolves (f → ves). Same pattern: leaf → leaves."
-          },
-          {
-            "id": "w4-fri-gr26",
-            "type": "choice",
-            "question": "We grew two ___ in the garden.（土豆）",
-            "options": [
-              "potatos",
-              "potato",
-              "potatoes",
-              "potatoies"
-            ],
-            "answer": 2,
-            "explanation_cn": "potato 复数加 -es：potatoes。注意：这是少数要加 es 的 o 结尾词，同类的还有 tomato→tomatoes。",
-            "explanation_en": "Potato becomes potatoes (add -es). Same as tomato → tomatoes."
-          },
-          {
-            "id": "w4-fri-gr27",
-            "type": "choice",
-            "question": "Pandas eat ___ every day.（竹子）",
-            "options": [
-              "bamboos",
-              "bambooes",
-              "bamboo",
-              "bambools"
-            ],
-            "answer": 2,
-            "explanation_cn": "bamboo（竹子）是不可数名词，没有复数形式，就用 bamboo。",
-            "explanation_en": "Bamboo is uncountable — no plural form, just bamboo."
-          },
-          {
-            "id": "w4-fri-gr28",
-            "type": "choice",
-            "question": "The cake is made with ___ .（草莓）",
-            "options": [
-              "strawberrys",
-              "strawberries",
-              "strawberryes",
-              "strawberry"
-            ],
-            "answer": 1,
-            "explanation_cn": "strawberry 是「辅音+y」结尾，变 y 为 i 加 es：strawberries。",
-            "explanation_en": "Strawberry: consonant + y becomes strawberries."
-          },
-          {
-            "id": "w4-fri-gr29",
-            "type": "choice",
-            "question": "Two ___ passed on the road.（卡车）",
-            "options": [
-              "lorrys",
-              "lorry",
-              "lorries",
-              "lorryes"
-            ],
-            "answer": 2,
-            "explanation_cn": "lorry 是「辅音+y」结尾，变 y 为 i 加 es：lorries。英式英语的卡车。",
-            "explanation_en": "Lorry: consonant + y becomes lorries."
-          },
-          {
-            "id": "w4-fri-gr30",
-            "type": "choice",
-            "question": "In the story, two ___ helped the boy.（精灵）",
-            "options": [
-              "elfs",
-              "elfes",
-              "elf",
-              "elves"
-            ],
-            "answer": 3,
-            "explanation_cn": "elf 变 f 为 ves：elves。和 wolf→wolves 同一类。",
-            "explanation_en": "Elf becomes elves (f → ves)."
-          },
-          {
-            "id": "w4-fri-gr31",
-            "type": "choice",
-            "question": "The library has many ___ .（词典）",
-            "options": [
-              "dictionarys",
-              "dictionaries",
-              "dictionaryes",
-              "dictionary"
-            ],
-            "answer": 1,
-            "explanation_cn": "dictionary 是「辅音+y」结尾，变 y 为 i 加 es：dictionaries。",
-            "explanation_en": "Dictionary: consonant + y becomes dictionaries."
-          },
-          {
-            "id": "w4-fri-gr32",
-            "type": "fill",
-            "question": "Write the plural form: child → ___（孩子们）",
-            "answer": "children",
-            "explanation_cn": "child 的复数是不规则的：children。不加 s，也不能写 childs。",
-            "explanation_en": "Child has the irregular plural children — never childs."
-          },
-          {
-            "id": "w4-fri-gr33",
-            "type": "fill",
-            "question": "Write the plural form: foot → ___（脚（复数））",
-            "answer": "feet",
-            "explanation_cn": "foot 的复数是 feet（元音变化）：one foot, two feet。",
-            "explanation_en": "Foot becomes feet (vowel change)."
-          },
-          {
-            "id": "w4-fri-gr34",
-            "type": "fill",
-            "question": "Write the plural form: mouse → ___（老鼠（复数））",
-            "answer": "mice",
-            "explanation_cn": "mouse 的复数是 mice，不规则的，不能写 mouses。",
-            "explanation_en": "Mouse becomes mice — irregular."
-          },
-          {
-            "id": "w4-fri-gr35",
-            "type": "fill",
-            "question": "Write the plural form: sheep → ___（绵羊（单复数同形））",
-            "answer": "sheep",
-            "explanation_cn": "sheep 的单数和复数长得一样：one sheep, two sheep。千万不要写 sheeps！",
-            "explanation_en": "Sheep is the same in singular and plural — never sheeps."
           }
         ]
       }
@@ -6410,7 +16901,7 @@ const WEEK4 = [
     "day_cn": "周六",
     "day_en": "Saturday",
     "is_speaking_day": true,
-    "total_duration": 40,
+    "total_duration": 60,
     "theme_cn": "AI口语 + 高频词汇 + 阅读理解",
     "modules": [
       {
@@ -6432,7 +16923,14 @@ const WEEK4 = [
             "answer": 0,
             "pronunciation_tips": "advice /ədˈvaɪs/ 名词重音在后，注意和动词 advise 的读音区别；breath /breθ/ 咬舌",
             "explanation_cn": "would give 表示虚拟建议，A 用 would tell him to do 结构，正确。B 应该是 I would tell；C 是过去的事不是建议；D 只是描述。",
-            "explanation_en": "The imagined advice uses 'would': A is correct. B should also use 'would'; C reports the past, not advice; D just describes."
+            "explanation_en": "The imagined advice uses 'would': A is correct. B should also use 'would'; C reports the past, not advice; D just describes.",
+            "answer_cn_hint": "它在问「你会给什么建议」，答句要用 I would tell him to … 说出一个建议。",
+            "options_cn": [
+              "我会告诉他深呼吸，相信自己。",
+              "我会告诉他考试很简单。",
+              "我上周告诉他要更努力学习。",
+              "他考试总是很紧张。"
+            ]
           },
           {
             "id": "w4-sat-sp2",
@@ -6447,7 +16945,14 @@ const WEEK4 = [
             "answer": 0,
             "pronunciation_tips": "prefer /prɪˈfɜː/ 重音在第二音节，imagine /ɪˈmædʒɪn/",
             "explanation_cn": "prefer A to B / prefer doing 表示更喜欢。问二选一，A 明确选了书并给出原因，正确。B 换成了电视没有二选一；C、D 答非所问。",
-            "explanation_en": "The question asks to choose between two things. A chooses books and gives a reason; B answers with a third thing; C and D do not answer."
+            "explanation_en": "The question asks to choose between two things. A chooses books and gives a reason; B answers with a third thing; C and D do not answer.",
+            "answer_cn_hint": "这是二选一，答句要先说你选哪一个，再说理由（because…）。",
+            "options_cn": [
+              "我更喜欢看书，因为我可以自己想象画面。",
+              "我更喜欢在家看电视。",
+              "我昨晚看了一部电影。",
+              "书和电影都很便宜。"
+            ]
           },
           {
             "id": "w4-sat-sp3",
@@ -6462,7 +16967,14 @@ const WEEK4 = [
             "answer": 0,
             "pronunciation_tips": "important /ɪmˈpɔːtnt/ 注意重音，learned 此处作动词过去分词读 /lɜːnd/",
             "explanation_cn": "A 用动名词短语作主语回答最重要的东西，正确且深刻。B 只是学了多久；C 答非所问；D 说的是学到的一件事但题目问最重要，D 也可算答但 A 直接呼应最高级 the most important，最佳。",
-            "explanation_en": "A answers with the superlative directly ('the most important thing'); B only gives a duration; C is off topic; D gives an example but A matches the question best."
+            "explanation_en": "A answers with the superlative directly ('the most important thing'); B only gives a duration; C is off topic; D gives an example but A matches the question best.",
+            "answer_cn_hint": "它在问「最重要的一样东西」，答句要说出一样具体的收获。",
+            "options_cn": [
+              "学会怎么学习是最重要的。",
+              "我学了六年英语。",
+              "学校的楼很旧。",
+              "我学会了守时。"
+            ]
           },
           {
             "id": "w4-sat-sp4",
@@ -6477,7 +16989,14 @@ const WEEK4 = [
             "answer": 0,
             "pronunciation_tips": "community /kəˈmjuːnəti/ 重音在第二音节，help them 中 them 常弱读 /ðəm/",
             "explanation_cn": "how 问方法，A 说出两件具体能做的事，正确。B、C、D 都是描述性陈述，没有回答怎么帮。",
-            "explanation_en": "'How' asks for a way. A gives two concrete actions; B, C and D are statements that do not answer."
+            "explanation_en": "'How' asks for a way. A gives two concrete actions; B, C and D are statements that do not answer.",
+            "answer_cn_hint": "它在问「怎样帮助老人」，答句要用 We can … 说出具体做法。",
+            "options_cn": [
+              "我们可以去看望他们，帮他们拿东西。",
+              "老人喜欢谈过去的事。",
+              "我们的社区很大。",
+              "他们通常起得很早。"
+            ]
           },
           {
             "id": "w4-sat-sp5",
@@ -6492,7 +17011,14 @@ const WEEK4 = [
             "answer": 0,
             "pronunciation_tips": "Egypt /ˈiːdʒɪpt/ 注意开头是长元音 iː，pyramids /ˈpɪrəmɪdz/",
             "explanation_cn": "could 虚拟提问，回答用 would，A 正确并说明原因。B 是真实计划用 will；C 是过去事实；D 是地理常识，答非所问。",
-            "explanation_en": "The imagined 'could' question is answered with 'would'. A is correct with a reason; B is a real plan; C is a past fact; D does not answer."
+            "explanation_en": "The imagined 'could' question is answered with 'would'. A is correct with a reason; B is a real plan; C is a past fact; D does not answer.",
+            "answer_cn_hint": "这是假设句，答句要用 I would go to … 说出一个地方。",
+            "options_cn": [
+              "我想去埃及看金字塔。",
+              "我下个月要去埃及。",
+              "我和父母去过埃及。",
+              "埃及在非洲。"
+            ]
           }
         ]
       },
@@ -6502,77 +17028,747 @@ const WEEK4 = [
         "type": "vocabulary_game",
         "duration": 5,
         "words": [
-          vocabWord({
-            "word": "pyramid", "phonetic": "/ˈpɪrəmɪd/", "meaning": "金字塔", "emoji": "🔺",
-            "example_en": "The pyramids are in Egypt.", "example_cn": "金字塔在埃及。",
-            "syllables": ["pyr", "a", "mid"], "spell": ["py__mid", "ra"],
-            "wrongEmoji": ["⭐", "🐪", "❓"], "wrongMeaning": ["骆驼", "沙漠", "之谜"]
-          }),
-          vocabWord({
-            "word": "desert", "phonetic": "/ˈdezət/", "meaning": "沙漠", "emoji": "🐪",
-            "example_en": "Camels live in the desert.", "example_cn": "骆驼生活在沙漠里。",
-            "syllables": ["des", "ert"], "spell": ["des__t", "er"],
-            "wrongEmoji": ["⭐", "🔺", "🧭"], "wrongMeaning": ["金字塔", "之谜", "导游"]
-          }),
-          vocabWord({
-            "word": "camel", "phonetic": "/ˈkæml/", "meaning": "骆驼", "emoji": "🐫",
-            "example_en": "The camel is called the ship of the desert.", "example_cn": "骆驼被称为沙漠之舟。",
-            "syllables": ["cam", "el"], "spell": ["cam__l", "e"],
-            "wrongEmoji": ["⭐", "🏜️", "☂️"], "wrongMeaning": ["沙漠", "金字塔", "导游"]
-          }),
-          vocabWord({
-            "word": "mystery", "phonetic": "/ˈmɪstri/", "meaning": "谜；神秘的事物", "emoji": "❓",
-            "example_en": "The old house is full of mystery.", "example_cn": "那座老房子充满神秘。",
-            "syllables": ["mys", "te", "ry"], "spell": ["mys__ry", "te"],
-            "wrongEmoji": ["⭐", "🚢", "🎲"], "wrongMeaning": ["导游", "沙漠", "骆驼"]
-          }),
-          vocabWord({
-            "word": "guide", "phonetic": "/ɡaɪd/", "meaning": "导游；指南", "emoji": "🧭",
-            "example_en": "The guide showed us around the city.", "example_cn": "导游带我们游览了这座城市。",
-            "syllables": ["guide"], "spell": ["g__de", "ui"],
-            "wrongEmoji": ["⭐", "❓", "🎸"], "wrongMeaning": ["之谜", "骆驼", "沙漠"]
-          })
+          {
+            "word": "pyramid",
+            "phonetic": "/ˈpɪrəmɪd/",
+            "meaning": "金字塔",
+            "emoji": "🔺",
+            "example_en": "The pyramids are in Egypt.",
+            "example_cn": "金字塔在埃及。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "🔺",
+                  "⭐",
+                  "🐪",
+                  "❓"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "❓",
+                  "⭐",
+                  "🔺",
+                  "🐪"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "pyramid 是什么意思？（1/2）",
+                "options": [
+                  "骆驼",
+                  "沙漠",
+                  "金字塔",
+                  "之谜"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "pyramid 是什么意思？（2/2）",
+                "options": [
+                  "金字塔",
+                  "之谜",
+                  "骆驼",
+                  "沙漠"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: py__mid",
+                "answer": "ra"
+              }
+            ],
+            "letters": [
+              "p",
+              "y",
+              "r",
+              "a",
+              "m",
+              "i",
+              "d"
+            ],
+            "syllables": [
+              "pyr",
+              "a",
+              "mid"
+            ],
+            "hint_cn": "埃及那种尖尖的、三角形的大石头建筑"
+          },
+          {
+            "word": "desert",
+            "phonetic": "/ˈdezət/",
+            "meaning": "沙漠",
+            "emoji": "🐪",
+            "example_en": "Camels live in the desert.",
+            "example_cn": "骆驼生活在沙漠里。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "🐪",
+                  "⭐",
+                  "🔺",
+                  "🧭"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "🧭",
+                  "⭐",
+                  "🐪",
+                  "🔺"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "desert 是什么意思？（1/2）",
+                "options": [
+                  "金字塔",
+                  "之谜",
+                  "沙漠",
+                  "导游"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "desert 是什么意思？（2/2）",
+                "options": [
+                  "沙漠",
+                  "导游",
+                  "金字塔",
+                  "之谜"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: des__t",
+                "answer": "er"
+              }
+            ],
+            "letters": [
+              "d",
+              "e",
+              "s",
+              "e",
+              "r",
+              "t"
+            ],
+            "syllables": [
+              "des",
+              "ert"
+            ],
+            "hint_cn": "全是沙子、很少下雨的地方"
+          },
+          {
+            "word": "camel",
+            "phonetic": "/ˈkæml/",
+            "meaning": "骆驼",
+            "emoji": "🐫",
+            "example_en": "The camel is called the ship of the desert.",
+            "example_cn": "骆驼被称为沙漠之舟。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "🐫",
+                  "⭐",
+                  "🏜️",
+                  "☂️"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "☂️",
+                  "⭐",
+                  "🐫",
+                  "🏜️"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "camel 是什么意思？（1/2）",
+                "options": [
+                  "沙漠",
+                  "金字塔",
+                  "骆驼",
+                  "导游"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "camel 是什么意思？（2/2）",
+                "options": [
+                  "骆驼",
+                  "导游",
+                  "沙漠",
+                  "金字塔"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: cam__l",
+                "answer": "e"
+              }
+            ],
+            "letters": [
+              "c",
+              "a",
+              "m",
+              "e",
+              "l"
+            ],
+            "syllables": [
+              "cam",
+              "el"
+            ],
+            "hint_cn": "背上有鼓包，能在沙子里走很久"
+          },
+          {
+            "word": "mystery",
+            "phonetic": "/ˈmɪstri/",
+            "meaning": "谜；神秘的事物",
+            "emoji": "❓",
+            "example_en": "The old house is full of mystery.",
+            "example_cn": "那座老房子充满神秘。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "❓",
+                  "⭐",
+                  "🚢",
+                  "🎲"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "🎲",
+                  "⭐",
+                  "❓",
+                  "🚢"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "mystery 是什么意思？（1/2）",
+                "options": [
+                  "导游",
+                  "沙漠",
+                  "谜；神秘的事物",
+                  "骆驼"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "mystery 是什么意思？（2/2）",
+                "options": [
+                  "谜；神秘的事物",
+                  "骆驼",
+                  "导游",
+                  "沙漠"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: mys__ry",
+                "answer": "te"
+              }
+            ],
+            "letters": [
+              "m",
+              "y",
+              "s",
+              "t",
+              "e",
+              "r",
+              "y"
+            ],
+            "syllables": [
+              "mys",
+              "te",
+              "ry"
+            ],
+            "hint_cn": "想不明白、还等着人去解开的事"
+          },
+          {
+            "word": "guide",
+            "phonetic": "/ɡaɪd/",
+            "meaning": "导游；指南",
+            "emoji": "🧭",
+            "example_en": "The guide showed us around the city.",
+            "example_cn": "导游带我们游览了这座城市。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "🧭",
+                  "⭐",
+                  "❓",
+                  "🎸"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "🎸",
+                  "⭐",
+                  "🧭",
+                  "❓"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "guide 是什么意思？（1/2）",
+                "options": [
+                  "之谜",
+                  "骆驼",
+                  "导游；指南",
+                  "沙漠"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "guide 是什么意思？（2/2）",
+                "options": [
+                  "导游；指南",
+                  "沙漠",
+                  "之谜",
+                  "骆驼"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: g__de",
+                "answer": "ui"
+              }
+            ],
+            "letters": [
+              "g",
+              "u",
+              "i",
+              "d",
+              "e"
+            ],
+            "syllables": [
+              "guide"
+            ],
+            "hint_cn": "带你逛、给你讲的那个人"
+          }
         ]
       },
       {
         "id": "w4-sat-reading",
         "name_cn": "阅读理解",
         "type": "reading",
-        "duration": 5,
-        "passage": "Last year, Tom took part in a charity run across part of the Gobi Desert. Before the race, he trained for six months. Runners had to carry their own food and water for three days. On the second day, Tom's water ran out, and the sun was burning. Another runner, an old man, shared his water with Tom. \"We are not rivals,\" the man said. \"We are friends in the desert.\" In the end, Tom finished forty-first out of two hundred runners, but he raised ten thousand yuan for sick children. He says the medal that matters is not made of gold.",
-        "passage_cn": "去年，汤姆参加了一场穿越戈壁滩部分的慈善跑。赛前他训练了六个月。参赛者要自己带三天的食物和水。第二天，汤姆的水喝完了，太阳火辣辣的。另一位选手——一位老先生，把自己的水分给了汤姆。我们不是对手，老先生说。我们是沙漠里的朋友。最后，汤姆在两百名选手中名列第四十一，但他为患病儿童筹到了一万元。他说，真正重要的奖牌不是金子做的。",
+        "duration": 10,
+        "passage": "Paper cutting is one of China's oldest folk arts, and it is now becoming popular around the world. With only a pair of scissors and a piece of red paper, artists can make wonderful pictures of flowers, animals and people. In the north of China, people still put paper cuttings on windows during the Spring Festival, because the red colour means good luck. In 2009, Chinese paper cutting was added to the world intangible cultural heritage list. Today, paper cutting artists teach in schools and even online, and short videos of their hands moving quickly get millions of likes. Foreign visitors love taking paper cutting classes when they travel to China. A girl from France said, \"It looks easy, but one wrong cut and you must start again.\" Paper cutting connects the past and the present, the old and the young, China and the world.",
+        "passage_cn": "剪纸是中国最古老的民间艺术之一，如今正在世界范围内流行。艺术家只用一把剪刀和一张红纸，就能剪出花草、动物和人像。在中国北方，春节时人们仍然把剪纸贴在窗上，因为红色代表好运。2009年，中国剪纸被列入世界非物质文化遗产名录。如今，剪纸艺人走进学校，甚至在网上教学，他们灵巧双手的短视频获得数百万点赞。外国游客来中国旅游时也喜欢上剪纸课。一位法国女孩说：「看起来容易，但只要剪错一刀，就得从头再来。」剪纸连接着过去与现在、老人与孩子、中国与世界。",
         "questions": [
           {
             "id": "w4-sat-rd1",
             "type": "choice",
-            "question": "How long did Tom train before the race?",
-            "options": ["For three days", "For six months", "For two weeks", "For a year"],
-            "answer": 1,
-            "explanation_cn": "文章说 Before the race, he trained for six months。赛前训练了六个月。train 意为训练。",
-            "explanation_en": "The text says 'Before the race, he trained for six months.' Note: 'train' means to practise for a race."
+            "question": "What do artists need to make paper cuttings?",
+            "options": [
+              "Scissors and a piece of red paper",
+              "A knife and a board",
+              "A computer",
+              "Paints and brushes"
+            ],
+            "answer": 0,
+            "explanation_cn": "一把剪刀和一张红纸即可。"
           },
           {
             "id": "w4-sat-rd2",
             "type": "choice",
-            "question": "Who shared water with Tom?",
-            "options": ["The judge of the race", "A young runner", "An old runner", "A doctor"],
-            "answer": 2,
-            "explanation_cn": "文章说 Another runner, an old man, shared his water with Tom。一位老选手分了水。share sth with sb 意为和某人分享某物。",
-            "explanation_en": "The text says 'Another runner, an old man, shared his water with Tom.' Note: 'share something with somebody'."
+            "question": "Where do people put paper cuttings during the Spring Festival?",
+            "options": [
+              "On windows",
+              "On doors only",
+              "On cars",
+              "On beds"
+            ],
+            "answer": 0,
+            "explanation_cn": "北方春节时把剪纸贴在窗上。"
           },
           {
             "id": "w4-sat-rd3",
             "type": "choice",
-            "question": "What does Tom mean by \"the medal that matters is not made of gold\"?",
+            "question": "Why do people use red paper?",
             "options": [
-              "He wants a gold medal next time.",
-              "Helping others is more important than winning.",
-              "The medal he got was made of silver.",
-              "Gold medals are too expensive."
+              "Because red means good luck.",
+              "Because red is cheap.",
+              "Because red is bright.",
+              "Because red is easy to cut."
             ],
-            "answer": 1,
-            "explanation_cn": "他名次不高但为患病儿童筹到了钱，说明他认为帮助别人才是真正重要的。matter 意为要紧、重要。",
-            "explanation_en": "He did not win but raised money for sick children, so he means helping others matters more than winning. Note: 'matter' means to be important."
+            "answer": 0,
+            "explanation_cn": "红色代表好运。"
+          },
+          {
+            "id": "w4-sat-rd4",
+            "type": "choice",
+            "question": "When was paper cutting added to the world heritage list?",
+            "options": [
+              "In 2009",
+              "In 1999",
+              "In 2019",
+              "In 2020"
+            ],
+            "answer": 0,
+            "explanation_cn": "2009年列入世界非遗名录。"
+          },
+          {
+            "id": "w4-sat-rd5",
+            "type": "choice",
+            "question": "What do paper cutting artists do today?",
+            "options": [
+              "They teach in schools and online.",
+              "They only work at home.",
+              "They sell scissors.",
+              "They make paper."
+            ],
+            "answer": 0,
+            "explanation_cn": "艺人进学校、上网课。"
+          },
+          {
+            "id": "w4-sat-rd6",
+            "type": "choice",
+            "question": "What do the artists' short videos get?",
+            "options": [
+              "Millions of likes",
+              "No likes",
+              "Only a few likes",
+              "Bad comments"
+            ],
+            "answer": 0,
+            "explanation_cn": "短视频获得数百万点赞。"
+          },
+          {
+            "id": "w4-sat-rd7",
+            "type": "choice",
+            "question": "Who loves taking paper cutting classes?",
+            "options": [
+              "Foreign visitors",
+              "Only Chinese children",
+              "Only old people",
+              "Nobody"
+            ],
+            "answer": 0,
+            "explanation_cn": "外国游客来中国喜欢上剪纸课。"
+          },
+          {
+            "id": "w4-sat-rd8",
+            "type": "choice",
+            "question": "What did the French girl say?",
+            "options": [
+              "One wrong cut and you must start again.",
+              "Paper cutting is too easy.",
+              "She hates paper cutting.",
+              "Paper cutting is expensive."
+            ],
+            "answer": 0,
+            "explanation_cn": "「剪错一刀就得重来」。"
+          },
+          {
+            "id": "w4-sat-rd9",
+            "type": "choice",
+            "question": "The word \"intangible\" here means ___.",
+            "options": [
+              "非物质的",
+              "看不见的",
+              "重要的",
+              "古老的"
+            ],
+            "answer": 0,
+            "explanation_cn": "intangible cultural heritage：非物质文化遗产。"
+          },
+          {
+            "id": "w4-sat-rd10",
+            "type": "choice",
+            "question": "The best title for the passage about red paper art is ___.",
+            "options": [
+              "Paper Cutting Wins the World",
+              "How to Use Scissors",
+              "Red Windows in Winter",
+              "Artists in France"
+            ],
+            "answer": 0,
+            "explanation_cn": "全文讲剪纸从中国走向世界。"
+          }
+        ]
+      },
+      {
+        "id": "w4-sat-mc",
+        "name_cn": "单项选择",
+        "type": "multiple_choice",
+        "duration": 10,
+        "questions": [
+          {
+            "id": "w4-sat-mc1",
+            "type": "choice",
+            "question": "Paper cutting is one of China's oldest ___ arts.",
+            "options": [
+              "folk",
+              "fool",
+              "full",
+              "fall"
+            ],
+            "answer": 0,
+            "explanation_cn": "folk art 民间艺术，注意 folk 不是 fool（傻瓜）。"
+          },
+          {
+            "id": "w4-sat-mc2",
+            "type": "choice",
+            "question": "Artists can make wonderful pictures ___ red paper.",
+            "options": [
+              "with",
+              "in",
+              "at",
+              "on"
+            ],
+            "answer": 0,
+            "explanation_cn": "「用红纸」做，工具用 with。"
+          },
+          {
+            "id": "w4-sat-mc3",
+            "type": "choice",
+            "question": "People put paper cuttings ___ windows during the festival.",
+            "options": [
+              "on",
+              "in",
+              "at",
+              "under"
+            ],
+            "answer": 0,
+            "explanation_cn": "贴「在窗上」用 on windows。"
+          },
+          {
+            "id": "w4-sat-mc4",
+            "type": "choice",
+            "question": "Red ___ good luck in Chinese culture.",
+            "options": [
+              "means",
+              "mean",
+              "meaning",
+              "meant"
+            ],
+            "answer": 0,
+            "explanation_cn": "主语 red（红色）三单，用 means。"
+          },
+          {
+            "id": "w4-sat-mc5",
+            "type": "choice",
+            "question": "Paper cutting ___ to the world heritage list in 2009.",
+            "options": [
+              "was added",
+              "added",
+              "is added",
+              "adds"
+            ],
+            "answer": 0,
+            "explanation_cn": "剪纸「被列入」，过去时被动 was added。"
+          },
+          {
+            "id": "w4-sat-mc6",
+            "type": "choice",
+            "question": "Artists teach in schools and even ___.",
+            "options": [
+              "online",
+              "on line of",
+              "in the line",
+              "by line"
+            ],
+            "answer": 0,
+            "explanation_cn": "online 网上，副词单独用。"
+          },
+          {
+            "id": "w4-sat-mc7",
+            "type": "choice",
+            "question": "Their videos get ___ of likes.",
+            "options": [
+              "millions",
+              "million",
+              "million of",
+              "a million of"
+            ],
+            "answer": 0,
+            "explanation_cn": "millions of likes：数百万点赞。"
+          },
+          {
+            "id": "w4-sat-mc8",
+            "type": "choice",
+            "question": "It looks easy, ___ one wrong cut and you must start again.",
+            "options": [
+              "but",
+              "and",
+              "so",
+              "or"
+            ],
+            "answer": 0,
+            "explanation_cn": "「但」剪错一刀就要重来，but。"
+          },
+          {
+            "id": "w4-sat-mc9",
+            "type": "choice",
+            "question": "Paper cutting connects China ___ the world.",
+            "options": [
+              "and",
+              "with",
+              "to",
+              "for"
+            ],
+            "answer": 0,
+            "explanation_cn": "connect…and…：连接中国与世界。"
+          },
+          {
+            "id": "w4-sat-mc10",
+            "type": "choice",
+            "question": "___ wonderful paper cutting is!",
+            "options": [
+              "How",
+              "What",
+              "Which",
+              "When"
+            ],
+            "answer": 0,
+            "explanation_cn": "How + 形容词：How wonderful…!"
+          }
+        ]
+      },
+      {
+        "id": "w4-sat-tense2",
+        "name_cn": "时态练习",
+        "type": "tense",
+        "duration": 5,
+        "questions": [
+          {
+            "id": "w4-sat-tn21",
+            "type": "fill",
+            "question": "Paper cutting ___ (be) popular for hundreds of years. [填入正确形式]",
+            "answer": "has been",
+            "explanation_cn": "for hundreds of years 与现在完成时连用。"
+          },
+          {
+            "id": "w4-sat-tn22",
+            "type": "fill",
+            "question": "People ___ (add) it to the heritage list in 2009. [填入正确形式]",
+            "answer": "added",
+            "explanation_cn": "in 2009 过去时间，用过去式 added。"
+          },
+          {
+            "id": "w4-sat-tn23",
+            "type": "fill",
+            "question": "Look! The artist ___ (cut) a red paper flower. [填入正确形式]",
+            "answer": "is cutting",
+            "explanation_cn": "Look! 提示正在进行，用 is cutting。"
+          },
+          {
+            "id": "w4-sat-tn24",
+            "type": "fill",
+            "question": "Short videos of the artists ___ (get) millions of likes. [填入正确形式]",
+            "answer": "have got",
+            "explanation_cn": "表示已经获得的影响，用现在完成时。"
+          },
+          {
+            "id": "w4-sat-tn25",
+            "type": "fill",
+            "question": "The girl ___ (start) again after the wrong cut. [填入正确形式]",
+            "answer": "started",
+            "explanation_cn": "叙述过去的事，用过去式 started。"
           }
         ]
       }
@@ -6582,92 +17778,442 @@ const WEEK4 = [
     "day_cn": "周日",
     "day_en": "Sunday",
     "is_speaking_day": false,
-    "total_duration": 30,
+    "total_duration": 35,
     "theme_cn": "阅读理解 + 高频词汇 + 完形填空",
     "modules": [
-      {
-        "id": "w4-sun-reading",
-        "name_cn": "阅读理解",
-        "type": "reading",
-        "duration": 10,
-        "passage": "Helen Keller was born in America in 1880. When she was nineteen months old, a terrible illness took away her sight and hearing. Little Helen lived in a dark and silent world. She could not see or hear, so it was very hard for her to learn words. When Helen was almost seven, a teacher called Anne Sullivan came to live with her family. Anne spelled words into Helen's hand. One day, water ran over Helen's hand while Anne spelled w-a-t-e-r. Suddenly, Helen understood. From then on, she learned quickly. She even learned to speak and went to university. Helen wrote books and travelled around the world, helping blind people everywhere.",
-        "passage_cn": "海伦·凯勒 1880 年出生于美国。她十九个月大时，一场可怕的疾病夺走了她的视力和听力。小海伦生活在一个黑暗又寂静的世界里。她看不见也听不见，学词语对她来说非常困难。海伦快七岁时，一位叫安妮·沙利文的老师来到她家和她一起生活。安妮在海伦手心里拼单词。有一天，水流过海伦的手，安妮同时拼出 w-a-t-e-r。海伦突然懂了。从那以后，她学得飞快。她甚至学会了说话，还上了大学。海伦写了书，走遍世界，帮助各地的盲人。",
-        "questions": [
-          {
-            "id": "w4-sun-rd1",
-            "type": "choice",
-            "question": "What happened to Helen when she was nineteen months old?",
-            "options": [
-              "She moved to America.",
-              "An illness took away her sight and hearing.",
-              "She met her teacher Anne.",
-              "She went to university."
-            ],
-            "answer": 1,
-            "explanation_cn": "文章说 a terrible illness took away her sight and hearing。疾病夺走了她的视力和听力。sight 意为视力，hearing 意为听力。",
-            "explanation_en": "The text says 'a terrible illness took away her sight and hearing.' Note: 'sight' means the ability to see, 'hearing' the ability to hear."
-          },
-          {
-            "id": "w4-sun-rd2",
-            "type": "choice",
-            "question": "Who was Anne Sullivan?",
-            "options": ["Helen's mother", "Helen's doctor", "Helen's teacher", "Helen's classmate"],
-            "answer": 2,
-            "explanation_cn": "文章说 a teacher called Anne Sullivan came to live with her family。安妮是海伦的老师。called 意为名叫。",
-            "explanation_en": "The text says 'a teacher called Anne Sullivan'. Note: 'called' here means named."
-          },
-          {
-            "id": "w4-sun-rd3",
-            "type": "choice",
-            "question": "What did Helen do later in her life?",
-            "options": [
-              "She wrote books and helped blind people.",
-              "She became a teacher for deaf children.",
-              "She stopped learning after university.",
-              "She travelled only in America."
-            ],
-            "answer": 0,
-            "explanation_cn": "文章最后说 Helen wrote books and travelled around the world, helping blind people everywhere。她写书并帮助全世界的盲人。blind 意为失明的。",
-            "explanation_en": "The last lines say 'Helen wrote books and travelled around the world, helping blind people everywhere.' Note: 'blind' means unable to see."
-          }
-        ]
-      },
       {
         "id": "w4-sun-vocab",
         "name_cn": "高频词汇",
         "type": "vocabulary_game",
         "duration": 5,
         "words": [
-          vocabWord({
-            "word": "sight", "phonetic": "/saɪt/", "meaning": "视力", "emoji": "👁️",
-            "example_en": "The illness took away her sight.", "example_cn": "疾病夺走了她的视力。",
-            "syllables": ["sight"], "spell": ["s__ht", "ig"],
-            "wrongEmoji": ["⭐", "🤫", "🤒"], "wrongMeaning": ["安静的", "疾病", "勇气"]
-          }),
-          vocabWord({
-            "word": "silent", "phonetic": "/ˈsaɪlənt/", "meaning": "寂静的；沉默的", "emoji": "🤫",
-            "example_en": "The room was silent.", "example_cn": "房间里一片寂静。",
-            "syllables": ["si", "lent"], "spell": ["si__nt", "le"],
-            "wrongEmoji": ["⭐", "🎓", "🎲"], "wrongMeaning": ["大学", "视力", "疾病"]
-          }),
-          vocabWord({
-            "word": "courage", "phonetic": "/ˈkʌrɪdʒ/", "meaning": "勇气", "emoji": "🦁",
-            "example_en": "She had the courage to try again.", "example_cn": "她有勇气再试一次。",
-            "syllables": ["cour", "age"], "spell": ["cou__ge", "ra"],
-            "wrongEmoji": ["⭐", "👁️", "☂️"], "wrongMeaning": ["视力", "寂静的", "大学"]
-          }),
-          vocabWord({
-            "word": "university", "phonetic": "/ˌjuːnɪˈvɜːsəti/", "meaning": "大学", "emoji": "🎓",
-            "example_en": "She went to university at eighteen.", "example_cn": "她十八岁上了大学。",
-            "syllables": ["u", "ni", "ver", "si", "ty"], "spell": ["univer__ty", "si"],
-            "wrongEmoji": ["⭐", "🤫", "🚗"], "wrongMeaning": ["勇气", "寂静的", "疾病"]
-          }),
-          vocabWord({
-            "word": "disease", "phonetic": "/dɪˈziːz/", "meaning": "疾病", "emoji": "🤒",
-            "example_en": "Washing hands helps stop disease.", "example_cn": "洗手有助于预防疾病。",
-            "syllables": ["di", "ease"], "spell": ["dis__se", "ea"],
-            "wrongEmoji": ["⭐", "🎓", "🦁"], "wrongMeaning": ["大学", "视力", "勇气"]
-          })
+          {
+            "word": "sight",
+            "phonetic": "/saɪt/",
+            "meaning": "视力",
+            "emoji": "👁️",
+            "example_en": "The illness took away her sight.",
+            "example_cn": "疾病夺走了她的视力。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "👁️",
+                  "⭐",
+                  "🤫",
+                  "🤒"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "🤒",
+                  "⭐",
+                  "👁️",
+                  "🤫"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "sight 是什么意思？（1/2）",
+                "options": [
+                  "安静的",
+                  "疾病",
+                  "视力",
+                  "勇气"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "sight 是什么意思？（2/2）",
+                "options": [
+                  "视力",
+                  "勇气",
+                  "安静的",
+                  "疾病"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: s__ht",
+                "answer": "ig"
+              }
+            ],
+            "letters": [
+              "s",
+              "i",
+              "g",
+              "h",
+              "t"
+            ],
+            "syllables": [
+              "sight"
+            ],
+            "hint_cn": "用眼睛看东西的能力"
+          },
+          {
+            "word": "silent",
+            "phonetic": "/ˈsaɪlənt/",
+            "meaning": "寂静的；沉默的",
+            "emoji": "🤫",
+            "example_en": "The room was silent.",
+            "example_cn": "房间里一片寂静。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "🤫",
+                  "⭐",
+                  "🎓",
+                  "🎲"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "🎲",
+                  "⭐",
+                  "🤫",
+                  "🎓"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "silent 是什么意思？（1/2）",
+                "options": [
+                  "大学",
+                  "视力",
+                  "寂静的；沉默的",
+                  "疾病"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "silent 是什么意思？（2/2）",
+                "options": [
+                  "寂静的；沉默的",
+                  "疾病",
+                  "大学",
+                  "视力"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: si__nt",
+                "answer": "le"
+              }
+            ],
+            "letters": [
+              "s",
+              "i",
+              "l",
+              "e",
+              "n",
+              "t"
+            ],
+            "syllables": [
+              "si",
+              "lent"
+            ],
+            "hint_cn": "一点点声音都没有"
+          },
+          {
+            "word": "courage",
+            "phonetic": "/ˈkʌrɪdʒ/",
+            "meaning": "勇气",
+            "emoji": "🦁",
+            "example_en": "She had the courage to try again.",
+            "example_cn": "她有勇气再试一次。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "🦁",
+                  "⭐",
+                  "👁️",
+                  "☂️"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "☂️",
+                  "⭐",
+                  "🦁",
+                  "👁️"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "courage 是什么意思？（1/2）",
+                "options": [
+                  "视力",
+                  "寂静的",
+                  "勇气",
+                  "大学"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "courage 是什么意思？（2/2）",
+                "options": [
+                  "勇气",
+                  "大学",
+                  "视力",
+                  "寂静的"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: cou__ge",
+                "answer": "ra"
+              }
+            ],
+            "letters": [
+              "c",
+              "o",
+              "u",
+              "r",
+              "a",
+              "g",
+              "e"
+            ],
+            "syllables": [
+              "cour",
+              "age"
+            ],
+            "hint_cn": "心里有点怕，但还是敢去做"
+          },
+          {
+            "word": "university",
+            "phonetic": "/ˌjuːnɪˈvɜːsəti/",
+            "meaning": "大学",
+            "emoji": "🎓",
+            "example_en": "She went to university at eighteen.",
+            "example_cn": "她十八岁上了大学。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "🎓",
+                  "⭐",
+                  "🤫",
+                  "🚗"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "🚗",
+                  "⭐",
+                  "🎓",
+                  "🤫"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "university 是什么意思？（1/2）",
+                "options": [
+                  "勇气",
+                  "寂静的",
+                  "大学",
+                  "疾病"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "university 是什么意思？（2/2）",
+                "options": [
+                  "大学",
+                  "疾病",
+                  "勇气",
+                  "寂静的"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: univer__ty",
+                "answer": "si"
+              }
+            ],
+            "letters": [
+              "u",
+              "n",
+              "i",
+              "v",
+              "e",
+              "r",
+              "s",
+              "i",
+              "t",
+              "y"
+            ],
+            "syllables": [
+              "u",
+              "ni",
+              "ver",
+              "si",
+              "ty"
+            ],
+            "hint_cn": "读完中学以后去读书的地方"
+          },
+          {
+            "word": "disease",
+            "phonetic": "/dɪˈziːz/",
+            "meaning": "疾病",
+            "emoji": "🤒",
+            "example_en": "Washing hands helps stop disease.",
+            "example_cn": "洗手有助于预防疾病。",
+            "stages": [
+              {
+                "type": "learn",
+                "instruction": "看图学单词"
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（1/2）",
+                "options": [
+                  "🤒",
+                  "⭐",
+                  "🎓",
+                  "🦁"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "image_choice",
+                "prompt": "听发音，选图片（2/2）",
+                "options": [
+                  "🦁",
+                  "⭐",
+                  "🤒",
+                  "🎓"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "disease 是什么意思？（1/2）",
+                "options": [
+                  "大学",
+                  "视力",
+                  "疾病",
+                  "勇气"
+                ],
+                "answer": 2
+              },
+              {
+                "type": "meaning_choice",
+                "prompt": "disease 是什么意思？（2/2）",
+                "options": [
+                  "疾病",
+                  "勇气",
+                  "大学",
+                  "视力"
+                ],
+                "answer": 0
+              },
+              {
+                "type": "letter_read",
+                "prompt": "跟读字母（每个字母读两遍）"
+              },
+              {
+                "type": "syllable_blend",
+                "prompt": "拼合音标（每个音节读两遍）"
+              },
+              {
+                "type": "spell_fill",
+                "prompt": "补全拼写: dis__se",
+                "answer": "ea"
+              }
+            ],
+            "letters": [
+              "d",
+              "i",
+              "s",
+              "e",
+              "a",
+              "s",
+              "e"
+            ],
+            "syllables": [
+              "di",
+              "ease"
+            ],
+            "hint_cn": "让人生病、身体不舒服的东西"
+          }
         ]
       },
       {
@@ -6675,59 +18221,372 @@ const WEEK4 = [
         "name_cn": "完形填空",
         "type": "cloze",
         "duration": 10,
-        "passage": "Leo promised his classmate Ben to return a comic book on Monday morning. But on Sunday night, a heavy rain 1___ and Leo got a high fever. His mother told him to stay in bed. Leo was worried, not because he was ill, but because he couldn't 2___ his promise. Early on Monday, he asked his father to take him to school for just one minute. He 3___ the comic book to Ben at the school gate and went home again. When Ben heard the whole story, he was deeply moved. True friends 4___ their promises. From that day on, the two boys became best friends, and their classmates learned the 5___ of keeping a promise.",
+        "passage": "Chinese characters are one of the oldest writing systems in the world. People wrote on oracle bones more than 3000 years 1___. In old times, characters looked like the things they stood 2___. For example, the character for \"mountain\" looked like three 3___, and \"sun\" was a circle with a dot. Later, the characters became simpler and rounder. Today, Chinese people write with pens and 4___, but the old shapes are still easy to see. There are more than 50000 characters in all, 5___ people only use a few thousand in daily life. Schoolchildren learn about 2500 characters in six years. In 2010, the UN made Chinese Language Day to 6___ this old writing. Now more and more foreigners are learning Chinese, and some of them find characters 7___ but beautiful. A foreign student said each character is 8___ a small picture with a story inside. Calligraphy, the art of writing characters, is also 9___. With a brush and ink, a good writer can make the characters dance on the paper. Chinese characters carry the history of 5000 years, and they will keep 10___ for the next 5000 years.",
         "questions": [
           {
             "id": "w4-sun-cz1",
             "type": "choice",
             "question": "1___",
-            "options": ["stopped", "started", "ended", "passed"],
-            "answer": 1,
-            "explanation_cn": "暴雨下起来了，用 started。a heavy rain started 意为暴雨开始下。",
-            "explanation_en": "The heavy rain 'started' on Sunday night. Note: 'started' means began."
+            "options": [
+              "ago",
+              "before",
+              "later",
+              "after"
+            ],
+            "answer": 0,
+            "explanation_cn": "「三千多年前」，时间 + ago。"
           },
           {
             "id": "w4-sun-cz2",
             "type": "choice",
             "question": "2___",
-            "options": ["break", "forget", "keep", "lose"],
-            "answer": 2,
-            "explanation_cn": "他担心的不是生病，而是没法遵守承诺，用 keep his promise。keep a promise 意为遵守承诺。",
-            "explanation_en": "He worried that he couldn't 'keep' his promise. Note: 'keep a promise' means to do what you promised."
+            "options": [
+              "for",
+              "at",
+              "up",
+              "with"
+            ],
+            "answer": 0,
+            "explanation_cn": "stand for：代表，固定短语。"
           },
           {
             "id": "w4-sun-cz3",
             "type": "choice",
             "question": "3___",
-            "options": ["sold", "threw", "handed", "lent"],
-            "answer": 2,
-            "explanation_cn": "他在校门口把漫画书交给了本，用 handed。hand sth to sb 意为把某物递给某人。",
-            "explanation_en": "He 'handed' the comic book to Ben at the gate. Note: 'hand something to somebody' means to pass it over."
+            "options": [
+              "peaks",
+              "peak",
+              "peaks'",
+              "the peaks"
+            ],
+            "answer": 0,
+            "explanation_cn": "「山」字像三个山峰，three peaks 复数。"
           },
           {
             "id": "w4-sun-cz4",
             "type": "choice",
             "question": "4___",
-            "options": ["make", "keep", "tell", "take"],
-            "answer": 1,
-            "explanation_cn": "真正的朋友遵守承诺，用 keep their promises。make a promise 意为许下承诺，keep a promise 意为遵守承诺。",
-            "explanation_en": "True friends 'keep' their promises. Note: you 'make' a promise first, then 'keep' it."
+            "options": [
+              "keyboards",
+              "keyboard's",
+              "keyboard",
+              "a keyboard"
+            ],
+            "answer": 0,
+            "explanation_cn": "pens and keyboards：笔和键盘，并列复数。"
           },
           {
             "id": "w4-sun-cz5",
             "type": "choice",
             "question": "5___",
-            "options": ["fun", "importance", "trouble", "joke"],
-            "answer": 1,
-            "explanation_cn": "同学们学到了遵守承诺的重要性，用 importance。the importance of doing 意为做某事的重要性。",
-            "explanation_en": "The classmates learned the 'importance' of keeping a promise. Note: 'the importance of doing something'."
+            "options": [
+              "but",
+              "and",
+              "so",
+              "or"
+            ],
+            "answer": 0,
+            "explanation_cn": "「有五万多字，但日常只用到几千个」，but 转折。"
+          },
+          {
+            "id": "w4-sun-cz6",
+            "type": "choice",
+            "question": "6___",
+            "options": [
+              "celebrate",
+              "celebrates",
+              "celebrating",
+              "celebrated"
+            ],
+            "answer": 0,
+            "explanation_cn": "to 后面用动词原形 celebrate（庆祝）。"
+          },
+          {
+            "id": "w4-sun-cz7",
+            "type": "choice",
+            "question": "7___",
+            "options": [
+              "hard",
+              "easy",
+              "cheap",
+              "soft"
+            ],
+            "answer": 0,
+            "explanation_cn": "后面说但很美，说明学起来「难」，hard。"
+          },
+          {
+            "id": "w4-sun-cz8",
+            "type": "choice",
+            "question": "8___",
+            "options": [
+              "like",
+              "likes",
+              "liking",
+              "liked"
+            ],
+            "answer": 0,
+            "explanation_cn": "is like a small picture：像一幅小画。"
+          },
+          {
+            "id": "w4-sun-cz9",
+            "type": "choice",
+            "question": "9___",
+            "options": [
+              "famous",
+              "fame",
+              "famously",
+              "more famous"
+            ],
+            "answer": 0,
+            "explanation_cn": "is also famous：书法也很有名，形容词 famous。"
+          },
+          {
+            "id": "w4-sun-cz10",
+            "type": "choice",
+            "question": "10___",
+            "options": [
+              "growing",
+              "grow",
+              "grows",
+              "grew"
+            ],
+            "answer": 0,
+            "explanation_cn": "keep doing sth：keep growing 继续生长。"
+          }
+        ]
+      },
+      {
+        "id": "w4-sun-tense",
+        "name_cn": "时态练习",
+        "type": "tense",
+        "duration": 10,
+        "questions": [
+          {
+            "id": "w4-sun-tn1",
+            "type": "fill",
+            "question": "People ___ (write) on oracle bones 3000 years ago. [填入正确形式]",
+            "answer": "wrote",
+            "explanation_cn": "3000 years ago 过去时间，write 的过去式是 wrote。"
+          },
+          {
+            "id": "w4-sun-tn2",
+            "type": "fill",
+            "question": "Look! The old master ___ (write) with a brush. [填入正确形式]",
+            "answer": "is writing",
+            "explanation_cn": "Look! 提示正在进行，用 is writing。"
+          },
+          {
+            "id": "w4-sun-tn3",
+            "type": "fill",
+            "question": "Chinese characters ___ (carry) history for 5000 years. [填入正确形式]",
+            "answer": "have carried",
+            "explanation_cn": "for 5000 years 与现在完成时连用。"
+          },
+          {
+            "id": "w4-sun-tn4",
+            "type": "fill",
+            "question": "The UN ___ (make) Chinese Language Day in 2010. [填入正确形式]",
+            "answer": "made",
+            "explanation_cn": "in 2010 过去时间，make 的过去式是 made。"
+          },
+          {
+            "id": "w4-sun-tn5",
+            "type": "fill",
+            "question": "More and more foreigners ___ (learn) Chinese now. [填入正确形式]",
+            "answer": "are learning",
+            "explanation_cn": "now 与进行时连用，主语复数 are learning。"
+          },
+          {
+            "id": "w4-sun-tn6",
+            "type": "fill",
+            "question": "Calligraphy ___ (be) famous for thousands of years. [填入正确形式]",
+            "answer": "has been",
+            "explanation_cn": "for thousands of years 与现在完成时连用。"
+          },
+          {
+            "id": "w4-sun-tn7",
+            "type": "fill",
+            "question": "My sister ___ (learn) calligraphy next term. [填入正确形式]",
+            "answer": "will learn",
+            "explanation_cn": "next term 将来时间，用 will learn。"
+          },
+          {
+            "id": "w4-sun-tn8",
+            "type": "fill",
+            "question": "While the master ___ (write), we watched quietly. [填入正确形式]",
+            "answer": "was writing",
+            "explanation_cn": "while 引导过去进行时：was writing。"
+          },
+          {
+            "id": "w4-sun-tn9",
+            "type": "fill",
+            "question": "Thousands of characters ___ (use) in daily life. [填入正确形式]",
+            "answer": "are used",
+            "explanation_cn": "字被使用，一般现在时被动 are used。"
+          },
+          {
+            "id": "w4-sun-tn10",
+            "type": "fill",
+            "question": "The old shapes ___ (not disappear) so far. [填入正确形式]",
+            "answer": "haven't disappeared",
+            "explanation_cn": "so far 与现在完成时连用：haven't disappeared。"
+          }
+        ]
+      },
+      {
+        "id": "w4-sun-grammar",
+        "name_cn": "语法练习",
+        "type": "grammar",
+        "duration": 5,
+        "questions": [
+          {
+            "id": "w4-sun-gr1",
+            "type": "choice",
+            "question": "Chinese characters are one of the oldest ___ systems.",
+            "options": [
+              "writing",
+              "write",
+              "wrote",
+              "written of"
+            ],
+            "answer": 0,
+            "explanation_cn": "writing system 文字系统，动名词作定语。"
+          },
+          {
+            "id": "w4-sun-gr2",
+            "type": "choice",
+            "question": "The character for \"mountain\" looked like three ___.",
+            "options": [
+              "peaks",
+              "peak",
+              "peak's",
+              "a peak"
+            ],
+            "answer": 0,
+            "explanation_cn": "three peaks 三个山峰，复数。"
+          },
+          {
+            "id": "w4-sun-gr3",
+            "type": "choice",
+            "question": "Each character is ___ a small picture.",
+            "options": [
+              "like",
+              "likes",
+              "liking",
+              "liked"
+            ],
+            "answer": 0,
+            "explanation_cn": "be like：像，like 是介词。"
+          },
+          {
+            "id": "w4-sun-gr4",
+            "type": "choice",
+            "question": "A good writer can make the characters ___ on the paper.",
+            "options": [
+              "dance",
+              "dances",
+              "dancing",
+              "danced"
+            ],
+            "answer": 0,
+            "explanation_cn": "make sth do sth：让字在纸上「跳舞」，用原形 dance。"
+          },
+          {
+            "id": "w4-sun-gr5",
+            "type": "choice",
+            "question": "Chinese characters will keep ___ for the next 5000 years.",
+            "options": [
+              "growing",
+              "grow",
+              "grows",
+              "grew"
+            ],
+            "answer": 0,
+            "explanation_cn": "keep doing sth：keep growing 继续生长。"
+          }
+        ]
+      },
+      {
+        "id": "w4-sun-listening",
+        "name_cn": "听力练习",
+        "type": "listening",
+        "duration": 5,
+        "questions": [
+          {
+            "id": "w4-sun-ls1",
+            "type": "choice",
+            "question": "听到的句子是什么？",
+            "audio_text": "People wrote on oracle bones more than 3000 years ago.",
+            "options": [
+              "People wrote on oracle bones more than 3000 years ago.",
+              "People wrote on paper more than 3000 years ago.",
+              "People wrote on oracle bones more than 300 years ago.",
+              "People draw on oracle bones more than 3000 years ago."
+            ],
+            "answer": 0,
+            "explanation_cn": "oracle bones（甲骨），时间 3000 多年前。"
+          },
+          {
+            "id": "w4-sun-ls2",
+            "type": "choice",
+            "question": "听到的句子是什么？",
+            "audio_text": "There are more than 50000 characters in all.",
+            "options": [
+              "There are more than 50000 characters in all.",
+              "There are more than 5000 characters in all.",
+              "There are more than 50000 words in all.",
+              "There were more than 50000 characters in all."
+            ],
+            "answer": 0,
+            "explanation_cn": "数字 50000（五万），in all（总共）。"
+          },
+          {
+            "id": "w4-sun-ls3",
+            "type": "choice",
+            "question": "听到的句子是什么？",
+            "audio_text": "The character for mountain looked like three peaks.",
+            "options": [
+              "The character for mountain looked like three peaks.",
+              "The character for water looked like three peaks.",
+              "The character for mountain looks like three lines.",
+              "The word for mountain looked like three peaks."
+            ],
+            "answer": 0,
+            "explanation_cn": "「山」字像三个山峰，looked like（过去像）。"
+          },
+          {
+            "id": "w4-sun-ls4",
+            "type": "choice",
+            "question": "听到的句子是什么？",
+            "audio_text": "Calligraphy is the art of writing characters.",
+            "options": [
+              "Calligraphy is the art of writing characters.",
+              "Calligraphy is the game of writing characters.",
+              "Calligraphy is the art of drawing pictures.",
+              "Photography is the art of writing characters."
+            ],
+            "answer": 0,
+            "explanation_cn": "calligraphy（书法）是写字的艺术，不是游戏或画画。"
+          },
+          {
+            "id": "w4-sun-ls5",
+            "type": "choice",
+            "question": "听到的句子是什么？",
+            "audio_text": "With a brush and ink, the characters can dance on the paper.",
+            "options": [
+              "With a brush and ink, the characters can dance on the paper.",
+              "With a pen and ink, the characters can dance on the paper.",
+              "With a brush and ink, the children can dance on the paper.",
+              "With a brush and ink, the characters can dance on the wall."
+            ],
+            "answer": 0,
+            "explanation_cn": "工具是 brush and ink（毛笔和墨），地点 on the paper。"
           }
         ]
       }
     ]
   }
 ];
-
 
 const HOMEWORK_WEEKS = [WEEK1, WEEK2, WEEK3, WEEK4];
 
@@ -6820,95 +18679,113 @@ function hwSetActiveWeek(offset) {
 // **顺序和 _splitSentences(passage) 完全一致**（测试会逐句核对句数）。
 // 译文是给判分和"看原文"用的参考，不读给孩子听、不显示在题目里。
 const CLOZE_SENTENCE_CN = {
-  'thu-cloze': [
-    '上个星期天，丽萨和她的家人一起去了动物园。',
-    '她在那里看到了很多动物。',
-    '首先，他们去看了猴子。',
-    '猴子们在树之间跳来跳去。',
-    '然后他们去看大象。',
-    '大象非常高大强壮。',
-    '丽萨最喜欢的动物是长颈鹿，因为它有一个长长的脖子。',
-    '中午，他们在一棵大树下野餐。',
-    '那真是美好的一天。'
+  "thu-cloze": [
+    "中国是茶的故乡。",
+    "中国人很久很久以前就开始喝茶了。",
+    "在过去，人们沿着古老的道路把茶叶运往许多国家。",
+    "那条路在今天被叫做「茶马古道」。",
+    "中国有很多种茶，比如绿茶和红茶。",
+    "绿茶生长在杭州和其他温暖的地方。",
+    "大多数中国人喜欢喝热茶，不喝冷茶。",
+    "客人来家里时，主人总会端上一杯茶。",
+    "这是一种表达欢迎和喜爱的方式。",
+    "人们还说喝茶对健康有好处。",
+    "下次你去中国人家里做客，记得好好品一品那杯茶。",
+    "它带着悠久的历史和温暖的心意。"
   ],
-  'sun-cloze': [
-    '彼得是一个十岁的男孩。',
-    '他和父母一起住在上海。',
-    '每天早上，他六点半起床，七点吃早饭。',
-    '他的学校离家不远，所以他走路去上学。',
-    '他最喜欢的科目是英语，因为他喜欢读英语故事。',
-    '放学后，他经常和同学们一起踢足球。',
-    '他是一个快乐的男孩。'
+  "sun-cloze": [
+    "京剧是中国最古老的民间艺术之一。",
+    "它有两百多年的历史。",
+    "演员们穿着漂亮的戏服，把脸画成不同的颜色。",
+    "红脸代表善良勇敢的人，白脸代表坏人。",
+    "演员们用特别的方式演唱，用特别的动作表演。",
+    "许多老人喜欢在电视上或戏院里看京剧。",
+    "一些孩子在学校社团里学京剧。",
+    "学京剧并不容易，因为演员可能要练习很多年才能唱好。",
+    "如今，越来越多的年轻人开始喜爱这门古老的艺术。",
+    "它是中国文化重要的一部分。",
+    "只要你看过一次，就永远不会忘记它。"
   ],
-  'w2-thu-cloze': [
-    '阳光学校举行运动会。',
-    '太阳在蓝色的天空中闪耀。',
-    '露西参加了第一场赛跑。',
-    '她拼命地跑，结果她赢了。',
-    '她的同学们为她大声加油。',
-    '比赛结束后，大家观看了跳高。',
-    '汤姆跳过了横杆，但是第二次他失败了。',
-    '他有点难过。',
-    '他的老师对他说："别担心。',
-    '下次你能赢。"'
+  "w2-thu-cloze": [
+    "新能源汽车在中国越来越受欢迎。",
+    "它们用电不用汽油。",
+    "它们产生的污染更少，所以大城市的空气变得更好。",
+    "这些车还很安静。",
+    "当你坐在新能源汽车里，几乎听不到发动机的声音。",
+    "司机可以在充电站给车充电，就像给一部大手机充电一样。",
+    "把电池充满大约要一个小时。",
+    "这些车并不贵，政府还会补贴购车的人。",
+    "在大城市，许多家庭选择把新能源汽车作为家里的第二辆车。",
+    "越来越多的充电站正在路边出现。",
+    "将来，街上行驶的大多数汽车都会是电动车。"
   ],
-  'w2-sun-cloze': [
-    '去年夏天，杰克一家在海滩上度过了一天。',
-    '天空晴朗，海水是蓝色的。',
-    '杰克和他的妹妹在水边堆了一个大沙堡。',
-    '然后他们在沙滩上捡贝壳。',
-    '这些贝壳有许多不同的颜色——有些是白色的，有些是粉色的。',
-    '中午，他们在一把大伞下吃三明治。',
-    '离开之前，杰克看着干净的沙滩，开心地笑了。',
-    '这真是完美的一天。'
+  "w2-sun-cloze": [
+    "无人机是会飞的小机器，它们正在改变我们的生活。",
+    "一家快递公司现在用无人机送包裹。",
+    "无人机从空中带着包裹，几分钟就送到你家门口。",
+    "山村里的医生也用无人机快速拿到药品。",
+    "在无人机出现之前，药品要两天才能到；现在只需要三十分钟。",
+    "消防员用无人机看火情在哪里。",
+    "农民用它们从空中看庄稼。",
+    "无人机并不贵，越来越多的人可以买一台。",
+    "但是有规则：无人机不能在机场附近飞，孩子需要大人帮忙。",
+    "科学家正在研制能载人的更大的无人机。",
+    "也许有一天，我们会坐无人机出租车去上学！"
   ],
-  'w3-thu-cloze': [
-    '王爷爷住在一个小湖泊附近。',
-    '他年轻的时候，湖水非常干净，人们可以在里面捕鱼。',
-    '后来，附近建起了一家工厂，湖水变得很脏。',
-    '回来的鸟儿也越来越少了。',
-    '王爷爷决定做点什么。',
-    '每天早上，他都捡起湖边的垃圾，并且告诉大家要保护湖水。',
-    '年复一年，他从未停止。',
-    '现在湖水又变干净了。',
-    '鱼儿在这里游来游去，鸟儿在水边筑巢。',
-    '"这个湖就像一位朋友，"他说。',
-    '"你必须好好照顾它，它就会让你开心。"'
+  "w3-thu-cloze": [
+    "垃圾分类如今是中国城市里的重要习惯。",
+    "在上海和其他很多城市，人们必须把垃圾分成四类：干垃圾、湿垃圾、可回收物和有害垃圾。",
+    "香蕉皮这样的厨余是湿垃圾。",
+    "瓶子、纸张和旧衣服是可回收物，因为它们能变成新的东西。",
+    "电池和过期药品是有害垃圾，所以我们要特别小心地处理它们。",
+    "一开始很多人觉得很难记住这四类，但现在大多数人都能分好。",
+    "一些小区给分得好的居民小奖励，比如肥皂和鸡蛋。",
+    "孩子们在学校学习垃圾分类，回家再教爸爸妈妈。",
+    "每天给垃圾分类只花一分钟，却对地球帮助很大。",
+    "如果人人都参与，我们的城市会变得干净得多、美丽得多。"
   ],
-  'w3-sun-cloze': [
-    '安娜和丽塔从一年级起就是好朋友。',
-    '有一天，学校举行了一场数学考试。',
-    '安娜得了最高分，但丽塔没考及格。',
-    '丽塔很难过，不再跟安娜说话了。',
-    '安娜没有生气。',
-    '她为丽塔做了一张漂亮的卡片。',
-    '她在上面写道："在我困难的时候，你帮助过我。',
-    '现在让我来帮助你。"',
-    '每天放学后，安娜都花一个小时给丽塔补数学。',
-    '一个月后，丽塔通过了那次考试。',
-    '"谢谢你没有放弃我，"丽塔眼里含着泪水说。'
+  "w3-sun-cloze": [
+    "在中国，越来越多的人热爱跑步，城市马拉松比赛现在到处都有。",
+    "每年，北京、上海等大城市都会举办马拉松比赛。",
+    "数以万计的人参加。",
+    "跑者们穿着运动服，背上有号码布。",
+    "全程大约四十二公里，通常一大早开始。",
+    "很多人跑得不快，但他们坚持跑到终点。",
+    "医生和志愿者沿路守候，随时提供帮助。",
+    "每隔几公里的补给站提供免费的水和水果。",
+    "跑步对心脏有好处，还让人心情愉快。",
+    "孩子们可以参加大约三公里的短程赛。",
+    "想跑好，比赛前必须坚持每天练习几个月。",
+    "马拉松不只是一场比赛，它是一堂「永不放弃」的课。"
   ],
-  'w4-thu-cloze': [
-    '杰克八岁的时候，他爷爷的腿变得没有力气，上楼梯都很困难。',
-    '杰克想要帮忙。',
-    '他观察、画图，一次又一次地尝试。',
-    '一年后，他发明了一个小机器，可以把东西运送上下楼梯。',
-    '他的爷爷非常高兴。',
-    '现在这台小机器被用在杰克所在小镇的许多家庭里。',
-    '上个月，杰克在一次全国发明比赛中得了一个奖。',
-    '"不要等到长大，"杰克告诉其他孩子。',
-    '"如果你看到一个难题，就试着去解决它。"'
+  "w4-thu-cloze": [
+    "港珠澳大桥是现代工程的奇迹。",
+    "它是世界上最长的跨海大桥，全长55公里。",
+    "大桥像一条海上巨龙，把香港、珠海和澳门连接起来。",
+    "在大桥建成之前，香港到珠海坐车要四个小时。",
+    "现在只需要四十五分钟。",
+    "大桥要对抗海风和强台风，所以工程师把它设计为可以使用120年。",
+    "它还能抵御强烈地震。",
+    "中段的海底隧道在海面之下穿行，大型船只可以从上方通过。",
+    "大桥经过九年建设，于2018年10月通车。",
+    "工人用了超过40万吨钢铁，足够建造六十座埃菲尔铁塔。",
+    "如今每天有成千上万的汽车通过大桥，人们说它把三座城市连成了一个大家庭。"
   ],
-  'w4-sun-cloze': [
-    '利奥答应他的同学本，星期一早上把一本漫画书还给他。',
-    '但是星期天晚上下了一场大雨，利奥发起了高烧。',
-    '他妈妈叫他在床上休息。',
-    '利奥很担心，不是因为他生病了，而是因为他没办法遵守自己的承诺。',
-    '星期一一大早，他请爸爸送他去学校待一分钟。',
-    '他在校门口把漫画书还给了本，然后又回家去了。',
-    '本听说了整件事后，被深深地感动了。',
-    '真正的朋友会信守承诺。',
-    '从那天起，这两个男孩成了最好的朋友，他们的同学也学到了守信的意义。'
+  "w4-sun-cloze": [
+    "汉字是世界上最古老的文字系统之一。",
+    "三千多年前，人们把字刻在甲骨上。",
+    "古时候，汉字长得像它们所代表的东西。",
+    "比如，「山」字像三个山峰，「日」字是一个圆圈加一点。",
+    "后来，汉字变得更简单、更圆润。",
+    "今天，中国人用笔和键盘写字，但古老的字形仍然看得出来。",
+    "汉字总共有五万多个，但日常生活中人们只用几千个。",
+    "小学生六年里学大约2500个字。",
+    "2010年，联合国设立了中文日来纪念这种古老的文字。",
+    "现在越来越多的外国人学中文，有些人觉得汉字难，但很美。",
+    "一位外国学生说，每个汉字都像一幅藏着故事的小画。",
+    "书法，这门写字的艺术，也很有名。",
+    "一支毛笔、一滴墨，好的书写者能让字在纸上跳舞。",
+    "汉字承载着五千年的历史，还会在未来五千年继续生长。"
   ]
 };
 
