@@ -1,13 +1,14 @@
-// 题库数据 —— v153 起由 tools/apply-v153-content.js 生成。
-// 每天恒 30 道；阅读/完形/写作主题 = 中国文化 · 科学技术 · 现代热点。
-// 改题库：改 tools/v153-content-*.js 后重跑该脚本，再跑 node tools/verify-weeks.js。
+// 题库数据 —— v153 由 tools/apply-v153-content.js 生成，v154 由 tools/apply-v154-trim.js 裁量。
+// 每天 30 个单元：带词汇的日子 25 题 + 5 词，不带词汇的日子 30 题（家长：所有题加单词加起来 30 道）。
+// 阅读/完形/写作主题 = 中国文化 · 科学技术 · 现代热点。
+// 改题库：改 tools/v153-content-*.js 重跑 v153 脚本，再跑本脚本，最后 node tools/verify-weeks.js。
 
 const WEEK1 = [
   {
     "day_cn": "周一",
     "day_en": "Monday",
     "is_speaking_day": true,
-    "total_duration": 60,
+    "total_duration": 55,
     "theme_cn": "AI口语 + 高频词汇 + 阅读理解",
     "modules": [
       {
@@ -713,7 +714,7 @@ const WEEK1 = [
         "id": "mon-mc",
         "name_cn": "单项选择",
         "type": "multiple_choice",
-        "duration": 10,
+        "duration": 5,
         "questions": [
           {
             "id": "mon-mc1",
@@ -779,71 +780,6 @@ const WEEK1 = [
             ],
             "answer": 0,
             "explanation_cn": "every year 表示经常性动作，主语 we 是复数，动词用原形 visit。"
-          },
-          {
-            "id": "mon-mc6",
-            "type": "choice",
-            "question": "Look! The children ___ dragon dances in the street.",
-            "options": [
-              "are watching",
-              "watches",
-              "watched",
-              "watch"
-            ],
-            "answer": 0,
-            "explanation_cn": "Look! 提示动作正在进行，用现在进行时 are watching。"
-          },
-          {
-            "id": "mon-mc7",
-            "type": "choice",
-            "question": "My mother ___ dumplings for us last night.",
-            "options": [
-              "makes",
-              "made",
-              "make",
-              "making"
-            ],
-            "answer": 1,
-            "explanation_cn": "last night 是过去时间，用过去式 made（make 的过去式）。"
-          },
-          {
-            "id": "mon-mc8",
-            "type": "choice",
-            "question": "___ do people eat mooncakes? — Because they are delicious.",
-            "options": [
-              "Why",
-              "When",
-              "Where",
-              "Who"
-            ],
-            "answer": 0,
-            "explanation_cn": "答句是 Because…，问句用 Why（为什么）。"
-          },
-          {
-            "id": "mon-mc9",
-            "type": "choice",
-            "question": "Beijing is ___ old city with a long history.",
-            "options": [
-              "a",
-              "an",
-              "the",
-              "/（不填）"
-            ],
-            "answer": 1,
-            "explanation_cn": "old 以元音音素开头，前面用 an。"
-          },
-          {
-            "id": "mon-mc10",
-            "type": "choice",
-            "question": "The Spring Festival is ___ January or February.",
-            "options": [
-              "in",
-              "on",
-              "at",
-              "to"
-            ],
-            "answer": 0,
-            "explanation_cn": "月份前面用介词 in：in January or February。"
           }
         ]
       },
@@ -1321,7 +1257,7 @@ const WEEK1 = [
     "day_cn": "周三",
     "day_en": "Wednesday",
     "is_speaking_day": true,
-    "total_duration": 60,
+    "total_duration": 55,
     "theme_cn": "AI口语 + 高频词汇 + 阅读理解",
     "modules": [
       {
@@ -2023,7 +1959,7 @@ const WEEK1 = [
         "id": "wed-mc",
         "name_cn": "单项选择",
         "type": "multiple_choice",
-        "duration": 10,
+        "duration": 5,
         "questions": [
           {
             "id": "wed-mc1",
@@ -2089,71 +2025,6 @@ const WEEK1 = [
             ],
             "answer": 0,
             "explanation_cn": "be good at doing sth：at 后面用动名词 climbing。"
-          },
-          {
-            "id": "wed-mc6",
-            "type": "choice",
-            "question": "___ lovely the pandas are!",
-            "options": [
-              "How",
-              "What",
-              "Where",
-              "When"
-            ],
-            "answer": 0,
-            "explanation_cn": "How + 形容词 + 主语 + 谓语：How lovely the pandas are!"
-          },
-          {
-            "id": "wed-mc7",
-            "type": "choice",
-            "question": "There ___ a panda base in Sichuan.",
-            "options": [
-              "is",
-              "are",
-              "am",
-              "be"
-            ],
-            "answer": 0,
-            "explanation_cn": "a panda base 是单数，There be 用 is。"
-          },
-          {
-            "id": "wed-mc8",
-            "type": "choice",
-            "question": "Pandas can ___ trees very well.",
-            "options": [
-              "climb",
-              "climbs",
-              "climbing",
-              "climbed"
-            ],
-            "answer": 0,
-            "explanation_cn": "情态动词 can 后面用动词原形 climb。"
-          },
-          {
-            "id": "wed-mc9",
-            "type": "choice",
-            "question": "The panda is one of the most ___ animals in China.",
-            "options": [
-              "loved",
-              "love",
-              "loving",
-              "loves"
-            ],
-            "answer": 0,
-            "explanation_cn": "one of the most loved animals：最受喜爱的动物之一，用 loved。"
-          },
-          {
-            "id": "wed-mc10",
-            "type": "choice",
-            "question": "Scientists in the bases help baby pandas ___ up well.",
-            "options": [
-              "grow",
-              "grows",
-              "growing",
-              "grew"
-            ],
-            "answer": 0,
-            "explanation_cn": "help sb do sth：help 后面用动词原形 grow。"
           }
         ]
       },
@@ -2989,7 +2860,7 @@ const WEEK1 = [
     "day_cn": "周六",
     "day_en": "Saturday",
     "is_speaking_day": true,
-    "total_duration": 60,
+    "total_duration": 55,
     "theme_cn": "AI口语 + 高频词汇 + 阅读理解",
     "modules": [
       {
@@ -3694,7 +3565,7 @@ const WEEK1 = [
         "id": "sat-mc",
         "name_cn": "单项选择",
         "type": "multiple_choice",
-        "duration": 10,
+        "duration": 5,
         "questions": [
           {
             "id": "sat-mc1",
@@ -3760,71 +3631,6 @@ const WEEK1 = [
             ],
             "answer": 0,
             "explanation_cn": "story 的复数是 stories（辅音字母+y 变 ies）。"
-          },
-          {
-            "id": "sat-mc6",
-            "type": "choice",
-            "question": "Children enjoy ___ to the old stories.",
-            "options": [
-              "listening",
-              "listen",
-              "listens",
-              "listened"
-            ],
-            "answer": 0,
-            "explanation_cn": "enjoy doing sth：enjoy 后面用动名词 listening。"
-          },
-          {
-            "id": "sat-mc7",
-            "type": "choice",
-            "question": "The moon is ___ and bright on that day.",
-            "options": [
-              "round",
-              "rounds",
-              "rounding",
-              "rounded"
-            ],
-            "answer": 0,
-            "explanation_cn": "系动词 is 后面用形容词 round，作表语。"
-          },
-          {
-            "id": "sat-mc8",
-            "type": "choice",
-            "question": "We usually eat mooncakes ___ the evening.",
-            "options": [
-              "in",
-              "on",
-              "at",
-              "for"
-            ],
-            "answer": 0,
-            "explanation_cn": "「在晚上」用 in the evening。"
-          },
-          {
-            "id": "sat-mc9",
-            "type": "choice",
-            "question": "___ beautiful the moon is tonight!",
-            "options": [
-              "How",
-              "What",
-              "Which",
-              "Who"
-            ],
-            "answer": 0,
-            "explanation_cn": "How + 形容词 + 主语 + 谓语：How beautiful the moon is!"
-          },
-          {
-            "id": "sat-mc10",
-            "type": "choice",
-            "question": "My grandma ___ us a story about Chang'e every year.",
-            "options": [
-              "tells",
-              "tell",
-              "telling",
-              "told"
-            ],
-            "answer": 0,
-            "explanation_cn": "every year 表示习惯动作，主语 my grandma 是三单，用 tells。"
           }
         ]
       },
@@ -3877,7 +3683,7 @@ const WEEK1 = [
     "day_cn": "周日",
     "day_en": "Sunday",
     "is_speaking_day": false,
-    "total_duration": 40,
+    "total_duration": 35,
     "theme_cn": "阅读理解 + 高频词汇 + 完形填空",
     "modules": [
       {
@@ -4459,7 +4265,7 @@ const WEEK1 = [
         "id": "sun-tense",
         "name_cn": "时态练习",
         "type": "tense",
-        "duration": 10,
+        "duration": 5,
         "questions": [
           {
             "id": "sun-tn1",
@@ -4495,41 +4301,6 @@ const WEEK1 = [
             "question": "We ___ (see) a wonderful show last night. [填入正确形式]",
             "answer": "saw",
             "explanation_cn": "last night 过去时间，see 的过去式是 saw。"
-          },
-          {
-            "id": "sun-tn6",
-            "type": "fill",
-            "question": "The actors ___ (practise) singing for many years before they become famous. [填入正确形式]",
-            "answer": "practise",
-            "explanation_cn": "表示一般事实，用一般现在时 practise（主语复数）。"
-          },
-          {
-            "id": "sun-tn7",
-            "type": "fill",
-            "question": "I ___ (learn) Peking Opera since last September. [填入正确形式]",
-            "answer": "have learned",
-            "explanation_cn": "since last September 与现在完成时连用：have learned。"
-          },
-          {
-            "id": "sun-tn8",
-            "type": "fill",
-            "question": "More and more young people ___ (enjoy) the old art now. [填入正确形式]",
-            "answer": "enjoy",
-            "explanation_cn": "主语 people 是复数，now 表示现在，用原形 enjoy。"
-          },
-          {
-            "id": "sun-tn9",
-            "type": "fill",
-            "question": "She ___ (join) the opera club tomorrow. [填入正确形式]",
-            "answer": "will join",
-            "explanation_cn": "tomorrow 将来时间，用 will join。"
-          },
-          {
-            "id": "sun-tn10",
-            "type": "fill",
-            "question": "When I was young, my grandma often ___ (take) me to the theatre. [填入正确形式]",
-            "answer": "took",
-            "explanation_cn": "when I was young 过去时间，take 的过去式是 took。"
           }
         ]
       },
@@ -4693,7 +4464,7 @@ const WEEK2 = [
     "day_cn": "周一",
     "day_en": "Monday",
     "is_speaking_day": true,
-    "total_duration": 60,
+    "total_duration": 55,
     "theme_cn": "AI口语 + 高频词汇 + 阅读理解",
     "modules": [
       {
@@ -5403,7 +5174,7 @@ const WEEK2 = [
         "id": "w2-mon-mc",
         "name_cn": "单项选择",
         "type": "multiple_choice",
-        "duration": 10,
+        "duration": 5,
         "questions": [
           {
             "id": "w2-mon-mc1",
@@ -5469,71 +5240,6 @@ const WEEK2 = [
             ],
             "answer": 0,
             "explanation_cn": "than 比较级用 faster。"
-          },
-          {
-            "id": "w2-mon-mc6",
-            "type": "choice",
-            "question": "My father went to Beijing ___ high-speed train last week.",
-            "options": [
-              "by",
-              "on",
-              "in",
-              "with"
-            ],
-            "answer": 0,
-            "explanation_cn": "「乘高铁」用 by high-speed train。"
-          },
-          {
-            "id": "w2-mon-mc7",
-            "type": "choice",
-            "question": "Ten years ago, the trip ___ more than ten hours.",
-            "options": [
-              "took",
-              "takes",
-              "take",
-              "taking"
-            ],
-            "answer": 0,
-            "explanation_cn": "ten years ago 过去时间，用过去式 took。"
-          },
-          {
-            "id": "w2-mon-mc8",
-            "type": "choice",
-            "question": "There ___ many new high-speed railways in China.",
-            "options": [
-              "are",
-              "is",
-              "am",
-              "be"
-            ],
-            "answer": 0,
-            "explanation_cn": "railways 复数，There be 用 are。"
-          },
-          {
-            "id": "w2-mon-mc9",
-            "type": "choice",
-            "question": "___ fast the high-speed train is!",
-            "options": [
-              "How",
-              "What",
-              "Where",
-              "When"
-            ],
-            "answer": 0,
-            "explanation_cn": "How + 形容词 + 主谓：How fast…!"
-          },
-          {
-            "id": "w2-mon-mc10",
-            "type": "choice",
-            "question": "The ticket is ___ cheaper on the phone.",
-            "options": [
-              "much",
-              "many",
-              "more",
-              "most"
-            ],
-            "answer": 0,
-            "explanation_cn": "much 修饰比较级 cheaper（便宜得多）。"
           }
         ]
       },
@@ -6011,7 +5717,7 @@ const WEEK2 = [
     "day_cn": "周三",
     "day_en": "Wednesday",
     "is_speaking_day": true,
-    "total_duration": 60,
+    "total_duration": 55,
     "theme_cn": "AI口语 + 高频词汇 + 阅读理解",
     "modules": [
       {
@@ -6705,7 +6411,7 @@ const WEEK2 = [
         "id": "w2-wed-mc",
         "name_cn": "单项选择",
         "type": "multiple_choice",
-        "duration": 10,
+        "duration": 5,
         "questions": [
           {
             "id": "w2-wed-mc1",
@@ -6771,71 +6477,6 @@ const WEEK2 = [
             ],
             "answer": 0,
             "explanation_cn": "否定句用 any cash。"
-          },
-          {
-            "id": "w2-wed-mc6",
-            "type": "choice",
-            "question": "Mobile payment makes shopping ___ and safer.",
-            "options": [
-              "faster",
-              "fast",
-              "fastest",
-              "more fast"
-            ],
-            "answer": 0,
-            "explanation_cn": "and 连接并列比较级：faster and safer。"
-          },
-          {
-            "id": "w2-wed-mc7",
-            "type": "choice",
-            "question": "Old people can learn it because the steps are ___.",
-            "options": [
-              "simple",
-              "hard",
-              "difficult",
-              "slow"
-            ],
-            "answer": 0,
-            "explanation_cn": "后文说老人也能学会，因为步骤简单 simple。"
-          },
-          {
-            "id": "w2-wed-mc8",
-            "type": "choice",
-            "question": "You don't need to carry ___ money with you.",
-            "options": [
-              "a lot of",
-              "a lot",
-              "many of",
-              "lots"
-            ],
-            "answer": 0,
-            "explanation_cn": "money 不可数，用 a lot of money。"
-          },
-          {
-            "id": "w2-wed-mc9",
-            "type": "choice",
-            "question": "___ useful mobile payment is!",
-            "options": [
-              "How",
-              "What",
-              "Which",
-              "Who"
-            ],
-            "answer": 0,
-            "explanation_cn": "How + 形容词：How useful…!"
-          },
-          {
-            "id": "w2-wed-mc10",
-            "type": "choice",
-            "question": "Please show ___ your QR code.",
-            "options": [
-              "me",
-              "I",
-              "my",
-              "mine"
-            ],
-            "answer": 0,
-            "explanation_cn": "动词 show 后面用宾格 me。"
           }
         ]
       },
@@ -7671,7 +7312,7 @@ const WEEK2 = [
     "day_cn": "周六",
     "day_en": "Saturday",
     "is_speaking_day": true,
-    "total_duration": 60,
+    "total_duration": 55,
     "theme_cn": "AI口语 + 高频词汇 + 阅读理解",
     "modules": [
       {
@@ -8363,7 +8004,7 @@ const WEEK2 = [
         "id": "w2-sat-mc",
         "name_cn": "单项选择",
         "type": "multiple_choice",
-        "duration": 10,
+        "duration": 5,
         "questions": [
           {
             "id": "w2-sat-mc1",
@@ -8429,71 +8070,6 @@ const WEEK2 = [
             ],
             "answer": 0,
             "explanation_cn": "feel 是系动词，后面用形容词 tired（累）。"
-          },
-          {
-            "id": "w2-sat-mc6",
-            "type": "choice",
-            "question": "AI is not ___, so we must check its answers.",
-            "options": [
-              "perfect",
-              "perfection",
-              "perfectly",
-              "more perfect"
-            ],
-            "answer": 0,
-            "explanation_cn": "系动词 is 后面用形容词 perfect（完美的）。"
-          },
-          {
-            "id": "w2-sat-mc7",
-            "type": "choice",
-            "question": "___ the answers carefully before you hand them in.",
-            "options": [
-              "Check",
-              "Checks",
-              "Checking",
-              "Checked"
-            ],
-            "answer": 0,
-            "explanation_cn": "祈使句用动词原形 Check。"
-          },
-          {
-            "id": "w2-sat-mc8",
-            "type": "choice",
-            "question": "People will work ___ AI in the future.",
-            "options": [
-              "with",
-              "at",
-              "for of",
-              "off"
-            ],
-            "answer": 0,
-            "explanation_cn": "work with AI：与 AI 一起工作。"
-          },
-          {
-            "id": "w2-sat-mc9",
-            "type": "choice",
-            "question": "AI is becoming a big ___ of our life.",
-            "options": [
-              "part",
-              "party",
-              "partly",
-              "partner"
-            ],
-            "answer": 0,
-            "explanation_cn": "a big part of our life：生活中重要的一部分。"
-          },
-          {
-            "id": "w2-sat-mc10",
-            "type": "choice",
-            "question": "The robots work ___ and never stop.",
-            "options": [
-              "day and night",
-              "day and day",
-              "night on night",
-              "day to night"
-            ],
-            "answer": 0,
-            "explanation_cn": "day and night 日夜不停地工作，固定短语。"
           }
         ]
       },
@@ -8546,7 +8122,7 @@ const WEEK2 = [
     "day_cn": "周日",
     "day_en": "Sunday",
     "is_speaking_day": false,
-    "total_duration": 35,
+    "total_duration": 30,
     "theme_cn": "阅读理解 + 高频词汇 + 完形填空",
     "modules": [
       {
@@ -9117,7 +8693,7 @@ const WEEK2 = [
         "id": "w2-sun-tense",
         "name_cn": "时态练习",
         "type": "tense",
-        "duration": 10,
+        "duration": 5,
         "questions": [
           {
             "id": "w2-sun-tn1",
@@ -9153,41 +8729,6 @@ const WEEK2 = [
             "question": "My uncle ___ (buy) a drone last month. [填入正确形式]",
             "answer": "bought",
             "explanation_cn": "last month 过去时间，buy 的过去式是 bought。"
-          },
-          {
-            "id": "w2-sun-tn6",
-            "type": "fill",
-            "question": "In the future, drone taxis ___ (take) us to school. [填入正确形式]",
-            "answer": "will take",
-            "explanation_cn": "in the future 将来时间，用 will take。"
-          },
-          {
-            "id": "w2-sun-tn7",
-            "type": "fill",
-            "question": "The company ___ (send) parcels by drone since 2022. [填入正确形式]",
-            "answer": "has sent",
-            "explanation_cn": "since 2022 与现在完成时连用。"
-          },
-          {
-            "id": "w2-sun-tn8",
-            "type": "fill",
-            "question": "While the drone ___ (drop) the box, the dog barked. [填入正确形式]",
-            "answer": "was dropping",
-            "explanation_cn": "while 引导过去进行时：was dropping。"
-          },
-          {
-            "id": "w2-sun-tn9",
-            "type": "fill",
-            "question": "Rules ___ (make) for drones last year. [填入正确形式]",
-            "answer": "were made",
-            "explanation_cn": "规则是被制定的，去年 → 一般过去时被动 were made。"
-          },
-          {
-            "id": "w2-sun-tn10",
-            "type": "fill",
-            "question": "Don't worry — the engineer ___ (fix) the drone already. [填入正确形式]",
-            "answer": "has fixed",
-            "explanation_cn": "already 与现在完成时连用：has fixed。"
           }
         ]
       },
@@ -9351,7 +8892,7 @@ const WEEK3 = [
     "day_cn": "周一",
     "day_en": "Monday",
     "is_speaking_day": true,
-    "total_duration": 60,
+    "total_duration": 55,
     "theme_cn": "AI口语 + 高频词汇 + 阅读理解",
     "modules": [
       {
@@ -10045,7 +9586,7 @@ const WEEK3 = [
         "id": "w3-mon-mc",
         "name_cn": "单项选择",
         "type": "multiple_choice",
-        "duration": 10,
+        "duration": 5,
         "questions": [
           {
             "id": "w3-mon-mc1",
@@ -10111,71 +9652,6 @@ const WEEK3 = [
             ],
             "answer": 0,
             "explanation_cn": "learn to do sth：学会网购，用 to shop。"
-          },
-          {
-            "id": "w3-mon-mc6",
-            "type": "choice",
-            "question": "She buys vegetables ___ her phone.",
-            "options": [
-              "on",
-              "in",
-              "at",
-              "for"
-            ],
-            "answer": 0,
-            "explanation_cn": "「在手机上」用 on her phone。"
-          },
-          {
-            "id": "w3-mon-mc7",
-            "type": "choice",
-            "question": "There ___ many online shopping festivals in a year.",
-            "options": [
-              "are",
-              "is",
-              "am",
-              "be"
-            ],
-            "answer": 0,
-            "explanation_cn": "festivals 复数，There be 用 are。"
-          },
-          {
-            "id": "w3-mon-mc8",
-            "type": "choice",
-            "question": "___ convenient online shopping is!",
-            "options": [
-              "How",
-              "What",
-              "Where",
-              "When"
-            ],
-            "answer": 0,
-            "explanation_cn": "How + 形容词：How convenient…!"
-          },
-          {
-            "id": "w3-mon-mc9",
-            "type": "choice",
-            "question": "The fruit comes from farms far ___ from the city.",
-            "options": [
-              "away",
-              "away from",
-              "far of",
-              "farthest"
-            ],
-            "answer": 0,
-            "explanation_cn": "far away from the city：离城市很远。"
-          },
-          {
-            "id": "w3-mon-mc10",
-            "type": "choice",
-            "question": "Please ___ the box when it arrives.",
-            "options": [
-              "open",
-              "opens",
-              "opening",
-              "opened"
-            ],
-            "answer": 0,
-            "explanation_cn": "祈使句用动词原形 open。"
           }
         ]
       },
@@ -10653,7 +10129,7 @@ const WEEK3 = [
     "day_cn": "周三",
     "day_en": "Wednesday",
     "is_speaking_day": true,
-    "total_duration": 60,
+    "total_duration": 55,
     "theme_cn": "AI口语 + 高频词汇 + 阅读理解",
     "modules": [
       {
@@ -11354,7 +10830,7 @@ const WEEK3 = [
         "id": "w3-wed-mc",
         "name_cn": "单项选择",
         "type": "multiple_choice",
-        "duration": 10,
+        "duration": 5,
         "questions": [
           {
             "id": "w3-wed-mc1",
@@ -11420,71 +10896,6 @@ const WEEK3 = [
             ],
             "answer": 0,
             "explanation_cn": "be bad for…：对…有害。"
-          },
-          {
-            "id": "w3-wed-mc6",
-            "type": "choice",
-            "question": "Doctors say students should watch screens for ___ two hours a day.",
-            "options": [
-              "less than",
-              "less then",
-              "least than",
-              "little than"
-            ],
-            "answer": 0,
-            "explanation_cn": "less than two hours：不到两小时。"
-          },
-          {
-            "id": "w3-wed-mc7",
-            "type": "choice",
-            "question": "The best way is ___ good videos first.",
-            "options": [
-              "to pick",
-              "pick",
-              "picking",
-              "picked"
-            ],
-            "answer": 0,
-            "explanation_cn": "is 后面用不定式 to pick 作表语。"
-          },
-          {
-            "id": "w3-wed-mc8",
-            "type": "choice",
-            "question": "Then go outside ___ instead of watching more.",
-            "options": [
-              "to play",
-              "play",
-              "playing",
-              "played"
-            ],
-            "answer": 0,
-            "explanation_cn": "出门「去玩」，目的用 to play。"
-          },
-          {
-            "id": "w3-wed-mc9",
-            "type": "choice",
-            "question": "Some videos are not useful ___ all.",
-            "options": [
-              "at",
-              "in",
-              "on",
-              "of"
-            ],
-            "answer": 0,
-            "explanation_cn": "not…at all：一点也不。"
-          },
-          {
-            "id": "w3-wed-mc10",
-            "type": "choice",
-            "question": "___ interesting the museum videos are!",
-            "options": [
-              "How",
-              "What",
-              "Where",
-              "Why"
-            ],
-            "answer": 0,
-            "explanation_cn": "How + 形容词：How interesting…!"
           }
         ]
       },
@@ -12320,7 +11731,7 @@ const WEEK3 = [
     "day_cn": "周六",
     "day_en": "Saturday",
     "is_speaking_day": true,
-    "total_duration": 60,
+    "total_duration": 55,
     "theme_cn": "AI口语 + 高频词汇 + 阅读理解",
     "modules": [
       {
@@ -13016,7 +12427,7 @@ const WEEK3 = [
         "id": "w3-sat-mc",
         "name_cn": "单项选择",
         "type": "multiple_choice",
-        "duration": 10,
+        "duration": 5,
         "questions": [
           {
             "id": "w3-sat-mc1",
@@ -13082,71 +12493,6 @@ const WEEK3 = [
             ],
             "answer": 0,
             "explanation_cn": "「带有…图案的」玩具，用 with。"
-          },
-          {
-            "id": "w3-sat-mc6",
-            "type": "choice",
-            "question": "Young people like ___ the photos online.",
-            "options": [
-              "sharing",
-              "share",
-              "shares",
-              "shared"
-            ],
-            "answer": 0,
-            "explanation_cn": "like doing sth：喜欢分享照片。"
-          },
-          {
-            "id": "w3-sat-mc7",
-            "type": "choice",
-            "question": "Museums are no longer quiet and ___.",
-            "options": [
-              "boring",
-              "bored",
-              "bore",
-              "boringly"
-            ],
-            "answer": 0,
-            "explanation_cn": "修饰地方用 -ing 形容词 boring（无聊的）。"
-          },
-          {
-            "id": "w3-sat-mc8",
-            "type": "choice",
-            "question": "They are becoming the most ___ classrooms.",
-            "options": [
-              "fashionable",
-              "fashion",
-              "fashionably",
-              "more fashionable"
-            ],
-            "answer": 0,
-            "explanation_cn": "the most + 多音节形容词：最时髦的。"
-          },
-          {
-            "id": "w3-sat-mc9",
-            "type": "choice",
-            "question": "___ wonderful the new museum looks!",
-            "options": [
-              "How",
-              "What",
-              "Which",
-              "Who"
-            ],
-            "answer": 0,
-            "explanation_cn": "How + 形容词：How wonderful…!"
-          },
-          {
-            "id": "w3-sat-mc10",
-            "type": "choice",
-            "question": "The museum is open ___ nine in the morning.",
-            "options": [
-              "at",
-              "in",
-              "on",
-              "for"
-            ],
-            "answer": 0,
-            "explanation_cn": "具体时刻前用 at：at nine。"
           }
         ]
       },
@@ -13199,7 +12545,7 @@ const WEEK3 = [
     "day_cn": "周日",
     "day_en": "Sunday",
     "is_speaking_day": false,
-    "total_duration": 35,
+    "total_duration": 30,
     "theme_cn": "阅读理解 + 高频词汇 + 完形填空",
     "modules": [
       {
@@ -13781,7 +13127,7 @@ const WEEK3 = [
         "id": "w3-sun-tense",
         "name_cn": "时态练习",
         "type": "tense",
-        "duration": 10,
+        "duration": 5,
         "questions": [
           {
             "id": "w3-sun-tn1",
@@ -13817,41 +13163,6 @@ const WEEK3 = [
             "question": "The volunteers ___ (give) out water at every rest point tomorrow. [填入正确形式]",
             "answer": "will give",
             "explanation_cn": "tomorrow 将来时间，用 will give。"
-          },
-          {
-            "id": "w3-sun-tn6",
-            "type": "fill",
-            "question": "She ___ (practise) running every morning last year. [填入正确形式]",
-            "answer": "practised",
-            "explanation_cn": "last year 过去时间，practise 的过去式是 practised。"
-          },
-          {
-            "id": "w3-sun-tn7",
-            "type": "fill",
-            "question": "Thousands of people ___ (join) the race every year. [填入正确形式]",
-            "answer": "join",
-            "explanation_cn": "every year 习惯动作，主语复数用原形 join。"
-          },
-          {
-            "id": "w3-sun-tn8",
-            "type": "fill",
-            "question": "While I ___ (wait) at the rest point, I saw an old runner. [填入正确形式]",
-            "answer": "was waiting",
-            "explanation_cn": "while 引导过去进行时：was waiting。"
-          },
-          {
-            "id": "w3-sun-tn9",
-            "type": "fill",
-            "question": "The race ___ (start) early in the morning every time. [填入正确形式]",
-            "answer": "starts",
-            "explanation_cn": "every time 习惯动作，主语三单用 starts。"
-          },
-          {
-            "id": "w3-sun-tn10",
-            "type": "fill",
-            "question": "By nine o'clock, the first runner ___ (finish) the race. [填入正确形式]",
-            "answer": "had finished",
-            "explanation_cn": "九点之前已完成，过去完成时 had finished。"
           }
         ]
       },
@@ -14015,7 +13326,7 @@ const WEEK4 = [
     "day_cn": "周一",
     "day_en": "Monday",
     "is_speaking_day": true,
-    "total_duration": 60,
+    "total_duration": 55,
     "theme_cn": "AI口语 + 高频词汇 + 阅读理解",
     "modules": [
       {
@@ -14721,7 +14032,7 @@ const WEEK4 = [
         "id": "w4-mon-mc",
         "name_cn": "单项选择",
         "type": "multiple_choice",
-        "duration": 10,
+        "duration": 5,
         "questions": [
           {
             "id": "w4-mon-mc1",
@@ -14787,71 +14098,6 @@ const WEEK4 = [
             ],
             "answer": 0,
             "explanation_cn": "数词 + million 单数：seventeen million。"
-          },
-          {
-            "id": "w4-mon-mc6",
-            "type": "choice",
-            "question": "People can enjoy the palace ___ leaving home.",
-            "options": [
-              "without",
-              "with",
-              "in",
-              "for"
-            ],
-            "answer": 0,
-            "explanation_cn": "without doing sth：足不出户。"
-          },
-          {
-            "id": "w4-mon-mc7",
-            "type": "choice",
-            "question": "The museum now ___ apps and online tours.",
-            "options": [
-              "uses",
-              "use",
-              "used",
-              "using"
-            ],
-            "answer": 0,
-            "explanation_cn": "主语三单，now 一般现在时用 uses。"
-          },
-          {
-            "id": "w4-mon-mc8",
-            "type": "choice",
-            "question": "There are about ___ rooms in the palace.",
-            "options": [
-              "nine thousand",
-              "ninety thousand",
-              "nine hundreds",
-              "nineteen thousand"
-            ],
-            "answer": 0,
-            "explanation_cn": "大约九千间：nine thousand。"
-          },
-          {
-            "id": "w4-mon-mc9",
-            "type": "choice",
-            "question": "Photos of the palace ___ quickly on the internet.",
-            "options": [
-              "spread",
-              "spreads",
-              "spreading",
-              "spreaded"
-            ],
-            "answer": 0,
-            "explanation_cn": "photos 复数，spread 过去式和原形同形，这里一般现在时用原形。"
-          },
-          {
-            "id": "w4-mon-mc10",
-            "type": "choice",
-            "question": "It becomes the Forbidden City ___ 600 years ago again.",
-            "options": [
-              "of",
-              "from",
-              "at",
-              "since"
-            ],
-            "answer": 0,
-            "explanation_cn": "「六百年前的」紫禁城，用 of 600 years ago。"
           }
         ]
       },
@@ -15329,7 +14575,7 @@ const WEEK4 = [
     "day_cn": "周三",
     "day_en": "Wednesday",
     "is_speaking_day": true,
-    "total_duration": 60,
+    "total_duration": 55,
     "theme_cn": "AI口语 + 高频词汇 + 阅读理解",
     "modules": [
       {
@@ -16018,7 +15264,7 @@ const WEEK4 = [
         "id": "w4-wed-mc",
         "name_cn": "单项选择",
         "type": "multiple_choice",
-        "duration": 10,
+        "duration": 5,
         "questions": [
           {
             "id": "w4-wed-mc1",
@@ -16084,71 +15330,6 @@ const WEEK4 = [
             ],
             "answer": 0,
             "explanation_cn": "宽大的座椅、大窗户，big windows。"
-          },
-          {
-            "id": "w4-wed-mc6",
-            "type": "choice",
-            "question": "More and more airlines ___ choosing C919.",
-            "options": [
-              "are",
-              "is",
-              "am",
-              "be"
-            ],
-            "answer": 0,
-            "explanation_cn": "airlines 复数，现在进行时用 are choosing。"
-          },
-          {
-            "id": "w4-wed-mc7",
-            "type": "choice",
-            "question": "The sky used to ___ to planes from other countries.",
-            "options": [
-              "belong",
-              "belongs",
-              "belonging",
-              "belonged"
-            ],
-            "answer": 0,
-            "explanation_cn": "used to do sth：过去常常，用原形 belong。"
-          },
-          {
-            "id": "w4-wed-mc8",
-            "type": "choice",
-            "question": "Now China has its ___ big plane.",
-            "options": [
-              "own",
-              "owns",
-              "owning",
-              "owned"
-            ],
-            "answer": 0,
-            "explanation_cn": "its own big plane：自己的大飞机。"
-          },
-          {
-            "id": "w4-wed-mc9",
-            "type": "choice",
-            "question": "The plane flies ___ and higher.",
-            "options": [
-              "higher",
-              "highest",
-              "high",
-              "more high"
-            ],
-            "answer": 0,
-            "explanation_cn": "比较级 and 比较级：higher and higher 越来越高。"
-          },
-          {
-            "id": "w4-wed-mc10",
-            "type": "choice",
-            "question": "919 sounds ___ \"jiu jiu\" in Chinese.",
-            "options": [
-              "like",
-              "likes",
-              "liking",
-              "liked"
-            ],
-            "answer": 0,
-            "explanation_cn": "sound like：听起来像。"
           }
         ]
       },
@@ -16901,7 +16082,7 @@ const WEEK4 = [
     "day_cn": "周六",
     "day_en": "Saturday",
     "is_speaking_day": true,
-    "total_duration": 60,
+    "total_duration": 55,
     "theme_cn": "AI口语 + 高频词汇 + 阅读理解",
     "modules": [
       {
@@ -17595,7 +16776,7 @@ const WEEK4 = [
         "id": "w4-sat-mc",
         "name_cn": "单项选择",
         "type": "multiple_choice",
-        "duration": 10,
+        "duration": 5,
         "questions": [
           {
             "id": "w4-sat-mc1",
@@ -17661,71 +16842,6 @@ const WEEK4 = [
             ],
             "answer": 0,
             "explanation_cn": "剪纸「被列入」，过去时被动 was added。"
-          },
-          {
-            "id": "w4-sat-mc6",
-            "type": "choice",
-            "question": "Artists teach in schools and even ___.",
-            "options": [
-              "online",
-              "on line of",
-              "in the line",
-              "by line"
-            ],
-            "answer": 0,
-            "explanation_cn": "online 网上，副词单独用。"
-          },
-          {
-            "id": "w4-sat-mc7",
-            "type": "choice",
-            "question": "Their videos get ___ of likes.",
-            "options": [
-              "millions",
-              "million",
-              "million of",
-              "a million of"
-            ],
-            "answer": 0,
-            "explanation_cn": "millions of likes：数百万点赞。"
-          },
-          {
-            "id": "w4-sat-mc8",
-            "type": "choice",
-            "question": "It looks easy, ___ one wrong cut and you must start again.",
-            "options": [
-              "but",
-              "and",
-              "so",
-              "or"
-            ],
-            "answer": 0,
-            "explanation_cn": "「但」剪错一刀就要重来，but。"
-          },
-          {
-            "id": "w4-sat-mc9",
-            "type": "choice",
-            "question": "Paper cutting connects China ___ the world.",
-            "options": [
-              "and",
-              "with",
-              "to",
-              "for"
-            ],
-            "answer": 0,
-            "explanation_cn": "connect…and…：连接中国与世界。"
-          },
-          {
-            "id": "w4-sat-mc10",
-            "type": "choice",
-            "question": "___ wonderful paper cutting is!",
-            "options": [
-              "How",
-              "What",
-              "Which",
-              "When"
-            ],
-            "answer": 0,
-            "explanation_cn": "How + 形容词：How wonderful…!"
           }
         ]
       },
@@ -17778,7 +16894,7 @@ const WEEK4 = [
     "day_cn": "周日",
     "day_en": "Sunday",
     "is_speaking_day": false,
-    "total_duration": 35,
+    "total_duration": 30,
     "theme_cn": "阅读理解 + 高频词汇 + 完形填空",
     "modules": [
       {
@@ -18359,7 +17475,7 @@ const WEEK4 = [
         "id": "w4-sun-tense",
         "name_cn": "时态练习",
         "type": "tense",
-        "duration": 10,
+        "duration": 5,
         "questions": [
           {
             "id": "w4-sun-tn1",
@@ -18395,41 +17511,6 @@ const WEEK4 = [
             "question": "More and more foreigners ___ (learn) Chinese now. [填入正确形式]",
             "answer": "are learning",
             "explanation_cn": "now 与进行时连用，主语复数 are learning。"
-          },
-          {
-            "id": "w4-sun-tn6",
-            "type": "fill",
-            "question": "Calligraphy ___ (be) famous for thousands of years. [填入正确形式]",
-            "answer": "has been",
-            "explanation_cn": "for thousands of years 与现在完成时连用。"
-          },
-          {
-            "id": "w4-sun-tn7",
-            "type": "fill",
-            "question": "My sister ___ (learn) calligraphy next term. [填入正确形式]",
-            "answer": "will learn",
-            "explanation_cn": "next term 将来时间，用 will learn。"
-          },
-          {
-            "id": "w4-sun-tn8",
-            "type": "fill",
-            "question": "While the master ___ (write), we watched quietly. [填入正确形式]",
-            "answer": "was writing",
-            "explanation_cn": "while 引导过去进行时：was writing。"
-          },
-          {
-            "id": "w4-sun-tn9",
-            "type": "fill",
-            "question": "Thousands of characters ___ (use) in daily life. [填入正确形式]",
-            "answer": "are used",
-            "explanation_cn": "字被使用，一般现在时被动 are used。"
-          },
-          {
-            "id": "w4-sun-tn10",
-            "type": "fill",
-            "question": "The old shapes ___ (not disappear) so far. [填入正确形式]",
-            "answer": "haven't disappeared",
-            "explanation_cn": "so far 与现在完成时连用：haven't disappeared。"
           }
         ]
       },

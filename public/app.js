@@ -387,6 +387,45 @@ const App = {
     return n;
   },
 
+  // ===== v154：按"题"计数的进度（家长：所有题加单词加起来 30 道）=====
+  //
+  // 做题界面右上角的计数以前直接用步骤下标（_buildSteps 里阅读逐句翻译、
+  // 完形逐句翻译每句各占一步），家长看到的是"第 3 / 51 步"，以为题量是
+  // 四五十道。现在改成按**单元**计数：一道题 = 1 个单元、一个词汇词 = 1
+  // 个单元、写作 5 个空 = 5 个单元；逐句翻译/跟读这些"过程屏"占 0 个单元。
+  // 每天恰好 30（题库已按 25 题 + 5 词 / 30 题 裁好），错题巩固不占 30。
+  _dayUnits(dayIdx) {
+    const day = HOMEWORK_DATA[dayIdx];
+    if (!day || !day.modules) return 0;
+    let n = 0;
+    day.modules.forEach(m => {
+      if (m.words) n += m.words.length;
+      if (m.questions) n += m.questions.length;
+      if (m.blanks) n += m.blanks.length;
+    });
+    return n;
+  },
+
+  // 一个步骤代表几个单元（0 = 过程屏，不占题数）。
+  _unitsOfStep(step, day) {
+    if (!step || step.mi === undefined) return 0;   // retry / review 巩固步
+    const m = day && day.modules && day.modules[step.mi];
+    if (!m) return 0;
+    if (step.kind === 'vocab') return (m.words || []).length;
+    if (step.kind === 'writing') return (m.blanks || []).length;
+    if (step.kind === 'clozegroup') return (step.qis || [step.qi]).length;
+    if (step.kind === 'speaking' || step.kind === 'question') return 1;
+    return 0;
+  },
+
+  // 当前步骤之前已经完成的单元数。
+  _unitsBeforeStep(steps, idx, dayIdx) {
+    const day = HOMEWORK_DATA[dayIdx];
+    let n = 0;
+    for (let i = 0; i < idx && i < steps.length; i++) n += this._unitsOfStep(steps[i], day);
+    return n;
+  },
+
   // ===== 断点位置（连续记录）=====
   // 「上次退出去时停在哪儿」不能只靠答题记录反推：一道题答到一半、正在跟读
   // 的那一屏、词汇闯关里的第几个词第几个阶段，都还没有任何"答过了"的痕迹。
@@ -6460,6 +6499,18 @@ const App = {
     as: 1, so: 1, but: 1, for: 1, with: 1, that: 1, this: 1, us: 1, not: 1,
   },
 
+  // v154：太简单的词不进单词修复、不进错词巩固 —— 家长原话：「太简单的单词
+  // 就不要出来了，真正读错的给弄出来」。判定口径：3 个字母以内、纯语法连接
+  // 词（GLUE_WORDS）、纯数字，都算"太简单"。识别端对这类短词本来就最不稳，
+  // 把孩子拉去单独重读全是白费功夫。
+  _isSimpleWord(raw) {
+    const w = String(raw || '').toLowerCase().replace(/[^a-z'\-]/g, '');
+    if (!w) return true;
+    if (/^\d+$/.test(w)) return true;
+    if (this.GLUE_WORDS[w]) return true;
+    return w.length <= 3;
+  },
+
   // 词尾变化（v96）：同一个词的复数 / 三单 / 过去式 / 进行时 / 比较级。
   // cats/cat 那条由 _wordSame ③ 覆盖掉了；helped/help、visited/visit、
   // years/year、reading/read 得剥掉 -ed/-s/-ing 才相等，单独补一条。
@@ -8178,10 +8229,13 @@ const App = {
       // v87 修复流程：只要有读错/漏读的词，整句就不算过 —— 先把这些单词
       // 一个个读对，才解锁「再读整句」，整句读对才放行下一句。
       // （对齐结果里 wrong = 读错，miss = 漏读，两者都要修复。）
+      // v154：太简单的词不收（家长：「太简单的单词就不要出来了」），
+      // 简单词读错也不再挡整句 —— 说了没大问题就过。
       const wrongs = [];
       if (text) {
         a.items.forEach(function(x) {
-          if ((x.status === 'wrong' || x.status === 'missing') && wrongs.indexOf(x.target) < 0) {
+          if ((x.status === 'wrong' || x.status === 'missing') && wrongs.indexOf(x.target) < 0
+              && !self._isSimpleWord(x.target)) {
             wrongs.push(x.target);
           }
         });
@@ -8322,7 +8376,8 @@ const App = {
       const a = self.alignSpeech(word, text || '');
       // 判"读对了"：位置上对得上，或者这一串识别结果里任意位置出现过这个词。
       // 后者挡住对齐偶尔把词吃进"多余的词"里的情况。
-      const hit = voiceOk || (a.ok >= 1 && a.score >= 60) || self._heardAny(word, text);
+      // v154：分数线 60 → 40（家长：「说了就过，说了没大问题就过，不要卡太严」）。
+      const hit = voiceOk || (a.ok >= 1 && a.score >= 40) || self._heardAny(word, text);
       const tries = (r.tries[idx] || 0) + 1;
       r.tries[idx] = tries;
       if (hit || tries >= self.REPAIR_GIVE_UP) {
@@ -10136,10 +10191,13 @@ const App = {
 
       // v87：和阅读逐句同一条规则 —— 有读错/漏读的词就先进单词修复，
       // 全部读对才能再读整句，整句读对（无错词）才算这句通过。
+      // v154：太简单的词不收、不挡（家长：「太简单的单词就不要出来了，
+      // 真正读错的给弄出来」）。
       const wrongs = [];
       if (text) {
         a.items.forEach(function(x) {
-          if ((x.status === 'wrong' || x.status === 'missing') && wrongs.indexOf(x.target) < 0) {
+          if ((x.status === 'wrong' || x.status === 'missing') && wrongs.indexOf(x.target) < 0
+              && !self._isSimpleWord(x.target)) {
             wrongs.push(x.target);
           }
         });
@@ -10316,6 +10374,7 @@ const App = {
   _reviewAdd(rawWord) {
     const word = String(rawWord || '').trim().toLowerCase();
     if (!word || word.length > 40 || !/^[a-z][a-z'\- ]*$/i.test(word)) return;
+    if (this._isSimpleWord(word)) return;   // v154：太简单的词不进巩固
     const list = this._reviewLoad();
     const e = list.find(x => x.w === word);
     if (e) { e.n = (e.n || 1) + 1; e.ok = 0; e.t = Date.now(); }
@@ -10365,7 +10424,7 @@ const App = {
     const word = String(step.word || '');
     const esc = word.replace(/'/g, "\\'");
     Recorder.warmUp(); Api.warmup();
-    this._reviewCtx = { word: word, tries: step.tries || 0 };
+    this._reviewCtx = { word: word, tries: step.tries || 0, attempts: 0 };
     this._reviewListened = false;   // 每个新词都要先听一遍示范才能跟读
     const n = this._reviewDue(60).length;
     const ph = this._wordPhonetic(word);
@@ -10454,19 +10513,39 @@ const App = {
       const judge = self._judgeSilence(out);
       const voiceOk = !text && judge.voiceOk;
       if (!text && !voiceOk) {
+        // v154：连续 3 次"没录到声音"也放行 —— 识别端一直空手而归多半不是
+        // 孩子的错，不能让她在这一格无限循环（家长：「说了就过」）。
+        ctx.attempts = (ctx.attempts || 0) + 1;
+        if (ctx.attempts >= 3) {
+          self._reviewPass(word);
+          const btn2 = document.getElementById('review-btn');
+          if (btn2) { btn2.classList.add('review-done'); btn2.disabled = true; }
+          if (status) status.innerHTML = '👍 这一轮先算过，明天再巩固一次';
+          const next2 = document.getElementById('stage-next-btn');
+          if (next2) { next2.disabled = false; next2.classList.add('nudge'); }
+          return;
+        }
         if (status) status.innerHTML = '<div class="review-fix">'
           + '<div class="rf-head">这次没录到声音</div>'
           + '<div class="rf-tip">点一下上面的单词听读音，再按住大声读一次</div></div>';
         return;
       }
       const a = self.alignSpeech(word, text || '');
-      if (voiceOk || (a.ok >= 1 && a.score >= 60)) {
+      // v154：说了就过（家长原话）。分数线 60 → 40；另外连试 3 次自动放行
+      // （跟修复词的 REPAIR_GIVE_UP 同一个道理 —— 识别不准不能让孩子白读
+      // 一遍又一遍，读了好多遍还不过，问题多半在识别不在孩子）。
+      ctx.attempts = (ctx.attempts || 0) + 1;
+      const hit = voiceOk || (a.ok >= 1 && a.score >= 40) || self._heardAny(word, text);
+      if (hit || ctx.attempts >= 3) {
+        const lenient = !hit;
         const okN = self._reviewPass(word);
         const btn = document.getElementById('review-btn');
         if (btn) { btn.classList.add('review-done'); btn.disabled = true; }
-        if (status) status.innerHTML = okN >= 2
-          ? '🎉 连续 2 次读对，这个词毕业啦！'
-          : '✓ 第 1 次读对！明天还要再读一次巩固';
+        if (status) status.innerHTML = lenient
+          ? '👍 这一轮先算过，明天再巩固一次'
+          : (okN >= 2
+            ? '🎉 连续 2 次读对，这个词毕业啦！'
+            : '✓ 第 1 次读对！明天还要再读一次巩固');
         const next = document.getElementById('stage-next-btn');
         if (next) { next.disabled = false; next.classList.add('nudge'); }
       } else {
@@ -10474,7 +10553,8 @@ const App = {
         // 纠音（v120）：当场把正确读音放一遍，再说清楚差在哪儿。没有这一步，
         // 孩子看到的只是"还没读对"，只能一遍遍瞎试 —— 又慢又挫败。
         self.speak(word);
-        if (status) status.innerHTML = self._reviewFixHtml(word, text, a);
+        if (status) status.innerHTML = self._reviewFixHtml(word, text, a)
+          + '<div class="rf-tip">再读 1 遍还差一点就直接过（不卡人）</div>';
       }
     }, true, 'en', word, '', true);
   },
@@ -10812,10 +10892,17 @@ const App = {
     let html = '<div class="stage">';
 
     // Head: module name + progress
+    // v154：右上角计数改成按"题"（单元），不再显示步骤下标 —— 家长原话：
+    // 「每天的练习题都是四五十道，并不是总题30道」。现在 25 题 + 5 词（或
+    // 30 题）恒等于 30；逐句翻译这些过程屏不涨数，错题巩固不占 30。
+    const totalU = Math.max(this._dayUnits(dayIdx), 1);
+    const curU = Math.min(this._unitsBeforeStep(steps, this.state.stepIdx, dayIdx)
+      + (this._unitsOfStep(step, day) > 0 ? 1 : 0), totalU);
+    const isConsolid = (step.kind === 'retry' || step.kind === 'review');
     html += '<div class="stage-head">';
     html += '<span class="sh-name">' + (m ? m.name_cn : '🎯 错词巩固') + '</span>';
     html += '<div class="stage-progress"><i style="width:' + Math.round((this.state.stepIdx) / steps.length * 100) + '%"></i></div>';
-    html += '<span class="sh-count">' + (this.state.stepIdx + 1) + ' / ' + steps.length + '</span>';
+    html += '<span class="sh-count">' + (isConsolid ? '🎯 巩固' : '第 ' + curU + ' / ' + totalU + ' 题') + '</span>';
     html += '</div>';
 
     html += '<div class="stage-body">';

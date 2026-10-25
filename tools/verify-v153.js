@@ -71,7 +71,7 @@ console.log('\n== 2. _raceTimeout 行为级：挂着不回来的 promise 会被�
 }
 
 function part2() {
-  console.log('\n== 3. 每天恰好 30 道（28 天全部一致）==');
+  console.log('\n== 3. 每天恰好 30（v154 起口径 = 题 + 词）==');
   {
     const fn = new Function(dataSrc + '; return { W: HOMEWORK_WEEKS };');
     const W = fn().W;
@@ -81,10 +81,11 @@ function part2() {
       (d.modules || []).forEach(m => {
         if (m.questions) n += m.questions.length;
         if (m.blanks) n += m.blanks.length;
+        if (m.words) n += m.words.length;   // v154：词汇的词也算一个单元
       });
       if (n !== 30) { allOk = false; detail.push('W' + (wi + 1) + d.day_cn + '=' + n); }
     }));
-    ok(allOk, '28 天每天都是 30 道', detail.join(' '));
+    ok(allOk, '28 天每天（题 + 词）都是 30', detail.join(' '));
     // 时长也写回去了
     let durOk = true;
     W.forEach(week => week.forEach(d => {
@@ -175,9 +176,9 @@ function part2() {
 
   console.log('\n== 6. 版本号 = 153 ==');
   {
-    ok(/app-version" content="153"/.test(htmlSrc), 'index.html meta = 153');
-    ok((htmlSrc.match(/\?v=153/g) || []).length >= 5, '脚本引用 ?v=153（' + (htmlSrc.match(/\?v=153/g) || []).length + ' 处）');
-    ok(/amy-english-v153/.test(swSrc) && /var V = 153;/.test(swSrc), 'sw.js 缓存名与 V = 153');
+    ok(/app-version" content="154"/.test(htmlSrc), 'index.html meta = 153');
+    ok((htmlSrc.match(/\?v=154/g) || []).length >= 5, '脚本引用 ?v=154（' + (htmlSrc.match(/\?v=154/g) || []).length + ' 处）');
+    ok(/amy-english-v154/.test(swSrc) && /var V = 154;/.test(swSrc), 'sw.js 缓存名与 V = 153');
   }
 
   console.log('');
