@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="155">
+<meta name="app-version" content="156">
 <link rel="manifest" href="manifest.json">
 <!-- v135：登录第一步就是调 api.amyeng.top 验手机号。提前把 DNS + TLS
      握手做掉，接口首调能省几百毫秒 —— 手机弱网下这几百毫秒很显眼。 -->
@@ -759,6 +759,12 @@ body.preview-mode .stage{height:calc(100dvh - var(--nav-h) - var(--pv-h) - var(-
 /* 句子拆成一个词一个 span。读到的词变绿打勾，读错的词红色波浪线。
    孩子一眼能看出自己读到哪、哪个词没读对。 */
 .rd-sentence{font-size:20px;line-height:2.2;margin:10px 0 4px;font-weight:600;color:var(--text);word-break:break-word}
+/* v156：录音时句子吸顶 —— 问句答句一直钉在屏幕顶上，孩子边看边读，
+   不会因为往下点按钮、出分面板展开而把句子挤出屏幕。 */
+.rd-sentence.rd-rec{position:sticky;top:0;z-index:40;background:var(--card);
+  padding:10px 4px;border-radius:10px;box-shadow:0 3px 12px rgba(0,0,0,.14)}
+/* v156：问句一行、答句一行 —— 答句单独占一行挂在问句下面。 */
+.rd-aline{display:block;margin-top:4px}
 /* 过渡压到 70ms：实时高亮要"跟得上嘴"，超过 100ms 的渐变看起来就是慢半拍 */
 .rd-w{display:inline-block;border-radius:6px;padding:0 3px;
   transition:color .07s linear,background .07s linear,box-shadow .07s linear}
@@ -1359,8 +1365,8 @@ body.perf-on .content-area{padding-bottom:54vh}
 </div>
 
 <script>window.__appReady = false;</script>
-<script defer src="cloud.js?v=155"></script>
-<script defer src="data.js?v=155"></script>
+<script defer src="cloud.js?v=156"></script>
+<script defer src="data.js?v=156"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
 <!--
   ?v= 必须跟着版本号走（v124 修正）。
@@ -1370,9 +1376,9 @@ body.perf-on .content-area{padding-bottom:54vh}
   这个坑很隐蔽：代码明明改了、也部署上去了，手机上跑的还是几个月前的逻辑。
   以后每次发版，这里跟着 app-version 一起改。
 -->
-<script defer src="recorder.js?v=155"></script>
-<script defer src="api.js?v=155"></script>
-<script defer src="app.js?v=155"></script>
+<script defer src="recorder.js?v=156"></script>
+<script defer src="api.js?v=156"></script>
+<script defer src="app.js?v=156"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {

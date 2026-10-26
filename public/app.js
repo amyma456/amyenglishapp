@@ -5937,13 +5937,22 @@ const App = {
   // 口语跟读：问句 + 答句整句连读。点一下开始、读完再点一下停止打分，
   // 读到的词实时变绿打勾；≥60 分才能进下一题。
   startReadAlong(mi, qi, dayIdx) {
-    const sentence = this._speakingReadSentence(mi, qi, dayIdx);
+    const parts = this._speakingReadParts(mi, qi, dayIdx);
+    const sentence = parts ? (parts.a ? (parts.q + ' ' + parts.a) : parts.q) : '';
     const readArea = document.getElementById('sp-read-' + mi);
     if (!readArea || !sentence) return;
+    // v156：问句一行、答句一行，标点一个不少（家长 2026-10-27）。
+    // 以前问句答句拼成一行还没有标点，孩子分不清哪句是问、哪句是答。
+    // 词盒顺序仍然是"问句的词在前、答句的词在后"，和打分用的整句
+    // 完全同序，逐词高亮 / 判分 / 纠错都不受两行显示的影响。
+    const sentHtml = (parts && parts.a)
+      ? this._readSentenceHtml(parts.q)
+        + '<div class="rd-aline">' + this._readSentenceHtml(parts.a) + '</div>'
+      : this._readSentenceHtml(sentence);
     const gid = this._gid('sp', mi, qi);
     readArea.innerHTML = '<div class="speak-record show" style="text-align:center">'
       + '<p class="fs-12 text-sub">请把问句和答句连起来读：</p>'
-      + '<div class="rd-sentence" id="rd-sent-' + mi + '-' + qi + '">' + this._readSentenceHtml(sentence) + '</div>'
+      + '<div class="rd-sentence" id="rd-sent-' + mi + '-' + qi + '">' + sentHtml + '</div>'
       + '<div class="rd-live-hint" id="rd-live-' + mi + '-' + qi + '"></div>'
       + '<div class="gate-bar">' + this._gateListenHtml(gid, sentence, '🔊 先听一遍示范', 'cf') + '</div>'
       + '<div id="sp-status-' + mi + '-' + qi + '" style="min-height:18px;margin:6px 0;color:var(--text-sub);font-size:14px"></div>'
@@ -5975,15 +5984,24 @@ const App = {
   // 问句 + 正确答句拼成整句。跟读面板和"听示范"都用这一句，
   // 所以孩子听到的、读的、打分对的都是同一段完整对话。
   _speakingReadSentence(mi, qi, dayIdx) {
+    const p = this._speakingReadParts(mi, qi, dayIdx);
+    if (!p) return '';
+    return p.a ? (p.q + ' ' + p.a) : p.q;
+  },
+
+  // v156：把问句、答句拆开返回。跟读面板要「问句一行、答句一行」
+  // （家长 2026-10-27），但打分、听示范仍然用拼好的整句 —— 两边共用
+  // 这一个来源，显示和判分永远不会对不上。
+  _speakingReadParts(mi, qi, dayIdx) {
     const m = HOMEWORK_DATA[dayIdx] && HOMEWORK_DATA[dayIdx].modules[mi];
     const q = m && m.questions[qi];
-    if (!q) return '';
+    if (!q) return null;
     const shuffled = this._speakingShuffle && this._speakingShuffle[mi + '-' + qi];
     const options = shuffled ? shuffled.options : q.options;
     const correctAnswer = shuffled ? shuffled.answer : q.answer;
     const ans = (options && options[correctAnswer] != null) ? String(options[correctAnswer]).trim() : '';
     const s = String(q.sentence || '').trim().replace(/[?？]\s*$/, '?');
-    return ans ? (s + ' ' + ans) : s;
+    return { q: s, a: ans };
   },
 
   _spReadStart(mi, qi, dayIdx) {
@@ -6014,6 +6032,8 @@ const App = {
     const hint = document.getElementById('rd-live-' + mi + '-' + qi);
     if (hint) hint.textContent = '';
     this._liveStart(mi, qi, sentence);
+    // v156：录音一开始就把问句答句钉在屏幕顶上，孩子边看边读。
+    this._setSentenceSticky(mi, qi, true);
     // 20 秒兜底：问句 + 答句比单句长，防止忘了点停止麦克风一直开着。
     this._spReadTimer = setTimeout(() => this._spReadEnd(mi, qi, dayIdx), 20000);
     this._spReadUI(mi, qi, dayIdx, 'recording');
@@ -6031,6 +6051,7 @@ const App = {
       this._spReadActive = null;
       this._liveStop();
       this._clearReadMarks(mi, qi);
+      this._setSentenceSticky(mi, qi, false);
       this._spReadUI(mi, qi, dayIdx, 'mistap');
       return;
     }
@@ -6084,6 +6105,8 @@ const App = {
   // 出分：逐词上色（绿勾/红波浪线），≥60 过、<60 锁下一题必须重读。
   _spShowResult(mi, qi, dayIdx, ctx, spoken, source, verdict, voiceOk) {
     const sentence = ctx.sentence;
+    // 出分了，句子不再需要吸顶（结果面板会接住孩子的视线）。
+    this._setSentenceSticky(mi, qi, false);
     if (!spoken) {
       // v139：识别端没回话，但录音里确实有人声 → 这道题算做完。
       // 家长 2026-10-17：「明明说得很清楚，他就说没听清，孩子要重复四五遍」——
@@ -11133,12 +11156,16 @@ const App = {
   // 完整句子（不会卡在横杠处）。同时按 _questionSpeechText 的规则剥掉
   // 指令词（"Choose the correct answer."）和中文，所以孩子不会跟着读
   // "KET choose the correct answer" 这种话。
-  _buildReadSentence(m, q) {
-    if (!q) return '';
+  // v156：把跟读句拆成「问句一行 + 答句一行」。q = 题干（含答案填好的空），
+  // a = 问句后面的正确回答（可能为空 = 这题不是一问一答）。
+  // _buildReadSentence 仍然返回拼好的整句（TTS、判分都靠它），
+  // 显示层用 parts 拆行 —— 同一个来源，显示和判分永远同序。
+  _buildReadParts(m, q) {
+    if (!q) return null;
     // 听力题直接用听力原文
     if (q.audio_text) {
       var at = this._ttsText(q.audio_text);
-      if (at) return at;
+      if (at) return { q: at, a: '' };
     }
     // 完形填空（v126）：跟读的是「这一句把所有空都填好」的完整句子。
     // 同句挖了 4、5 两个空时，两个都填上，孩子读到的是一句完整的人话。
@@ -11149,12 +11176,12 @@ const App = {
       if (csent) {
         var cfilled = this._clozeFillSentence(m, csent, false);
         var ctts = this._ttsText(cfilled);
-        if (ctts) return ctts;
+        if (ctts) return { q: ctts, a: '' };
       }
     }
     var parts = this._stemParts(q.question);
     var rest = parts.rest;
-    if (!rest) return '';
+    if (!rest) return null;
     // 把 ___ 替换成正确选项，构出一句完整的话
     var filled = rest;
     if (/_{2,}/.test(filled)) {
@@ -11177,7 +11204,7 @@ const App = {
       } else if (q.answer != null) {
         ansOpt = String(q.answer).trim();
       }
-      if (ansOpt) stem = stem.replace(/[?？]\s*$/, '?') + ' ' + ansOpt;
+      if (ansOpt) return { q: stem.replace(/[?？]\s*$/, '?'), a: ansOpt };
     }
     // 兜底：完形填空的题号（"2___"）且 rest 太短，从 passage 里找原句并
     // 把同句所有空都填上（v126：不再只填当前这一个）。
@@ -11191,11 +11218,17 @@ const App = {
         })[0];
         if (hit) {
           var filledAll = this._clozeFillSentence(m, hit, false);
-          if (filledAll) return this._ttsText(filledAll);
+          if (filledAll) return { q: this._ttsText(filledAll), a: '' };
         }
       }
     }
-    return stem;
+    return { q: stem, a: '' };
+  },
+
+  _buildReadSentence(m, q) {
+    const p = this._buildReadParts(m, q);
+    if (!p) return '';
+    return p.a ? (p.q + ' ' + p.a) : p.q;
   },
 
   // 一道题该朗读哪一段英文。规则只有一条：读题，不读答案，不读中文。
@@ -11630,9 +11663,22 @@ const App = {
     const stid = 'qr-status-' + mi + '-' + qi;
     const sentid = 'rd-sent-' + mi + '-' + qi;
     const gid = this._gid('hrg', mi, qi);
+    // v156：问答句拆成「问句一行、答句一行」，标点也要显示。
+    // parts 从 _buildReadParts 拿（和 sentence 同一个来源），拼回去必须
+    // 等于 sentence 才拆行 —— 对不上（万一将来调用方传了别的句子）就
+    // 退回单行，绝不冒险错位。
+    let sentHtml = null;
+    const m0 = HOMEWORK_DATA && HOMEWORK_DATA[dayIdx] && HOMEWORK_DATA[dayIdx].modules[mi];
+    const q0 = (m0 && m0.questions && m0.questions[qi]) || null;
+    const p0 = q0 ? this._buildReadParts(m0, q0) : null;
+    if (p0 && p0.a && sentence === (p0.q + ' ' + p0.a)) {
+      sentHtml = this._readSentenceHtml(p0.q)
+        + '<div class="rd-aline">' + this._readSentenceHtml(p0.a) + '</div>';
+    }
+    if (!sentHtml) sentHtml = this._readSentenceHtml(sentence);
     followEl.innerHTML = '<div class="speak-record show" style="text-align:center">'
       + '<p class="fs-12 text-sub">请朗读下面这句完整的话（问句和答案都读出来）：</p>'
-      + '<div class="rd-sentence" id="' + sentid + '">' + this._readSentenceHtml(sentence) + '</div>'
+      + '<div class="rd-sentence" id="' + sentid + '">' + sentHtml + '</div>'
       + '<div class="rd-live-hint" id="rd-live-' + mi + '-' + qi + '"></div>'
       + '<div class="gate-bar">' + this._gateListenHtml(gid, sentence, '🔊 先听一遍示范') + '</div>'
       + '<div id="' + stid + '" style="min-height:18px;margin:6px 0;color:var(--text-sub);font-size:14px"></div>'
@@ -11725,6 +11771,11 @@ const App = {
     return mask;
   },
 
+  // v156：问句答句的标点必须显示出来（家长 2026-10-27：「把所有的标点给
+  // 加上」）。以前这里只输出 .rd-w 词盒，词和词之间的空格、问号、句号、
+  // 逗号全被吞掉，孩子看到的是一串没有标点的词。现在把非词片段（空格 +
+  // 标点）按原样夹在词盒之间输出；词盒的顺序、data-n 一个不变，
+  // 逐词判分 / 实时高亮 / 纠错 / 台账全部不受影响。
   _readSentenceHtml(sentence) {
     const t = this._readTokens(sentence);
     const esc = this._escHtml;
@@ -11735,12 +11786,17 @@ const App = {
       .map(d => String(d.text).replace(/[^A-Za-z'\-]/g, '')));
     let html = '';
     let wi = 0;                       // 第几个词片段（不是 display 下标）
+    let emitted = 0;                  // display 里已输出到的下标（不含）
+    const emitNonWord = (to) => {     // 把 (emitted, to) 之间的空格/标点原样输出
+      for (let k = emitted; k < to; k++) html += esc(t.display[k].text);
+    };
     while (wi < pos.length) {
       const p = mask[wi];
       if (p && pos[wi + p.len - 1] !== undefined) {
         // giving up 这种：两个词（连同它们中间的空格）合成一个盒子，
         // 孩子点哪一半都是查这一整个短语。
         const from = pos[wi], to = pos[wi + p.len - 1];
+        emitNonWord(from);
         let text = '', n = 0;
         for (let k = from; k <= to; k++) {
           text += t.display[k].text;
@@ -11750,14 +11806,33 @@ const App = {
         }
         html += '<span class="rd-w lk-word lk-phrase" data-w="' + t.display[from].wi
              + '" data-n="' + n + '" data-phrase="' + esc(p.en) + '">' + esc(text) + '</span>';
+        emitted = to + 1;
         wi += p.len;
         continue;
       }
       const d = t.display[pos[wi]];
+      emitNonWord(pos[wi]);
       html += '<span class="rd-w" data-w="' + d.wi + '" data-n="' + d.n + '">' + esc(d.text) + '</span>';
+      emitted = pos[wi] + 1;
       wi++;
     }
+    emitNonWord(t.display.length);    // 句尾的问号/句号也要挂出来
     return html;
+  },
+
+  // v156：录音时把句子「钉」在屏幕顶部（家长 2026-10-27：按住录音的时候
+  // 问句答句有时候看不见，孩子还得手动去找）。开始录音 → 加 rd-rec 吸顶
+  // 并把句子滚到顶上；出分/误触 → 摘掉。两个跟读面板（口语、阅读问答）
+  // 共用这一个开关。
+  _setSentenceSticky(mi, qi, on) {
+    const panel = document.getElementById('rd-sent-' + mi + '-' + qi);
+    if (!panel) return;
+    if (on) {
+      panel.classList.add('rd-rec');
+      try { panel.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) {}
+    } else {
+      panel.classList.remove('rd-rec');
+    }
   },
 
   _clearReadMarks(mi, qi) {
@@ -12370,6 +12445,9 @@ const App = {
 
     this._liveStart(mi, qi, sentence);
 
+    // v156：同口语 —— 录音时句子吸顶，问句答句一直在眼前。
+    this._setSentenceSticky(mi, qi, true);
+
     // Tap-to-stop 的兜底：最多录 15 秒自动收一次（问句 + 回答比单句长），
     // 防止孩子忘了点停止、麦克风一直开着。
     this._holdReadTimer = setTimeout(() => this._holdReadEnd(mi, qi, dayIdx), 15000);
@@ -12388,6 +12466,7 @@ const App = {
       this._holdReadActive = null;
       this._liveStop();
       this._clearReadMarks(mi, qi);
+      this._setSentenceSticky(mi, qi, false);
       this._setHoldReadUI(mi, qi, 'mistap', null, false);
       return;
     }
@@ -12532,6 +12611,8 @@ const App = {
   _showHoldReadResult(mi, qi, dayIdx, sentence, spoken, source, verdict, voiceOk) {
     const m = HOMEWORK_DATA[dayIdx].modules[mi];
     const q = m.questions[qi];
+    // 出分了，句子摘掉吸顶。
+    this._setSentenceSticky(mi, qi, false);
     // v140：阅读理解答错后的「引导跟读」面板 —— 结算不走正选题的那套
     // （不记答案、不进下一题）。只要这一遍有内容（识别出字，或确实出了
     // 声），就解锁没划掉的选项让孩子自己再选一次；引导不是考试，没录到
