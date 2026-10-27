@@ -79,7 +79,7 @@ console.log('== 1. 刷新后回到原来那一屏 ==');
   App._saveTab('students');
   ok(App._restoreTab() === 'students', '老师存了「学生管理」，刷新后还原');
   App._saveTab('preview');
-  ok(App._restoreTab() === 'weekly', '临时页面（题库预览）不还原，回首页');
+  ok(App._restoreTab() === 'preview', 'v160：老师存了「题库预览」，刷新后还原（天/周另有 amy_last_preview 接回）');
   App._saveTab('checkin');
   App.state.role = '';
   App.state.phone = '13800000000';

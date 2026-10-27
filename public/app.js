@@ -1475,8 +1475,10 @@ const App = {
   // 刷新一下，下拉刷新之后它还是要在这个打卡监控页面，并且是刷新之后的」）。
   //
   // 存的是 tab id；恢复时按角色校验一遍 —— 老师存了 'checkin'、换个学生号
-  // 登录不会跑到不存在的页；反过来也一样。'preview' / 'print' 不恢复：
-  // 那两个是"带着当前选中对象进去"的临时页面，单独刷新回来只会是空壳。
+  // 登录不会跑到不存在的页；反过来也一样。'preview' 原来「不恢复」（v150：
+  // 那是"带着当前选中对象进去"的临时页面，单独刷新回来只会是空壳）——
+  // v160 起预览的天/周也持久化了（amy_last_preview），刷新能原样回到
+  // 同一天同一周，所以老师端把它加回名单。'print' 仍然不恢复。
   _tabMemoryKey() { return 'amy_last_tab'; },
   _saveTab(tab) {
     try { localStorage.setItem(this._tabMemoryKey(), String(tab || '')); } catch (e) {}
@@ -1486,7 +1488,7 @@ const App = {
     try { t = String(localStorage.getItem(this._tabMemoryKey()) || ''); } catch (e) {}
     var teacher = this.isTeacher();
     var allowed = teacher
-      ? ['weekly', 'daily', 'edit', 'checkin', 'scores', 'errors', 'speaking', 'students', 'classmgmt']
+      ? ['weekly', 'daily', 'edit', 'checkin', 'scores', 'errors', 'speaking', 'students', 'classmgmt', 'preview']
       : ['today', 'myprogress', 'compare', 'myerrors'];
     if (allowed.indexOf(t) >= 0) return t;
     return teacher ? 'weekly' : 'today';
@@ -1510,6 +1512,15 @@ const App = {
     // 写死回 'weekly'，手机下拉刷新 / 电脑 F5 都会把人踢回首页。
     this.state.currentTab = this._restoreTab();
     this.state.currentDay = this.getTodayWeekdayIdx();
+    // v160：刷新前停在题库预览 → 原样回到同一天同一周（previewDay/Week
+    // 只存 localStorage，必须在这里接回来；_syncWeekData 会按 previewWeek
+    // 把生效周对齐）。非预览页时 previewDay 保持 null，一切照旧。
+    if (this.state.currentTab === 'preview' && this.isTeacher()) {
+      const pv = this._restorePreviewPos();
+      this.state.previewDay = pv.d;
+      this.state.previewWeek = pv.w;
+      this.state.currentDay = pv.d;
+    }
     // 学生：接着上次做到的地方继续，不从第一题重来（重新登录、更新
     // 自动刷新后同样生效）。老师保持第 0 步。
     this.state.stepIdx = this.isTeacher()
@@ -3938,6 +3949,7 @@ const App = {
     this.state.currentDay = dayIdx;   // renderStage 内部按 currentDay 取词汇坐标
     this.state.stepIdx = 0;           // 老师是来查题的，不是来续做的，从头看
     this._pvPickerOpen = false;
+    this._savePreviewPos();
     this.switchTab('preview');
   },
 
@@ -3946,6 +3958,7 @@ const App = {
     this.state.previewWeek = 0;
     this.state.stepIdx = 0;
     this._pvPickerOpen = false;
+    this._savePreviewPos();           // 清掉存的位置（已退出预览）
     // 走 switchTab 而不是只 renderContent —— 它会把 currentTab 改掉，
     // 于是 _previewWeekOffset() 立刻回到 0，题库自动切回本周。
     this.switchTab('weekly');
@@ -3958,7 +3971,27 @@ const App = {
     this.state.currentDay = dayIdx;
     this.state.stepIdx = 0;
     this._pvPickerOpen = false;
+    this._savePreviewPos();
     this.renderContent();
+  },
+
+  // 老师 2026-10-27：题库预览刷新后要停在预览页（原来 'preview' 被排除在
+  // 恢复名单外，刷新就被踢回周计划）。预览是"带选中对象"的临时页，光记
+  // tab 不够 —— 天/周一起存下来，回来才能原样复现。
+  _previewMemoryKey() { return 'amy_last_preview'; },
+  _savePreviewPos() {
+    try {
+      const d = this.state.previewDay;
+      if (d === null || d === undefined) localStorage.removeItem(this._previewMemoryKey());
+      else localStorage.setItem(this._previewMemoryKey(),
+        (this.state.previewWeek || 0) + '|' + d);
+    } catch (e) {}
+  },
+  _restorePreviewPos() {
+    var s = '';
+    try { s = String(localStorage.getItem(this._previewMemoryKey()) || ''); } catch (e) {}
+    var m = s.match(/^([01])\|([0-6])$/);
+    return m ? { w: Number(m[1]), d: Number(m[2]) } : { w: 0, d: this.getTodayWeekdayIdx() };
   },
 
   // 老师 2026-10-27：查题时一天一天翻太费劲（要点「换天」→ 再点具体某天，

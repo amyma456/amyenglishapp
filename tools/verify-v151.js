@@ -123,9 +123,9 @@ console.log('\n== 2. 成绩分析 / 错题本也只算本班 ==');
 
 console.log('\n== 3. 版本号 = 151 ==');
 {
-  ok(/app-version" content="159"/.test(htmlSrc), 'index.html meta = 151');
-  ok((htmlSrc.match(/\?v=159/g) || []).length >= 5, '脚本引用 ?v=155（' + (htmlSrc.match(/\?v=159/g) || []).length + ' 处）');
-  ok(/amy-english-v159/.test(swSrc) && /var V = 159;/.test(swSrc), 'sw.js 缓存名与 V = 151（旧缓存整体作废）');
+  ok(/app-version" content="160"/.test(htmlSrc), 'index.html meta = 151');
+  ok((htmlSrc.match(/\?v=160/g) || []).length >= 5, '脚本引用 ?v=155（' + (htmlSrc.match(/\?v=160/g) || []).length + ' 处）');
+  ok(/amy-english-v160/.test(swSrc) && /var V = 160;/.test(swSrc), 'sw.js 缓存名与 V = 151（旧缓存整体作废）');
   ok(!/content="150"|amy-english-v150|\?v=150/.test(htmlSrc + swSrc), '没有残留 150 的引用');
 }
 
