@@ -89,7 +89,7 @@ function part2() {
       });
       if (n !== 30) { allOk = false; detail.push('W' + (wi + 1) + d.day_cn + '=' + n); }
     }));
-    ok(allOk, '28 天每天真实动作（读/译/题/词）都是 30', detail.join(' '));
+    ok(allOk, '35 天每天真实动作（读/译/题/词）都是 30（W5 起承接退化）', detail.join(' '));
     // 阅读中英句数必须一致（裁剪是同下标裁的）
     let pairOk = true;
     W.forEach(week => week.forEach(d => (d.modules || []).forEach(m => {
@@ -187,9 +187,9 @@ function part2() {
 
   console.log('\n== 6. 版本号 = 153 ==');
   {
-    ok(/app-version" content="156"/.test(htmlSrc), 'index.html meta = 153');
-    ok((htmlSrc.match(/\?v=156/g) || []).length >= 5, '脚本引用 ?v=155（' + (htmlSrc.match(/\?v=156/g) || []).length + ' 处）');
-    ok(/amy-english-v156/.test(swSrc) && /var V = 156;/.test(swSrc), 'sw.js 缓存名与 V = 153');
+    ok(/app-version" content="157"/.test(htmlSrc), 'index.html meta = 153');
+    ok((htmlSrc.match(/\?v=157/g) || []).length >= 5, '脚本引用 ?v=155（' + (htmlSrc.match(/\?v=157/g) || []).length + ' 处）');
+    ok(/amy-english-v157/.test(swSrc) && /var V = 157;/.test(swSrc), 'sw.js 缓存名与 V = 153');
   }
 
   console.log('');

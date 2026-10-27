@@ -46,7 +46,7 @@ section('1. 题库：28 天每天真实动作恰好 30');
     const u = (d.modules || []).reduce((s, m) => s + unitsOf(m), 0);
     if (u !== 30) detail.push('W' + (wi + 1) + d.day_cn + '=' + u);
   }));
-  ok(detail.length === 0, '28 天每天真实动作 = 30', detail.join(' ') || '全部 30');
+  ok(detail.length === 0, '35 天每天真实动作 = 30（W5 起承接退化）', detail.join(' ') || '全部 30');
 }
 section('1b. 阅读与完形的新结构');
 {
@@ -55,12 +55,12 @@ section('1b. 阅读与完形的新结构');
     if (m.type === 'reading') readings.push({ w: wi, m });
     if (m.type === 'cloze') clozes.push({ w: wi, m });
   })));
-  ok(readings.length === 16, '阅读模块 16 篇', readings.length);
+  ok(readings.length === 20, '阅读模块 20 篇（W1-W4 每周 4 篇 + W5 承接）', readings.length);
   ok(readings.every(x => sentsEN(x.m.passage).length === 6), '每篇阅读课文 6 句');
   ok(readings.every(x => x.m.questions.length === 4), '每篇阅读 4 道题');
   ok(readings.every(x => sentsEN(x.m.passage).length === sentsCN(x.m.passage_cn).length),
      '每篇阅读中英句数逐句对齐');
-  ok(clozes.length === 8, '完形模块 8 篇', clozes.length);
+  ok(clozes.length === 10, '完形模块 10 篇（W1-W4 每周 2 篇 + W5 承接）', clozes.length);
   ok(clozes.every(x => sentsEN(x.m.passage).length === 7), '每篇完形课文 7 句');
   ok(clozes.every(x => x.m.questions.length === 6), '每篇完形 6 空');
   ok(clozes.every(x => (x.m.passage.match(/[0-9]+_{2,}/g) || []).length === 6),
@@ -80,11 +80,11 @@ section('1b. 阅读与完形的新结构');
 section('1c. 补量模块已删除（v155）');
 {
   const has = (wi, di, pred) => !!W[wi][di].modules.find(pred);
-  const monWedSatClean = [0, 2, 5].every(di => [0, 1, 2, 3].every(wi => !has(wi, di, m => m.type === 'tense')));
+  const monWedSatClean = [0, 2, 5].every(di => [0, 1, 2, 3, 4].every(wi => !has(wi, di, m => m.type === 'tense')));
   ok(monWedSatClean, '周一/三/六不再有补量时态模块');
-  const sunClean = [0, 1, 2, 3].every(wi => !has(wi, 6, m => m.type === 'tense' || m.type === 'grammar'));
+  const sunClean = [0, 1, 2, 3, 4].every(wi => !has(wi, 6, m => m.type === 'tense' || m.type === 'grammar'));
   ok(sunClean, '周日不再有补量时态/语法模块');
-  ok([0, 1, 2, 3].every(wi => has(wi, 6, m => m.type === 'listening')), '周日保留听力模块');
+  ok([0, 1, 2, 3, 4].every(wi => has(wi, 6, m => m.type === 'listening')), '周日保留听力模块');
 }
 
 section('2. app.js 按真实动作计数（行为级，W1 周一）');
@@ -127,10 +127,10 @@ section('2. app.js 按真实动作计数（行为级，W1 周一）');
 
 section('3. 版本号 = 155');
 {
-  ok(/app-version" content="156"/.test(htmlSrc), 'index.html app-version = 155');
-  ok((htmlSrc.match(/\?v=156/g) || []).length === 5, 'index.html 5 处 ?v=155', (htmlSrc.match(/\?v=156/g) || []).length);
-  ok(/amy-english-v156/.test(swSrc), 'sw.js 缓存名 v155');
-  ok(/var V = 156;/.test(swSrc), 'sw.js var V = 155');
+  ok(/app-version" content="157"/.test(htmlSrc), 'index.html app-version = 155');
+  ok((htmlSrc.match(/\?v=157/g) || []).length === 5, 'index.html 5 处 ?v=155', (htmlSrc.match(/\?v=157/g) || []).length);
+  ok(/amy-english-v157/.test(swSrc), 'sw.js 缓存名 v155');
+  ok(/var V = 157;/.test(swSrc), 'sw.js var V = 155');
 }
 
 console.log('\n———————————————');

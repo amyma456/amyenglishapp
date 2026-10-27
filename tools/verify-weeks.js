@@ -23,6 +23,9 @@ ok(Array.isArray(ctx.HOMEWORK_DATA) && ctx.HOMEWORK_DATA.length === 7, 'HOMEWORK
 
 const allIds = new Set();
 const questionTexts = {}; // key -> week，跨周查重
+// v157（家长 2026-10-27）：第 5 周起内容允许承接上一周退化（骨架复用、
+// 只换写作和砍短课文），跨周查重只对前 4 周（完整独立命题的周）强制。
+const DEGRADE_FROM = 4;
 const PASSAGE_STEMS = /^[0-9]{1,2}___$/; // v153：完形可到 10 空 // 完形填空的空位桩，各周必然相同，不查重
 const LISTEN_STEMS = [/听到的句子/, /听到的数字/];
 
@@ -69,12 +72,11 @@ for (let w = 0; w < WEEKS.length; w++) {
         const txt = (q.question || '').trim();
         if (txt && !PASSAGE_STEMS.test(txt) && !LISTEN_STEMS.some(r => r.test(txt))) {
           const key = txt.toLowerCase().replace(/[^a-z0-9 ]/g, '').slice(0, 90);
-          if (key) {
-            if (questionTexts[key] !== undefined && questionTexts[key] !== w) {
-              ok(false, '跨周重复题目 W' + (questionTexts[key] + 1) + ' ↔ W' + (w + 1) + ': ' + txt.slice(0, 70));
-            } else {
-              questionTexts[key] = w;
-            }
+          if (key && questionTexts[key] !== undefined && questionTexts[key] !== w
+              && questionTexts[key] < DEGRADE_FROM && w < DEGRADE_FROM) {
+            ok(false, '跨周重复题目 W' + (questionTexts[key] + 1) + ' ↔ W' + (w + 1) + ': ' + txt.slice(0, 70));
+          } else if (key && w < DEGRADE_FROM) {
+            questionTexts[key] = w;
           }
         }
       });
@@ -105,11 +107,12 @@ for (let w = 0; w < WEEKS.length; w++) {
               ok(s.options.length === 4 && s.answer >= 0 && s.answer < 4, wt + ' 选择阶段选项异常');
             }
           });
-          // 跨周查重：单词本身
+          // 跨周查重：单词本身（退化区豁免，同上）
           const wk = 'WORD:' + wd.word.toLowerCase();
-          if (questionTexts[wk] !== undefined && questionTexts[wk] !== w) {
+          if (questionTexts[wk] !== undefined && questionTexts[wk] !== w
+              && questionTexts[wk] < DEGRADE_FROM && w < DEGRADE_FROM) {
             ok(false, '跨周重复单词 W' + (questionTexts[wk] + 1) + ' ↔ W' + (w + 1) + ': ' + wd.word);
-          } else {
+          } else if (w < DEGRADE_FROM) {
             questionTexts[wk] = w;
           }
         });
@@ -153,8 +156,9 @@ for (let w = 0; w < WEEKS.length; w++) {
   });
 }
 
-// —— 逐周难度应递增：文章长度逐周变长（均值） ——
-for (let w = 1; w < WEEKS.length; w++) {
+// —— 文章长度（家长 2026-10-27：难度不再逐周/逐天上升，只记录不强制递增）——
+// v157 起取消「逐周递增」断言：W5 的句子全面砍短，之后每周文章长度应大体持平。
+for (let w = 0; w < WEEKS.length; w++) {
   const avg = week => {
     let n = 0, sum = 0;
     week.forEach(d => d.modules.forEach(m => {
@@ -162,9 +166,7 @@ for (let w = 1; w < WEEKS.length; w++) {
     }));
     return n ? sum / n : 0;
   };
-  const a = avg(WEEKS[w - 1]), b = avg(WEEKS[w]);
-  console.log('W' + w + ' 平均文章长度 ' + Math.round(a) + ' 字符 → W' + (w + 1) + ' ' + Math.round(b) + ' 字符');
-  ok(b > a * 0.98, '难度应递增：W' + (w + 1) + ' 平均文章长度不应明显低于 W' + w);
+  console.log('W' + (w + 1) + ' 平均文章长度 ' + Math.round(avg(WEEKS[w])) + ' 字符');
 }
 
 console.log(fails === 0 ? '✅ 全部 ' + total + ' 项通过' : '❌ ' + fails + '/' + total + ' 项失败');

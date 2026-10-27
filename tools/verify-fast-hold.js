@@ -84,6 +84,8 @@ const Api = {
   transcribe: async () => ({ text: 'B' }),
   load: async () => ({ answers: {}, checkins: {} }),
   getAnswers: async () => [], loadWrongCache: async () => {},
+  // v157 补：app.js 的 hold/跟读链路会调 ASR 预算接口（v153 引入），替身要接住
+  asrResetBudget: () => {}, asrCanRetry: () => false,
 };
 
 // 录音器替身：把 onLevel 交出来，stop() 给一个"有声音"的回执。
@@ -167,6 +169,7 @@ function startHold(autoStop, promptLabel) {
 
   console.log('\n== 2) 说完了自动收：不用一直按着 ==');
   const read1 = startHold(true);
+  await sleep(5);   // v147 起 begin() 走 primeP.then 微任务，等 Recorder.start 真正落地再断言
   ok(typeof lastLevelCb === 'function', '录音器拿到了 onLevel');
   lastLevelCb(0.3);                          // 孩子开口
   ok(App._holdKey === 'unit-t-0', '刚开口不会立刻收（还在读）');
