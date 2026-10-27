@@ -4004,6 +4004,7 @@ const App = {
     html += '<button class="btn btn-sm btn-outline" onclick="App.previewStep(-1)"'
          + (abs <= 0 ? ' disabled' : '') + '>‹ 前一天</button>';
     html += '<span class="pv-title">👀 ' + (weekOff === 0 ? '本周' : '下周') + ' · ' + day.day_cn
+         + ' · ' + this.getDayDateLabel(d, weekOff)
          + (this.isDayToday(d, weekOff) ? '（今天）' : '') + '</span>';
     html += '<button class="btn btn-sm btn-outline" onclick="App.previewStep(1)"'
          + (abs >= maxAbs ? ' disabled' : '') + '>后一天 ›</button>';
