@@ -3961,6 +3961,22 @@ const App = {
     this.renderContent();
   },
 
+  // 老师 2026-10-27：查题时一天一天翻太费劲（要点「换天」→ 再点具体某天，
+  // 两步还得瞄准小按钮）。顶栏直接给「‹ 前一天 / 后一天 ›」各一下到位，
+  // 跨周自动切本周/下周（绝对天号 = weekOff*7 + dayIdx，在全部周内平移）。
+  previewStep(delta) {
+    const weekOff = this._previewWeekOffset();
+    let d = this.state.previewDay;
+    if (d === null || d === undefined) d = this.getTodayWeekdayIdx();
+    // 预览只覆盖本周/下周两周（和「换天」浮层的两个按钮一致）；
+    // 最后一周内容不足时 hwWeekData 自然退化，周号仍真实。
+    const maxAbs = 13;
+    let abs = (weekOff || 0) * 7 + d + delta;
+    if (abs < 0) abs = 0;
+    if (abs > maxAbs) abs = maxAbs;
+    this.previewGo(abs % 7, Math.floor(abs / 7));
+  },
+
   togglePvPicker() {
     this._pvPickerOpen = !this._pvPickerOpen;
     this.renderContent();
@@ -3980,10 +3996,17 @@ const App = {
     let html = '';
 
     // ---- 顶栏（占 --pv-h 那一行，舞台自动让位）----
+    // 一键翻天：前一天 / 后一天，点一下就走（v158）；「换天 ▾」保留给直接跳。
+    const maxAbs = 13;
+    const abs = (weekOff || 0) * 7 + d;
     html += '<div class="pv-bar">';
     html += '<button class="btn btn-sm" onclick="App.closePreview()">✕ 退出</button>';
+    html += '<button class="btn btn-sm btn-outline" onclick="App.previewStep(-1)"'
+         + (abs <= 0 ? ' disabled' : '') + '>‹ 前一天</button>';
     html += '<span class="pv-title">👀 ' + (weekOff === 0 ? '本周' : '下周') + ' · ' + day.day_cn
          + (this.isDayToday(d, weekOff) ? '（今天）' : '') + '</span>';
+    html += '<button class="btn btn-sm btn-outline" onclick="App.previewStep(1)"'
+         + (abs >= maxAbs ? ' disabled' : '') + '>后一天 ›</button>';
     html += '<button class="btn btn-sm btn-outline" onclick="App.togglePvPicker()">换天 ▾</button>';
     html += '</div>';
 
