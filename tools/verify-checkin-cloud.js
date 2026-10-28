@@ -254,6 +254,13 @@ ok(prof.indexOf('badge-danger">未打卡') >= 0 || doneDays === HOMEWORK_DATA.le
   '剩下的天数仍然老实显示"未打卡"（没全绿）');
 
 console.log('== 8) 渲染：完成率对比的 x/7 与平均正确率 ==');
+// v161：完成率对比只认云端纯档（state.cloudCheckins）—— 把上面种的本机
+// 记录镜像进云端档再渲染，模拟"后台确认过"的真实路径。
+App.state.cloudCheckins = {};
+HOMEWORK_DATA.forEach((d, di) => {
+  const ck = App.state.checkins[kOf(SID, di)];
+  if (ck) App.state.cloudCheckins[kOf(SID, di)] = Object.assign({}, ck, { fromCloud: true });
+});
 const cmp = App.renderCompare();
 ok(cmp.indexOf('/' + HOMEWORK_DATA.length) >= 0, '完成天数按 x/' + HOMEWORK_DATA.length + ' 显示');
 // 只看优素福那一行 —— 另一个学生确实没打卡，显示 0/7 是对的。
@@ -383,6 +390,7 @@ ok(/this\._backfilled = false;[\s\S]{0,60}this\._backfillCheckins\(\);/.test(app
 console.log('== 15) 老师端：一个账号看全班 + 看得见谁还没上传 ==');
 App.state.role = 'teacher';
 App.state.checkins = {};
+App.state.cloudCheckins = {};   // v161：横幅数的是云端纯档，先把前面测试攒的清掉
 // 只有优素福上传了（fromCloud 由 _mergeCloudCheckins 打）
 App._mergeCloudCheckins([
   { student_id: SID, day_idx: 0, done: true, answered: 10, total: 10, correct_rate: 90,

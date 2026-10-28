@@ -81,10 +81,12 @@ console.log('== 1. 「数据来自后台」横幅只点名本班 ==');
     { id: 'j5', name: '田墨翰-Matt', phone: '11840843943', class: '' },
   ];
   App.state.checkins = {};
+  App.state.cloudCheckins = {};   // v161：横幅数的是云端纯档
 
   // Yunus 周一已从后台上传，Harvey 什么都没传
   const tag = App._weekTag();
-  App.state.checkins['a1' + tag + '_d0'] = { done: true, fromCloud: true, at: '2026-10-23T09:33:00', time: '09:33', correctRate: 90 };
+  // v161：种进云端纯档（_clsCk 只读这一份）
+  App.state.cloudCheckins['a1' + tag + '_d0'] = { done: true, fromCloud: true, at: '2026-10-23T09:33:00', time: '09:33', correctRate: 90 };
 
   const html = App._checkinSyncStrip();
   ok(/数据来自后台/.test(html), '横幅正常渲染');
@@ -98,7 +100,7 @@ console.log('== 1. 「数据来自后台」横幅只点名本班 ==');
   ok(/本周从后台收到 <b>1<\/b> 条/.test(html), '后台记录条数只按本班学生统计');
 
   // 全班都传过 → 显示「全班都已有记录」
-  App.state.checkins['a2' + tag + '_d0'] = { done: true, fromCloud: true, at: '2026-10-23T08:00:00', time: '08:00', correctRate: 80 };
+  App.state.cloudCheckins['a2' + tag + '_d0'] = { done: true, fromCloud: true, at: '2026-10-23T08:00:00', time: '08:00', correctRate: 80 };
   const html2 = App._checkinSyncStrip();
   ok(/全班 2 位本周都已有记录/.test(html2), '本班 2 人都有记录时显示全班已齐（按本班人数算）');
 }
@@ -123,9 +125,9 @@ console.log('\n== 2. 成绩分析 / 错题本也只算本班 ==');
 
 console.log('\n== 3. 版本号 = 151 ==');
 {
-  ok(/app-version" content="160"/.test(htmlSrc), 'index.html meta = 151');
-  ok((htmlSrc.match(/\?v=160/g) || []).length >= 5, '脚本引用 ?v=155（' + (htmlSrc.match(/\?v=160/g) || []).length + ' 处）');
-  ok(/amy-english-v160/.test(swSrc) && /var V = 160;/.test(swSrc), 'sw.js 缓存名与 V = 151（旧缓存整体作废）');
+  ok(/app-version" content="161"/.test(htmlSrc), 'index.html meta = 151');
+  ok((htmlSrc.match(/\?v=161/g) || []).length >= 5, '脚本引用 ?v=155（' + (htmlSrc.match(/\?v=161/g) || []).length + ' 处）');
+  ok(/amy-english-v161/.test(swSrc) && /var V = 161;/.test(swSrc), 'sw.js 缓存名与 V = 151（旧缓存整体作废）');
   ok(!/content="150"|amy-english-v150|\?v=150/.test(htmlSrc + swSrc), '没有残留 150 的引用');
 }
 

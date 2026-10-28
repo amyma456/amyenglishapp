@@ -1395,25 +1395,49 @@ async function ensureCheckinsTable(db) {
        wrong_count   INTEGER NOT NULL DEFAULT 0,
        finish_time   TEXT,
        updated_at    TEXT NOT NULL,
+       client_ver    INTEGER,
        PRIMARY KEY (student_id, week_idx, day_idx)
      )`
   ).run();
+  // v161 之前建的表没有 client_ver 列 —— 补一列，老库平滑升级。
+  try {
+    await db.prepare('ALTER TABLE checkins ADD COLUMN client_ver INTEGER').run();
+  } catch (e) { /* 列已存在就算了 */ }
   checkinsTableReady = true;
 }
 
-// 写入用：14 列（含 student_phone —— 要存下来，只是读的时候不返回）。
+// v161：后台自己的「真实周号」尺子。
+//
+// 血的教训（2026-10-26 那周）：打卡数据虽然是存在 Cloudflare D1 后台，但
+// 周号是**学生手机报上来的**。旧版本前端把「第 5 周」夹取成「第 4 周」，
+// 报上来后台照单全收，把本周的打卡写进了上周的桶 —— 于是电脑、手机、
+// 平板三个端各看各的版本，数据对不上。
+// 根治原则：**客户端的话只能听一半**。周号、天数这种能由日期推导出来的
+// 东西，后台必须自己再算一遍：报上来的不许超前（手机时钟错了也不行），
+// 天数不许越界。往周报的历史补录是合法的，仍然放行。
+//
+// 题库锚点在 public/data.js：HOMEWORK_EPOCH = 2026-09-28（北京时间周一）。
+// 服务器在 UTC，换算成 2026-09-27T16:00Z；中国没有夏令时，直接减 8 小时即可。
+const CK_EPOCH_MS = Date.UTC(2026, 8, 27, 16, 0, 0);
+function serverHomeworkWeek(nowMs) {
+  const days = Math.floor((nowMs - CK_EPOCH_MS) / 864e5);
+  const w = Math.floor(days / 7);
+  return w < 0 ? 0 : w;
+}
+
+// 写入用：15 列（含 student_phone —— 要存下来，只是读的时候不返回；
+// v161 起再加 client_ver —— 客户端版本号，出问题能追到是哪台旧设备）。
 const CHECKIN_WRITE_COLS =
   'student_id, student_name, student_phone, student_class, week_idx, day_idx, done, ' +
-  'completed, answered, total, correct_rate, wrong_count, finish_time, updated_at';
+  'completed, answered, total, correct_rate, wrong_count, finish_time, updated_at, client_ver';
 const CHECKIN_WRITE_VALUES =
-  '?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14';
+  '?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15';
 
-// 读取用：13 列，**刻意不含 student_phone**。页面上本来就只展示"姓名 + 完成
-// 情况"，接口不该多给。写用和读用必须分开 —— 早先共用一份"不含 phone"的列
-// 列表，INSERT 直接报了 "14 values for 13 columns"。
+// 读取用：14 列，**刻意不含 student_phone**。页面上本来就只展示"姓名 + 完成
+// 情况"，接口不该多给。client_ver 给排查用（老师端不展示，但能看）。
 const CHECKIN_COLS =
   'student_id, student_name, student_class, week_idx, day_idx, done, completed, ' +
-  'answered, total, correct_rate, wrong_count, finish_time, updated_at';
+  'answered, total, correct_rate, wrong_count, finish_time, updated_at, client_ver';
 
 function intOr(v, dflt) {
   const n = parseInt(v, 10);
@@ -1432,8 +1456,16 @@ async function checkinsApi(request, url, env) {
     const studentId = String(body.student_id || '').trim().slice(0, 80);
     if (!studentId) return json({ error: 'missing_student_id' }, 400);
     const dayIdx = intOr(body.day_idx, -1);
-    const weekIdx = intOr(body.week_idx, 0);
-    if (dayIdx < 0) return json({ error: 'bad_day_idx' }, 400);
+    if (dayIdx < 0 || dayIdx > 6) return json({ error: 'bad_day_idx' }, 400);
+    // v161：周号以**后台的钟**为准，客户端报上来的只做参考。
+    //   ・报了未来的周（手机时钟错了 / 前端算错）→ 一律按本周收
+    //   ・往周报的历史补录合法，照收
+    const nowMs = Date.now();
+    const serverWeek = serverHomeworkWeek(nowMs);
+    let weekIdx = intOr(body.week_idx, 0);
+    if (weekIdx < 0) weekIdx = 0;
+    if (weekIdx > serverWeek) weekIdx = serverWeek;
+    const clientVer = intOr(body.client_ver, 0);
 
     const done = body.done ? 1 : 0;
     const answered = intOr(body.answered, 0);
@@ -1478,6 +1510,7 @@ async function checkinsApi(request, url, env) {
         weekIdx, dayIdx, done,
         done ? 'full' : 'partial',
         answered, total, correctRate, wrongCount, finishTime, now,
+        clientVer || null,
       ).run();
       return json({ ok: true, count: 1 });
     } catch (e) {
@@ -1520,6 +1553,7 @@ async function checkinsApi(request, url, env) {
           wrong_count: row.wrong_count,
           finish_time: row.finish_time,
           updated_at: row.updated_at,
+          client_ver: row.client_ver == null ? 0 : row.client_ver,
         };
       });
       return json({ rows: rows, count: rows.length, week: week });

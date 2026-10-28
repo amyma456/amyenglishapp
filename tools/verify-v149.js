@@ -67,7 +67,7 @@ console.log('== 2. 打卡上报持久重试队列 ==');
   ok(/q\.slice\(-200\)/.test(api), '队列封顶 200 条');
   ok(/_flushingCheckins/.test(api), '防并发重入');
   const rcAt = api.indexOf('\n  reportCheckin(rec, who) {');
-  const rc = api.slice(rcAt, rcAt + 1800);
+  const rc = api.slice(rcAt, rcAt + 2600);
   ok(/keepalive:\s*true/.test(rc), '上报请求带 keepalive（答完锁屏也能发出去）');
   ok(/fail\('http '/.test(rc), '非 200 也入队');
   ok(/\.catch\(e => fail\(/.test(rc), '网络错误入队');

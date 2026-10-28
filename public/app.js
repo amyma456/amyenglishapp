@@ -507,23 +507,21 @@ const App = {
   _mergeCloudCheckins(rows) {
     if (!Array.isArray(rows)) return 0;
     const tag = this._weekTag();
+    // v161：云端记录**单独留一份纯的**（state.cloudCheckins）。班级视图
+    // （打卡监控/成绩分析/完成率对比）只读这一份 —— 见 _clsCk 注释。
+    // 本机那份照旧按"更完整者胜"合并，学生自己的进度不受影响。
+    if (!this.state.cloudCheckins) this.state.cloudCheckins = {};
     let n = 0;
     rows.forEach(r => {
       if (!r || !r.student_id || r.day_idx === undefined || r.day_idx === null) return;
       const sid = this._rosterIdFor(r.student_id, r.student_name, r.student_class);
       const k = sid + tag + '_d' + r.day_idx;
-      const mine = this.state.checkins[k];
-      const done = !!r.done;
-      const better = !mine
-        || (done && !mine.done)
-        || ((r.answered || 0) > (mine.answered || 0));
-      if (!better) return;
-      this.state.checkins[k] = {
+      const rec = {
         id: 'cloud_' + k,
         studentId: sid,
         dayIdx: r.day_idx,
-        done: done,
-        completed: r.completed || (done ? 'full' : 'partial'),
+        done: !!r.done,
+        completed: r.completed || (r.done ? 'full' : 'partial'),
         answered: r.answered || 0,
         total: r.total || 0,
         correctRate: r.correct_rate || 0,
@@ -532,6 +530,15 @@ const App = {
         at: r.updated_at || '',
         fromCloud: true,
       };
+      // 云端纯档：后台回来的原样放进去（后台 UPSERT 只增不减，直接覆盖即可）
+      this.state.cloudCheckins[k] = rec;
+      const mine = this.state.checkins[k];
+      const done = !!r.done;
+      const better = !mine
+        || (done && !mine.done)
+        || ((r.answered || 0) > (mine.answered || 0));
+      if (!better) return;
+      this.state.checkins[k] = rec;
       n++;
     });
     return n;
@@ -2472,6 +2479,22 @@ const App = {
     return w > 0 ? '_w' + w : '';
   },
 
+  // v161：班级视图（打卡监控 / 成绩分析 / 完成率对比）的打卡记录**只认后台
+  // 确认过的**（_mergeCloudCheckins 打了 fromCloud 标记的）。
+  //
+  // 2026-10-28 家长要求：「无论怎么更新，所有端口看到的数据永远一样」。
+  // 本机 localStorage 里那份可能是旧版本残留、别的账号登录时留下的、或者
+  // 老师预览时点出来的 —— 掺进班级统计里，手机和电脑就会各看各的。班级
+  // 层面的唯一可信来源是 D1 后台：一台设备上报，所有设备拉到的都是同一份。
+  // （学生看自己进度的「我的打卡」不受影响，本机未上传的进度照常显示。）
+  _clsCk(sid, di) {
+    // v161：只读云端纯档（_mergeCloudCheckins 维护的 state.cloudCheckins），
+    // 不再从混合的 state.checkins 里挑 fromCloud —— 那样会被"本机更优"的
+    // 合并规则挡住：本机有一条旧残留，后台的真实记录反而进不来。
+    const cloud = this.state.cloudCheckins || {};
+    return cloud[sid + this._weekTag() + '_d' + di] || null;
+  },
+
   // v134：把「当前生效的一周」对齐到该对齐的那一周。
   //
   // 只有老师、且**正停在预览页**时才切到别的周；其它一切情况都强制回到本周。
@@ -4228,10 +4251,10 @@ const App = {
     students.forEach(s => {
       let n = 0;
       HOMEWORK_DATA.forEach((d, di) => {
-        const ck = this.state.checkins[s.id + tag + '_d' + di];
-        // fromCloud 由 _mergeCloudCheckins 打上 —— 只有"后台回来的"才算上传过，
+        // v161：直接数云端纯档 —— 只有"后台回来的"才算上传过，
         // 老师本机自己点出来的记录不算（否则会假报"已上传"）。
-        if (!ck || !ck.fromCloud) return;
+        const ck = this._clsCk(s.id, di);
+        if (!ck) return;
         n++; cloudRows++;
         if (ck.at && String(ck.at) > latest) latest = String(ck.at);
       });
@@ -4311,8 +4334,8 @@ const App = {
     let totalDone = 0, totalUndone = 0;
     roster.forEach(s => {
       HOMEWORK_DATA.forEach((d, di) => {
-        const k = s.id + this._weekTag() + '_d' + di;
-        if (this.state.checkins[k] && this.state.checkins[k].done) totalDone++;
+        // v161：只认后台确认过的记录（见 _clsCk 注释）
+        if (this._clsCk(s.id, di) && this._clsCk(s.id, di).done) totalDone++;
         else totalUndone++;
       });
     });
@@ -4329,8 +4352,8 @@ const App = {
       html += '<tr><td>' + s.name + '</td>';
       let doneCount = 0, totalCorrect = 0, correctCount = 0;
       HOMEWORK_DATA.forEach((d, di) => {
-        const k = s.id + this._weekTag() + '_d' + di;
-        const ck = this.state.checkins[k];
+        // v161：只认后台确认过的记录（见 _clsCk 注释）
+        const ck = this._clsCk(s.id, di);
         // A record exists from the first answer on. Show the dot either way —
         // 'started but unfinished' is what the teacher most wants to see —
         // but only count a finished day toward doneCount.
@@ -4361,8 +4384,8 @@ const App = {
         // Calculate demo scores（只统计本班学生）
         const scores = [];
         this._classRoster().forEach(s => {
-          const k = s.id + this._weekTag() + '_d' + di;
-          const ck = this.state.checkins[k];
+          // v161：只认后台确认过的记录（见 _clsCk 注释）
+          const ck = this._clsCk(s.id, di);
           if (ck && ck.done && ck.correctRate) scores.push(ck.correctRate);
         });
         if (scores.length > 0) {
@@ -13017,8 +13040,8 @@ const App = {
     const rankings = classStudents.map(s => {
       let doneCount = 0, totalCorrect = 0, correctCount = 0, firstTime = '';
       HOMEWORK_DATA.forEach((d, di) => {
-        const k = s.id + this._weekTag() + '_d' + di;
-        const ck = this.state.checkins[k];
+        // v161：只认后台确认过的记录 —— 班级排名必须人手一份相同（_clsCk）
+        const ck = this._clsCk(s.id, di);
         if (ck && ck.done) {
           doneCount++;
           if (ck.correctRate) { totalCorrect += ck.correctRate; correctCount++; }
@@ -13053,8 +13076,8 @@ const App = {
       html += '<tr' + highlight + '><td>' + r.name + (r.isMe ? ' ⭐' : '') + '</td>';
       let doneCount = 0;
       HOMEWORK_DATA.forEach((d, di) => {
-        const k = student.id + this._weekTag() + '_d' + di;
-        const ck = this.state.checkins[k];
+        // v161：只认后台确认过的记录（见 _clsCk 注释）
+        const ck = this._clsCk(student.id, di);
         if (ck) {
           if (ck.done) doneCount++;
           html += '<td><span class="checkin-dot ' + (ck.completed==='partial'?'partial':'done') + '" title="' + ck.time + '">✓</span></td>';

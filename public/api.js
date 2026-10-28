@@ -1507,6 +1507,13 @@ const Api = {
     const w = who || {};
     const stu = (Store.doc().students || []).find(s => s.id === rec.studentId) || {};
     const curWeek = (typeof HOMEWORK_WEEK_IDX === 'number') ? HOMEWORK_WEEK_IDX : 0;
+    // v161：上报带客户端版本号。后台存下来，以后再出"哪台设备报了怪数据"
+    // 的事，查一行就知道是哪个版本干的好事（2026-10-26 串周事件后加的）。
+    let clientVer = 0;
+    try {
+      const meta = document.querySelector('meta[name="app-version"]');
+      if (meta) clientVer = parseInt(meta.getAttribute('content'), 10) || 0;
+    } catch (e) {}
     const body = {
       student_id: rec.studentId,
       student_name: w.name || stu.name || '',
@@ -1521,6 +1528,7 @@ const Api = {
       correct_rate: rec.correctRate,
       wrong_count: rec.wrongCount,
       finish_time: rec.time,
+      client_ver: clientVer,
     };
     const fail = (why) => {
       this._queueCheckin(body);
