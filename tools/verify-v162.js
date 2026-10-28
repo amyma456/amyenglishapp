@@ -1,6 +1,6 @@
-// tools/verify-v161.js — 打卡数据一致性根治
+// tools/verify-v162.js — 打卡数据一致性根治
 // 家长 2026-10-28：「无论怎么更新，所有端口看到的打卡数据永远一样」。
-// v161 三层加固：1) worker 端周号闸门（不许超前/越界）；2) 上报带 client_ver；
+// v162 三层加固：1) worker 端周号闸门（不许超前/越界）；2) 上报带 client_ver；
 // 3) 班级视图只读云端纯档 state.cloudCheckins（_clsCk）。
 const fs = require('fs');
 const path = require('path');
@@ -16,6 +16,7 @@ const ROOT = path.join(__dirname, '..');
 const appSrc = fs.readFileSync(path.join(ROOT, 'public', 'app.js'), 'utf8');
 const htmlSrc = fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8');
 const swSrc = fs.readFileSync(path.join(ROOT, 'public', 'sw.js'), 'utf8');
+const dSrc = fs.readFileSync(path.join(ROOT, 'public', 'data.js'), 'utf8');
 
 // 从 app.js 抽方法体，绑到stub对象上独立跑。
 // 注意：_previewMemoryKey 是单行方法（结尾没有独立的 \n  }, 行），
@@ -95,15 +96,15 @@ section('3. 恢复名单与 showApp 接线');
   ok(/'print' 仍然不恢复/.test(rt) || rt.includes("'print'"), 'print 仍不恢复（注释声明）');
 }
 
-section('4. 版本号 v161');
+section('4. 版本号 v162');
 {
-  ok(htmlSrc.includes('app-version" content="161"'), 'index.html app-version=161');
-  ok(/\.js\?v=161/.test(htmlSrc), 'index.html 资源 ?v=161');
-  ok(swSrc.includes('amy-english-v161') && /var V = 161;/.test(swSrc), 'sw.js 版本 161');
+  ok(htmlSrc.includes('app-version" content="162"'), 'index.html app-version=161');
+  ok(/\.js\?v=162/.test(htmlSrc), 'index.html 资源 ?v=162');
+  ok(swSrc.includes('amy-english-v162') && /var V = 162;/.test(swSrc), 'sw.js 版本 161');
   ok(!/content="160"|\?v=160|amy-english-v160/.test(htmlSrc + swSrc), '无 160 残留');
 }
 
-section('5. v161 专项：云端纯档 + 班级视图只认后台');
+section('5. v162 专项：云端纯档 + 班级视图只认后台');
 {
   ok(appSrc.includes('state.cloudCheckins'), '有云端纯档 state.cloudCheckins');
   ok(appSrc.includes('this.state.cloudCheckins[k] = rec;'), '_mergeCloudCheckins 往云端纯档写原样记录');
@@ -122,7 +123,7 @@ section('5. v161 专项：云端纯档 + 班级视图只认后台');
   ok(/cloudCheckins/.test(clsCk) && !/state\.checkins\[/.test(clsCk), '_clsCk 只读云端档');
 }
 
-section('6. v161 专项：worker 周号闸门 + client_ver');
+section('6. v162 专项：worker 周号闸门 + client_ver');
 {
   const wSrc = fs.readFileSync(path.join(ROOT, 'worker', 'src', 'index.js'), 'utf8');
   ok(wSrc.includes('serverHomeworkWeek'), 'worker 有自己的真实周号计算');
@@ -134,6 +135,37 @@ section('6. v161 专项：worker 周号闸门 + client_ver');
   const apiSrc2 = fs.readFileSync(path.join(ROOT, 'public', 'api.js'), 'utf8');
   ok(/client_ver:\s*clientVer/.test(apiSrc2), '上报体带 client_ver');
   ok(/app-version/.test(apiSrc2), 'client_ver 取自 meta app-version');
+}
+
+
+section('7. v162 专项：周四 30 题（复数 / a-an / How much-many）');
+{
+  const fn = new Function(dSrc + '; return HOMEWORK_WEEKS;');
+  const WEEKS = fn();
+  const thu = WEEKS[4][3];
+  ok(thu.day_en === 'Thursday', 'WEEK5[3] 是周四');
+  const mids = thu.modules.map(m => m.id);
+  ok(mids.join(',') === 'w5-thu-articles,w5-thu-muchmany,w5-thu-plural-fill,w5-thu-plural-choice',
+     '周四 4 个新模块（旧听力/完形/时态已挪掉）');
+  ok(!thu.modules.some(m => m.type === 'cloze' || m.type === 'reading'),
+     '周四没有课文型模块 —— 30 题 = 30 真实动作（v155 约定）');
+  const counts = thu.modules.map(m => (m.questions || []).length);
+  ok(counts.reduce((a, b) => a + b, 0) === 30, '总题数 30（实际 ' + counts.reduce((a,b)=>a+b,0) + '）');
+  ok(JSON.stringify(counts) === '[5,6,14,5]', '模块题数 5/6/14/5（实际 ' + counts.join('/') + '）');
+  // 打字题：14 个复数答案全部小写、且都在预期清单里
+  const expect = ['feet','teeth','children','mice','women','knives','leaves','shelves','countries','families','dishes','boxes','watches','sandwiches'];
+  const fills = thu.modules[2].questions.map(q => q.answer);
+  ok(JSON.stringify(fills) === JSON.stringify(expect), '14 个复数答案与清单一致');
+  ok(fills.every(a => a === a.toLowerCase()), '打字题答案全部小写');
+  // How much/many 打字题：6 题答案序列 many/much 对应 6 个名词
+  const mm = thu.modules[1].questions;
+  ok(JSON.stringify(mm.map(q => q.answer)) === JSON.stringify(['many','many','much','much','much','many']),
+     'much/many 6 题答案序列正确');
+  ok(mm.every(q => q.type === 'fill'), 'much/many 全部是打字题');
+  // a/an 与复数选择题：每题 4 选项、answer 在范围内
+  [0, 3].forEach(mi => thu.modules[mi].questions.forEach(q => {
+    ok(q.options.length === 4 && q.answer >= 0 && q.answer < 4, q.id + ' 选项 4 个且 answer 越界检查');
+  }));
 }
 
 

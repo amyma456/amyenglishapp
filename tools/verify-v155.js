@@ -60,7 +60,7 @@ section('1b. 阅读与完形的新结构');
   ok(readings.every(x => x.m.questions.length === 4), '每篇阅读 4 道题');
   ok(readings.every(x => sentsEN(x.m.passage).length === sentsCN(x.m.passage_cn).length),
      '每篇阅读中英句数逐句对齐');
-  ok(clozes.length === 10, '完形模块 10 篇（W1-W4 每周 2 篇 + W5 承接）', clozes.length);
+  ok(clozes.length === 9, '完形模块 9 篇（W1-W4 每周 2 篇 + W5 周日承接；W5 周四完形被 v162 家长要求挪掉换成 30 道图题）', clozes.length);
   ok(clozes.every(x => sentsEN(x.m.passage).length === 7), '每篇完形课文 7 句');
   ok(clozes.every(x => x.m.questions.length === 6), '每篇完形 6 空');
   ok(clozes.every(x => (x.m.passage.match(/[0-9]+_{2,}/g) || []).length === 6),
@@ -127,10 +127,10 @@ section('2. app.js 按真实动作计数（行为级，W1 周一）');
 
 section('3. 版本号 = 155');
 {
-  ok(/app-version" content="161"/.test(htmlSrc), 'index.html app-version = 155');
-  ok((htmlSrc.match(/\?v=161/g) || []).length === 5, 'index.html 5 处 ?v=155', (htmlSrc.match(/\?v=161/g) || []).length);
-  ok(/amy-english-v161/.test(swSrc), 'sw.js 缓存名 v155');
-  ok(/var V = 161;/.test(swSrc), 'sw.js var V = 155');
+  ok(/app-version" content="162"/.test(htmlSrc), 'index.html app-version = 155');
+  ok((htmlSrc.match(/\?v=162/g) || []).length === 5, 'index.html 5 处 ?v=155', (htmlSrc.match(/\?v=162/g) || []).length);
+  ok(/amy-english-v162/.test(swSrc), 'sw.js 缓存名 v155');
+  ok(/var V = 162;/.test(swSrc), 'sw.js var V = 155');
 }
 
 console.log('\n———————————————');

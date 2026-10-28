@@ -88,7 +88,7 @@ section('3. W5 句子砍短（跟读不再长）');
       if (!cn || cn.length !== 7) bad.push(m.id + ' 完形逐句中文缺失或句数不对');
     }
   }));
-  ok(readingCnt === 4 && clozeCnt === 2, 'W5 有 4 篇阅读 + 2 篇完形', readingCnt + '/' + clozeCnt);
+  ok(readingCnt === 4 && clozeCnt === 1, 'W5 有 4 篇阅读 + 1 篇完形（周四完形被 v162 挪掉）', readingCnt + '/' + clozeCnt);
   ok(readMax <= 14, 'W5 阅读最长句 ≤ 14 词', readMax);
   ok(clozeMax <= 13, 'W5 完形最长句 ≤ 13 词', clozeMax);
   ok(bad.length === 0, '句数/对齐/占位/中文表全部正常', bad.join(' | ') || '全部正常');
@@ -112,10 +112,10 @@ section('5. 版本号 v157');
 {
   const html = fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8');
   const sw = fs.readFileSync(path.join(ROOT, 'public', 'sw.js'), 'utf8');
-  ok(/app-version" content="161"/.test(html), 'index.html app-version = 157');
-  ok((html.match(/\?v=161/g) || []).length >= 4, 'index.html ?v=157 引用 ≥ 4 处', (html.match(/\?v=161/g) || []).length);
-  ok(/amy-english-v161/.test(sw), 'sw.js CACHE_NAME = amy-english-v161');
-  ok(/var V = 161;/.test(sw), 'sw.js var V = 157');
+  ok(/app-version" content="162"/.test(html), 'index.html app-version = 157');
+  ok((html.match(/\?v=162/g) || []).length >= 4, 'index.html ?v=157 引用 ≥ 4 处', (html.match(/\?v=162/g) || []).length);
+  ok(/amy-english-v162/.test(sw), 'sw.js CACHE_NAME = amy-english-v162');
+  ok(/var V = 162;/.test(sw), 'sw.js var V = 157');
 }
 
 console.log('\n' + (fail === 0 ? '✅ 全部 ' + (pass + fail) + ' 项通过' : '❌ ' + fail + '/' + (pass + fail) + ' 项失败'));
