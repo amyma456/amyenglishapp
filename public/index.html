@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="167">
+<meta name="app-version" content="168">
 <link rel="manifest" href="manifest.json">
 <!-- v135：登录第一步就是调 api.amyeng.top 验手机号。提前把 DNS + TLS
      握手做掉，接口首调能省几百毫秒 —— 手机弱网下这几百毫秒很显眼。 -->
@@ -422,16 +422,22 @@ body.stage-mode .content-area{padding-block:0}
    上面压一排按钮会把底部的「上一题/下一题」挤出屏幕。
    所以这里不覆盖舞台，而是给它让出一行的高度（--pv-h），让顶栏和舞台
    在同一条垂直流里各占各的。舞台内部的样式一个字节都没动。 */
-body.preview-mode{--pv-h:44px}
+body.preview-mode{--pv-h:64px}
 body.preview-mode .stage{height:calc(100dvh - var(--nav-h) - var(--pv-h) - var(--banner-h,0px))}
 
-.pv-bar{flex:none;height:var(--pv-h,44px);display:flex;align-items:center;gap:8px;
-  padding:0 4px;border-bottom:1px solid var(--line)}
-.pv-bar .pv-title{flex:1;min-width:0;font-size:13px;font-weight:600;color:var(--primary-dark);
+/* v168（家长 2026-10-30）：顶栏从一行改两行小字 —— 手机上一行挤不下，
+   日期被省略号吞掉看不见。第一行「退出 / 本周·周X / 换天」，
+   第二行「‹ 前一天 / 📅 完整日期 / 后一天 ›」，日期永远完整可见。 */
+.pv-bar{flex:none;height:var(--pv-h,64px);display:flex;flex-direction:column;justify-content:center;gap:3px;
+  padding:3px 6px;border-bottom:1px solid var(--line)}
+.pv-bar .pv-line{display:flex;align-items:center;gap:6px;min-width:0}
+.pv-bar .pv-title{flex:1;min-width:0;font-size:12px;font-weight:600;color:var(--primary-dark);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pv-bar button{flex:none}
+.pv-bar .pv-date{flex:1;min-width:0;text-align:center;font-size:12px;font-weight:500;color:var(--ink-2);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.pv-bar button{flex:none;padding:3px 8px;font-size:11px}
 /* 换天面板：浮层，不占流 —— 舞台高度不会因为开关面板而跳动 */
-.pv-picker{position:fixed;left:8px;right:8px;top:calc(var(--nav-h) + var(--pv-h,44px) + 4px);
+.pv-picker{position:fixed;left:8px;right:8px;top:calc(var(--nav-h) + var(--pv-h,64px) + 4px);
   z-index:60;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
   box-shadow:var(--shadow-lg);padding:12px}
 .pv-picker .pv-row{display:flex;flex-wrap:wrap;gap:6px}
@@ -1371,9 +1377,9 @@ body.perf-on .content-area{padding-bottom:54vh}
 </div>
 
 <script>window.__appReady = false;</script>
-<script defer src="cloud.js?v=167"></script>
-<script defer src="data.js?v=167"></script>
-<script defer src="data-shuffle.js?v=167"></script>
+<script defer src="cloud.js?v=168"></script>
+<script defer src="data.js?v=168"></script>
+<script defer src="data-shuffle.js?v=168"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
 <!--
   ?v= 必须跟着版本号走（v124 修正）。
@@ -1383,9 +1389,9 @@ body.perf-on .content-area{padding-bottom:54vh}
   这个坑很隐蔽：代码明明改了、也部署上去了，手机上跑的还是几个月前的逻辑。
   以后每次发版，这里跟着 app-version 一起改。
 -->
-<script defer src="recorder.js?v=167"></script>
-<script defer src="api.js?v=167"></script>
-<script defer src="app.js?v=167"></script>
+<script defer src="recorder.js?v=168"></script>
+<script defer src="api.js?v=168"></script>
+<script defer src="app.js?v=168"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {

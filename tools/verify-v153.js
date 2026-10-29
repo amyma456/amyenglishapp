@@ -187,9 +187,9 @@ function part2() {
 
   console.log('\n== 6. 版本号 = 153 ==');
   {
-    ok(/app-version" content="167"/.test(htmlSrc), 'index.html meta = 153');
-    ok((htmlSrc.match(/\?v=167/g) || []).length >= 5, '脚本引用 ?v=167（' + (htmlSrc.match(/\?v=167/g) || []).length + ' 处）');
-    ok(/amy-english-v167/.test(swSrc) && /var V = 167;/.test(swSrc), 'sw.js 缓存名与 V = 153');
+    ok(/app-version" content="168"/.test(htmlSrc), 'index.html meta = 153');
+    ok((htmlSrc.match(/\?v=168/g) || []).length >= 5, '脚本引用 ?v=168（' + (htmlSrc.match(/\?v=168/g) || []).length + ' 处）');
+    ok(/amy-english-v168/.test(swSrc) && /var V = 168;/.test(swSrc), 'sw.js 缓存名与 V = 153');
   }
 
   console.log('');

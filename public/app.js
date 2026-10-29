@@ -4179,18 +4179,25 @@ const App = {
 
     // ---- 顶栏（占 --pv-h 那一行，舞台自动让位）----
     // 一键翻天：前一天 / 后一天，点一下就走（v158）；「换天 ▾」保留给直接跳。
+    // v168（家长 2026-10-30）：手机上一行挤不下，日期被省略号吞掉看不见。
+    // 改成两行小字：第一行「退出 · 本周/下周·周X · 换天」，第二行
+    // 「‹ 前一天 · 📅 完整日期 · 后一天 ›」—— 日期永远完整可见。
     const maxAbs = 13;
     const abs = (weekOff || 0) * 7 + d;
     html += '<div class="pv-bar">';
+    html += '<div class="pv-line">';
     html += '<button class="btn btn-sm" onclick="App.closePreview()">✕ 退出</button>';
+    html += '<span class="pv-title">👀 ' + (weekOff === 0 ? '本周' : '下周') + ' · ' + day.day_cn
+         + (this.isDayToday(d, weekOff) ? '（今天）' : '') + '</span>';
+    html += '<button class="btn btn-sm btn-outline" onclick="App.togglePvPicker()">换天 ▾</button>';
+    html += '</div>';
+    html += '<div class="pv-line">';
     html += '<button class="btn btn-sm btn-outline" onclick="App.previewStep(-1)"'
          + (abs <= 0 ? ' disabled' : '') + '>‹ 前一天</button>';
-    html += '<span class="pv-title">👀 ' + (weekOff === 0 ? '本周' : '下周') + ' · ' + day.day_cn
-         + ' · ' + this.getDayDateLabel(d, weekOff)
-         + (this.isDayToday(d, weekOff) ? '（今天）' : '') + '</span>';
+    html += '<span class="pv-date">📅 ' + this.getDayDateLabel(d, weekOff) + '</span>';
     html += '<button class="btn btn-sm btn-outline" onclick="App.previewStep(1)"'
          + (abs >= maxAbs ? ' disabled' : '') + '>后一天 ›</button>';
-    html += '<button class="btn btn-sm btn-outline" onclick="App.togglePvPicker()">换天 ▾</button>';
+    html += '</div>';
     html += '</div>';
 
     // ---- 换天浮层：默认收起，不影响舞台高度 ----

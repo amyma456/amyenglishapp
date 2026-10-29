@@ -61,15 +61,16 @@ section('1. 一键翻天：点一下走一天，跨周自动切');
   ok(calls[0][0] === 5 && calls[0][1] === 0, 'previewDay 为空时从「今天」起算', JSON.stringify(calls[0]));
 }
 
-section('2. 顶栏渲染：三个按钮都在，边界置灰');
+section('2. 顶栏渲染：按钮都在，边界置灰（v168 改两行布局，检查同步升级）');
 {
-  const start = appSrc.indexOf('App.previewStep(-1)');
-  const bar = appSrc.slice(start, appSrc.indexOf('换天 ▾', start) + 8);
+  const bar = appSrc.slice(appSrc.indexOf("class=\"pv-bar\""), appSrc.indexOf('---- 换天浮层'));
   ok(bar.includes('App.previewStep(-1)'), '顶栏有「‹ 前一天」按钮');
   ok(bar.includes('App.previewStep(1)'), '顶栏有「后一天 ›」按钮');
   ok(bar.includes("' disabled'"), '边界置灰（disabled 属性）');
   ok(bar.includes('togglePvPicker()'), '「换天 ▾」浮层保留（直接跳某天）');
   ok(bar.includes('pv-title'), '标题「本周/下周 · 周X」保留');
+  ok(bar.includes('pv-date') && bar.includes('getDayDateLabel(d, weekOff)'),
+    '第二行完整日期单独一行（v168：手机上日期不再被省略号截断）');
 }
 
 section('3. previewGo 收口干净（不污染学生状态）');
@@ -83,10 +84,10 @@ section('3. previewGo 收口干净（不污染学生状态）');
 
 section('4. 版本号 v158');
 {
-  ok(htmlSrc.includes('app-version" content="167"'), 'index.html app-version=158');
-  ok(/\.js\?v=167/.test(htmlSrc), 'index.html 资源 ?v=158');
-  ok(swSrc.includes('amy-english-v167'), 'sw.js CACHE_NAME=v158');
-  ok(/var V = 167;/.test(swSrc), 'sw.js var V = 158');
+  ok(htmlSrc.includes('app-version" content="168"'), 'index.html app-version=158');
+  ok(/\.js\?v=168/.test(htmlSrc), 'index.html 资源 ?v=158');
+  ok(swSrc.includes('amy-english-v168'), 'sw.js CACHE_NAME=v158');
+  ok(/var V = 168;/.test(swSrc), 'sw.js var V = 158');
   ok(!/\?v=157/.test(htmlSrc) && !/amy-english-v157/.test(swSrc), '无 157 残留');
 }
 
