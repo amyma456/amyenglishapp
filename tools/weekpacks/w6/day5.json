@@ -1,7 +1,8 @@
 {
   "day_cn": "周六",
   "day_en": "Saturday",
-  "theme_cn": "AI口语 + 高频词汇 + 阅读理解",
+  "theme_cn": "AI口语 + 高频词汇 + 阅读理解 + 键盘拼写",
+  "spell_name": "今天学的词，敲一遍",
   "speaking": [
     {
       "sentence": "Would you like to travel to space? Why or why not?",
@@ -118,7 +119,11 @@
       "example_en": "The astronaut waved to us from the window.",
       "example_cn": "宇航员从窗口向我们挥手。",
       "hint_cn": "坐火箭上天工作的人",
-      "syllables": ["as", "tro", "naut"]
+      "syllables": [
+        "as",
+        "tro",
+        "naut"
+      ]
     },
     {
       "word": "weightless",
@@ -128,7 +133,10 @@
       "example_en": "Water floats in the air because it is weightless there.",
       "example_cn": "水在空中飘着，因为那里是失重的。",
       "hint_cn": "在太空里身体轻飘飘的",
-      "syllables": ["weight", "less"]
+      "syllables": [
+        "weight",
+        "less"
+      ]
     },
     {
       "word": "mission",
@@ -138,7 +146,10 @@
       "example_en": "The team finished the six-month mission in space.",
       "example_cn": "这支队伍完成了为期六个月的太空任务。",
       "hint_cn": "上头交给你必须完成的一件事",
-      "syllables": ["mis", "sion"]
+      "syllables": [
+        "mis",
+        "sion"
+      ]
     },
     {
       "word": "signal",
@@ -148,7 +159,10 @@
       "example_en": "The phone signal is weak in the mountains.",
       "example_cn": "山里手机信号很弱。",
       "hint_cn": "手机格数变少时说的那个词",
-      "syllables": ["sig", "nal"]
+      "syllables": [
+        "sig",
+        "nal"
+      ]
     },
     {
       "word": "laboratory",
@@ -158,7 +172,13 @@
       "example_en": "We did the water test in the school laboratory.",
       "example_cn": "我们在学校实验室做了水质测试。",
       "hint_cn": "做科学实验的房间",
-      "syllables": ["la", "bor", "a", "to", "ry"]
+      "syllables": [
+        "la",
+        "bor",
+        "a",
+        "to",
+        "ry"
+      ]
     }
   ],
   "reading": {
@@ -167,13 +187,23 @@
     "questions": [
       {
         "question": "How high does the Tiangong station fly?",
-        "options": ["About 400 kilometres above the Earth", "About 40 kilometres above the Earth", "About 4000 kilometres above the Earth", "About 400 metres above the ground"],
+        "options": [
+          "About 400 kilometres above the Earth",
+          "About 40 kilometres above the Earth",
+          "About 4000 kilometres above the Earth",
+          "About 400 metres above the ground"
+        ],
         "answer": 0,
         "explanation_cn": "第一句：flies about 400 kilometres above the Earth。"
       },
       {
         "question": "Since when has the station been home to Chinese astronauts?",
-        "options": ["Since 2021", "Since 2011", "Since 2019", "Since 2024"],
+        "options": [
+          "Since 2021",
+          "Since 2011",
+          "Since 2019",
+          "Since 2024"
+        ],
         "answer": 0,
         "explanation_cn": "第二句：has been home to Chinese astronauts since 2021。"
       },
@@ -201,30 +231,26 @@
       }
     ]
   },
-  "mc": [
+  "spell": [
     {
-      "question": "The space station ___ about 400 kilometres above the Earth.",
-      "options": ["flies", "fly", "flying", "to fly"],
-      "answer": 0,
-      "explanation_cn": "主语 The space station 是单数，一般现在时用 flies。"
+      "question": "宇航员：a________ [填完整单词]",
+      "answer": "astronaut",
+      "explanation_cn": "astro 表示「星星」，naut 表示「航行的人」，读 /ˈæstrənɔːt/。"
     },
     {
-      "question": "Chinese astronauts have lived there ___ 2021.",
-      "options": ["since", "for", "in", "at"],
-      "answer": 0,
-      "explanation_cn": "since + 年份，表示从那时持续到现在，常与现在完成时连用。"
+      "question": "失重的：w_________ [填完整单词]",
+      "answer": "weightless",
+      "explanation_cn": "weight（重量）+ less（没有）= 失重的，读 /ˈweɪtləs/。"
     },
     {
-      "question": "Inside the station, everything ___ in the air.",
-      "options": ["floats", "float", "floating", "floated"],
-      "answer": 0,
-      "explanation_cn": "everything 作主语看作单数，动词加 s。"
+      "question": "任务：m______ [填完整单词]",
+      "answer": "mission",
+      "explanation_cn": "mission 结尾是 sion，读 /ʃn/，注意两个 s。"
     },
     {
-      "question": "Tiangong is one of ___ stations in the world.",
-      "options": ["the most modern", "most modern", "more modern", "the more modern"],
-      "answer": 0,
-      "explanation_cn": "one of the + 最高级 + 名词复数，表示「最……之一」。"
+      "question": "信号：s______ [填完整单词]",
+      "answer": "signal",
+      "explanation_cn": "signal 中间是 gn，g 不发音，读 /ˈsɪɡnəl/。"
     }
   ]
 }

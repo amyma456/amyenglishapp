@@ -1,7 +1,9 @@
 {
   "day_cn": "周五",
   "day_en": "Friday",
-  "theme_cn": "模板写作 + KET/PET题型 + 语法复习",
+  "theme_cn": "模板写作 + KET/PET题型 + 语法复习 + 听力 + 键盘拼写",
+  "listening_name": "听力：听对话 + 选图 + 听写",
+  "spell_name": "写作关键词，敲一遍",
   "writing": {
     "title": "The Dragon Boat Festival in My Hometown",
     "keywords": [
@@ -26,31 +28,56 @@
   "ket_pet": [
     {
       "question": "KET: I'd like ___ ticket to Beijing, please.",
-      "options": ["a", "an", "the", "some"],
+      "options": [
+        "a",
+        "an",
+        "the",
+        "some"
+      ],
       "answer": 0,
       "explanation_cn": "ticket 是可数名词单数，泛指「一张」用 a。"
     },
     {
       "question": "KET: ___ is the ticket? — Twenty yuan.",
-      "options": ["How much", "How many", "How long", "How often"],
+      "options": [
+        "How much",
+        "How many",
+        "How long",
+        "How often"
+      ],
       "answer": 0,
       "explanation_cn": "问价格用 How much；How many 问可数数量。"
     },
     {
       "question": "PET: This is the station ___ we met last year.",
-      "options": ["where", "which", "when", "whose"],
+      "options": [
+        "where",
+        "which",
+        "when",
+        "whose"
+      ],
       "answer": 0,
       "explanation_cn": "先行词是地点 station，从句 we met 不缺宾语，缺地点状语，用 where。"
     },
     {
       "question": "PET: The train was so crowded that we ___ stand all the way.",
-      "options": ["had to", "must", "should", "can"],
+      "options": [
+        "had to",
+        "must",
+        "should",
+        "can"
+      ],
       "answer": 0,
       "explanation_cn": "so...that 从句描述过去的情况，用 had to（不得不）表示过去的必须。"
     },
     {
       "question": "PET: She asked me ___ I had finished the project.",
-      "options": ["whether", "that", "what", "which"],
+      "options": [
+        "whether",
+        "that",
+        "what",
+        "which"
+      ],
       "answer": 0,
       "explanation_cn": "宾语从句原本是一般疑问句，转述时用 whether/if 引导。"
     }
@@ -58,98 +85,148 @@
   "grammar": [
     {
       "question": "My family has lived in this town ___ 2019.",
-      "options": ["since", "for", "in", "from"],
+      "options": [
+        "since",
+        "for",
+        "in",
+        "from"
+      ],
       "answer": 0,
       "explanation_cn": "since + 时间点（2019），for + 一段时间（five years）。"
     },
     {
       "question": "There ___ some milk in the fridge for breakfast.",
-      "options": ["is", "are", "have", "has"],
+      "options": [
+        "is",
+        "are",
+        "have",
+        "has"
+      ],
       "answer": 0,
       "explanation_cn": "There be 就近原则：milk 不可数，用 is。"
     },
     {
       "question": "If it ___ tomorrow, we will stay at home and read.",
-      "options": ["rains", "will rain", "rained", "raining"],
+      "options": [
+        "rains",
+        "will rain",
+        "rained",
+        "raining"
+      ],
       "answer": 0,
       "explanation_cn": "if 条件句主将从现：主句 will + 动词原形，从句用一般现在时。"
     },
     {
       "question": "Linda is the ___ girl in our class.",
-      "options": ["tallest", "taller", "tall", "most tall"],
+      "options": [
+        "tallest",
+        "taller",
+        "tall",
+        "most tall"
+      ],
       "answer": 0,
       "explanation_cn": "in our class 是范围，用最高级；tall 是单音节词加 est。"
     },
     {
       "question": "I ___ my homework when my mother came home.",
-      "options": ["was doing", "did", "have done", "do"],
+      "options": [
+        "was doing",
+        "did",
+        "have done",
+        "do"
+      ],
       "answer": 0,
       "explanation_cn": "过去某个时刻正在做某事，用过去进行时 was doing。"
     },
     {
       "question": "___ you like to come to my birthday party?",
-      "options": ["Would", "Do", "Are", "Will"],
+      "options": [
+        "Would",
+        "Do",
+        "Are",
+        "Will"
+      ],
       "answer": 0,
       "explanation_cn": "Would you like to do sth. 是礼貌邀请的固定句式。"
     },
     {
       "question": "The book ___ by many students in our school.",
-      "options": ["is read", "reads", "is reading", "read"],
-      "answer": 0,
-      "explanation_cn": "书是「被读」的，用被动语态 be + 过去分词。"
-    },
-    {
-      "question": "Jack speaks English ___ than his brother.",
-      "options": ["better", "good", "well", "best"],
-      "answer": 0,
-      "explanation_cn": "有 than 用比较级；修饰动词 speaks 用副词 well 的比较级 better。"
-    },
-    {
-      "question": "___ of the two answers is correct, so try again.",
-      "options": ["Neither", "Both", "All", "Each"],
-      "answer": 0,
-      "explanation_cn": "两者都不对用 neither，谓语用单数 is。"
-    },
-    {
-      "question": "My father ___ to Shanghai three times this year.",
-      "options": ["has been", "has gone", "went", "goes"],
-      "answer": 0,
-      "explanation_cn": "have been to 去过（已回来），has gone to 去了（还在那儿）；three times 说明经历。"
-    },
-    {
-      "question": "It takes me half an hour ___ to school on foot.",
-      "options": ["to walk", "walk", "walking", "walked"],
-      "answer": 0,
-      "explanation_cn": "It takes sb. some time to do sth. 是固定句型。"
-    },
-    {
-      "question": "The boy is very interested ___ space science.",
-      "options": ["in", "on", "at", "for"],
-      "answer": 0,
-      "explanation_cn": "be interested in 对……感兴趣，in 是固定搭配。"
-    },
-    {
-      "question": "Do you know ___ ?",
       "options": [
-        "where he lives",
-        "where does he live",
-        "where he live",
-        "where is he live"
+        "is read",
+        "reads",
+        "is reading",
+        "read"
       ],
       "answer": 0,
-      "explanation_cn": "宾语从句要用陈述语序：where + 主语 + 谓语。"
+      "explanation_cn": "书是「被读」的，用被动语态 be + 过去分词。"
+    }
+  ],
+  "listening": [
+    {
+      "question": "听对话，人们吃粽子是为了什么？",
+      "audio_text": "Girl: Mum, why do we eat zongzi at the Dragon Boat Festival? Mum: Because we want to remember the poet Qu Yuan. Girl: And what are those long boats for? Mum: They are for the dragon boat races.",
+      "options": [
+        "To remember Qu Yuan",
+        "To welcome spring",
+        "To thank the farmers",
+        "To celebrate a birthday"
+      ],
+      "answer": 0,
+      "explanation_cn": "妈妈说 Because we want to remember the poet Qu Yuan（为了纪念诗人屈原）。后半段说的是龙舟，不是粽子的用意。"
     },
     {
-      "question": "She didn't go to bed ___ she finished her homework.",
-      "options": ["until", "because", "so", "though"],
+      "question": "听对话，奶奶什么时候学会包粽子的？",
+      "audio_text": "Boy: Can you make zongzi, Grandma? Grandma: Yes, I learned it from my mother when I was ten. Boy: It looks difficult. Grandma: It is easy once you try.",
+      "options": [
+        "When she was ten",
+        "Last year",
+        "When she was twenty",
+        "This morning"
+      ],
       "answer": 0,
-      "explanation_cn": "not...until 直到……才，符合句意。"
+      "explanation_cn": "奶奶说 I learned it from my mother when I was ten（十岁时跟妈妈学的）。"
     },
     {
-      "question": "This is the most interesting film ___ I have ever watched.",
-      "options": ["that", "which", "what", "who"],
+      "question": "听到的句子说的是哪幅图？",
+      "audio_text": "We watched the dragon boat race on the river yesterday.",
+      "picture_options": true,
+      "options": [
+        "🛶",
+        "🚗",
+        "✈️",
+        "🚲"
+      ],
       "answer": 0,
-      "explanation_cn": "先行词被最高级修饰时，定语从句关系词通常用 that。"
+      "explanation_cn": "句子里说的是 dragon boat race（龙舟比赛），船在河上，所以选 🛶。"
+    },
+    {
+      "question": "听录音填空：Every year we cook more zongzi than we need and share them with our ___.",
+      "type": "fill",
+      "answer": "friends",
+      "audio_text": "Every year we cook more zongzi than we need and share them with our friends.",
+      "explanation_cn": "听到的是 share them with our friends（和朋友们分享），friends 是复数。"
+    }
+  ],
+  "spell": [
+    {
+      "question": "粽子：d________ [填完整单词]",
+      "answer": "dumpling",
+      "explanation_cn": "dumpling 中间是 mpl，读 /ˈdʌmplɪŋ/；rice dumpling 就是粽子。"
+    },
+    {
+      "question": "节日：f_______ [填完整单词]",
+      "answer": "festival",
+      "explanation_cn": "festival 重音在第一个音节，读 /ˈfestɪvl/。"
+    },
+    {
+      "question": "比赛：r___ [填完整单词]",
+      "answer": "race",
+      "explanation_cn": "race 读 /reɪs/，dragon boat race 就是龙舟比赛。"
+    },
+    {
+      "question": "分享：s____ [填完整单词]",
+      "answer": "share",
+      "explanation_cn": "share sth. with sb. 和某人分享某物，读 /ʃeə/。"
     }
   ]
 }

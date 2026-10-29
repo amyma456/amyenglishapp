@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="164">
+<meta name="app-version" content="165">
 <link rel="manifest" href="manifest.json">
 <!-- v135：登录第一步就是调 api.amyeng.top 验手机号。提前把 DNS + TLS
      握手做掉，接口首调能省几百毫秒 —— 手机弱网下这几百毫秒很显眼。 -->
@@ -553,6 +553,12 @@ body.preview-mode .stage{height:calc(100dvh - var(--nav-h) - var(--pv-h) - var(-
 .q-options{display:flex;flex-direction:column;gap:6px}
 .q-option{padding:8px 12px;border:1.5px solid #FFE0CC;border-radius:var(--radius-sm);font-size:13px;cursor:pointer}
 .q-option:hover{background:var(--primary-light)}
+/* v165：听力「听句子选图片」—— 选项是 emoji 大图，2×2 网格，跟选项文字区分开 */
+.q-options.pic-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.q-option.pic-opt{position:relative;display:flex;align-items:center;justify-content:center;height:74px;font-size:34px;line-height:1;padding:0}
+.q-option.pic-opt .pic-tag{position:absolute;left:6px;top:4px;font-size:11px;color:var(--text-sub);font-weight:600}
+.q-option.pic-opt.selected .pic-tag,.q-option.pic-opt.correct .pic-tag,.q-option.pic-opt.wrong .pic-tag{color:inherit;opacity:.75}
+@media (max-width:360px){.q-option.pic-opt{height:62px;font-size:28px}}
 .q-option.selected{background:var(--primary);color:#fff;border-color:var(--primary)}
 .q-option.correct{background:var(--success-light);border-color:var(--success);color:var(--success);animation:ackPop .42s ease}
 .q-option.wrong{background:var(--danger-light);border-color:var(--danger);color:var(--danger)}
@@ -1365,9 +1371,9 @@ body.perf-on .content-area{padding-bottom:54vh}
 </div>
 
 <script>window.__appReady = false;</script>
-<script defer src="cloud.js?v=164"></script>
-<script defer src="data.js?v=164"></script>
-<script defer src="data-shuffle.js?v=164"></script>
+<script defer src="cloud.js?v=165"></script>
+<script defer src="data.js?v=165"></script>
+<script defer src="data-shuffle.js?v=165"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
 <!--
   ?v= 必须跟着版本号走（v124 修正）。
@@ -1377,9 +1383,9 @@ body.perf-on .content-area{padding-bottom:54vh}
   这个坑很隐蔽：代码明明改了、也部署上去了，手机上跑的还是几个月前的逻辑。
   以后每次发版，这里跟着 app-version 一起改。
 -->
-<script defer src="recorder.js?v=164"></script>
-<script defer src="api.js?v=164"></script>
-<script defer src="app.js?v=164"></script>
+<script defer src="recorder.js?v=165"></script>
+<script defer src="api.js?v=165"></script>
+<script defer src="app.js?v=165"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {

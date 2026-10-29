@@ -1,7 +1,8 @@
 {
   "day_cn": "周三",
   "day_en": "Wednesday",
-  "theme_cn": "AI口语 + 高频词汇 + 阅读理解",
+  "theme_cn": "AI口语 + 高频词汇 + 阅读理解 + 键盘拼写",
+  "spell_name": "今天学的词，敲一遍",
   "speaking": [
     {
       "sentence": "What is your favourite festival? Tell me about it.",
@@ -118,7 +119,11 @@
       "example_en": "I marked the exam day on my calendar.",
       "example_cn": "我在日历上标出了考试那天。",
       "hint_cn": "一个月一个月排下来的那张纸",
-      "syllables": ["cal", "en", "dar"]
+      "syllables": [
+        "cal",
+        "en",
+        "dar"
+      ]
     },
     {
       "word": "harvest",
@@ -128,7 +133,10 @@
       "example_en": "The farmers had a good harvest this autumn.",
       "example_cn": "今年秋天农民收成很好。",
       "hint_cn": "秋天把庄稼收回家",
-      "syllables": ["har", "vest"]
+      "syllables": [
+        "har",
+        "vest"
+      ]
     },
     {
       "word": "grain",
@@ -138,7 +146,9 @@
       "example_en": "Rice is an important grain in Asia.",
       "example_cn": "稻米是亚洲重要的谷物。",
       "hint_cn": "磨成面粉做馒头的小颗粒",
-      "syllables": ["grain"]
+      "syllables": [
+        "grain"
+      ]
     },
     {
       "word": "tradition",
@@ -148,7 +158,11 @@
       "example_en": "Eating dumplings at New Year is a Chinese tradition.",
       "example_cn": "过年吃饺子是中国的传统。",
       "hint_cn": "一代一代传下来的做法",
-      "syllables": ["tra", "di", "tion"]
+      "syllables": [
+        "tra",
+        "di",
+        "tion"
+      ]
     },
     {
       "word": "custom",
@@ -158,7 +172,10 @@
       "example_en": "Giving red packets is a popular custom in my town.",
       "example_cn": "发红包在我们这儿是很流行的习俗。",
       "hint_cn": "一个地方大家习惯了的做法",
-      "syllables": ["cus", "tom"]
+      "syllables": [
+        "cus",
+        "tom"
+      ]
     }
   ],
   "reading": {
@@ -167,19 +184,34 @@
     "questions": [
       {
         "question": "How many solar terms are there in a year?",
-        "options": ["Twenty-four", "Twelve", "Fifteen", "Thirty"],
+        "options": [
+          "Twenty-four",
+          "Twelve",
+          "Fifteen",
+          "Thirty"
+        ],
         "answer": 0,
         "explanation_cn": "第一句：divided the year into 24 solar terms。"
       },
       {
         "question": "How often does a new solar term come?",
-        "options": ["About every fifteen days", "Every week", "Every month", "Every three days"],
+        "options": [
+          "About every fifteen days",
+          "Every week",
+          "Every month",
+          "Every three days"
+        ],
         "answer": 0,
         "explanation_cn": "第二句：Each term comes about fifteen days after the one before it。"
       },
       {
         "question": "What does Grain in Ear tell farmers to do?",
-        "options": ["Cut the wheat", "Plant trees", "Feed the fish", "Build a house"],
+        "options": [
+          "Cut the wheat",
+          "Plant trees",
+          "Feed the fish",
+          "Build a house"
+        ],
         "answer": 0,
         "explanation_cn": "第四句：Grain in Ear tells farmers it is time to cut the wheat。"
       },
@@ -196,30 +228,26 @@
       }
     ]
   },
-  "mc": [
+  "spell": [
     {
-      "question": "There are twenty-four ___ in a Chinese year.",
-      "options": ["solar terms", "solar term", "solars term", "solar terms's"],
-      "answer": 0,
-      "explanation_cn": "twenty-four 后面接可数名词复数，solar terms 中只把主体名词变复数。"
+      "question": "日历：c_______ [填完整单词]",
+      "answer": "calendar",
+      "explanation_cn": "calendar 中间是 len 不是 land，结尾是 dar，读 /ˈkælɪndə/。"
     },
     {
-      "question": "Great Snow is ___ term that comes in winter.",
-      "options": ["a", "an", "the", "/"],
-      "answer": 0,
-      "explanation_cn": "term 是辅音音素开头的单数可数名词，泛指用 a。"
+      "question": "收获：h_______ [填完整单词]",
+      "answer": "harvest",
+      "explanation_cn": "harvest 既能作名词（收成）也能作动词（收割），读 /ˈhɑːvɪst/。"
     },
     {
-      "question": "The name of each term ___ us what the weather is like.",
-      "options": ["tells", "tell", "telling", "to tell"],
-      "answer": 0,
-      "explanation_cn": "主语 The name 是单数，一般现在时用 tells。"
+      "question": "传统：t________ [填完整单词]",
+      "answer": "tradition",
+      "explanation_cn": "tradition 结尾是 tion，读 /ʃn/，重音在第二音节。"
     },
     {
-      "question": "Farmers have used these names ___ hundreds of years.",
-      "options": ["for", "since", "in", "during"],
-      "answer": 0,
-      "explanation_cn": "现在完成时 + for + 一段时间（hundreds of years）；since 后接时间点。"
+      "question": "习俗：c_____ [填完整单词]",
+      "answer": "custom",
+      "explanation_cn": "custom 指一个地方的风俗习惯；customs 还有「海关」的意思。"
     }
   ]
 }

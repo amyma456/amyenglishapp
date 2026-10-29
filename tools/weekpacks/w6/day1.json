@@ -1,7 +1,9 @@
 {
   "day_cn": "周二",
   "day_en": "Tuesday",
-  "theme_cn": "阅读理解 + 语法练习 + 单项选择",
+  "theme_cn": "阅读理解 + 语法练习 + 听力对话 + 键盘拼写",
+  "listening_name": "听力：听对话 + 听写填空",
+  "spell_name": "支付常用词，敲一遍",
   "reading": {
     "passage": "In China, many people pay with their phones instead of cash. You open a payment app, scan the QR code in the shop and type the amount, and the money leaves your wallet in a second. Small shops like this way because they do not need to keep much change. Even people who sell vegetables in the street use it. Some grandparents find it hard at first, so their children teach them step by step. Now they can buy breakfast with a single tap, and they no longer worry about losing money on the way home.",
     "passage_cn": "在中国，很多人用手机付款而不是现金。你打开支付软件，扫一下店里的二维码，再输入金额，钱一秒钟就从钱包里出去了。小店喜欢这种方式，因为不用准备很多零钱。连在街边卖菜的人也在用。有些爷爷奶奶一开始觉得难，所以孩子们一步一步教他们。现在他们点一下就能买到早餐，也不用再担心回家路上把钱弄丢。",
@@ -75,54 +77,61 @@
       "explanation_cn": "learn from sb. 向某人学习；learn to do sth. 学做某事。"
     }
   ],
-  "mc": [
+  "listening": [
     {
-      "question": "___ you ever paid for a meal with your phone?",
-      "options": ["Have", "Has", "Do", "Are"],
+      "question": "听对话，这本故事书多少钱？",
+      "audio_text": "Boy: How much is this story book? Woman: It's twenty yuan. You can scan the code on the desk. Boy: Great, I'll pay with my phone.",
+      "options": ["Twenty yuan", "Twelve yuan", "Thirty yuan", "Two yuan"],
       "answer": 0,
-      "explanation_cn": "主语 you 用 Have；ever 是现在完成时的标志词。"
+      "explanation_cn": "售货员说 It's twenty yuan（二十元），注意 twenty 和 twelve 的读音差别。"
     },
     {
-      "question": "My grandfather ___ cash for everything when he was young.",
-      "options": ["used", "uses", "is using", "use"],
+      "question": "听对话，奶奶后来觉得这个软件怎么样？",
+      "audio_text": "Grandma: I really don't know how to use this app. Girl: Don't worry, Grandma. Just scan the code and type the amount. Grandma: Oh, it's much easier than I thought.",
+      "options": [
+        "Easier than she thought",
+        "Too expensive for her",
+        "Too slow to use",
+        "Dangerous for old people"
+      ],
       "answer": 0,
-      "explanation_cn": "when he was young 是过去时间，用一般过去时 used。"
+      "explanation_cn": "奶奶最后说 much easier than I thought（比我原来想的容易多了），这是问「后来觉得怎么样」的答案。"
     },
     {
-      "question": "There ___ a small QR code on the table.",
-      "options": ["is", "are", "have", "has"],
-      "answer": 0,
-      "explanation_cn": "There be 句型就近原则：a small QR code 是单数，用 is。"
+      "question": "听录音填空：Small shops do not need to keep much ___.",
+      "type": "fill",
+      "answer": "change",
+      "audio_text": "Small shops do not need to keep much change.",
+      "explanation_cn": "听到的是 keep much change（备很多零钱），change 在这里是「零钱」的意思。"
     },
     {
-      "question": "It is very easy ___ with a phone in the supermarket.",
-      "options": ["to pay", "paying", "pay", "paid"],
-      "answer": 0,
-      "explanation_cn": "It is + 形容词 + to do sth. 句型，用动词不定式作真正主语。"
+      "question": "听录音填空：The money leaves your ___ in a second.",
+      "type": "fill",
+      "answer": "wallet",
+      "audio_text": "The money leaves your wallet in a second.",
+      "explanation_cn": "听到的是 leaves your wallet（离开你的钱包），wallet 读 /ˈwɒlɪt/。"
+    }
+  ],
+  "spell": [
+    {
+      "question": "移动的：m______ [填完整单词]",
+      "answer": "mobile",
+      "explanation_cn": "mobile phone 就是手机；mobile 读 /ˈməʊbaɪl/，重音在前。"
     },
     {
-      "question": "Some children spend too ___ time playing games on the phone.",
-      "options": ["much", "many", "few", "lots"],
-      "answer": 0,
-      "explanation_cn": "time 是不可数名词，用 too much；too many 接可数名词复数。"
+      "question": "金额：a_____ [填完整单词]",
+      "answer": "amount",
+      "explanation_cn": "amount 指金额，读 /əˈmaʊnt/；type the amount 就是输入金额。"
     },
     {
-      "question": "___ many payment apps are there on your phone?",
-      "options": ["How", "What", "Which", "Whose"],
-      "answer": 0,
-      "explanation_cn": "修饰可数名词复数 many 用 How many，问数量。"
+      "question": "收到：r______ [填完整单词]",
+      "answer": "receive",
+      "explanation_cn": "receive 遵守 i 在 e 前的规则（ei），读 /rɪˈsiːv/。"
     },
     {
-      "question": "The bookshop ___ open since 2010.",
-      "options": ["has been", "is", "was", "will be"],
-      "answer": 0,
-      "explanation_cn": "since 2010 表示从过去持续到现在，用现在完成时 has been。"
-    },
-    {
-      "question": "Paying by phone is ___ than carrying a lot of cash.",
-      "options": ["safer", "safe", "safest", "more safe"],
-      "answer": 0,
-      "explanation_cn": "有 than 用比较级；safe 是单音节词，直接加 r 变 safer。"
+      "question": "账户：a______ [填完整单词]",
+      "answer": "account",
+      "explanation_cn": "account 有两个 c 连写，读 /əˈkaʊnt/。"
     }
   ]
 }

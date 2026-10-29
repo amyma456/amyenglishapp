@@ -1,7 +1,8 @@
 {
   "day_cn": "周一",
   "day_en": "Monday",
-  "theme_cn": "AI口语 + 高频词汇 + 阅读理解",
+  "theme_cn": "AI口语 + 高频词汇 + 阅读理解 + 键盘拼写",
+  "spell_name": "今天学的词，敲一遍",
   "speaking": [
     {
       "sentence": "How do you usually go to school every day?",
@@ -196,30 +197,26 @@
       }
     ]
   },
-  "mc": [
+  "spell": [
     {
-      "question": "The train ___ at 350 kilometres an hour.",
-      "options": ["runs", "run", "running", "to run"],
-      "answer": 0,
-      "explanation_cn": "主语 The train 是第三人称单数，一般现在时动词加 s。"
+      "question": "铁路：r______ [填完整单词]",
+      "answer": "railway",
+      "explanation_cn": "railway = rail（铁轨）+ way（路），读 /ˈreɪlweɪ/。"
     },
     {
-      "question": "A high-speed train is ___ than a plane.",
-      "options": ["more comfortable", "comfortable", "most comfortable", "comfortabler"],
-      "answer": 0,
-      "explanation_cn": "有 than 用比较级；comfortable 是多音节词，比较级前加 more。"
+      "question": "乘客：p________ [填完整单词]",
+      "answer": "passenger",
+      "explanation_cn": "passenger 中间是 ss 和 ng，词尾 er，读 /ˈpæsɪndʒə/。"
     },
     {
-      "question": "The first line ___ in 2008.",
-      "options": ["opened", "opens", "opening", "open"],
-      "answer": 0,
-      "explanation_cn": "in 2008 是过去的时间，用一般过去时 opened。"
+      "question": "站台：p_______ [填完整单词]",
+      "answer": "platform",
+      "explanation_cn": "platform = plat + form，读 /ˈplætfɔːm/。"
     },
     {
-      "question": "Passengers ___ their tickets on the phone before the trip.",
-      "options": ["buy", "buys", "buying", "bought"],
-      "answer": 0,
-      "explanation_cn": "主语 Passengers 是复数，一般现在时用动词原形 buy。"
+      "question": "时刻表：t________ [填完整单词]",
+      "answer": "timetable",
+      "explanation_cn": "time + table 合成一个词，中间不空格。"
     }
   ]
 }

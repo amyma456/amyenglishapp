@@ -1,177 +1,129 @@
 {
   "day_cn": "周四",
   "day_en": "Thursday",
-  "theme_cn": "冠词 + 比较级 + 拼写打字",
-  "mc_name": "冠词专项",
-  "tense_name": "比较级 / 最高级打字",
-  "tense2_name": "本周单词拼写",
-  "mc2_name": "综合巩固",
-  "mc": [
+  "theme_cn": "阅读理解 + 语法练习 + 听力（选图 / 问答 / 听写）+ 键盘拼写",
+  "listening_name": "听力：选图 + 问答 + 听写",
+  "spell_name": "剪纸这课的字，敲一遍",
+  "reading": {
+    "passage": "Paper cutting is one of China's oldest folk arts. People use red paper and a pair of scissors to cut out flowers, animals and Chinese characters. The art is more than 1500 years old, and it is still popular in villages today. During the Spring Festival, families put red paper cuttings on windows and doors for good luck. Each pattern has its own meaning: a fish stands for a rich year, and a peach stands for long life. Learning paper cutting takes patience, but children love it because a plain sheet of paper can become a beautiful picture in a few minutes.",
+    "passage_cn": "剪纸是中国最古老的民间艺术之一。人们用红纸和一把剪刀剪出花、动物和汉字。这门艺术有一千五百多年历史，今天在乡村依然流行。春节期间，家家户户把红色剪纸贴在窗户和门上，图个吉利。每种图案都有自己的含义：鱼代表年年有余，桃子代表长寿。学剪纸需要耐心，但孩子们很喜欢，因为一张普通的纸几分钟就能变成一幅漂亮的画。",
+    "questions": [
+      {
+        "question": "What do people use to cut the paper?",
+        "options": ["A pair of scissors", "A ruler", "A brush", "A spoon"],
+        "answer": 0,
+        "explanation_cn": "第二句：use red paper and a pair of scissors to cut out...（用红纸和一把剪刀剪出）。"
+      },
+      {
+        "question": "How old is the art of paper cutting?",
+        "options": ["More than 1500 years", "More than 150 years", "About 50 years", "About 100 years"],
+        "answer": 0,
+        "explanation_cn": "第三句：The art is more than 1500 years old。"
+      },
+      {
+        "question": "Where do families put paper cuttings at Spring Festival?",
+        "options": ["On windows and doors", "Under the bed", "In the garden", "On the car"],
+        "answer": 0,
+        "explanation_cn": "第四句：put red paper cuttings on windows and doors for good luck。"
+      },
+      {
+        "question": "What does a fish stand for in paper cutting?",
+        "options": ["A rich year", "Long life", "Good weather", "A big house"],
+        "answer": 0,
+        "explanation_cn": "第五句：a fish stands for a rich year（鱼代表年年有余）。"
+      }
+    ]
+  },
+  "grammar": [
     {
-      "question": "My uncle is ___ honest man, and everyone trusts him.",
-      "options": ["an", "a", "the", "/"],
+      "question": "People cut the red paper ___ a pair of scissors.",
+      "options": ["with", "by", "of", "for"],
       "answer": 0,
-      "explanation_cn": "honest 的 h 不发音，开头是元音音素 /ɒ/，所以用 an。"
+      "explanation_cn": "表示「用某种工具」用 with：cut the paper with scissors。"
     },
     {
-      "question": "___ sun rises in the east and sets in the west.",
-      "options": ["The", "A", "An", "/"],
+      "question": "In Chinese art, the fish ___ for a rich year.",
+      "options": ["stands", "stand", "standing", "stood"],
       "answer": 0,
-      "explanation_cn": "世界上独一无二的事物前用定冠词 the，如 the sun、the moon。"
+      "explanation_cn": "主语 the fish 是单数，一般现在时动词加 s：stands for = 代表。"
     },
     {
-      "question": "When I grow up, I want to be ___ astronaut.",
-      "options": ["an", "a", "the", "/"],
+      "question": "Paper cutting is one of the ___ folk arts in China.",
+      "options": ["oldest", "older", "old", "most old"],
       "answer": 0,
-      "explanation_cn": "astronaut 以元音音素 /æ/ 开头，单数泛指用 an。"
+      "explanation_cn": "one of the + 最高级 + 复数名词：one of the oldest folk arts。"
     },
     {
-      "question": "We waited for ___ hour at the platform.",
-      "options": ["an", "a", "the", "/"],
+      "question": "___ the Spring Festival, we put red cuttings on the windows.",
+      "options": ["During", "Between", "Among", "Inside"],
       "answer": 0,
-      "explanation_cn": "hour 的 h 不发音，读音以元音开头，用 an hour。"
+      "explanation_cn": "表示「在……期间」用 during；between 用于两者之间。"
     },
     {
-      "question": "My sister plays ___ piano for half an hour every evening.",
-      "options": ["the", "a", "an", "/"],
+      "question": "Learning paper cutting ___ a lot of patience.",
+      "options": ["needs", "need", "needing", "to need"],
       "answer": 0,
-      "explanation_cn": "play + 乐器要加 the：play the piano；play + 球类不加 the。"
+      "explanation_cn": "动名词 Learning paper cutting 作主语，谓语用单数 needs。"
+    },
+    {
+      "question": "A red peach ___ long life in Chinese art.",
+      "options": ["means", "mean", "meaning", "meant"],
+      "answer": 0,
+      "explanation_cn": "主语 a red peach 单数，一般现在时用 means（代表、意味着）。"
     }
   ],
-  "tense": [
+  "listening": [
     {
-      "question": "This new train is ___ (fast) than the old one. [填比较级]",
-      "answer": "faster",
-      "explanation_cn": "fast 是单音节形容词，比较级直接加 er。"
+      "question": "听到的句子说的是哪幅图？",
+      "audio_text": "Look at the paper fish on the window. It means a rich year.",
+      "picture_options": true,
+      "options": ["🐟", "🍑", "✂️", "🌺"],
+      "answer": 0,
+      "explanation_cn": "句子里说的是 paper fish（纸鱼），所以选 🐟；桃子和剪刀是另外两句里出现的。"
     },
     {
-      "question": "February is the ___ (short) month of the year. [填最高级]",
-      "answer": "shortest",
-      "explanation_cn": "of the year 表示范围，用最高级 the shortest。"
+      "question": "听到的句子说的是哪幅图？",
+      "audio_text": "My sister is cutting the red paper with a pair of scissors.",
+      "picture_options": true,
+      "options": ["✂️", "🖌️", "📏", "🔪"],
+      "answer": 0,
+      "explanation_cn": "关键工具是 a pair of scissors（一把剪刀），所以选 ✂️。"
     },
     {
-      "question": "Today is much ___ (cold) than yesterday. [填比较级]",
-      "answer": "colder",
-      "explanation_cn": "much 修饰比较级，加强语气；cold 加 er。"
+      "question": "听对话，奶奶剪的桃子代表什么？",
+      "audio_text": "Girl: What are you making, Grandma? Grandma: I'm cutting a peach for your birthday. It means long life.",
+      "options": ["Long life", "Good luck", "A rich year", "A new job"],
+      "answer": 0,
+      "explanation_cn": "奶奶说 It means long life（代表长寿）。good luck 是贴窗花的用意，a rich year 是鱼的含义。"
     },
     {
-      "question": "This is the ___ (good) film I have ever seen. [填最高级]",
-      "answer": "best",
-      "explanation_cn": "good 的最高级是不规则变化 best，不是 goodest。"
-    },
-    {
-      "question": "My schoolbag is ___ (heavy) than yours. [填比较级]",
-      "answer": "heavier",
-      "explanation_cn": "heavy 是辅音字母 + y 结尾，变比较级把 y 变 i 再加 er。"
-    },
-    {
-      "question": "It is the ___ (busy) street in our city. [填最高级]",
-      "answer": "busiest",
-      "explanation_cn": "busy 变最高级把 y 变 i 再加 est。"
+      "question": "听录音填空：Families put red paper cuttings on the windows for good ___.",
+      "type": "fill",
+      "answer": "luck",
+      "audio_text": "Families put red paper cuttings on the windows for good luck.",
+      "explanation_cn": "听到的是 for good luck（图个吉利），luck 读 /lʌk/。"
     }
   ],
-  "tense2": [
+  "spell": [
     {
-      "question": "铁路：r______ [填完整单词]",
-      "answer": "railway",
-      "explanation_cn": "railway = rail（铁轨）+ way（路），指铁路。"
+      "question": "剪刀：s________ [填完整单词]",
+      "answer": "scissors",
+      "explanation_cn": "scissors 永远是复数形式，a pair of scissors 才是一把剪刀。"
     },
     {
-      "question": "乘客：p________ [填完整单词]",
-      "answer": "passenger",
-      "explanation_cn": "passenger 注意中间是 ss 和 ng，词尾是 er。"
+      "question": "图案：p______ [填完整单词]",
+      "answer": "pattern",
+      "explanation_cn": "pattern 有两个 t 连写，读 /ˈpætn/。"
     },
     {
-      "question": "站台：p_______ [填完整单词]",
-      "answer": "platform",
-      "explanation_cn": "platform = plat + form，站台、月台。"
+      "question": "耐心：p_______ [填完整单词]",
+      "answer": "patience",
+      "explanation_cn": "patience 结尾是 ence，读 /ˈpeɪʃns/，注意不是 patient。"
     },
     {
-      "question": "时刻表：t________ [填完整单词]",
-      "answer": "timetable",
-      "explanation_cn": "timetable 由 time + table 合成，中间不空格。"
-    },
-    {
-      "question": "舒适的：c__________ [填完整单词]",
-      "answer": "comfortable",
-      "explanation_cn": "comfort（舒适）+ able，注意 com 后面是 fort。"
-    },
-    {
-      "question": "日历：c_______ [填完整单词]",
-      "answer": "calendar",
-      "explanation_cn": "calendar 中间是 len 不是 land，结尾是 dar。"
-    },
-    {
-      "question": "收获：h_______ [填完整单词]",
-      "answer": "harvest",
-      "explanation_cn": "harvest 既可以作名词（收成）也可以作动词（收割）。"
-    },
-    {
-      "question": "传统：t________ [填完整单词]",
-      "answer": "tradition",
-      "explanation_cn": "tradition 结尾是 tion，读 /ʃn/。"
-    },
-    {
-      "question": "习俗：c_____ [填完整单词]",
-      "answer": "custom",
-      "explanation_cn": "custom 指一个地方的风俗习惯；customs 还有「海关」的意思。"
-    },
-    {
-      "question": "宇航员：a________ [填完整单词]",
-      "answer": "astronaut",
-      "explanation_cn": "astro 表示「星星」，naut 表示「航行的人」。"
-    },
-    {
-      "question": "失重的：w_________ [填完整单词]",
-      "answer": "weightless",
-      "explanation_cn": "weight（重量）+ less（没有），合起来是失重的。"
-    },
-    {
-      "question": "任务：m______ [填完整单词]",
-      "answer": "mission",
-      "explanation_cn": "mission 结尾是 sion，读 /ʃn/，注意双 s。"
-    },
-    {
-      "question": "信号：s______ [填完整单词]",
-      "answer": "signal",
-      "explanation_cn": "signal 中间是 gn，g 不发音，读 /ˈsɪɡnəl/。"
-    },
-    {
-      "question": "实验室：l__________ [填完整单词]",
-      "answer": "laboratory",
-      "explanation_cn": "laboratory 可缩写成 lab，重音在第二音节。"
-    }
-  ],
-  "mc2": [
-    {
-      "question": "The passenger put his bag ___ the seat and sat down.",
-      "options": ["on", "in", "at", "of"],
-      "answer": 0,
-      "explanation_cn": "包放在座位表面上用 on the seat。"
-    },
-    {
-      "question": "There ___ two platforms in this small station.",
-      "options": ["are", "is", "has", "have"],
-      "answer": 0,
-      "explanation_cn": "There be 就近原则：two platforms 是复数，用 are。"
-    },
-    {
-      "question": "Look at the timetable. The next train ___ at 7:20.",
-      "options": ["leaves", "leave", "leaving", "left"],
-      "answer": 0,
-      "explanation_cn": "按时刻表安排的将来动作可用一般现在时；主语单数用 leaves。"
-    },
-    {
-      "question": "This seat is ___ comfortable than that one near the door.",
-      "options": ["more", "most", "much", "very"],
-      "answer": 0,
-      "explanation_cn": "comfortable 是多音节词，比较级前加 more，后面还有 than。"
-    },
-    {
-      "question": "___ did you get to the station so early? — I took the first bus.",
-      "options": ["How", "What", "Why", "When"],
-      "answer": 0,
-      "explanation_cn": "答句说交通方式，问方式用 How。"
+      "question": "窗户：w______ [填完整单词]",
+      "answer": "window",
+      "explanation_cn": "window 中间的 n 不发音，读 /ˈwɪndəʊ/。"
     }
   ]
 }

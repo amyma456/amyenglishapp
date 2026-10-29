@@ -50,7 +50,7 @@ section('2. W6 结构合规（动作数 / 篇长 / 空位）');
     if (m.type === 'reading') readings.push(m);
     if (m.type === 'cloze') clozes.push(m);
   }));
-  ok(readings.length === 4, 'W6 阅读 4 篇', readings.length);
+  ok(readings.length === 5, 'W6 阅读 5 篇', readings.length);
   ok(readings.every((m) => sentsEN(m.passage).length === 6), 'W6 每篇阅读 6 句');
   ok(readings.every((m) => m.questions.length === 4), 'W6 每篇阅读 4 题');
   ok(readings.every((m) => !!m.passage_cn), 'W6 每篇阅读都有中文译文');
@@ -114,11 +114,11 @@ section('4. 周包自动出题工具链');
 
 section('5. 版本号 v164 全线一致');
 {
-  const refs = (htmlSrc.match(/\?v=164/g) || []).length;
+  const refs = (htmlSrc.match(/\?v=165/g) || []).length;
   ok(refs === 6, 'index.html 6 个脚本引用都是 v164', refs);
-  ok(/app-version"\s+content="164"/.test(htmlSrc), 'app-version = 164');
-  ok(/amy-english-v164/.test(swSrc), 'sw.js CACHE_NAME 升到 v164');
-  ok(/var V = 164;/.test(swSrc), 'sw.js var V = 164');
+  ok(/app-version"\s+content="165"/.test(htmlSrc), 'app-version = 164');
+  ok(/amy-english-v165/.test(swSrc), 'sw.js CACHE_NAME 升到 v164');
+  ok(/var V = 165;/.test(swSrc), 'sw.js var V = 164');
   ok(htmlSrc.indexOf('v=163') < 0, 'index.html 没有残留 v163');
 }
 

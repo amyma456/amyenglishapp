@@ -1,7 +1,8 @@
 {
   "day_cn": "周日",
   "day_en": "Sunday",
-  "theme_cn": "高频词汇 + 完形填空 + 听力",
+  "theme_cn": "高频词汇 + 完形填空 + 键盘拼写",
+  "spell_name": "今天学的词，敲一遍",
   "vocab": [
     {
       "word": "payment",
@@ -11,7 +12,10 @@
       "example_en": "The payment went through in a second.",
       "example_cn": "付款一秒钟就完成了。",
       "hint_cn": "买东西把钱给出去这一步",
-      "syllables": ["pay", "ment"]
+      "syllables": [
+        "pay",
+        "ment"
+      ]
     },
     {
       "word": "wallet",
@@ -21,7 +25,10 @@
       "example_en": "He took a photo of his card and put it in his wallet.",
       "example_cn": "他给卡拍了照，然后放进钱包。",
       "hint_cn": "装钱和卡的小包",
-      "syllables": ["wal", "let"]
+      "syllables": [
+        "wal",
+        "let"
+      ]
     },
     {
       "word": "scan",
@@ -31,7 +38,9 @@
       "example_en": "Please scan this code before you pay.",
       "example_cn": "付款前请扫一下这个码。",
       "hint_cn": "用镜头对着码照一下",
-      "syllables": ["scan"]
+      "syllables": [
+        "scan"
+      ]
     },
     {
       "word": "digital",
@@ -41,7 +50,11 @@
       "example_en": "Most students now read digital books on a tablet.",
       "example_cn": "现在大多数学生在平板上读电子书。",
       "hint_cn": "跟电脑、网络有关的那种",
-      "syllables": ["di", "gi", "tal"]
+      "syllables": [
+        "di",
+        "gi",
+        "tal"
+      ]
     },
     {
       "word": "convenient",
@@ -51,7 +64,11 @@
       "example_en": "Paying by phone is convenient for busy people.",
       "example_cn": "用手机付款对忙碌的人来说很方便。",
       "hint_cn": "省事、不麻烦",
-      "syllables": ["con", "ve", "nient"]
+      "syllables": [
+        "con",
+        "ve",
+        "nient"
+      ]
     }
   ],
   "cloze": {
@@ -68,102 +85,97 @@
     "questions": [
       {
         "question": "1___",
-        "options": ["volunteer", "visitor", "driver", "painter"],
+        "options": [
+          "volunteer",
+          "visitor",
+          "driver",
+          "painter"
+        ],
         "answer": 0,
         "explanation_cn": "去社区图书馆帮忙做事的人是志愿者 volunteer。visitor 只表示参观者。"
       },
       {
         "question": "2___",
-        "options": ["order", "price", "cover", "shelf"],
+        "options": [
+          "order",
+          "price",
+          "cover",
+          "shelf"
+        ],
         "answer": 0,
         "explanation_cn": "put the books back in the right order 按正确顺序放回书，与后文看标签对应。"
       },
       {
         "question": "3___",
-        "options": ["label", "picture", "story", "colour"],
+        "options": [
+          "label",
+          "picture",
+          "story",
+          "colour"
+        ],
         "answer": 0,
         "explanation_cn": "封面上贴的标签 label 写着编号，用来判断该放哪。"
       },
       {
         "question": "4___",
-        "options": ["animals", "weather", "sports", "music"],
+        "options": [
+          "animals",
+          "weather",
+          "sports",
+          "music"
+        ],
         "answer": 0,
         "explanation_cn": "下文说 pictures of pandas（熊猫图片），所以是动物的故事。"
       },
       {
         "question": "5___",
-        "options": ["younger", "taller", "richer", "quieter"],
+        "options": [
+          "younger",
+          "taller",
+          "richer",
+          "quieter"
+        ],
         "answer": 0,
         "explanation_cn": "跟父母一起来的、需要别人读故事的孩子，是更小的孩子 younger children。"
       },
       {
         "question": "6___",
-        "options": ["job", "meal", "game", "trip"],
+        "options": [
+          "job",
+          "meal",
+          "game",
+          "trip"
+        ],
         "answer": 0,
         "explanation_cn": "do a good job 干得好，是固定搭配。"
       }
     ]
   },
-  "listening": [
+  "spell": [
     {
-      "question": "听到的句子是什么？",
-      "audio_text": "The high-speed train runs at 350 kilometres an hour.",
-      "options": [
-        "The high-speed train runs at 350 kilometres an hour.",
-        "The high-speed train runs at 150 kilometres an hour.",
-        "The high-speed train runs at 350 kilometres a day.",
-        "The high-speed bus runs at 350 kilometres an hour."
-      ],
-      "answer": 0,
-      "explanation_cn": "数字 350（三百五十），单位 an hour（每小时）。"
+      "question": "付款：p______ [填完整单词]",
+      "answer": "payment",
+      "explanation_cn": "pay + ment 变名词，payment 读 /ˈpeɪmənt/。"
     },
     {
-      "question": "听到的句子是什么？",
-      "audio_text": "You can scan the QR code with your phone.",
-      "options": [
-        "You can scan the QR code with your phone.",
-        "You can scan the QR code with your card.",
-        "You can send the QR code with your phone.",
-        "You can scan the bar code with your phone."
-      ],
-      "answer": 0,
-      "explanation_cn": "动词 scan（扫描）+ QR code（二维码）+ with your phone（用手机）。"
+      "question": "钱包：w_____ [填完整单词]",
+      "answer": "wallet",
+      "explanation_cn": "wallet 读 /ˈwɒlɪt/，注意两个 l 和一个 t。"
     },
     {
-      "question": "听到的句子是什么？",
-      "audio_text": "Grandpa has used the payment app for two years.",
-      "options": [
-        "Grandpa has used the payment app for two years.",
-        "Grandpa has used the payment app for two months.",
-        "Grandpa used the payment app two years ago.",
-        "Grandma has used the payment app for two years."
-      ],
-      "answer": 0,
-      "explanation_cn": "has used 现在完成时 + for two years 持续两年。"
+      "question": "扫描：s____ [填完整单词]",
+      "answer": "scan",
+      "explanation_cn": "scan 是重读闭音节，双写 n 再加 ing：scanning。"
     },
     {
-      "question": "听到的句子是什么？",
-      "audio_text": "The astronauts fix their sleeping bags to the wall.",
-      "options": [
-        "The astronauts fix their sleeping bags to the wall.",
-        "The astronauts fix their sleeping bags to the floor.",
-        "The astronauts put their sleeping bags on the wall.",
-        "The astronauts fix their water bags to the wall."
-      ],
-      "answer": 0,
-      "explanation_cn": "sleeping bags（睡袋）固定在墙上（to the wall），因为在太空会飘。"
+      "question": "数字的：d______ [填完整单词]",
+      "answer": "digital",
+      "explanation_cn": "digital 读 /ˈdɪdʒɪtl/，来自 digit（数字）。"
     },
     {
-      "question": "听到的句子是什么？",
-      "audio_text": "Each solar term comes about fifteen days apart.",
-      "options": [
-        "Each solar term comes about fifteen days apart.",
-        "Each solar term comes about fifty days apart.",
-        "Each solar term comes about fifteen weeks apart.",
-        "Each season comes about fifteen days apart."
-      ],
-      "answer": 0,
-      "explanation_cn": "fifteen days（十五天）和 apart（相隔）都是关键词。"
+      "question": "方便的：c_________ [填完整单词]",
+      "answer": "convenient",
+      "explanation_cn": "convenient 读 /kənˈviːniənt/，中间是 ven，结尾是 ient。"
     }
   ]
 }

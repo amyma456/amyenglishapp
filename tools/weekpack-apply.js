@@ -15,7 +15,7 @@ const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
 const DATA = path.join(ROOT, 'public', 'data.js');
-const MOD_ORDER = ['speaking', 'vocab', 'reading', 'mc', 'grammar', 'tense', 'tense2', 'mc2', 'cloze', 'listening', 'ket_pet', 'writing'];
+const MOD_ORDER = ['speaking', 'vocab', 'reading', 'mc', 'grammar', 'tense', 'tense2', 'mc2', 'cloze', 'listening', 'ket_pet', 'writing', 'spell'];
 const MOD_META = {
   speaking: { type: 'speaking', name_cn: 'AI口语练习', duration: 30 },
   vocab: { type: 'vocabulary_game', name_cn: '高频词汇', duration: 5 },
@@ -25,6 +25,8 @@ const MOD_META = {
   grammar: { type: 'grammar', name_cn: '语法练习', duration: 10 },
   tense: { type: 'tense', name_cn: '语法练习（打字）', duration: 10 },
   tense2: { type: 'tense', name_cn: '拼写打字', duration: 10 },
+  // v165（家长 2026-10-29）：键盘拼写不再集中在周四，每天 3~5 道。
+  spell: { type: 'tense', name_cn: '敲键盘拼写', duration: 6 },
   cloze: { type: 'cloze', name_cn: '完形填空', duration: 10 },
   listening: { type: 'listening', name_cn: '听力练习', duration: 5 },
   ket_pet: { type: 'ket_pet', name_cn: 'KET/PET题型', duration: 10 },
@@ -117,8 +119,10 @@ function buildWeek(pack, meta) {
       const src = day[key];
       if (!src) return;
       const mm = MOD_META[key];
-      const idKey = key === 'mc2' ? 'choice2' : (key === 'tense2' ? 'spell' : key);
+      const idKey = key === 'mc2' ? 'choice2' : (key === 'tense2' ? 'spell' : (key === 'spell' ? 'kb' : key));
       const base = { id: prefix + '-' + idKey, name_cn: day[key + '_name'] || mm.name_cn, type: mm.type, duration: mm.duration };
+      // v165：标出「敲键盘」的模块，好让校验器按天统计拼写题（不再堆在同一天）
+      if (key === 'spell' || key === 'tense' || key === 'tense2') base.skill = 'keyboard';
 
       if (key === 'vocab') {
         const words = src.map((wd, wi) => {
@@ -180,9 +184,9 @@ function buildWeek(pack, meta) {
         return;
       }
       // speaking / mc / grammar / tense / listening / ket_pet
-      const short = { speaking: 'sp', mc: 'mc', mc2: 'mcq', grammar: 'gr', tense: 'tn', tense2: 'ten', listening: 'ls', ket_pet: 'kp' }[key];
+      const short = { speaking: 'sp', mc: 'mc', mc2: 'mcq', grammar: 'gr', tense: 'tn', tense2: 'ten', listening: 'ls', ket_pet: 'kp', spell: 'kb' }[key];
       base.questions = src.map((q, qi) => {
-        const defType = (key === 'tense' || key === 'tense2') ? 'fill' : 'choice';
+        const defType = (key === 'tense' || key === 'tense2' || key === 'spell') ? 'fill' : 'choice';
         const o = { id: prefix + '-' + short + (qi + 1), type: q.type || defType };
         if (key === 'speaking') {
           o.sentence = q.sentence;
@@ -192,6 +196,8 @@ function buildWeek(pack, meta) {
         }
         if (q.audio_text) o.audio_text = q.audio_text;
         if (q.options) o.options = q.options;
+        // v165：听力「听句子选图片」，选项是 emoji，前端排成 2×2 大图
+        if (q.picture_options) o.picture_options = true;
         if (q.answer !== undefined) o.answer = q.answer;
         if (q.pronunciation_tips) o.pronunciation_tips = q.pronunciation_tips;
         if (q.explanation_cn) o.explanation_cn = q.explanation_cn;
@@ -223,7 +229,11 @@ function validate(week, meta, allWeeks) {
   const ids = new Set();
   const qtexts = new Map(); // text -> week label
   const words = new Map();
-  allWeeks.forEach((wk, wi) => {
+  // v165：跨周查重只对 W1~W4（完整独立命题的周）强制，W5 起内容允许承接，
+  // 新周（W6+）是全新题材、不必与过去逐字避让 —— 与 verify-weeks 口径一致。
+  allWeeks.forEach((item) => {
+    const wk = item.w || item, wi = (typeof item.i === 'number') ? item.i : -1;
+    if (wi >= 4) return;
     (wk || []).forEach((d) =>
       (d.modules || []).forEach((m) => {
         (m.questions || []).forEach((q) => {
@@ -251,6 +261,23 @@ function validate(week, meta, allWeeks) {
         (m.type === 'writing_template' ? (String(m.full_text || '').replace(/\s+/g, ' ').match(/[^.!?]+[.!?]+["']?(?=\s|$)/g) || []).length : 0);
     });
     if (units !== 30) errs.push(tag + ' 真实动作必须 30，实际 ' + units);
+    // v165（家长 2026-10-29）：「敲键盘的拼写题不要在同一天，分布到每一天」
+    // 每天 3~6 道：少于 3 道等于这天没练打字，多于 6 道又变成一天猛敲。
+    let kb = 0;
+    d.modules.forEach((m) => { if (m.skill === 'keyboard') kb += (m.questions || []).length; });
+    if (kb < 3 || kb > 6) errs.push(tag + ' 键盘拼写题必须 3~6 道，实际 ' + kb);
+    // 听力题型至少 2 种：不许一整套全是「听原句选原句」
+    const lm = d.modules.filter((m) => m.type === 'listening');
+    lm.forEach((m) => {
+      const kinds = new Set();
+      (m.questions || []).forEach((q) => {
+        if (q.picture_options) kinds.add('选图');
+        else if (q.type === 'fill') kinds.add('听写填空');
+        else if (/听到的句子是什么/.test(String(q.question || ''))) kinds.add('复述');
+        else kinds.add('问答');
+      });
+      if (kinds.size < 2) errs.push(tag + '/listening 题型至少 2 种，实际只有 ' + [...kinds].join('/'));
+    });
     d.modules.forEach((m) => {
       const mt = tag + '/' + m.type;
       if (!m.id || ids.has(m.id)) errs.push(mt + ' 模块 id 重复或缺失: ' + m.id);
@@ -312,7 +339,14 @@ function validate(week, meta, allWeeks) {
           }
           if (m.type === 'listening') {
             if (!q.audio_text) errs.push(qt + ' 听力缺 audio_text');
-            if (q.options && q.options[q.answer] !== q.audio_text) errs.push(qt + ' 听力正确项必须等于 audio_text');
+            // v165（家长 2026-10-29）：听力不再只有「听原句、选一模一样的原句」
+            // 这一种。复述题才要求正确项逐字等于 audio_text；问答 / 选图 /
+            // 听写填空各有各的正确项，一刀切会把新题型全判成错。
+            const isEcho = /听到的句子是什么/.test(String(q.question || ''));
+            if (isEcho && q.options && q.options[q.answer] !== q.audio_text) errs.push(qt + ' 复述题正确项必须等于 audio_text');
+            if (q.picture_options && (!q.options || q.options.length !== 4)) errs.push(qt + ' 选图题必须 4 个图片选项');
+            if (q.type === 'fill' && !String(q.answer || '').trim()) errs.push(qt + ' 听力填空缺答案');
+            if (!q.options && q.type !== 'fill') errs.push(qt + ' 听力题既无选项也非填空');
           }
         });
       }
@@ -440,7 +474,7 @@ function main() {
     process.exit(2);
   }
   const targetIdx = meta.week - 1;
-  const others = existing.filter((_, i) => i !== targetIdx);
+  const others = existing.map((w, i) => ({ w: w, i: i })).filter((x) => x.i !== targetIdx);
 
   const errs = validate(week, meta, others);
   if (errs.length) {

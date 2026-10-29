@@ -11397,10 +11397,16 @@ const App = {
     }
     html += '<div class="q-text">' + this._stemHtml(q.question) + '</div>';
     if (q.options) {
+      // v165（家长 2026-10-29）：听力「听句子选图片」—— 选项是图片不是句子，
+      // 排成 2×2 大图格子，字号拉满，字母标号缩到角上。孩子听到 The train is
+      // leaving the platform 就去点 🚉，比在四行相似英文里挑一句像真正的听力。
+      var isPic = !!q.picture_options;
       // Options disabled until reading finishes（阅读题例外：立即可点，见上）
-      html += '<div class="q-options" id="qo-' + mi + '-' + qi + '"' + (isReading ? '' : ' style="opacity:0.4;pointer-events:none"') + '>';
+      html += '<div class="q-options' + (isPic ? ' pic-grid' : '') + '" id="qo-' + mi + '-' + qi + '"' + (isReading ? '' : ' style="opacity:0.4;pointer-events:none"') + '>';
       q.options.forEach((o, oi) => {
-        html += '<div class="q-option" onclick="App.selectAnswer(' + mi + ',' + qi + ',' + oi + ',' + dayIdx + ')">' + String.fromCharCode(65+oi) + '. ' + o + '</div>';
+        var head = String.fromCharCode(65+oi);
+        html += '<div class="q-option' + (isPic ? ' pic-opt' : '') + '" onclick="App.selectAnswer(' + mi + ',' + qi + ',' + oi + ',' + dayIdx + ')">'
+          + (isPic ? '<span class="pic-tag">' + head + '</span>' + o : head + '. ' + o) + '</div>';
       });
       html += '</div>';
       if (!isReading) {
@@ -11448,7 +11454,14 @@ const App = {
     var done = false;
     var open = function() { if (!done) { done = true; unlock(); } };
     this.autoSpeak(speakText, open);
-    setTimeout(open, 6000);
+    // v165：听对话、听短文比听一句长得多，6 秒兜底会把孩子放进去太早（还没
+    // 听完就能点，等于没听）。听力题按音频长度放长兜底：约 90ms/字符，最少
+    // 6 秒、最多 18 秒；正常播放完 onDone 会立刻解锁，这里只防朗读卡死。
+    var waitMs = 6000;
+    if (m && m.type === 'listening' && q.audio_text) {
+      waitMs = Math.max(6000, Math.min(18000, Math.round(String(q.audio_text).length * 90)));
+    }
+    setTimeout(open, waitMs);
   },
 
   replayQuestion(qId, mi, qi, dayIdx) {

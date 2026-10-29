@@ -55,7 +55,7 @@ section('1b. 阅读与完形的新结构');
     if (m.type === 'reading') readings.push({ w: wi, m });
     if (m.type === 'cloze') clozes.push({ w: wi, m });
   })));
-  ok(readings.length === 24, '阅读模块 24 篇（W1-W4 每周 4 篇 + W5/W6 承接）', readings.length);
+  ok(readings.length === 25, '阅读模块 25 篇（W1-W4 每周 4 篇 + W5 承接 + W6 五篇含周四剪纸）', readings.length);
   ok(readings.every(x => sentsEN(x.m.passage).length === 6), '每篇阅读课文 6 句');
   ok(readings.every(x => x.m.questions.length === 4), '每篇阅读 4 道题');
   ok(readings.every(x => sentsEN(x.m.passage).length === sentsCN(x.m.passage_cn).length),
@@ -127,10 +127,10 @@ section('2. app.js 按真实动作计数（行为级，W1 周一）');
 
 section('3. 版本号 = 155');
 {
-  ok(/app-version" content="164"/.test(htmlSrc), 'index.html app-version = 155');
-  ok((htmlSrc.match(/\?v=164/g) || []).length === 6, 'index.html 6 处 ?v=164', (htmlSrc.match(/\?v=164/g) || []).length);
-  ok(/amy-english-v164/.test(swSrc), 'sw.js 缓存名 v155');
-  ok(/var V = 164;/.test(swSrc), 'sw.js var V = 155');
+  ok(/app-version" content="165"/.test(htmlSrc), 'index.html app-version = 155');
+  ok((htmlSrc.match(/\?v=165/g) || []).length === 6, 'index.html 6 处 ?v=165', (htmlSrc.match(/\?v=165/g) || []).length);
+  ok(/amy-english-v165/.test(swSrc), 'sw.js 缓存名 v155');
+  ok(/var V = 165;/.test(swSrc), 'sw.js var V = 155');
 }
 
 console.log('\n———————————————');
