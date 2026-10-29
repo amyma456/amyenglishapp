@@ -360,7 +360,7 @@ function cssBlock(sel) {
                 questions: [], passage_cn: null };
     const h1 = App.renderClozeTransStep(m, 0, 0, 0);
     ok(/hold-zone/.test(h1), '★ 完形填空翻译屏的容器带 hold-zone');
-    ok(/按住说中文/.test(h1), '这屏确实有「按住说中文」按钮');
+    ok(/点一下说中文/.test(h1), '这屏确实有「点一下说中文」按钮');
   }
 
   console.log('\n' + (fail === 0 ? '全部通过 ✅' : (fail + ' 项没通过 ❌')));

@@ -7591,8 +7591,7 @@ const App = {
          + ' data-gate="' + this._gid('trsg', mi, si) + '"'
          + ' data-nudge="🔊 先听一遍这句英文，再用中文说意思"'
          + ' onpointerdown="App._translateSentence(event,' + mi + ',' + si + ')"'
-         + ' onpointerup="App._holdEnd(event)" onpointercancel="App._holdEnd(event)"'
-         + ' oncontextmenu="return false">按住说中文</button>';
+         + ' oncontextmenu="return false">🎤 点一下说中文</button>';
     html += '<div id="trs-status-' + mi + '-' + si + '"></div>';
     html += '<div id="trs-result-' + mi + '-' + si + '"></div>';
     html += '</div>';
@@ -7608,6 +7607,9 @@ const App = {
     const status = document.getElementById('trs-status-' + mi + '-' + si);
     if (btn) btn.classList.add('reading');
 
+    // v163 一键录音：第一下开始，再点一下结束。
+    if (this._holdKey === 'trs-' + mi + '-' + si) return this._holdEnd();
+    this._holdToggleNext = true;
     this._holdStart(ev, 'trs-' + mi + '-' + si, '这句的意思', status, function (out, text) {
       // 孩子说的是中文 —— 必须用多语种模型识别
       if (btn) btn.classList.remove('reading');
@@ -7843,14 +7845,13 @@ const App = {
     html += '<div class="sent-tip">👆 点单词看中文意思 · 点下面听整句英文</div>';
     html += '<div class="sent-listen">'
          + this._gateListenHtml(this._gid('cqtrsg', mi, si), shown, '🔊 听整句英文') + '</div>';
-    html += '<div class="sent-hint">先听一遍英文，想一想这句是什么意思，再按住说中文</div>';
+    html += '<div class="sent-hint">先听一遍英文，想一想这句是什么意思，再点一下按钮说中文（说完再点一下结束）</div>';
     // v137：同上，完形填空的逐句翻译也要"先听英文，再说中文"。
     html += '<button class="word-read-btn hold-target gate-locked" id="cqtrs-btn-' + mi + '-' + si + '"'
          + ' data-gate="' + this._gid('cqtrsg', mi, si) + '"'
          + ' data-nudge="🔊 先听一遍这句英文，再用中文说意思"'
          + ' onpointerdown="App._translateClozeSentence(event,' + mi + ',' + si + ')"'
-         + ' onpointerup="App._holdEnd(event)" onpointercancel="App._holdEnd(event)"'
-         + ' oncontextmenu="return false">按住说中文</button>';
+         + ' oncontextmenu="return false">🎤 点一下说中文</button>';
     html += '<div id="cqtrs-status-' + mi + '-' + si + '"></div>';
     html += '<div id="cqtrs-result-' + mi + '-' + si + '"></div>';
     html += '</div>';
@@ -7899,6 +7900,9 @@ const App = {
     const status = document.getElementById('cqtrs-status-' + mi + '-' + si);
     if (btn) btn.classList.add('reading');
 
+    // v163 一键录音：第一下开始，再点一下结束。
+    if (this._holdKey === 'cqtrs-' + mi + '-' + si) return this._holdEnd();
+    this._holdToggleNext = true;
     this._holdStart(ev, 'cqtrs-' + mi + '-' + si, '这句的意思', status, function(out, text) {
       if (btn) btn.classList.remove('reading');
       if (!out) return;
@@ -8267,8 +8271,7 @@ const App = {
     html += '<button class="word-read-btn hold-target gate-locked" data-gate="' + gid + '"'
          + ' id="sent-btn-' + mi + '-' + si + '"'
          + ' onpointerdown="App._readSentence(event,' + mi + ',' + si + ')"'
-         + ' onpointerup="App._holdEnd(event)" onpointercancel="App._holdEnd(event)"'
-         + ' oncontextmenu="return false">按住跟读</button>';
+         + ' oncontextmenu="return false">🎤 点一下跟读</button>';
     html += '<div id="sent-status-' + mi + '-' + si + '"></div>';
     html += '<div id="sent-result-' + mi + '-' + si + '"></div>';
     html += '</div>';
@@ -8294,6 +8297,9 @@ const App = {
     const status = document.getElementById('sent-status-' + mi + '-' + si);
     if (btn) btn.classList.add('reading');
 
+    // v163 一键录音：第一下开始，再点一下结束。
+    if (this._holdKey === 'sent-' + mi + '-' + si) return this._holdEnd();
+    this._holdToggleNext = true;
     this._holdStart(ev, 'sent-' + mi + '-' + si, '这句话', status, function(out, text) {
       if (btn) btn.classList.remove('reading');
       if (!out) return;
@@ -9623,10 +9629,14 @@ const App = {
   // 的毫秒数。字母跟读是一段 0.5 秒的孤立音，孩子按着不知道什么时候该松手，
   // 一直按着又"不耐烦"（家长原话）。开了它，孩子读完松手就行、甚至不松手
   // 也行 —— 系统听见声音之后再安静够久，自己收尾进评分。
-  _holdStart(ev, key, promptLabel, statusEl, onDone, needsTranscript, lang, asrHint, asrPrefer, autoStop) {
+  _holdStart(ev, key, promptLabel, statusEl, onDone, needsTranscript, lang, asrHint, asrPrefer, autoStop, tapToggle) {
+    // v163：调用方也可以在调用前置 _holdToggleNext = true（比加第 11 参省事）。
+    if (this._holdToggleNext) { tapToggle = true; this._holdToggleNext = false; }
     if (ev) {
       ev.preventDefault();
-      if (ev.pointerId !== undefined && ev.currentTarget.setPointerCapture) {
+      // v163：一键录音模式（点一下开始、再点一下结束）下**不**捕获指针 ——
+      // 捕获后手指抬起就触发 lostpointercapture → 立刻收尾，等于还是"按住"。
+      if (!tapToggle && ev.pointerId !== undefined && ev.currentTarget.setPointerCapture) {
         try {
           ev.currentTarget.setPointerCapture(ev.pointerId);
           // v129：被浏览器抢走指针时（弹了复制菜单 / 切应用 / 手势返回），
@@ -9668,13 +9678,16 @@ const App = {
     // 没有自动收尾的屏（"按住说中文"、"按住跟读"…）：松手才是唯一的收尾信号。
     // v129：上限从 15 秒收到 HOLD_MAX_MS。指针真被浏览器抢走（弹了复制菜单），
     // 靠 lostpointercapture 兜底；这条超时是最后一道，也别让孩子等太久。
-    var capMs = stopOn ? this.AUTO_STOP_CAP_MS : this.HOLD_MAX_MS;
+    // v163：一键录音的屏由孩子自己点停止 —— 上限放到 2 分钟，
+    // 只防"忘了关"。其余屏维持 HOLD_MAX_MS。
+    var capMs = tapToggle ? 120000 : (stopOn ? this.AUTO_STOP_CAP_MS : this.HOLD_MAX_MS);
+    this._holdWasToggle = !!tapToggle;
     var spoke = false, lastLoudAt = 0;
     var t0 = Date.now();
 
     var setStatus = function(html) { if (statusEl) statusEl.innerHTML = html; };
     setStatus('<div class="tap-rec"><span class="tap-dot"></span>正在录「' + promptLabel + '」'
-            + '<span class="tap-hint">松开结束</span>'
+            + '<span class="tap-hint">' + (tapToggle ? '读完再点一下结束' : '松开结束') + '</span>'
             + '<div class="rec-wave"><div class="rec-wave-bar" id="tap-wave" style="width:0%"></div></div></div>');
 
     if (!Recorder.supported()) {
@@ -9749,7 +9762,7 @@ const App = {
     // "录到的音频"这一关：真误触的录音里没有人声，识别为空 → 走"没听清"。
     if (heldMs < 140) {
       try { await Recorder.stop(); } catch (e) {}
-      if (statusEl) statusEl.innerHTML = '<div class="tap-result bad">太快了，按住读一下再松手</div>';
+      if (statusEl) statusEl.innerHTML = '<div class="tap-result bad">' + (this._holdWasToggle ? '太快了，点一下开始读，读完再点一下结束' : '太快了，按住读一下再松手') + '</div>';
       return;
     }
 
@@ -10217,7 +10230,7 @@ const App = {
 
     let html = '<div class="writing-read">';
     html += '<div class="wr-head">🎤 朗读全文</div>';
-    html += '<div class="wr-sub">点单词看中文意思，点 🔊 先听一遍，再按住按钮跟读。读对全部 '
+    html += '<div class="wr-sub">点单词看中文意思，点 🔊 先听一遍，再点一下按钮跟读（读完再点一下结束）。读对全部 '
          + sents.length + ' 句才能进入下一题。</div>';
     html += '<div class="wr-progress" id="wr-progress-' + mi + '"></div>';
     sents.forEach((s, si) => {
@@ -10235,8 +10248,7 @@ const App = {
       html += '<button class="word-read-btn hold-target gate-locked" data-gate="' + gid + '"'
            + ' id="wr-btn-' + mi + '-' + si + '"'
            + ' onpointerdown="App._readWritingSentence(event,' + mi + ',' + si + ')"'
-           + ' onpointerup="App._holdEnd(event)" onpointercancel="App._holdEnd(event)"'
-           + ' oncontextmenu="return false">' + (ok ? '重读这句' : '按住跟读') + '</button>';
+           + ' oncontextmenu="return false">' + (ok ? '重读这句' : '🎤 点一下跟读') + '</button>';
       html += '<div id="wr-status-' + mi + '-' + si + '"></div>';
       html += '<div id="wr-result-' + mi + '-' + si + '"></div>';
       html += '</div>';
@@ -10259,6 +10271,9 @@ const App = {
     const status = document.getElementById('wr-status-' + mi + '-' + si);
     if (btn) btn.classList.add('reading');
 
+    // v163 一键录音：第一下开始，再点一下结束。
+    if (this._holdKey === 'wr-' + mi + '-' + si) return this._holdEnd();
+    this._holdToggleNext = true;
     this._holdStart(ev, 'wr-' + mi + '-' + si, '这一句', status, function(out, text) {
       if (btn) btn.classList.remove('reading');
       if (!out) return;
@@ -13317,8 +13332,10 @@ const App = {
       if (a >= toks[k].a && b <= toks[k].b) { idx = k; break; }
     }
     if (idx < 0) return null;
-    // 短语可能从当前词往前一两个词开始
-    for (let back = 2; back >= 0; back--) {
+    // 短语可能从当前词往前一两个词开始。v163：短语最长放到 6 词，
+    // 往回看也要跟着放到 5 个词 —— 不然点 on the other hand 的 hand
+    // 只会查到一个 hand，还是"短语被漏掉"。
+    for (let back = 5; back >= 0; back--) {
       const start = idx - back;
       if (start < 0) continue;
       const p = WordHelp.phraseAt(toks.map(t => t.w), start);
@@ -13405,9 +13422,11 @@ const App = {
     const forms = (typeof WordHelp !== 'undefined') ? WordHelp.formsOf(word) : [];
 
     // 点词即读：孩子点这个词多半就是不认识，先让他听见怎么念。
-    // 走 CF 的母语音色（v98）：查词是任意单词，不在静态朗读表里 —— 表内那些
-    // 单词的示范音已经换成 CF 音色了，这里跟着走，两处听起来才是同一个人。
-    this.speak(word, { prefer: 'cf' });
+    // v163：家长 2026-10-29「点单词正在查、要等网络」——读音改为本地合成
+    // 优先（零网络、点下去就响），本机没有英文语音时 1.2 秒内自动落回
+    // 原来的网络通道（CF 母语音色）。字母仍走有道（v91 红线不变）。
+    if (this._speakWordInstant) this._speakWordInstant(word);
+    else this.speak(word, { prefer: 'cf' });
 
     const info = await Api.dict(word);
     if (this._lookupWord !== word.toLowerCase()) return;   // 已经点了别的词
@@ -13466,6 +13485,46 @@ App.init();
 // 这个标记让登录按钮知道"点下去有没有人接"：还没就绪就提示等一下，
 // 而不是抛 ReferenceError 让人以为按钮坏了。
 window.__appReady = true;
+
+// ===== 点词秒出读音（v163，家长 2026-10-29）==============================
+// 单词（非字母）先用设备本地 speechSynthesis 读——零网络、点下去就响；
+// 本机没有英文语音（onstart 不来 / onerror）时 1.2 秒内自动落回原来的
+// 网络通道（CF 母语音色）。字母仍走有道（v91 红线：孤立字母只有有道准）。
+App._speakWordInstant = function (word) {
+  const w = String(word || '').trim();
+  if (!w) return;
+  if (/^[a-z]$/i.test(w)) { App.speak(w); return; }
+  try {
+    if (window.speechSynthesis) {
+      let started = false, fellBack = false;
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(w);
+      u.lang = 'en-US';
+      u.rate = 0.85;
+      try {
+        const voices = window.speechSynthesis.getVoices() || [];
+        const v = voices.find(function (x) { return x.lang && x.lang.indexOf('en') === 0; });
+        if (v) u.voice = v;
+      } catch (e) {}
+      u.onstart = function () { started = true; };
+      u.onerror = function () {
+        if (fellBack) return;
+        fellBack = true;
+        App.speak(w, { prefer: 'cf' });
+      };
+      window.speechSynthesis.speak(u);
+      setTimeout(function () {
+        if (!started && !fellBack) {
+          try { window.speechSynthesis.cancel(); } catch (e) {}
+          fellBack = true;
+          App.speak(w, { prefer: 'cf' });
+        }
+      }, 1200);
+      return;
+    }
+  } catch (e) {}
+  App.speak(w, { prefer: 'cf' });
+};
 
 // 点词查义：全局代理，页面上任何英文单词点一下都有音标、中文意思和读音。
 // 挂一次就够，跟路由/渲染无关。

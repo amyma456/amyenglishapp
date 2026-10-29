@@ -380,7 +380,7 @@ console.log('\n=== 6. 渲染出来的屏里也没有 blank（抓真实 HTML）==
     const transHtml = A.renderClozeTransStep(m, TODAY.mi, 3, TODAY.day);
     ok(!hasBlank(stripAttrs(transHtml)) && !hasUnderscore(transHtml),
        '翻译屏的 HTML 里也没有 blank / ___');
-    ok(/按住说中文/.test(transHtml), '翻译屏有"按住说中文"按钮');
+    ok(/点一下说中文/.test(transHtml), '翻译屏有"点一下说中文"按钮（v163 一键录音）');
     ok(/sent-words/.test(transHtml), '翻译屏的句子是可点单词（点词看中文意思）');
   } else {
     ok(false, '找不到今天的完形填空模块，跳过渲染检查');

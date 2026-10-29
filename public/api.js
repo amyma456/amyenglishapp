@@ -819,6 +819,151 @@ const WordHelp = {
     ['do homework', '做作业'], ['watch TV', '看电视'],
     ['play football', '踢足球'], ['play basketball', '打篮球'],
     ['play the piano', '弹钢琴'], ['play the guitar', '弹吉他'],
+
+    // ===== v163：家长说"短语分化不够精细，有些还是会被漏掉" =====
+    // 下表按类型补齐：动词搭配 → be 结构 → 介词短语 → 量词/连接 → 课本题材。
+    // 变形（gave up / is good at / days off…）由 _buildPhraseIdx 自动生成，不手写。
+    ['get ready to', '准备好做…'], ['get dressed', '穿好衣服'],
+    ['get together', '聚会'], ['get lost', '迷路'], ['get home', '到家'],
+    ['get to', '到达'], ['get there', '到那里'], ['get worse', '变得更糟'],
+    ['take place', '发生，举行'], ['take a photo', '拍照'],
+    ['take photos', '拍照'], ['take a walk', '散步'],
+    ['take a bus', '乘公交车'], ['take a train', '乘火车'],
+    ['take care', '保重'], ['take it easy', '别紧张，放轻松'],
+    ['take notes', '记笔记'], ['take a rest', '休息一下'],
+    ['take a trip', '去旅行'], ['take turns', '轮流'],
+    ['make a mistake', '犯错误'], ['make sure', '确保'],
+    ['make a decision', '做决定'], ['make a plan', '制订计划'],
+    ['make a cake', '做蛋糕'], ['make a phone call', '打电话'],
+    ['make dumplings', '包饺子'], ['make money', '挣钱'],
+    ['make use of', '利用'],
+    ['do one\'s best', '尽力'], ['do sports', '做运动'],
+    ['do housework', '做家务'], ['do the dishes', '洗碗'],
+    ['do a good job', '干得好'], ['do some reading', '读点书'],
+    ['have a look', '看一看'], ['have a rest', '休息一下'],
+    ['have breakfast', '吃早饭'], ['have lunch', '吃午饭'],
+    ['have dinner', '吃晚饭'], ['have a try', '试一试'],
+    ['have a party', '开派对'], ['have a meeting', '开会'],
+    ['have a cold', '感冒'], ['have a good day', '过得愉快'],
+    ['keep healthy', '保持健康'], ['keep fit', '保持健康'],
+    ['keep quiet', '保持安静'], ['keep in touch with', '与…保持联系'],
+    ['keep away from', '远离'],
+    ['come out', '出来；出版'], ['come over', '过来'],
+    ['come up with', '想出'], ['come along', '一起来'],
+    ['go to bed', '上床睡觉'], ['go to school', '去上学'],
+    ['go to work', '去上班'], ['go abroad', '出国'],
+    ['go boating', '去划船'], ['go skating', '去滑冰'],
+    ['go camping', '去露营'], ['go hiking', '去远足'],
+    ['go on a trip', '去旅行'], ['go bad', '变坏'],
+    ['turn around', '转身'], ['turn into', '变成'],
+    ['put out', '扑灭'], ['put in', '放进；投入'],
+    ['look around', '四处看'], ['look the same', '看起来一样'],
+    ['run away', '跑开'], ['run after', '追赶'],
+    ['run into', '偶然遇到'], ['walk to', '走向'],
+    ['walk along', '沿着…走'], ['walk around', '四处走走'],
+    ['lie down', '躺下'], ['fall down', '跌倒'],
+    ['fall asleep', '睡着'], ['fall behind', '落后'],
+    ['throw away', '扔掉'], ['bring back', '带回来'],
+    ['hold on', '等一下；坚持'], ['try on', '试穿'],
+    ['switch on', '打开（电器）'], ['switch off', '关掉（电器）'],
+    ['smile at', '对…微笑'], ['point at', '指着'],
+    ['point out', '指出'], ['pay attention to', '注意'],
+    ['be good for', '对…有益'], ['be bad for', '对…有害'],
+    ['be famous for', '因…而闻名'], ['be known as', '被称为'],
+    ['be made from', '由…制成'], ['be made in', '在…制造'],
+    ['be used for', '用于'], ['be used to', '习惯于'],
+    ['be able to', '能够'], ['be going to', '打算'],
+    ['be about to', '即将'], ['be sure to', '一定'],
+    ['be ready for', '为…做好准备'], ['be ready to', '准备好做…'],
+    ['be busy with', '忙于'], ['be covered with', '被…覆盖'],
+    ['be filled with', '充满'], ['be angry with', '生…的气'],
+    ['be strict with', '对…严格'], ['be friendly to', '对…友好'],
+    ['be kind to', '对…友善'], ['be polite to', '对…有礼貌'],
+    ['be helpful to', '对…有帮助'], ['be important to', '对…重要'],
+    ['be fond of', '喜欢'], ['be tired of', '厌倦'],
+    ['be afraid to', '不敢'], ['be free', '有空'],
+    ['be over', '结束'], ['be different from', '与…不同'],
+    ['used to', '过去常常'], ['ought to', '应该'],
+    ['had better', '最好'], ['would rather', '宁愿'],
+    ['would like to', '想要'],
+    ['at first', '起初'], ['at least', '至少'], ['at most', '最多'],
+    ['at present', '目前'], ['at the moment', '此刻'],
+    ['at the end of', '在…末尾'], ['at the beginning of', '在…开始'],
+    ['at the age of', '在…岁时'], ['at home', '在家'],
+    ['at school', '在学校'], ['at work', '在上班'],
+    ['at night', '在夜里'], ['at noon', '在中午'],
+    ['at weekends', '在周末'], ['at the top of', '在…顶部'],
+    ['at the bottom of', '在…底部'], ['at the foot of', '在…脚下'],
+    ['at the same time', '同时'], ['at the gate', '在门口'],
+    ['in the morning', '在上午'], ['in the afternoon', '在下午'],
+    ['in the evening', '在晚上'], ['in the middle of', '在…中间'],
+    ['in fact', '事实上'], ['in future', '今后'],
+    ['in the future', '在未来'], ['in public', '当众'],
+    ['in trouble', '处于困境'], ['in danger', '处于危险中'],
+    ['in silence', '沉默地'], ['in a hurry', '匆忙'],
+    ['in common', '共同的'], ['in short', '简言之'],
+    ['in order to', '为了'], ['in the front of', '在…前部'],
+    ['in the world', '在世界上'], ['in English', '用英语'],
+    ['in class', '在课堂上'], ['in hospital', '住院'],
+    ['in the sky', '在天空中'], ['in the past', '在过去'],
+    ['in a word', '总之'], ['in the open air', '在户外'],
+    ['on foot', '步行'], ['on sale', '出售；打折'],
+    ['on holiday', '在度假'], ['on business', '出差'],
+    ['on the phone', '通电话'], ['on the internet', '在网上'],
+    ['on the left', '在左边'], ['on the right', '在右边'],
+    ['on the way', '在路上'], ['on the way to', '在去…的路上'],
+    ['on weekends', '在周末'], ['on the other hand', '另一方面'],
+    ['on purpose', '故意'], ['on show', '在展出'],
+    ['on the farm', '在农场'], ['on the playground', '在操场上'],
+    ['on the second floor', '在二楼'],
+    ['for example', '例如'], ['for free', '免费'],
+    ['for sure', '肯定'], ['for a while', '一会儿'],
+    ['for ever', '永远'], ['for the first time', '第一次'],
+    ['for a long time', '很长时间'], ['for hours', '好几个小时'],
+    ['by the way', '顺便说一下'], ['by bus', '乘公交车'],
+    ['by bike', '骑自行车'], ['by car', '乘汽车'],
+    ['by train', '乘火车'], ['by plane', '乘飞机'],
+    ['by subway', '乘地铁'], ['by ship', '乘船'],
+    ['by hand', '手工'], ['by mistake', '错误地'],
+    ['by the end of', '到…末为止'],
+    ['with the help of', '在…帮助下'], ['with pleasure', '乐意地'],
+    ['day by day', '一天天'], ['one by one', '一个接一个'],
+    ['side by side', '并排'], ['face to face', '面对面'],
+    ['step by step', '一步步'], ['little by little', '逐渐地'],
+    ['more and more', '越来越多'], ['less and less', '越来越少'],
+    ['better and better', '越来越好'], ['sooner or later', '迟早'],
+    ['now and then', '不时'], ['here and there', '到处'],
+    ['first of all', '首先'], ['so far', '到目前为止'],
+    ['as usual', '像往常一样'], ['as if', '好像'],
+    ['as long as', '只要'], ['as well as', '也，和'],
+    ['as soon as possible', '尽快'],
+    ['all over the world', '全世界'], ['all kinds of', '各种各样的'],
+    ['different kinds of', '不同种类的'], ['a kind of', '一种'],
+    ['plenty of', '大量的'], ['a number of', '许多'],
+    ['the number of', '…的数量'], ['a few', '几个'],
+    ['a little', '一点儿'], ['a pair of', '一双'],
+    ['a piece of', '一片；一条'], ['a cup of', '一杯'],
+    ['a glass of', '一玻璃杯'], ['a bottle of', '一瓶'],
+    ['a set of', '一套'], ['each other', '互相'],
+    ['one another', '互相'], ['so many', '这么多'],
+    ['so much', '这么多'], ['too many', '太多'],
+    ['no longer', '不再'], ['not any more', '不再'],
+    ['the Great Wall', '长城'], ['the Palace Museum', '故宫博物院'],
+    ['the Spring Festival', '春节'], ['the Mid-Autumn Festival', '中秋节'],
+    ['the Dragon Boat Festival', '端午节'],
+    ['high-speed train', '高铁'], ['mobile phone', '手机'],
+    ['ice cream', '冰淇淋'], ['fly a kite', '放风筝'],
+    ['ride a bike', '骑自行车'], ['draw a picture', '画画'],
+    ['sing a song', '唱歌'], ['read a book', '读书'],
+    ['listen to music', '听音乐'], ['watch a movie', '看电影'],
+    ['after school', '放学后'], ['before class', '上课前'],
+    ['next week', '下周'], ['last year', '去年'],
+    ['this morning', '今天早上'], ['the day before yesterday', '前天'],
+    ['the day after tomorrow', '后天'], ['how long', '多长（问长度／时间）'],
+    ['how far', '多远'], ['how often', '多久一次'],
+    ['how much', '多少（不可数／价格）'], ['how many', '多少（可数）'],
+    // there be：一条就够，_buildPhraseIdx 会生成 there is/are/was/were
+    ['there is', '有（某处存在）'],
   ],
 
   _formIdx: null,
@@ -965,20 +1110,49 @@ const WordHelp = {
   },
 
   // ===== 短语 =====
+  // v163：家长「短语分化不够精细，有些还是会被漏掉」。原来只给首词是动词的
+  // 条目生成形态，名词开头的（day off → days off）、one's 占位（do one's best
+  // → do my best）、be 的各种人称都漏。现在四类统一生成：
+  //   ① be 开头 → be/is/am/are/was/were/been/being
+  //   ② 动词开头 → 原形/过去式/过去分词/现在分词/三单
+  //   ③ 名词开头 → 单数 + 复数（不规则复数查 IRREG_N 反表）
+  //   ④ 含 one's 的 → my/your/his/her/our/their
   _buildPhraseIdx() {
     if (this._phraseIdx) return this._phraseIdx;
     const idx = {};
     const self = this;
+    const POSS = ['my', 'your', 'his', 'her', 'our', 'their'];
+
+    // 名词复数：先查不规则反表，再按规则加 -s/-es/-ies
+    const pluralOf = function (n) {
+      const w = String(n || '').toLowerCase();
+      if (!w) return null;
+      const rev = self._buildNounPluralRev && self._buildNounPluralRev();
+      if (rev && rev[w]) return rev[w];
+      if (/(s|x|ch|sh)$/.test(w)) return w + 'es';
+      if (/[^aeiou]y$/.test(w)) return w.slice(0, -1) + 'ies';
+      if (/f$/.test(w)) return w.slice(0, -1) + 'ves';
+      return w + 's';
+    };
+
     this.PHRASES.forEach(function (p) {
       const en = p[0], zh = p[1];
       const words = en.split(' ');
       const head = words[0];
       const rest = words.slice(1).join(' ');
-      const forms = [];
+      let forms = [];
+
       if (head === 'be') {
         ['be', 'is', 'am', 'are', 'was', 'were', 'been', 'being'].forEach(function (f) {
           forms.push(rest ? f + ' ' + rest : f);
         });
+      } else if (head === 'there') {
+        // there is / there are / there was / there were + 其余部分
+        const tail = words.slice(2).join(' ');
+        ['is', 'are', 'was', 'were'].forEach(function (f) {
+          forms.push('there ' + f + (tail ? ' ' + tail : ''));
+        });
+        forms.push(en);
       } else {
         const vf = self.verbForms(head);
         if (vf) {
@@ -990,8 +1164,23 @@ const WordHelp = {
           });
         } else {
           forms.push(en);
+          // 名词开头的短语：补一个复数形态（day off → days off）
+          const pl = pluralOf(head);
+          if (pl && pl !== head && rest) forms.push(pl + ' ' + rest);
         }
       }
+
+      // one's 占位：do one's best → do my best / do his best …
+      const expanded = [];
+      forms.forEach(function (f) {
+        if (f.indexOf("one's ") >= 0) {
+          POSS.forEach(function (ps) { expanded.push(f.replace("one's ", ps + ' ')); });
+        } else {
+          expanded.push(f);
+        }
+      });
+      forms = expanded;
+
       forms.forEach(function (f) {
         const k = f.toLowerCase().replace(/\s+/g, ' ');
         if (!idx[k]) idx[k] = { en: en, zh: zh, surface: f };
@@ -1001,16 +1190,40 @@ const WordHelp = {
     return idx;
   },
 
+  // 不规则复数反表（mice → mouse），给名词开头的短语用。
+  _buildNounPluralRev() {
+    if (this._pluralRev) return this._pluralRev;
+    const rev = {};
+    const src = this.IRREG_N || {};
+    Object.keys(src).forEach(function (base) {
+      const pl = String(src[base] || '').toLowerCase();
+      if (pl && !rev[pl]) rev[pl] = base;
+    });
+    this._pluralRev = rev;
+    return rev;
+  },
+
   // 一串词里从第 i 个位置开始，最长能匹配到哪个短语。
   // tokens: 已经拆好的单词数组（不含标点）
   phraseAt(tokens, i) {
     const idx = this._buildPhraseIdx();
-    const maxLen = 4;
+    // v163：最长 6 词（as soon as possible / on the other hand / in the middle of）
+    const maxLen = 6;
     for (let len = maxLen; len >= 2; len--) {
       if (i + len > tokens.length) continue;
       const joined = tokens.slice(i, i + len).join(' ').toLowerCase();
       const hit = idx[joined];
       if (hit) return { len: len, en: hit.en, zh: hit.zh, surface: tokens.slice(i, i + len).join(' ') };
+    }
+    // v163：代词插进短语中间（pick it up / take them off / put it on）。
+    // 孩子点 "it" 也要能拿到 pick up，别只给一个 it。
+    const PRON = ['it', 'them', 'him', 'her', 'me', 'us', 'you'];
+    if (i + 2 < tokens.length && PRON.indexOf(String(tokens[i + 1] || '').toLowerCase()) >= 0) {
+      const k = (tokens[i] + ' ' + tokens[i + 2]).toLowerCase();
+      const h2 = idx[k];
+      if (h2) {
+        return { len: 3, en: h2.en, zh: h2.zh, surface: tokens.slice(i, i + 3).join(' ') };
+      }
     }
     return null;
   },
@@ -2078,21 +2291,66 @@ const Api = {
   _dictMem: {},
   _dictKey(word) { return 'amy_dict_' + word; },
 
+  // 本地词表：把题库里全部词汇卡的 word → {phon, zh} 一次性建索引。
+  // 家长 2026-10-29：点单词不许再"正在查/等网络"——课程内的词本地秒出，
+  // 查不到的（课外词）才走 /api/dict 网络查询。
+  _localDict: null,
+  _localDictBuild() {
+    if (this._localDict) return this._localDict;
+    const map = {};
+    try {
+      const weeks = (typeof HOMEWORK_WEEKS !== 'undefined') ? HOMEWORK_WEEKS
+        : (typeof HOMEWORK_DATA !== 'undefined' ? [HOMEWORK_DATA] : []);
+      weeks.forEach(wk => {
+        (wk || []).forEach(day => {
+          (day.modules || []).forEach(m => {
+            (m.words || []).forEach(w => {
+              if (w && w.word && w.meaning && !map[w.word.toLowerCase()]) {
+                map[w.word.toLowerCase()] = { word: w.word.toLowerCase(), phon: String(w.phonetic || '').replace(/^\/|\/$/g, ''), zh: w.meaning, ok: true, local: true, at: Date.now() };
+              }
+            });
+          });
+        });
+      });
+    } catch (e) { console.warn('local dict build failed:', e); }
+    this._localDict = map;
+    return map;
+  },
+
   async dict(word) {
     const w = String(word || '').trim().toLowerCase().replace(/^[^a-z]+|[^a-z]+$/g, '');
     if (!w || !/^[a-z][a-z'\-]*$/.test(w)) return null;
     if (this._dictMem[w]) return this._dictMem[w];
+    // ① 本地词表 —— 课程内的词零网络、零等待。
+    const local = this._localDictBuild()[w];
+    if (local) { this._dictMem[w] = local; return local; }
+    // ② 变形词 → 原型在本地词表里（felt → feel）。
     try {
-      const raw = localStorage.getItem(this._dictKey(w));
-      if (raw) {
-        const cached = JSON.parse(raw);
-        // 空结果也缓存过 —— 但别让它永久占坑，7 天后重查。
-        if (cached && (cached.ok || Date.now() - (cached.at || 0) < 7 * 864e5)) {
-          this._dictMem[w] = cached;
-          return cached;
+      if (typeof WordHelp !== 'undefined') {
+        const inf = WordHelp.inflectionOf(w);
+        if (inf && inf.base) {
+          const baseLocal = this._localDictBuild()[inf.base];
+          if (baseLocal) {
+            const out = { word: w, phon: baseLocal.phon, zh: baseLocal.zh, ok: true, local: true, at: Date.now() };
+            this._dictMem[w] = out;
+            return out;
+          }
         }
       }
     } catch (e) {}
+    if (typeof localStorage !== 'undefined') {
+      try {
+        const raw = localStorage.getItem(this._dictKey(w));
+        if (raw) {
+          const cached = JSON.parse(raw);
+          // 空结果也缓存过 —— 但别让它永久占坑，7 天后重查。
+          if (cached && (cached.ok || Date.now() - (cached.at || 0) < 7 * 864e5)) {
+            this._dictMem[w] = cached;
+            return cached;
+          }
+        }
+      } catch (e) {}
+    }
     try {
       const res = await fetch(this.DICT_URL + '?word=' + encodeURIComponent(w));
       if (!res.ok) throw new Error('HTTP ' + res.status);

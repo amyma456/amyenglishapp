@@ -44,9 +44,10 @@ console.log('== 1. 录音起手不再丢开头（prime 预热 + 接管） ==');
 
 console.log('== 2. 按下那一刻就开录 ==');
 {
-  const hs = appSrc.slice(appSrc.indexOf('  _holdStart(ev, key, promptLabel'), appSrc.indexOf('  _holdStart(ev, key, promptLabel') + 3600);
+  // v163：_holdStart 头部加了一键录音（tapToggle）分支，函数体变长 —— 窗口放宽到 5200。
+  const hs = appSrc.slice(appSrc.indexOf('  _holdStart(ev, key, promptLabel'), appSrc.indexOf('  _holdStart(ev, key, promptLabel') + 5200);
   const flat = hs.replace(/\s+/g, ' ');
-  const primed = appSrc.slice(appSrc.indexOf('  _holdStart(ev, key, promptLabel'), appSrc.indexOf('  _holdStart(ev, key, promptLabel') + 2200);
+  const primed = appSrc.slice(appSrc.indexOf('  _holdStart(ev, key, promptLabel'), appSrc.indexOf('  _holdStart(ev, key, promptLabel') + 3000);
   ok(/Recorder\.prime\(\)/.test(primed), '手指一按就调 Recorder.prime()（预热）');
   ok(/typeof Recorder\.prime === 'function'/.test(hs), '老环境没有 prime 也不会抛错');
   ok(/\.then\(function \(\) \{ started = true; return begin\(\); \}\)/.test(flat),
