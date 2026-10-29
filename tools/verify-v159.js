@@ -26,9 +26,9 @@ ok(appSrc.includes('getDayDateLabel(dayIdx, weekOffset) {'), 'getDayDateLabel �
 ok(appSrc.includes('getWeekDates(weekOffset || 0)[dayIdx]'), 'getWeekDates 取日期逻辑未动');
 
 // 3. 版本号 v159
-ok(htmlSrc.includes('app-version" content="168"'), 'index.html app-version=159');
-ok(/\.js\?v=168/.test(htmlSrc), 'index.html 资源 ?v=159');
-ok(swSrc.includes('amy-english-v168') && /var V = 168;/.test(swSrc), 'sw.js 版本 159');
+ok(htmlSrc.includes('app-version" content="169"'), 'index.html app-version=159');
+ok(/\.js\?v=169/.test(htmlSrc), 'index.html 资源 ?v=159');
+ok(swSrc.includes('amy-english-v169') && /var V = 169;/.test(swSrc), 'sw.js 版本 159');
 ok(!/content="158"|\?v=158|amy-english-v158/.test(htmlSrc + swSrc), '无 158 残留');
 
 console.log('\n结果: ' + pass + ' 通过, ' + fail + ' 失败');

@@ -9982,15 +9982,25 @@ const App = {
 
     html += '<div class="card mb-16"><div class="card-title fs-12">📝 完成作文（填入空白处）</div>';
     html += '<div class="writing-essay">';
-    let text = m.template;
+    // v169（家长 2026-10-30）：作文正文也要「点词听意思」，短语要带「短语」
+    // 标识 —— "Every morning / in the park / junk food / make me" 这类常见
+    // 短语一个都不能漏。原来模板是纯文本，孩子对着整段蒙。现在按 {{n}} 把
+    // 模板切开：文字段走 _wordSpans（单词包成点词盒、表内短语自动合并成
+    // 带「短语」角标的短语盒），空位照旧替换成输入框。老师端学生端同一份。
     const fillOpen = this.isTeacher() || this._kwAllPaired(mi, m);
+    const inputs = {};
     m.blanks.forEach((b, bi) => {
       const v = prevVal(bi);
-      text = text.replace('{{' + b.id + '}}', '<input type="text" class="writing-blank-input' + (fillOpen ? '' : ' locked') + '" data-blank="' + b.id + '" data-answer="' + b.answer + '" value="' + v + '" placeholder="' + b.hint_cn + '"'
+      inputs[b.id] = '<input type="text" class="writing-blank-input' + (fillOpen ? '' : ' locked') + '" data-blank="' + b.id + '" data-answer="' + b.answer + '" value="' + v + '" placeholder="' + b.hint_cn + '"'
         + (fillOpen ? '' : ' readonly onclick="App._writingLockedClick(' + mi + ')"')
-        + ' autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" style="border:none;border-bottom:2px solid var(--primary);text-align:center;color:var(--primary);font-weight:600;width:120px;background:transparent;font-size:14px">');
+        + ' autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" style="border:none;border-bottom:2px solid var(--primary);text-align:center;color:var(--primary);font-weight:600;width:120px;background:transparent;font-size:14px">';
     });
-    html += text;
+    const self = this;
+    String(m.template).split(/(\{\{[0-9A-Za-z_-]+\}\})/).forEach(function (seg) {
+      const mm = /^\{\{([0-9A-Za-z_-]+)\}\}$/.exec(seg || '');
+      if (mm) html += (inputs[mm[1]] != null) ? inputs[mm[1]] : self._escHtml(seg);
+      else html += seg ? self._wordSpans(seg) : '';
+    });
     html += '</div></div>';
     html += '<button class="btn btn-primary" onclick="App.submitWriting(' + mi + ',' + dayIdx + ')">提交批改</button>';
     html += '<div id="writing-result-' + mi + '">' + this._writingReviewHtml(m, mi, dayIdx) + '</div>';
