@@ -1,0 +1,225 @@
+{
+  "day_cn": "周三",
+  "day_en": "Wednesday",
+  "theme_cn": "AI口语 + 高频词汇 + 阅读理解",
+  "speaking": [
+    {
+      "sentence": "What is your favourite festival? Tell me about it.",
+      "sentence_cn": "你最喜欢的节日是什么？说一说。",
+      "options": [
+        "My favourite festival is the Spring Festival, because the whole family eats together.",
+        "There are many festivals in China.",
+        "I was very busy last week.",
+        "My birthday is in June."
+      ],
+      "options_cn": [
+        "我最喜欢的节日是春节，因为全家人一起吃饭。",
+        "中国有很多节日。",
+        "我上周很忙。",
+        "我的生日在六月。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "favourite /ˈfeɪvərɪt/ 三个音节，because 后面稍作停顿再说理由",
+      "explanation_cn": "问「最喜欢的节日，并说一说」，答句要说出节日名 + 一两句说明。A 说了 Spring Festival 和原因；B 只是泛泛而谈；C、D 跟节日无关。",
+      "explanation_en": "The question asks for one festival plus some details. A names the Spring Festival and gives a reason; B only says festivals exist and C and D are off topic.",
+      "answer_cn_hint": "先说节日的名字，再说为什么喜欢它，最好提到人和活动。"
+    },
+    {
+      "sentence": "How do you help your parents at home?",
+      "sentence_cn": "你在家怎么帮父母？",
+      "options": [
+        "I wash the dishes after dinner and walk the dog on Sundays.",
+        "My parents are both very busy.",
+        "We live in a small flat.",
+        "I helped them last year."
+      ],
+      "options_cn": [
+        "晚饭后我洗碗，星期天我去遛狗。",
+        "我父母都很忙。",
+        "我们住在一套小公寓里。",
+        "我去年帮过他们。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "dishes /ˈdɪʃɪz/ 词尾读 /ɪz/，walk the dog 连读自然",
+      "explanation_cn": "问「怎么帮」，要用一般现在时说出一两件具体的事。A 举了洗碗和遛狗。B 说父母忙；C 说住哪里；D 说的是去年。",
+      "explanation_en": "The question asks how you help, so list one or two regular chores in the simple present. A gives two clear examples; B, C and D do not describe help.",
+      "answer_cn_hint": "答句里要有动作，比如 wash the dishes、clean the room、walk the dog。"
+    },
+    {
+      "sentence": "How was your last weekend? What did you do?",
+      "sentence_cn": "你上周末过得怎么样？做了什么？",
+      "options": [
+        "I went hiking with my cousin and took many photos.",
+        "I usually do my homework on Saturday.",
+        "I will visit my grandma next week.",
+        "Weekends are shorter than holidays."
+      ],
+      "options_cn": [
+        "我和表哥去爬山，拍了很多照片。",
+        "我通常星期六做作业。",
+        "我下周要去看外婆。",
+        "周末比假期短。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "hiking /ˈhaɪkɪŋ/ 注意 i 读 /aɪ/，went 与 and 之间可弱读",
+      "explanation_cn": "last weekend 是过去时间，答句用过去式。A 用 went / took。B 用一般现在时；C 说下周；D 是观点。",
+      "explanation_en": "Last weekend is in the past, so the answer needs the past tense. A uses 'went' and 'took'; B uses the present, C talks about next week and D gives an opinion.",
+      "answer_cn_hint": "问的是上周末，动词要用过去式，比如 went、played、visited。"
+    },
+    {
+      "sentence": "Which is better for you, studying in the morning or in the evening?",
+      "sentence_cn": "对你来说，早上学习好还是晚上学习好？",
+      "options": [
+        "Studying in the morning is better for me because my head is clear.",
+        "I study every day after school.",
+        "My desk is next to the window.",
+        "Evening comes after the afternoon."
+      ],
+      "options_cn": [
+        "早上学习对我更好，因为我头脑清醒。",
+        "我每天放学后都学习。",
+        "我的书桌在窗边。",
+        "晚上在下午之后。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "clear /klɪə/ 注意 l 音要发出来，because 重音在第二音节",
+      "explanation_cn": "二选一的问题要先选一个再给理由。A 选了 morning 并说明 head is clear。B 没说哪个更好；C、D 无关。",
+      "explanation_en": "An either-or question needs a choice plus a reason. A chooses the morning and explains why; B does not compare, and C and D are unrelated.",
+      "answer_cn_hint": "先明确选一个（A is better for me），再用 because 说一条理由。"
+    },
+    {
+      "sentence": "What should we do to keep our classroom clean?",
+      "sentence_cn": "要保持教室干净，我们应该怎么做？",
+      "options": [
+        "We should put rubbish in the bin and clean the desks every day.",
+        "Our classroom is on the second floor.",
+        "I cleaned it yesterday with Tom.",
+        "The teacher is very strict with us."
+      ],
+      "options_cn": [
+        "我们应该把垃圾放进垃圾桶，每天擦桌子。",
+        "我们教室在二楼。",
+        "我昨天和汤姆打扫过。",
+        "老师对我们很严格。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "rubbish /ˈrʌbɪʃ/ 注意重音在前，should 词尾 d 不发音",
+      "explanation_cn": "should 提问建议，回答用 We should + 动词原形。A 给了两条建议。B 说位置；C 说昨天做过；D 说老师严格。",
+      "explanation_en": "The question asks for advice, so answer with 'We should + base verb'. A gives two suggestions; B, C and D do not offer advice.",
+      "answer_cn_hint": "用 We should + 动词原形给出建议，说两条就更完整。"
+    }
+  ],
+  "vocab": [
+    {
+      "word": "calendar",
+      "phonetic": "/ˈkælɪndə/",
+      "meaning": "日历",
+      "emoji": "📅",
+      "example_en": "I marked the exam day on my calendar.",
+      "example_cn": "我在日历上标出了考试那天。",
+      "hint_cn": "一个月一个月排下来的那张纸",
+      "syllables": ["cal", "en", "dar"]
+    },
+    {
+      "word": "harvest",
+      "phonetic": "/ˈhɑːvɪst/",
+      "meaning": "收获",
+      "emoji": "🧺",
+      "example_en": "The farmers had a good harvest this autumn.",
+      "example_cn": "今年秋天农民收成很好。",
+      "hint_cn": "秋天把庄稼收回家",
+      "syllables": ["har", "vest"]
+    },
+    {
+      "word": "grain",
+      "phonetic": "/ɡreɪn/",
+      "meaning": "谷物",
+      "emoji": "🌾",
+      "example_en": "Rice is an important grain in Asia.",
+      "example_cn": "稻米是亚洲重要的谷物。",
+      "hint_cn": "磨成面粉做馒头的小颗粒",
+      "syllables": ["grain"]
+    },
+    {
+      "word": "tradition",
+      "phonetic": "/trəˈdɪʃn/",
+      "meaning": "传统",
+      "emoji": "🏮",
+      "example_en": "Eating dumplings at New Year is a Chinese tradition.",
+      "example_cn": "过年吃饺子是中国的传统。",
+      "hint_cn": "一代一代传下来的做法",
+      "syllables": ["tra", "di", "tion"]
+    },
+    {
+      "word": "custom",
+      "phonetic": "/ˈkʌstəm/",
+      "meaning": "习俗",
+      "emoji": "🎎",
+      "example_en": "Giving red packets is a popular custom in my town.",
+      "example_cn": "发红包在我们这儿是很流行的习俗。",
+      "hint_cn": "一个地方大家习惯了的做法",
+      "syllables": ["cus", "tom"]
+    }
+  ],
+  "reading": {
+    "passage": "Chinese farmers long ago divided the year into 24 solar terms. Each term comes about fifteen days after the one before it, and its name tells people what the weather will be like. Start of Spring means the cold days are ending. Grain in Ear tells farmers it is time to cut the wheat. Beginning of Autumn brings cooler evenings, and Great Snow warns of heavy snow. Even today these names help us plan our work and our meals, and they are now on the UNESCO list so that people all over the world can learn about them.",
+    "passage_cn": "很久以前，中国农民把一年分成二十四个节气。每个节气比上一个晚大约十五天，名字告诉人们接下来的天气。立春意味着寒冷的日子要结束了。芒种告诉农民该割麦子了。立秋带来凉爽的夜晚，大雪提醒会有大雪。即使在今天，这些名字还帮我们安排农活和饮食，而且它们列入了联合国教科文组织的名录，全世界的人都能了解它们。",
+    "questions": [
+      {
+        "question": "How many solar terms are there in a year?",
+        "options": ["Twenty-four", "Twelve", "Fifteen", "Thirty"],
+        "answer": 0,
+        "explanation_cn": "第一句：divided the year into 24 solar terms。"
+      },
+      {
+        "question": "How often does a new solar term come?",
+        "options": ["About every fifteen days", "Every week", "Every month", "Every three days"],
+        "answer": 0,
+        "explanation_cn": "第二句：Each term comes about fifteen days after the one before it。"
+      },
+      {
+        "question": "What does Grain in Ear tell farmers to do?",
+        "options": ["Cut the wheat", "Plant trees", "Feed the fish", "Build a house"],
+        "answer": 0,
+        "explanation_cn": "第四句：Grain in Ear tells farmers it is time to cut the wheat。"
+      },
+      {
+        "question": "What happened to the solar terms in recent years?",
+        "options": [
+          "They were put on the UNESCO list.",
+          "They were given new names.",
+          "They were stopped in cities.",
+          "They became a new sport."
+        ],
+        "answer": 0,
+        "explanation_cn": "最后一句：They are now on the UNESCO list。"
+      }
+    ]
+  },
+  "mc": [
+    {
+      "question": "There are twenty-four ___ in a Chinese year.",
+      "options": ["solar terms", "solar term", "solars term", "solar terms's"],
+      "answer": 0,
+      "explanation_cn": "twenty-four 后面接可数名词复数，solar terms 中只把主体名词变复数。"
+    },
+    {
+      "question": "Great Snow is ___ term that comes in winter.",
+      "options": ["a", "an", "the", "/"],
+      "answer": 0,
+      "explanation_cn": "term 是辅音音素开头的单数可数名词，泛指用 a。"
+    },
+    {
+      "question": "The name of each term ___ us what the weather is like.",
+      "options": ["tells", "tell", "telling", "to tell"],
+      "answer": 0,
+      "explanation_cn": "主语 The name 是单数，一般现在时用 tells。"
+    },
+    {
+      "question": "Farmers have used these names ___ hundreds of years.",
+      "options": ["for", "since", "in", "during"],
+      "answer": 0,
+      "explanation_cn": "现在完成时 + for + 一段时间（hundreds of years）；since 后接时间点。"
+    }
+  ]
+}

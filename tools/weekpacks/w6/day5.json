@@ -1,0 +1,230 @@
+{
+  "day_cn": "周六",
+  "day_en": "Saturday",
+  "theme_cn": "AI口语 + 高频词汇 + 阅读理解",
+  "speaking": [
+    {
+      "sentence": "Would you like to travel to space? Why or why not?",
+      "sentence_cn": "你想去太空旅行吗？为什么想，或者为什么不想？",
+      "options": [
+        "Yes, I would love to, because I want to see the Earth from above.",
+        "Space is very far away from us.",
+        "I watched a film about space last night.",
+        "There are many stars in the sky."
+      ],
+      "options_cn": [
+        "想，我很愿意，因为我想从上面看看地球。",
+        "太空离我们非常远。",
+        "我昨晚看了一部关于太空的电影。",
+        "天空中有很多星星。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "would /wʊd/ 注意不要读成 will，from above 连读 /frəməˈbʌv/",
+      "explanation_cn": "Would you like to...? 的答句先用 Yes/No 表态，再给理由。A 表态 + 理由齐全。B、C、D 都没有表态。",
+      "explanation_en": "Answer 'Would you like to...?' with Yes or No first, then a reason. A does both; B, C and D never say whether they want to go.",
+      "answer_cn_hint": "先回答 Yes I would 或 No I wouldn't，再用 because 说理由。"
+    },
+    {
+      "sentence": "What do you usually do after dinner?",
+      "sentence_cn": "晚饭后你通常做什么？",
+      "options": [
+        "I usually take a walk with my dog and then read for a while.",
+        "I had dinner at half past six.",
+        "Dinner is the biggest meal of the day.",
+        "My mother cooks very well."
+      ],
+      "options_cn": [
+        "我通常和狗一起散散步，然后看一会儿书。",
+        "我六点半吃的晚饭。",
+        "晚饭是一天中最大的一餐。",
+        "我妈妈做饭很好吃。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "usually /ˈjuːʒuəli/，take a walk 连读自然，for a while 意为「一会儿」",
+      "explanation_cn": "问「通常做什么」，要用一般现在时 + usually。A 说了两个习惯动作。B 说昨天几点吃饭；C 是常识；D 说的是妈妈。",
+      "explanation_en": "The question asks about a habit, so use the simple present with 'usually'. A lists two habits; B talks about one evening, C is a general fact and D describes the mother.",
+      "answer_cn_hint": "答句要说出习惯做的事，动词用原形，可以加 usually、often。"
+    },
+    {
+      "sentence": "How do you keep healthy in winter?",
+      "sentence_cn": "冬天你怎么保持健康？",
+      "options": [
+        "I drink warm water, wear thick clothes and go to bed early.",
+        "Winter is colder than autumn.",
+        "I was ill last winter for a week.",
+        "Many people like snow."
+      ],
+      "options_cn": [
+        "我喝温水、穿厚衣服，还很早睡觉。",
+        "冬天比秋天冷。",
+        "去年冬天我病了一个星期。",
+        "很多人喜欢雪。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "thick /θɪk/ 舌尖轻触上齿，healthy /ˈhelθi/ 注意 th 音",
+      "explanation_cn": "问「怎么保持健康」，要给出具体做法。A 给了三条：喝温水、穿厚衣、早睡。B 讲天气；C 说生病；D 说别人喜欢雪。",
+      "explanation_en": "The question asks for ways to stay healthy, so list concrete habits. A gives three; B describes the weather, C mentions being ill and D talks about other people.",
+      "answer_cn_hint": "用一般现在时说出两三个做法，比如 drink warm water、wear thick clothes。"
+    },
+    {
+      "sentence": "What is the best way for you to learn new words?",
+      "sentence_cn": "对你来说，学新单词最好的方法是什么？",
+      "options": [
+        "The best way for me is to use them in a sentence of my own.",
+        "There are many words in English.",
+        "I learned twenty words last week.",
+        "My dictionary is very heavy."
+      ],
+      "options_cn": [
+        "对我来说最好的方法是用它们造一个自己的句子。",
+        "英语里有很多单词。",
+        "我上周学了二十个单词。",
+        "我的词典很重。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "sentence /ˈsentəns/ 重音在前，of my own 连读",
+      "explanation_cn": "问「最好的方法」，答句要用 The best way is to... 给出方法。A 正确（自己造句）。B、C、D 都没给方法。",
+      "explanation_en": "The question asks for the best method, so answer with 'The best way is to...'. A gives a method; the others give facts instead.",
+      "answer_cn_hint": "用 The best way for me is to + 动词原形，说一个具体做法。"
+    },
+    {
+      "sentence": "Who do you admire most, and why?",
+      "sentence_cn": "你最敬佩谁？为什么？",
+      "options": [
+        "I admire my grandfather, because he taught himself English at sixty.",
+        "There are five people in my family.",
+        "My teacher gave us a lot of homework.",
+        "I met him at the school gate."
+      ],
+      "options_cn": [
+        "我敬佩我爷爷，因为他六十岁自学了英语。",
+        "我家有五口人。",
+        "老师给我们布置了很多作业。",
+        "我在校门口遇见了他。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "admire /ədˈmaɪə/ 重音在第二音节，himself 注意重读 self",
+      "explanation_cn": "要求介绍一个敬佩的人，要说出是谁 + 为什么。A 说了 grandfather 和原因。B 说家里人数；C 说作业；D 说见面地点。",
+      "explanation_en": "Name the person and explain why you admire them. A gives both; B, C and D do not describe anyone you admire.",
+      "answer_cn_hint": "先说是谁，再用 because 说一件他做过的事，这样最有说服力。"
+    }
+  ],
+  "vocab": [
+    {
+      "word": "astronaut",
+      "phonetic": "/ˈæstrənɔːt/",
+      "meaning": "宇航员",
+      "emoji": "👨‍🚀",
+      "example_en": "The astronaut waved to us from the window.",
+      "example_cn": "宇航员从窗口向我们挥手。",
+      "hint_cn": "坐火箭上天工作的人",
+      "syllables": ["as", "tro", "naut"]
+    },
+    {
+      "word": "weightless",
+      "phonetic": "/ˈweɪtləs/",
+      "meaning": "失重的",
+      "emoji": "🌀",
+      "example_en": "Water floats in the air because it is weightless there.",
+      "example_cn": "水在空中飘着，因为那里是失重的。",
+      "hint_cn": "在太空里身体轻飘飘的",
+      "syllables": ["weight", "less"]
+    },
+    {
+      "word": "mission",
+      "phonetic": "/ˈmɪʃn/",
+      "meaning": "任务",
+      "emoji": "🎯",
+      "example_en": "The team finished the six-month mission in space.",
+      "example_cn": "这支队伍完成了为期六个月的太空任务。",
+      "hint_cn": "上头交给你必须完成的一件事",
+      "syllables": ["mis", "sion"]
+    },
+    {
+      "word": "signal",
+      "phonetic": "/ˈsɪɡnəl/",
+      "meaning": "信号",
+      "emoji": "📡",
+      "example_en": "The phone signal is weak in the mountains.",
+      "example_cn": "山里手机信号很弱。",
+      "hint_cn": "手机格数变少时说的那个词",
+      "syllables": ["sig", "nal"]
+    },
+    {
+      "word": "laboratory",
+      "phonetic": "/ləˈbɒrətri/",
+      "meaning": "实验室",
+      "emoji": "🔬",
+      "example_en": "We did the water test in the school laboratory.",
+      "example_cn": "我们在学校实验室做了水质测试。",
+      "hint_cn": "做科学实验的房间",
+      "syllables": ["la", "bor", "a", "to", "ry"]
+    }
+  ],
+  "reading": {
+    "passage": "The Tiangong space station flies about 400 kilometres above the Earth. It is made of three main parts and has been home to Chinese astronauts since 2021. A spaceship needs about six hours to reach it. Inside, everything floats, so the crew must fix their sleeping bags to the wall before they rest. The astronauts do around two hundred experiments a year, from growing rice to testing new materials. Every week they talk to the ground station, and students can ask them questions in a live class from their own classroom.",
+    "passage_cn": "天宫空间站在地球上方约四百公里处飞行。它由三个主要舱段组成，从2021年起就是中国宇航员的家。飞船大约需要六个小时才能到达。舱内一切都会飘起来，所以乘员睡觉前必须把睡袋固定在墙上。宇航员一年做大约两百个实验，从种水稻到测试新材料。每周他们都和地面站通话，学生们可以在自己的教室里通过直播课向他们提问。",
+    "questions": [
+      {
+        "question": "How high does the Tiangong station fly?",
+        "options": ["About 400 kilometres above the Earth", "About 40 kilometres above the Earth", "About 4000 kilometres above the Earth", "About 400 metres above the ground"],
+        "answer": 0,
+        "explanation_cn": "第一句：flies about 400 kilometres above the Earth。"
+      },
+      {
+        "question": "Since when has the station been home to Chinese astronauts?",
+        "options": ["Since 2021", "Since 2011", "Since 2019", "Since 2024"],
+        "answer": 0,
+        "explanation_cn": "第二句：has been home to Chinese astronauts since 2021。"
+      },
+      {
+        "question": "Why must the crew fix their sleeping bags to the wall?",
+        "options": [
+          "Because everything floats inside the station.",
+          "Because the wall is very clean.",
+          "Because the bags are too heavy.",
+          "Because the station is too small."
+        ],
+        "answer": 0,
+        "explanation_cn": "第四句：everything floats, so the crew must fix their sleeping bags to the wall。"
+      },
+      {
+        "question": "What can students do in the live class?",
+        "options": [
+          "Ask the astronauts questions.",
+          "Fly to the station themselves.",
+          "Build a new spaceship.",
+          "Sleep in a sleeping bag."
+        ],
+        "answer": 0,
+        "explanation_cn": "最后一句：students can ask them questions in a live class。"
+      }
+    ]
+  },
+  "mc": [
+    {
+      "question": "The space station ___ about 400 kilometres above the Earth.",
+      "options": ["flies", "fly", "flying", "to fly"],
+      "answer": 0,
+      "explanation_cn": "主语 The space station 是单数，一般现在时用 flies。"
+    },
+    {
+      "question": "Chinese astronauts have lived there ___ 2021.",
+      "options": ["since", "for", "in", "at"],
+      "answer": 0,
+      "explanation_cn": "since + 年份，表示从那时持续到现在，常与现在完成时连用。"
+    },
+    {
+      "question": "Inside the station, everything ___ in the air.",
+      "options": ["floats", "float", "floating", "floated"],
+      "answer": 0,
+      "explanation_cn": "everything 作主语看作单数，动词加 s。"
+    },
+    {
+      "question": "Tiangong is one of ___ stations in the world.",
+      "options": ["the most modern", "most modern", "more modern", "the more modern"],
+      "answer": 0,
+      "explanation_cn": "one of the + 最高级 + 名词复数，表示「最……之一」。"
+    }
+  ]
+}

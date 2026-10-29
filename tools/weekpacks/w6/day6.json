@@ -1,0 +1,169 @@
+{
+  "day_cn": "周日",
+  "day_en": "Sunday",
+  "theme_cn": "高频词汇 + 完形填空 + 听力",
+  "vocab": [
+    {
+      "word": "payment",
+      "phonetic": "/ˈpeɪmənt/",
+      "meaning": "付款",
+      "emoji": "💳",
+      "example_en": "The payment went through in a second.",
+      "example_cn": "付款一秒钟就完成了。",
+      "hint_cn": "买东西把钱给出去这一步",
+      "syllables": ["pay", "ment"]
+    },
+    {
+      "word": "wallet",
+      "phonetic": "/ˈwɒlɪt/",
+      "meaning": "钱包",
+      "emoji": "👛",
+      "example_en": "He took a photo of his card and put it in his wallet.",
+      "example_cn": "他给卡拍了照，然后放进钱包。",
+      "hint_cn": "装钱和卡的小包",
+      "syllables": ["wal", "let"]
+    },
+    {
+      "word": "scan",
+      "phonetic": "/skæn/",
+      "meaning": "扫描",
+      "emoji": "📷",
+      "example_en": "Please scan this code before you pay.",
+      "example_cn": "付款前请扫一下这个码。",
+      "hint_cn": "用镜头对着码照一下",
+      "syllables": ["scan"]
+    },
+    {
+      "word": "digital",
+      "phonetic": "/ˈdɪdʒɪtl/",
+      "meaning": "数字的",
+      "emoji": "🔢",
+      "example_en": "Most students now read digital books on a tablet.",
+      "example_cn": "现在大多数学生在平板上读电子书。",
+      "hint_cn": "跟电脑、网络有关的那种",
+      "syllables": ["di", "gi", "tal"]
+    },
+    {
+      "word": "convenient",
+      "phonetic": "/kənˈviːniənt/",
+      "meaning": "方便的",
+      "emoji": "👍",
+      "example_en": "Paying by phone is convenient for busy people.",
+      "example_cn": "用手机付款对忙碌的人来说很方便。",
+      "hint_cn": "省事、不麻烦",
+      "syllables": ["con", "ve", "nient"]
+    }
+  ],
+  "cloze": {
+    "passage": "Last Saturday I went to the community library as a 1___. The librarian, Ms Chen, showed me around and gave me a simple job. My work was to put the returned books back in the right 2___, and at first I made a few mistakes, but she told me to read the 3___ on each cover carefully. By noon I had finished two shelves. A little girl asked me for a story about 4___, so I found one with lovely pictures of pandas. In the afternoon we read aloud to 5___ children who came with their parents. When I left, Ms Chen smiled and said I had done a good 6___.",
+    "sentences_cn": [
+      "上周六我去社区图书馆当志愿者。",
+      "图书管理员陈老师带我参观了一圈，还给我派了一件简单的活儿。",
+      "我的工作是把还回来的书按正确顺序放回去；一开始我出了几个错，但她让我仔细看书上的标签。",
+      "到中午我已经整理完两个书架。",
+      "一个小女孩向我要一本关于动物的故事书，我给她找了一本有可爱熊猫图片的。",
+      "下午我们给跟着爸爸妈妈来的更小的孩子朗读。",
+      "我离开时，陈老师笑着说，我干得很棒。"
+    ],
+    "questions": [
+      {
+        "question": "1___",
+        "options": ["volunteer", "visitor", "driver", "painter"],
+        "answer": 0,
+        "explanation_cn": "去社区图书馆帮忙做事的人是志愿者 volunteer。visitor 只表示参观者。"
+      },
+      {
+        "question": "2___",
+        "options": ["order", "price", "cover", "shelf"],
+        "answer": 0,
+        "explanation_cn": "put the books back in the right order 按正确顺序放回书，与后文看标签对应。"
+      },
+      {
+        "question": "3___",
+        "options": ["label", "picture", "story", "colour"],
+        "answer": 0,
+        "explanation_cn": "封面上贴的标签 label 写着编号，用来判断该放哪。"
+      },
+      {
+        "question": "4___",
+        "options": ["animals", "weather", "sports", "music"],
+        "answer": 0,
+        "explanation_cn": "下文说 pictures of pandas（熊猫图片），所以是动物的故事。"
+      },
+      {
+        "question": "5___",
+        "options": ["younger", "taller", "richer", "quieter"],
+        "answer": 0,
+        "explanation_cn": "跟父母一起来的、需要别人读故事的孩子，是更小的孩子 younger children。"
+      },
+      {
+        "question": "6___",
+        "options": ["job", "meal", "game", "trip"],
+        "answer": 0,
+        "explanation_cn": "do a good job 干得好，是固定搭配。"
+      }
+    ]
+  },
+  "listening": [
+    {
+      "question": "听到的句子是什么？",
+      "audio_text": "The high-speed train runs at 350 kilometres an hour.",
+      "options": [
+        "The high-speed train runs at 350 kilometres an hour.",
+        "The high-speed train runs at 150 kilometres an hour.",
+        "The high-speed train runs at 350 kilometres a day.",
+        "The high-speed bus runs at 350 kilometres an hour."
+      ],
+      "answer": 0,
+      "explanation_cn": "数字 350（三百五十），单位 an hour（每小时）。"
+    },
+    {
+      "question": "听到的句子是什么？",
+      "audio_text": "You can scan the QR code with your phone.",
+      "options": [
+        "You can scan the QR code with your phone.",
+        "You can scan the QR code with your card.",
+        "You can send the QR code with your phone.",
+        "You can scan the bar code with your phone."
+      ],
+      "answer": 0,
+      "explanation_cn": "动词 scan（扫描）+ QR code（二维码）+ with your phone（用手机）。"
+    },
+    {
+      "question": "听到的句子是什么？",
+      "audio_text": "Grandpa has used the payment app for two years.",
+      "options": [
+        "Grandpa has used the payment app for two years.",
+        "Grandpa has used the payment app for two months.",
+        "Grandpa used the payment app two years ago.",
+        "Grandma has used the payment app for two years."
+      ],
+      "answer": 0,
+      "explanation_cn": "has used 现在完成时 + for two years 持续两年。"
+    },
+    {
+      "question": "听到的句子是什么？",
+      "audio_text": "The astronauts fix their sleeping bags to the wall.",
+      "options": [
+        "The astronauts fix their sleeping bags to the wall.",
+        "The astronauts fix their sleeping bags to the floor.",
+        "The astronauts put their sleeping bags on the wall.",
+        "The astronauts fix their water bags to the wall."
+      ],
+      "answer": 0,
+      "explanation_cn": "sleeping bags（睡袋）固定在墙上（to the wall），因为在太空会飘。"
+    },
+    {
+      "question": "听到的句子是什么？",
+      "audio_text": "Each solar term comes about fifteen days apart.",
+      "options": [
+        "Each solar term comes about fifteen days apart.",
+        "Each solar term comes about fifty days apart.",
+        "Each solar term comes about fifteen weeks apart.",
+        "Each season comes about fifteen days apart."
+      ],
+      "answer": 0,
+      "explanation_cn": "fifteen days（十五天）和 apart（相隔）都是关键词。"
+    }
+  ]
+}

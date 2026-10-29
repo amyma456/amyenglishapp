@@ -1,0 +1,177 @@
+{
+  "day_cn": "周四",
+  "day_en": "Thursday",
+  "theme_cn": "冠词 + 比较级 + 拼写打字",
+  "mc_name": "冠词专项",
+  "tense_name": "比较级 / 最高级打字",
+  "tense2_name": "本周单词拼写",
+  "mc2_name": "综合巩固",
+  "mc": [
+    {
+      "question": "My uncle is ___ honest man, and everyone trusts him.",
+      "options": ["an", "a", "the", "/"],
+      "answer": 0,
+      "explanation_cn": "honest 的 h 不发音，开头是元音音素 /ɒ/，所以用 an。"
+    },
+    {
+      "question": "___ sun rises in the east and sets in the west.",
+      "options": ["The", "A", "An", "/"],
+      "answer": 0,
+      "explanation_cn": "世界上独一无二的事物前用定冠词 the，如 the sun、the moon。"
+    },
+    {
+      "question": "When I grow up, I want to be ___ astronaut.",
+      "options": ["an", "a", "the", "/"],
+      "answer": 0,
+      "explanation_cn": "astronaut 以元音音素 /æ/ 开头，单数泛指用 an。"
+    },
+    {
+      "question": "We waited for ___ hour at the platform.",
+      "options": ["an", "a", "the", "/"],
+      "answer": 0,
+      "explanation_cn": "hour 的 h 不发音，读音以元音开头，用 an hour。"
+    },
+    {
+      "question": "My sister plays ___ piano for half an hour every evening.",
+      "options": ["the", "a", "an", "/"],
+      "answer": 0,
+      "explanation_cn": "play + 乐器要加 the：play the piano；play + 球类不加 the。"
+    }
+  ],
+  "tense": [
+    {
+      "question": "This new train is ___ (fast) than the old one. [填比较级]",
+      "answer": "faster",
+      "explanation_cn": "fast 是单音节形容词，比较级直接加 er。"
+    },
+    {
+      "question": "February is the ___ (short) month of the year. [填最高级]",
+      "answer": "shortest",
+      "explanation_cn": "of the year 表示范围，用最高级 the shortest。"
+    },
+    {
+      "question": "Today is much ___ (cold) than yesterday. [填比较级]",
+      "answer": "colder",
+      "explanation_cn": "much 修饰比较级，加强语气；cold 加 er。"
+    },
+    {
+      "question": "This is the ___ (good) film I have ever seen. [填最高级]",
+      "answer": "best",
+      "explanation_cn": "good 的最高级是不规则变化 best，不是 goodest。"
+    },
+    {
+      "question": "My schoolbag is ___ (heavy) than yours. [填比较级]",
+      "answer": "heavier",
+      "explanation_cn": "heavy 是辅音字母 + y 结尾，变比较级把 y 变 i 再加 er。"
+    },
+    {
+      "question": "It is the ___ (busy) street in our city. [填最高级]",
+      "answer": "busiest",
+      "explanation_cn": "busy 变最高级把 y 变 i 再加 est。"
+    }
+  ],
+  "tense2": [
+    {
+      "question": "铁路：r______ [填完整单词]",
+      "answer": "railway",
+      "explanation_cn": "railway = rail（铁轨）+ way（路），指铁路。"
+    },
+    {
+      "question": "乘客：p________ [填完整单词]",
+      "answer": "passenger",
+      "explanation_cn": "passenger 注意中间是 ss 和 ng，词尾是 er。"
+    },
+    {
+      "question": "站台：p_______ [填完整单词]",
+      "answer": "platform",
+      "explanation_cn": "platform = plat + form，站台、月台。"
+    },
+    {
+      "question": "时刻表：t________ [填完整单词]",
+      "answer": "timetable",
+      "explanation_cn": "timetable 由 time + table 合成，中间不空格。"
+    },
+    {
+      "question": "舒适的：c__________ [填完整单词]",
+      "answer": "comfortable",
+      "explanation_cn": "comfort（舒适）+ able，注意 com 后面是 fort。"
+    },
+    {
+      "question": "日历：c_______ [填完整单词]",
+      "answer": "calendar",
+      "explanation_cn": "calendar 中间是 len 不是 land，结尾是 dar。"
+    },
+    {
+      "question": "收获：h_______ [填完整单词]",
+      "answer": "harvest",
+      "explanation_cn": "harvest 既可以作名词（收成）也可以作动词（收割）。"
+    },
+    {
+      "question": "传统：t________ [填完整单词]",
+      "answer": "tradition",
+      "explanation_cn": "tradition 结尾是 tion，读 /ʃn/。"
+    },
+    {
+      "question": "习俗：c_____ [填完整单词]",
+      "answer": "custom",
+      "explanation_cn": "custom 指一个地方的风俗习惯；customs 还有「海关」的意思。"
+    },
+    {
+      "question": "宇航员：a________ [填完整单词]",
+      "answer": "astronaut",
+      "explanation_cn": "astro 表示「星星」，naut 表示「航行的人」。"
+    },
+    {
+      "question": "失重的：w_________ [填完整单词]",
+      "answer": "weightless",
+      "explanation_cn": "weight（重量）+ less（没有），合起来是失重的。"
+    },
+    {
+      "question": "任务：m______ [填完整单词]",
+      "answer": "mission",
+      "explanation_cn": "mission 结尾是 sion，读 /ʃn/，注意双 s。"
+    },
+    {
+      "question": "信号：s______ [填完整单词]",
+      "answer": "signal",
+      "explanation_cn": "signal 中间是 gn，g 不发音，读 /ˈsɪɡnəl/。"
+    },
+    {
+      "question": "实验室：l__________ [填完整单词]",
+      "answer": "laboratory",
+      "explanation_cn": "laboratory 可缩写成 lab，重音在第二音节。"
+    }
+  ],
+  "mc2": [
+    {
+      "question": "The passenger put his bag ___ the seat and sat down.",
+      "options": ["on", "in", "at", "of"],
+      "answer": 0,
+      "explanation_cn": "包放在座位表面上用 on the seat。"
+    },
+    {
+      "question": "There ___ two platforms in this small station.",
+      "options": ["are", "is", "has", "have"],
+      "answer": 0,
+      "explanation_cn": "There be 就近原则：two platforms 是复数，用 are。"
+    },
+    {
+      "question": "Look at the timetable. The next train ___ at 7:20.",
+      "options": ["leaves", "leave", "leaving", "left"],
+      "answer": 0,
+      "explanation_cn": "按时刻表安排的将来动作可用一般现在时；主语单数用 leaves。"
+    },
+    {
+      "question": "This seat is ___ comfortable than that one near the door.",
+      "options": ["more", "most", "much", "very"],
+      "answer": 0,
+      "explanation_cn": "comfortable 是多音节词，比较级前加 more，后面还有 than。"
+    },
+    {
+      "question": "___ did you get to the station so early? — I took the first bus.",
+      "options": ["How", "What", "Why", "When"],
+      "answer": 0,
+      "explanation_cn": "答句说交通方式，问方式用 How。"
+    }
+  ]
+}

@@ -1,0 +1,225 @@
+{
+  "day_cn": "周一",
+  "day_en": "Monday",
+  "theme_cn": "AI口语 + 高频词汇 + 阅读理解",
+  "speaking": [
+    {
+      "sentence": "How do you usually go to school every day?",
+      "sentence_cn": "你每天通常怎么去上学？",
+      "options": [
+        "I usually go to school by bus with my neighbour.",
+        "I went to school yesterday morning.",
+        "My school is very big and new.",
+        "School begins at eight o'clock."
+      ],
+      "options_cn": [
+        "我通常和邻居一起坐公交车去上学。",
+        "我昨天早上去上学了。",
+        "我的学校又大又新。",
+        "学校八点开始上课。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "usually /ˈjuːʒuəli/ 注意 s 读 /ʒ/，by bus 连读成 /baɪbʌs/",
+      "explanation_cn": "问「通常怎么去」，答句要用 usually + 交通方式。A 正确（by bus 坐公交）。B 说的是昨天，时态不对；C、D 说的是学校本身，答非所问。",
+      "explanation_en": "The question asks about your usual way of travelling, so answer with 'usually' plus a means of transport. A is correct; B talks about yesterday and C and D describe the school.",
+      "answer_cn_hint": "问的是「怎么去」，答句要说出交通方式，比如 by bus、on foot、by bike。"
+    },
+    {
+      "sentence": "What job would you like to do after you finish school?",
+      "sentence_cn": "你毕业以后想做什么工作？",
+      "options": [
+        "I want to be a train driver and travel to many cities.",
+        "I am a primary school student now.",
+        "My father works in a big company.",
+        "Growing up takes a long time."
+      ],
+      "options_cn": [
+        "我想当火车司机，去很多城市。",
+        "我现在是小学生。",
+        "我爸爸在一家大公司工作。",
+        "长大要花很长时间。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "driver /ˈdraɪvə/ 注意重音在前，want to 口语里读成 /wɒnə/",
+      "explanation_cn": "问将来的理想，答句用 I want to be + 职业。A 正确（train driver 火车司机）。B 说的是现在的身份；C 说的是爸爸；D 没有回答职业。",
+      "explanation_en": "The question asks about a future job, so use 'I want to be a ...'. A answers with a job; B describes the present, C talks about the father and D does not answer.",
+      "answer_cn_hint": "问「长大想做什么」，答句要说一个职业，比如 teacher、doctor、driver。"
+    },
+    {
+      "sentence": "Which season do you like best, and why?",
+      "sentence_cn": "你最喜欢哪个季节？为什么？",
+      "options": [
+        "I like winter best because I can make a snowman with my friends.",
+        "I like it very much, thank you.",
+        "There are four seasons in a year.",
+        "Last winter was colder than this one."
+      ],
+      "options_cn": [
+        "我最喜欢冬天，因为我能和朋友一起堆雪人。",
+        "我很喜欢，谢谢。",
+        "一年有四个季节。",
+        "去年冬天比今年冷。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "because /bɪˈkɒz/ 重音在后，snowman /ˈsnəʊmæn/ 两个词根都要读清",
+      "explanation_cn": "问句有两个部分：哪个季节 + 为什么。A 两个都答了（winter + because）。B 没说季节；C 是常识；D 是比较，没回答最喜欢哪个。",
+      "explanation_en": "The question has two parts: which season and why. A answers both with 'winter' and 'because'. B gives no season, C states a fact and D makes a comparison.",
+      "answer_cn_hint": "先说我喜欢的季节，再用 because 说一条理由，两个都要说到。"
+    },
+    {
+      "sentence": "Do you prefer paper books or e-books?",
+      "sentence_cn": "你更喜欢纸质书还是电子书？",
+      "options": [
+        "I prefer paper books because I can write notes in them.",
+        "I read two books last month.",
+        "Books are very expensive in this shop.",
+        "My sister has a new phone."
+      ],
+      "options_cn": [
+        "我更喜欢纸质书，因为我可以在上面写笔记。",
+        "我上个月读了两本书。",
+        "这家店的书很贵。",
+        "我姐姐有一部新手机。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "prefer /prɪˈfɜː/ 重音在第二音节，paper books 之间稍作停顿",
+      "explanation_cn": "这是个选择疑问句（A or B），答句要选一个并给理由。A 选了 paper books 并说明原因。B 说读了几本；C 说价格；D 说的是姐姐的手机。",
+      "explanation_en": "This is an either-or question, so choose one side and give a reason. A chooses paper books and explains why; B, C and D do not choose at all.",
+      "answer_cn_hint": "问的是二选一，答句先说 I prefer…，再用 because 说理由。"
+    },
+    {
+      "sentence": "What do you say when your friend feels sad?",
+      "sentence_cn": "朋友难过的时候你会说什么？",
+      "options": [
+        "I say 'Don't worry, I am here with you.'",
+        "I said nothing to him yesterday.",
+        "Sad films make people cry.",
+        "He is my best friend at school."
+      ],
+      "options_cn": [
+        "我会说「别担心，我陪着你」。",
+        "我昨天什么都没对他说。",
+        "悲伤的电影会让人哭。",
+        "他是我在学校最好的朋友。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "worry /ˈwʌri/ 注意 r 要卷舌，with you 连读 /wɪðjuː/",
+      "explanation_cn": "问「你会说什么」，要用直接引语回答具体的一句话。A 给出了一句安慰的话。B 说的是昨天没说话；C 讲电影；D 只是介绍关系。",
+      "explanation_en": "The question asks what you actually say, so answer with the words you would use. A gives a comforting sentence; B says you said nothing, C talks about films and D only describes the friendship.",
+      "answer_cn_hint": "答句里要有一句真正说出口的安慰话，放在引号里最清楚。"
+    }
+  ],
+  "vocab": [
+    {
+      "word": "railway",
+      "phonetic": "/ˈreɪlweɪ/",
+      "meaning": "铁路",
+      "emoji": "🚄",
+      "example_en": "The new railway connects the two cities.",
+      "example_cn": "这条新铁路连接两座城市。",
+      "hint_cn": "火车走的那条特别长的路",
+      "syllables": ["rail", "way"]
+    },
+    {
+      "word": "passenger",
+      "phonetic": "/ˈpæsɪndʒə/",
+      "meaning": "乘客",
+      "emoji": "🧳",
+      "example_en": "Every passenger must wear a seat belt.",
+      "example_cn": "每位乘客都必须系好安全带。",
+      "hint_cn": "坐车坐船坐飞机的人",
+      "syllables": ["pas", "sen", "ger"]
+    },
+    {
+      "word": "platform",
+      "phonetic": "/ˈplætfɔːm/",
+      "meaning": "站台",
+      "emoji": "🚉",
+      "example_en": "The train to Shanghai leaves from platform three.",
+      "example_cn": "去上海的火车从三号站台出发。",
+      "hint_cn": "在车站等车时站的那块高台",
+      "syllables": ["plat", "form"]
+    },
+    {
+      "word": "timetable",
+      "phonetic": "/ˈtaɪmteɪbl/",
+      "meaning": "时刻表",
+      "emoji": "🕐",
+      "example_en": "Look at the timetable to find your train.",
+      "example_cn": "看看时刻表找到你的那趟车。",
+      "hint_cn": "写着几点几分有什么车的一张表",
+      "syllables": ["time", "ta", "ble"]
+    },
+    {
+      "word": "comfortable",
+      "phonetic": "/ˈkʌmftəbl/",
+      "meaning": "舒适的",
+      "emoji": "🛋️",
+      "example_en": "These new seats are very comfortable.",
+      "example_cn": "这些新座位非常舒适。",
+      "hint_cn": "坐着软软的，一点也不累",
+      "syllables": ["com", "fort", "a", "ble"]
+    }
+  ],
+  "reading": {
+    "passage": "China's high-speed trains are among the fastest in the world. The first line opened in 2008 between Beijing and Tianjin. Today the network is more than 40000 kilometres long and reaches almost every big city. A train can run at 350 kilometres an hour, so the trip from Beijing to Shanghai takes only about four hours. Passengers buy tickets on their phones and often choose a seat by the window. On the platform, everything is quiet and clean, and many people say the train is more comfortable than a plane and much cheaper too.",
+    "passage_cn": "中国的高铁是世界上最快的一批。第一条线路于2008年在北京和天津之间开通。如今这张网超过四万公里，几乎通到每一座大城市。列车时速可达350公里，所以从北京到上海只要大约四个小时。乘客用手机买票，常常挑靠窗的座位。站台上一切安静又整洁，很多人说高铁比飞机更舒适，而且便宜得多。",
+    "questions": [
+      {
+        "question": "When did the first high-speed line open?",
+        "options": ["In 2008", "In 2018", "In 1980", "In 2020"],
+        "answer": 0,
+        "explanation_cn": "第二句：The first line opened in 2008。时间与数字对应。"
+      },
+      {
+        "question": "How fast can a high-speed train run?",
+        "options": ["350 kilometres an hour", "150 kilometres an hour", "500 kilometres an hour", "40 kilometres an hour"],
+        "answer": 0,
+        "explanation_cn": "第四句：A train can run at 350 kilometres an hour。"
+      },
+      {
+        "question": "How long does the trip from Beijing to Shanghai take by train?",
+        "options": ["About four hours", "About ten hours", "About two days", "About half an hour"],
+        "answer": 0,
+        "explanation_cn": "so the trip ... takes only about four hours（所以只要约四小时）。"
+      },
+      {
+        "question": "Why do many people like the high-speed train?",
+        "options": [
+          "It is more comfortable and cheaper than a plane.",
+          "It is faster than every plane.",
+          "It has no windows at all.",
+          "It only runs at night."
+        ],
+        "answer": 0,
+        "explanation_cn": "最后一句：more comfortable than a plane, and much cheaper too。"
+      }
+    ]
+  },
+  "mc": [
+    {
+      "question": "The train ___ at 350 kilometres an hour.",
+      "options": ["runs", "run", "running", "to run"],
+      "answer": 0,
+      "explanation_cn": "主语 The train 是第三人称单数，一般现在时动词加 s。"
+    },
+    {
+      "question": "A high-speed train is ___ than a plane.",
+      "options": ["more comfortable", "comfortable", "most comfortable", "comfortabler"],
+      "answer": 0,
+      "explanation_cn": "有 than 用比较级；comfortable 是多音节词，比较级前加 more。"
+    },
+    {
+      "question": "The first line ___ in 2008.",
+      "options": ["opened", "opens", "opening", "open"],
+      "answer": 0,
+      "explanation_cn": "in 2008 是过去的时间，用一般过去时 opened。"
+    },
+    {
+      "question": "Passengers ___ their tickets on the phone before the trip.",
+      "options": ["buy", "buys", "buying", "bought"],
+      "answer": 0,
+      "explanation_cn": "主语 Passengers 是复数，一般现在时用动词原形 buy。"
+    }
+  ]
+}

@@ -1,0 +1,128 @@
+{
+  "day_cn": "周二",
+  "day_en": "Tuesday",
+  "theme_cn": "阅读理解 + 语法练习 + 单项选择",
+  "reading": {
+    "passage": "In China, many people pay with their phones instead of cash. You open a payment app, scan the QR code in the shop and type the amount, and the money leaves your wallet in a second. Small shops like this way because they do not need to keep much change. Even people who sell vegetables in the street use it. Some grandparents find it hard at first, so their children teach them step by step. Now they can buy breakfast with a single tap, and they no longer worry about losing money on the way home.",
+    "passage_cn": "在中国，很多人用手机付款而不是现金。你打开支付软件，扫一下店里的二维码，再输入金额，钱一秒钟就从钱包里出去了。小店喜欢这种方式，因为不用准备很多零钱。连在街边卖菜的人也在用。有些爷爷奶奶一开始觉得难，所以孩子们一步一步教他们。现在他们点一下就能买到早餐，也不用再担心回家路上把钱弄丢。",
+    "questions": [
+      {
+        "question": "What do many people in China use to pay?",
+        "options": ["Their phones", "Only paper money", "Bank cards only", "Coins"],
+        "answer": 0,
+        "explanation_cn": "第一句：many people pay with their phones instead of cash。"
+      },
+      {
+        "question": "What do you scan in the shop?",
+        "options": ["The QR code", "The window", "The menu", "The receipt"],
+        "answer": 0,
+        "explanation_cn": "第二句：scan the QR code in the shop（扫店里的二维码）。"
+      },
+      {
+        "question": "Why do small shops like paying by phone?",
+        "options": [
+          "They do not need to keep much change.",
+          "The phone is cheaper than food.",
+          "They can close earlier.",
+          "Customers must pay more."
+        ],
+        "answer": 0,
+        "explanation_cn": "第四句：they do not need to keep much change（不用备很多零钱）。"
+      },
+      {
+        "question": "Who teaches the grandparents to use the app?",
+        "options": ["Their children", "Their teachers", "The shopkeepers", "Nobody"],
+        "answer": 0,
+        "explanation_cn": "倒数第二句：their children teach them step by step。"
+      }
+    ]
+  },
+  "grammar": [
+    {
+      "question": "You can pay for the milk ___ your phone.",
+      "options": ["with", "by", "on", "of"],
+      "answer": 0,
+      "explanation_cn": "表示「用某种工具」用 with：pay with your phone。by 多用于交通方式。"
+    },
+    {
+      "question": "My mother has used this app ___ three years.",
+      "options": ["for", "since", "in", "at"],
+      "answer": 0,
+      "explanation_cn": "现在完成时里，for + 一段时间（three years），since + 时间点（2023）。"
+    },
+    {
+      "question": "There is a QR code ___ the wall near the door.",
+      "options": ["on", "in", "at", "under"],
+      "answer": 0,
+      "explanation_cn": "贴在墙的表面用 on the wall；in the wall 指嵌在墙体里。"
+    },
+    {
+      "question": "I have ___ finished my homework, so I can go out now.",
+      "options": ["already", "yet", "still", "ever"],
+      "answer": 0,
+      "explanation_cn": "肯定句里表示「已经」用 already；yet 多用于否定句和疑问句。"
+    },
+    {
+      "question": "If you scan this code, the money ___ from your account at once.",
+      "options": ["disappears", "disappear", "disappeared", "will disappearing"],
+      "answer": 0,
+      "explanation_cn": "if 引导的条件句用一般现在时，主句可用一般现在时表示规律；主语 the money 不可数作单数。"
+    },
+    {
+      "question": "Many old people learn to pay by phone ___ their grandchildren.",
+      "options": ["from", "to", "with", "for"],
+      "answer": 0,
+      "explanation_cn": "learn from sb. 向某人学习；learn to do sth. 学做某事。"
+    }
+  ],
+  "mc": [
+    {
+      "question": "___ you ever paid for a meal with your phone?",
+      "options": ["Have", "Has", "Do", "Are"],
+      "answer": 0,
+      "explanation_cn": "主语 you 用 Have；ever 是现在完成时的标志词。"
+    },
+    {
+      "question": "My grandfather ___ cash for everything when he was young.",
+      "options": ["used", "uses", "is using", "use"],
+      "answer": 0,
+      "explanation_cn": "when he was young 是过去时间，用一般过去时 used。"
+    },
+    {
+      "question": "There ___ a small QR code on the table.",
+      "options": ["is", "are", "have", "has"],
+      "answer": 0,
+      "explanation_cn": "There be 句型就近原则：a small QR code 是单数，用 is。"
+    },
+    {
+      "question": "It is very easy ___ with a phone in the supermarket.",
+      "options": ["to pay", "paying", "pay", "paid"],
+      "answer": 0,
+      "explanation_cn": "It is + 形容词 + to do sth. 句型，用动词不定式作真正主语。"
+    },
+    {
+      "question": "Some children spend too ___ time playing games on the phone.",
+      "options": ["much", "many", "few", "lots"],
+      "answer": 0,
+      "explanation_cn": "time 是不可数名词，用 too much；too many 接可数名词复数。"
+    },
+    {
+      "question": "___ many payment apps are there on your phone?",
+      "options": ["How", "What", "Which", "Whose"],
+      "answer": 0,
+      "explanation_cn": "修饰可数名词复数 many 用 How many，问数量。"
+    },
+    {
+      "question": "The bookshop ___ open since 2010.",
+      "options": ["has been", "is", "was", "will be"],
+      "answer": 0,
+      "explanation_cn": "since 2010 表示从过去持续到现在，用现在完成时 has been。"
+    },
+    {
+      "question": "Paying by phone is ___ than carrying a lot of cash.",
+      "options": ["safer", "safe", "safest", "more safe"],
+      "answer": 0,
+      "explanation_cn": "有 than 用比较级；safe 是单音节词，直接加 r 变 safer。"
+    }
+  ]
+}
