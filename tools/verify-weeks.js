@@ -30,7 +30,9 @@ const PASSAGE_STEMS = /^[0-9]{1,2}___$/; // v153：完形可到 10 空 // 完形
 // v165（家长 2026-10-29）：听力不再只有「听原句、选一模一样的原句」。
 // 现在有听对话问答、听句子选图、听录音填空，题干也跟着变成
 // 「听对话…」「听到的句子说的是哪幅图」「听录音填空…」，统一按「听」字头放行。
-const LISTEN_STEMS = [/听到的/, /听到的数字/, /听对话/, /听录音/, /听短文/];
+// v167（家长 2026-10-30）：题干全部改英文（Which sentence…/Which picture…/Listen to…）。
+const LISTEN_STEMS = [/听到的/, /听到的数字/, /听对话/, /听录音/, /听短文/,
+  /which sentence do you hear/i, /which picture matches/i, /listen to the dialogue/i, /listen and fill/i];
 
 for (let w = 0; w < WEEKS.length; w++) {
   const days = WEEKS[w];

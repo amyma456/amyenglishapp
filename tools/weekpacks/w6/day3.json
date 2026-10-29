@@ -74,7 +74,7 @@
   ],
   "listening": [
     {
-      "question": "听到的句子说的是哪幅图？",
+      "question": "Which picture matches the sentence you hear?",
       "audio_text": "Look at the paper fish on the window. It means a rich year.",
       "picture_options": true,
       "options": ["🐟", "🍑", "✂️", "🌺"],
@@ -82,7 +82,7 @@
       "explanation_cn": "句子里说的是 paper fish（纸鱼），所以选 🐟；桃子和剪刀是另外两句里出现的。"
     },
     {
-      "question": "听到的句子说的是哪幅图？",
+      "question": "Which picture matches the sentence you hear?",
       "audio_text": "My sister is cutting the red paper with a pair of scissors.",
       "picture_options": true,
       "options": ["✂️", "🖌️", "📏", "🔪"],
@@ -90,14 +90,14 @@
       "explanation_cn": "关键工具是 a pair of scissors（一把剪刀），所以选 ✂️。"
     },
     {
-      "question": "听对话，奶奶剪的桃子代表什么？",
+      "question": "Listen to the dialogue. What does Grandma's paper peach mean?",
       "audio_text": "Boy: What are you making, Grandma? Grandma: I'm cutting a peach for your birthday. It means long life.",
       "options": ["Long life", "Good luck", "A rich year", "A new job"],
       "answer": 0,
       "explanation_cn": "奶奶说 It means long life（代表长寿）。good luck 是贴窗花的用意，a rich year 是鱼的含义。"
     },
     {
-      "question": "听录音填空：Families put red paper cuttings on the windows for good ___.",
+      "question": "Listen and fill in the blank: Families put red paper cuttings on the windows for good ___.",
       "type": "fill",
       "answer": "luck",
       "audio_text": "Families put red paper cuttings on the windows for good luck.",

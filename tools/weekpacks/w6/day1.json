@@ -79,14 +79,14 @@
   ],
   "listening": [
     {
-      "question": "听对话，这本故事书多少钱？",
+      "question": "Listen to the dialogue. How much is the story book?",
       "audio_text": "Boy: How much is this story book? Woman: It's twenty yuan. You can scan the code on the desk. Boy: Great, I'll pay with my phone.",
       "options": ["Twenty yuan", "Twelve yuan", "Thirty yuan", "Two yuan"],
       "answer": 0,
       "explanation_cn": "售货员说 It's twenty yuan（二十元），注意 twenty 和 twelve 的读音差别。"
     },
     {
-      "question": "听对话，奶奶后来觉得这个软件怎么样？",
+      "question": "Listen to the dialogue. What does Grandma think of the app at last?",
       "audio_text": "Grandma: I really don't know how to use this app. Boy: Don't worry, Grandma. Just scan the code and type the amount. Grandma: Oh, it's much easier than I thought.",
       "options": [
         "Easier than she thought",
@@ -98,14 +98,14 @@
       "explanation_cn": "奶奶最后说 much easier than I thought（比我原来想的容易多了），这是问「后来觉得怎么样」的答案。"
     },
     {
-      "question": "听录音填空：Small shops do not need to keep much ___.",
+      "question": "Listen and fill in the blank: Small shops do not need to keep much ___.",
       "type": "fill",
       "answer": "change",
       "audio_text": "Small shops do not need to keep much change.",
       "explanation_cn": "听到的是 keep much change（备很多零钱），change 在这里是「零钱」的意思。"
     },
     {
-      "question": "听录音填空：The money leaves your ___ in a second.",
+      "question": "Listen and fill in the blank: The money leaves your ___ in a second.",
       "type": "fill",
       "answer": "wallet",
       "audio_text": "The money leaves your wallet in a second.",

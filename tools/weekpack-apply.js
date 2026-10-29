@@ -15,6 +15,10 @@ const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
 const DATA = path.join(ROOT, 'public', 'data.js');
+// v167（家长 2026-10-30）：听力题干全部改英文（「所有这样的听力的问句都给写成英文」）。
+// ECHO_STEM：听原句选原句的固定题干；LISTEN_STEM_EN：其余英文听力题干前缀。
+const ECHO_STEM = /^(?:which sentence do you hear|听到的句子是什么)/i;
+const LISTEN_STEM_EN = /^(?:which picture matches|listen to the dialogue|listen and fill)/i;
 const MOD_ORDER = ['speaking', 'vocab', 'reading', 'mc', 'grammar', 'tense', 'tense2', 'mc2', 'cloze', 'listening', 'ket_pet', 'writing', 'spell'];
 const MOD_META = {
   speaking: { type: 'speaking', name_cn: 'AI口语练习', duration: 30 },
@@ -238,7 +242,7 @@ function validate(week, meta, allWeeks) {
       (d.modules || []).forEach((m) => {
         (m.questions || []).forEach((q) => {
           const t = String(q.sentence || q.question || '').trim();
-          if (!t || /^\d+___$/.test(t) || /听到的句子是什么/.test(t)) return;
+          if (!t || /^\d+___$/.test(t) || ECHO_STEM.test(t)) return;
           const key = t.toLowerCase().replace(/[^a-z0-9 ]/g, '').slice(0, 90);
           if (key) qtexts.set(key, 'W' + (wi + 1));
         });
@@ -273,7 +277,7 @@ function validate(week, meta, allWeeks) {
       (m.questions || []).forEach((q) => {
         if (q.picture_options) kinds.add('选图');
         else if (q.type === 'fill') kinds.add('听写填空');
-        else if (/听到的句子是什么/.test(String(q.question || ''))) kinds.add('复述');
+        else if (ECHO_STEM.test(String(q.question || ''))) kinds.add('复述');
         else kinds.add('问答');
       });
       if (kinds.size < 2) errs.push(tag + '/listening 题型至少 2 种，实际只有 ' + [...kinds].join('/'));
@@ -324,7 +328,7 @@ function validate(week, meta, allWeeks) {
           if (!stem) errs.push(qt + ' 缺题干');
           // 与 verify-weeks 一致：完形 N___ 题干、听力固定题干不参与查重
           const isClozeStem = /^\d+___$/.test(String(stem).trim());
-          const isListenStem = /听到的句子是什么/.test(String(stem));
+          const isListenStem = ECHO_STEM.test(String(stem)) || LISTEN_STEM_EN.test(String(stem));
           if (stem && !isClozeStem && !isListenStem) {
             const key = String(stem).toLowerCase().replace(/[^a-z0-9 ]/g, '').slice(0, 90);
             const dup = key && qtexts.get(key);
@@ -342,7 +346,7 @@ function validate(week, meta, allWeeks) {
             // v165（家长 2026-10-29）：听力不再只有「听原句、选一模一样的原句」
             // 这一种。复述题才要求正确项逐字等于 audio_text；问答 / 选图 /
             // 听写填空各有各的正确项，一刀切会把新题型全判成错。
-            const isEcho = /听到的句子是什么/.test(String(q.question || ''));
+            const isEcho = ECHO_STEM.test(String(q.question || ''));
             if (isEcho && q.options && q.options[q.answer] !== q.audio_text) errs.push(qt + ' 复述题正确项必须等于 audio_text');
             if (q.picture_options && (!q.options || q.options.length !== 4)) errs.push(qt + ' 选图题必须 4 个图片选项');
             if (q.type === 'fill' && !String(q.answer || '').trim()) errs.push(qt + ' 听力填空缺答案');

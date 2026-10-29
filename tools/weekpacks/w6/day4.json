@@ -163,7 +163,7 @@
   ],
   "listening": [
     {
-      "question": "听对话，人们吃粽子是为了什么？",
+      "question": "Listen to the dialogue. Why do people eat zongzi?",
       "audio_text": "Girl: Dad, why do we eat zongzi at the Dragon Boat Festival? Dad: Because we want to remember the poet Qu Yuan. Girl: And what are those long boats for? Dad: They are for the dragon boat races.",
       "options": [
         "To remember Qu Yuan",
@@ -175,7 +175,7 @@
       "explanation_cn": "爸爸说 Because we want to remember the poet Qu Yuan（为了纪念诗人屈原）。后半段说的是龙舟，不是粽子的用意。"
     },
     {
-      "question": "听对话，奶奶什么时候学会包粽子的？",
+      "question": "Listen to the dialogue. When did Grandma learn to make zongzi?",
       "audio_text": "Boy: Can you make zongzi, Grandma? Grandma: Yes, I learned it from my mother when I was ten. Boy: It looks difficult. Grandma: It is easy once you try.",
       "options": [
         "When she was ten",
@@ -187,7 +187,7 @@
       "explanation_cn": "奶奶说 I learned it from my mother when I was ten（十岁时跟妈妈学的）。"
     },
     {
-      "question": "听到的句子说的是哪幅图？",
+      "question": "Which picture matches the sentence you hear?",
       "audio_text": "We watched the dragon boat race on the river yesterday.",
       "picture_options": true,
       "options": [
@@ -200,7 +200,7 @@
       "explanation_cn": "句子里说的是 dragon boat race（龙舟比赛），船在河上，所以选 🛶。"
     },
     {
-      "question": "听录音填空：Every year we cook more zongzi than we need and share them with our ___.",
+      "question": "Listen and fill in the blank: Every year we cook more zongzi than we need and share them with our ___.",
       "type": "fill",
       "answer": "friends",
       "audio_text": "Every year we cook more zongzi than we need and share them with our friends.",

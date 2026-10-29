@@ -65,7 +65,7 @@ section('2. 听力题型多样化（不再是「听原句选原句」）');
   const kindsOf = (q) => {
     if (q.picture_options) return '选图';
     if (q.type === 'fill') return '听写';
-    if (/听到的句子是什么/.test(String(q.question || ''))) return '复述';
+    if (/^(?:which sentence do you hear|听到的句子是什么)/i.test(String(q.question || ''))) return '复述';
     return '问答';
   };
   const allQ = [];
@@ -134,11 +134,11 @@ section('4. 周包工具链能生成这几类题');
 
 section('5. 版本号 165 全线一致');
 {
-  ok(/app-version" content="166"/.test(htmlSrc), 'index.html app-version = 165');
-  const refs = (htmlSrc.match(/\?v=166/g) || []).length;
+  ok(/app-version" content="167"/.test(htmlSrc), 'index.html app-version = 165');
+  const refs = (htmlSrc.match(/\?v=167/g) || []).length;
   ok(refs === 6, 'index.html 6 处脚本引用都升到 165', refs);
-  ok(/amy-english-v166/.test(swSrc), 'sw.js CACHE_NAME = amy-english-v166');
-  ok(/var V = 166;/.test(swSrc), 'sw.js var V = 165');
+  ok(/amy-english-v167/.test(swSrc), 'sw.js CACHE_NAME = amy-english-v167');
+  ok(/var V = 167;/.test(swSrc), 'sw.js var V = 165');
   // 用字符类而不是字面量：以后每周升版本时，批量替换不会把这句负向断言也改掉
   ok(!/amy-english-v16[0-4]/.test(swSrc), 'sw.js 里没有残留旧缓存名');
 }

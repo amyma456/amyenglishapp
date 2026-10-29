@@ -58,24 +58,27 @@ tools/weekpacks/w6/
 
 ### 听力四类题的写法
 
+**v167 起听力题干一律写英文**（家长 2026-10-30：「所有这样的听力的问句都给写成英文」），
+不许再用中文题干。四类的固定写法：
+
 ```jsonc
-// ① 听对话问答：audio_text 里带说话人，题干用中文问「听对话，……？」
-{ "question": "听对话，这本故事书多少钱？",
+// ① 听对话问答：audio_text 里带说话人，题干用英文问「Listen to the dialogue. ……?」
+{ "question": "Listen to the dialogue. How much is the story book?",
   "audio_text": "Boy: How much is this story book? Woman: It's twenty yuan. Boy: Great, I'll pay with my phone.",
   "options": ["Twenty yuan", "Twelve yuan", "Thirty yuan", "Two yuan"], "answer": 0 }
 
 // ② 听句子选图：picture_options = true，options 是 4 张不同 emoji
-{ "question": "听到的句子说的是哪幅图？",
+{ "question": "Which picture matches the sentence you hear?",
   "audio_text": "My sister is cutting the red paper with a pair of scissors.",
   "picture_options": true, "options": ["✂️","🖌️","📏","🔪"], "answer": 0 }
 
 // ③ 听录音填空：type = fill，题干里留 ___，答案必须原样出现在 audio_text 里
-{ "question": "听录音填空：The money leaves your ___ in a second.",
+{ "question": "Listen and fill in the blank: The money leaves your ___ in a second.",
   "type": "fill", "answer": "wallet",
   "audio_text": "The money leaves your wallet in a second." }
 
 // ④ 复述题（老题型，现在最多占听力的 40%）
-{ "question": "听到的句子是什么？", "audio_text": "…", "options": ["…", "…", "…", "…"], "answer": 0 }
+{ "question": "Which sentence do you hear?", "audio_text": "…", "options": ["…", "…", "…", "…"], "answer": 0 }
 ```
 
 **对话必须用说话人标签写（v166 起前端按角色分声部朗读）**：
