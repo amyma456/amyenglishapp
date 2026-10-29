@@ -222,6 +222,23 @@ const ALIYUN_TTS_MODEL = 'qwen3-tts-flash';
 const ALIYUN_TTS_VOICE_CN = 'Cherry';
 const ALIYUN_TTS_VOICE_EN = 'Jennifer';
 
+// 分角色音色（v166，家长 2026-10-29）：
+// 「听力里 Boy、Girl、Woman 都是一个人读的，没有男女区分」—— 对话必须
+// 男读男、女读女。客户端把一段对话拆成「角色 + 台词」逐段请求，用 ?voice=
+// 指定音色；服务端只认下面这四个抽象音色，具体换成哪家的声音在这里决定，
+// 以后换引擎不用动前端。
+//   f1 = 小女孩 / 女学生        f2 = 成年女性（妈妈、奶奶、老师、店员）
+//   m1 = 小男孩 / 男学生        m2 = 成年男性（爸爸、爷爷、店主、司机）
+// 两家都挑"英语母语"的那一档：阿里云 Jennifer / Aiden / Ryan 是专门为美语
+// 训练的男女声，Deepgram aura-2 侧选 asteria（女）/ hera（成年女）/ orion、
+// apollo（男）。f2 与 f1、m2 与 m1 音色差得开，孩子能听出是谁在说话。
+const TTS_VOICES_EN = {
+  f1: { aliyun: 'Jennifer', cf: 'asteria' },
+  f2: { aliyun: 'Serena', cf: 'hera' },
+  m1: { aliyun: 'Aiden', cf: 'orion' },
+  m2: { aliyun: 'Ryan', cf: 'apollo' },
+};
+
 // 消费上限：qwen3-tts-flash ¥0.8/万字符 → 30,000 字符/天 ≈ ¥2.4 封顶。
 // 正常流量远到不了（题库固定 + 边缘缓存），这道闸只防缓存失效/刷量时的
 // 失控账单。计数走 D1（按 UTC 日一行），超额当天自动回落免费通道。
@@ -258,10 +275,14 @@ async function ttsCharsToday(env) {
 // 返回 ArrayBuffer；失败一律抛错，由 tts() 决定降级，不在这里吞。
 // 响应里 output.audio.url 是 24 小时有效的 OSS 直链，必须当场取回字节
 // 再写缓存 —— 缓存里存直链的话，第二天全站孩子都拿到过期签名。
-async function aliyunTtsAudio(text, env) {
+async function aliyunTtsAudio(text, env, voiceId) {
   const key = (env && (env.ALIYUN_KEY || env.DASHSCOPE_API_KEY)) || '';
   if (!key) throw new Error('aliyun_key_missing');
   const hasCJK = /[\u4e00-\u9fff\u3400-\u4dbf]/.test(text);
+  // 角色音色只对纯英文台词生效：中英混排（单词 + 中文释义）仍用 Cherry，
+  // 否则中文释义会被一个只练过英语的嗓子读成怪音。
+  const pick = TTS_VOICES_EN[voiceId];
+  const voiceEn = (pick && pick.aliyun) || ALIYUN_TTS_VOICE_EN;
   const res = await fetch(ALIYUN_TTS_URL, {
     method: 'POST',
     headers: { Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' },
@@ -269,7 +290,7 @@ async function aliyunTtsAudio(text, env) {
       model: ALIYUN_TTS_MODEL,
       input: {
         text: text,
-        voice: hasCJK ? ALIYUN_TTS_VOICE_CN : ALIYUN_TTS_VOICE_EN,
+        voice: hasCJK ? ALIYUN_TTS_VOICE_CN : voiceEn,
         language_type: hasCJK ? 'Chinese' : 'English',
       },
     }),
@@ -289,9 +310,10 @@ async function aliyunTtsAudio(text, env) {
 // 返回 null 表示这条通道这次不可用（每日 neurons 额度耗尽 / 模型报错），
 // 由调用方决定往哪儿降级；不在这里吞掉整条请求。
 // 入参形状的坑见「已知坑」：aura 返回 base64 对象或 ReadableStream，两种都要认。
-async function cfTtsAudio(text, env) {
+async function cfTtsAudio(text, env, speaker) {
   try {
-    const audio = await env.AI.run(TTS_MODEL, { text: text });
+    const input = speaker ? { text: text, speaker: speaker } : { text: text };
+    const audio = await env.AI.run(TTS_MODEL, input);
     // The binding returns either a ReadableStream or an object holding base64.
     let body = audio;
     if (audio && typeof audio === 'object' && !(audio instanceof ReadableStream)) {
@@ -319,6 +341,11 @@ async function tts(request, env, ctx) {
   // engine / prefer 也要进键：同一段文字不同通道音色不同，不能互相串。
   const forceTtsQ = (url.searchParams.get('engine') || '').toLowerCase();
   const preferCf = (url.searchParams.get('prefer') || '').toLowerCase() === 'cf';
+  // 角色音色（v166）：只认 TTS_VOICES_EN 里的四个键，别的值一律当没传，
+  // 免得把任意字符串透到上游当音色名。
+  const voiceQ = (url.searchParams.get('voice') || '').toLowerCase();
+  const voice = Object.prototype.hasOwnProperty.call(TTS_VOICES_EN, voiceQ) ? voiceQ : '';
+  const cfSpeaker = voice ? TTS_VOICES_EN[voice].cf : '';
 
   // 静态预生成表（v97）：固定课程的朗读音频已经用 tools/pregen-tts.js 一次性
   // 合成好、放在 public/tts/ 里。命中就直接回文件 —— 不调上游、不计字符费、
@@ -328,8 +355,10 @@ async function tts(request, env, ctx) {
   //   · prefer=cf —— AI 口语练习是家长点名的 Cloudflare 母语音色，不能被
   //     静态表里另一种音色顶掉（同一句话在两处听起来必须是同一个人）。
   //   · engine=... —— 那是线上排查"到底谁在答"的开关，走静态就查不出来了。
+  //   · voice=...  —— 静态表里那一份是默认音色，拿它当 m1/m2 播出来还是一个人
+  //     的声音，男女不分（v166 对话分角色朗读必须绕开）。
   // 表是空的（还没跑过预生成）时，这里整段都命不中，行为与以前完全一致。
-  if (!preferCf && !forceTtsQ && env.ASSETS
+  if (!preferCf && !forceTtsQ && !voice && env.ASSETS
       && Object.prototype.hasOwnProperty.call(TTS_STATIC, text)) {
     try {
       // 用一个假域名，别用 url.origin：实测拿 amyeng.top 这个自家域名去
@@ -357,6 +386,7 @@ async function tts(request, env, ctx) {
   const cacheKey = new Request(url.origin + '/api/tts?v3'
     + (forceTtsQ ? '&engine=' + forceTtsQ : '')
     + (preferCf ? '&prefer=cf' : '')
+    + (voice ? '&voice=' + voice : '')
     + '&text=' + encodeURIComponent(text), { method: 'GET' });
   const cache = caches.default;
   const hit = await cache.match(cacheKey);
@@ -380,14 +410,22 @@ async function tts(request, env, ctx) {
   // prefer=cf（AI 口语练习）：先用 Cloudflare 的母语音色。额度用完/上游报错
   // 时 body 还是 null，下面照常落阿里云 —— 孩子不会因为额度耗尽就没声音。
   if (!body && preferCf && forceTtsQ !== 'ali') {
-    body = await cfTtsAudio(text, env);
+    body = await cfTtsAudio(text, env, cfSpeaker);
+    if (body) source = 'cf';
+  }
+  // 带角色音色时也先走 Cloudflare（v166）：aura-2 的 asteria/hera/orion/apollo
+  // 都是英语母语的男女声，两个性别一耳朵就能分开；阿里云那几档是老外腔，
+  // 家长对发音挑得很。额度耗尽/上游报错时下面照常落阿里云同色音色，孩子
+  // 至少还能听到"两个人"。
+  if (!body && voice && forceTtsQ !== 'ali') {
+    body = await cfTtsAudio(text, env, cfSpeaker);
     if (body) source = 'cf';
   }
   if (!body && forceTtsQ !== 'cf') {
     const usage = await ttsCharsToday(env);
     if (usage.used < ALIYUN_TTS_DAILY_CHAR_CAP) {
       try {
-        body = await aliyunTtsAudio(text, env);
+        body = await aliyunTtsAudio(text, env, voice);
         source = 'aliyun';
         ctx.waitUntil(usage.add(text.length));
       } catch (e) {
@@ -397,7 +435,7 @@ async function tts(request, env, ctx) {
   }
   if (!body && !preferCf) {
     source = 'cf';
-    body = await cfTtsAudio(text, env);
+    body = await cfTtsAudio(text, env, cfSpeaker);
   }
   if (!body) {
     // 额度用完 / 模型出错：换备用通道。再不行才真的报错，让客户端走

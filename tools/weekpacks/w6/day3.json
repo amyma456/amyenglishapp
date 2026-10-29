@@ -91,7 +91,7 @@
     },
     {
       "question": "听对话，奶奶剪的桃子代表什么？",
-      "audio_text": "Girl: What are you making, Grandma? Grandma: I'm cutting a peach for your birthday. It means long life.",
+      "audio_text": "Boy: What are you making, Grandma? Grandma: I'm cutting a peach for your birthday. It means long life.",
       "options": ["Long life", "Good luck", "A rich year", "A new job"],
       "answer": 0,
       "explanation_cn": "奶奶说 It means long life（代表长寿）。good luck 是贴窗花的用意，a rich year 是鱼的含义。"

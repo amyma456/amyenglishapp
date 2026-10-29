@@ -78,6 +78,17 @@ tools/weekpacks/w6/
 { "question": "听到的句子是什么？", "audio_text": "…", "options": ["…", "…", "…", "…"], "answer": 0 }
 ```
 
+**对话必须用说话人标签写（v166 起前端按角色分声部朗读）**：
+
+- 标签只有这些：`Boy:` `Girl:` `Man:` `Woman:` `Mum:` `Dad:` `Grandma:`
+  `Grandpa:` `Teacher:` `Shopkeeper:` 等（见 `app.js` 的 `DLG_ROLE`）。
+- 标签**不会被念出来**（`_ttsText` 兜底剥离），所以可以放心写在 `audio_text` 里。
+- 男女按角色自动换嗓子：`Boy`→男童、`Girl`→女童、`Man/Dad/Grandpa`→成年男、
+  `Woman/Mum/Grandma/Teacher`→成年女。**一段对话里至少要出现一男一女**，
+  否则听起来还是一个人（`verify-weeks.js` 会查）。
+- 标签要用英文半角冒号 + 一个空格，台词直接跟在后面；台词里称呼别人
+  （"Mum, why …?"）不带冒号，不会被误当标签。
+
 ## 已用题材（新周请避开）
 
 - W1~W4：熊猫/竹子、故宫/长城、恐龙/天文、海岛/海豚、茶、汉字、环保、健康生活

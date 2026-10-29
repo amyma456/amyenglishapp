@@ -67,6 +67,19 @@ for (let w = 0; w < WEEKS.length; w++) {
           ok(!!q.audio_text, qt + ' 听力缺 audio_text');
           const stemHit = LISTEN_STEMS.some(r => r.test(q.question || ''));
           ok(stemHit || !q.options, qt + ' 听力题干异常');
+          // v166（家长 2026-10-29）：「Boy、girl 都是一个人读的」—— 对话稿必须
+          // 带说话人标签，而且一男一女都得有（前端按标签换音色，见 app.js 的
+          // DLG_ROLE）。只写一个人的台词等于又变回一个人读。
+          const at = String(q.audio_text || '');
+          const roles = [];
+          const roleRe = /(?:^|[\s.!?])(boy|girl|man|woman|mum|mom|dad|grandma|grandpa|teacher|shopkeeper)\s*:/gi;
+          let rm;
+          while ((rm = roleRe.exec(at))) roles.push(rm[1].toLowerCase());
+          if (roles.length >= 2) {
+            const hasM = roles.some(r => ['boy', 'man', 'dad', 'grandpa', 'shopkeeper'].indexOf(r) >= 0);
+            const hasF = roles.some(r => ['girl', 'woman', 'mum', 'mom', 'grandma', 'teacher'].indexOf(r) >= 0);
+            ok(hasM && hasF, qt + ' 对话必须一男一女（现在 ' + roles.join('/') + '）');
+          }
         }
         if (m.type === 'cloze') {
           ok(PASSAGE_STEMS.test(q.question || ''), qt + ' 完形填空题干应为 N___');

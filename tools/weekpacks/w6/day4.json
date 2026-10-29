@@ -164,7 +164,7 @@
   "listening": [
     {
       "question": "听对话，人们吃粽子是为了什么？",
-      "audio_text": "Girl: Mum, why do we eat zongzi at the Dragon Boat Festival? Mum: Because we want to remember the poet Qu Yuan. Girl: And what are those long boats for? Mum: They are for the dragon boat races.",
+      "audio_text": "Girl: Dad, why do we eat zongzi at the Dragon Boat Festival? Dad: Because we want to remember the poet Qu Yuan. Girl: And what are those long boats for? Dad: They are for the dragon boat races.",
       "options": [
         "To remember Qu Yuan",
         "To welcome spring",
@@ -172,7 +172,7 @@
         "To celebrate a birthday"
       ],
       "answer": 0,
-      "explanation_cn": "妈妈说 Because we want to remember the poet Qu Yuan（为了纪念诗人屈原）。后半段说的是龙舟，不是粽子的用意。"
+      "explanation_cn": "爸爸说 Because we want to remember the poet Qu Yuan（为了纪念诗人屈原）。后半段说的是龙舟，不是粽子的用意。"
     },
     {
       "question": "听对话，奶奶什么时候学会包粽子的？",

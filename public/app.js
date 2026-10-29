@@ -1648,6 +1648,11 @@ const App = {
   _ttsText(text) {
     var s = String(text === null || text === undefined ? '' : text);
     if (!s) return '';
+    // 说话人标签（v166）：听力原文是 "Girl: Mum, why ...? Mum: Because ..."，
+    // 标签是给界面看的，念出来就是"Girl、冒号"——家长实测孩子听到一串莫名
+    // 其妙的人名。对话朗读本身由 _dialogTurns 按角色拆段（男女分开），这里
+    // 是无条件兜底：任何走 speak() 的路径都不会把标签读出来。
+    s = s.replace(/(^|[\r\n]|[.!?]["”']?\s+)\s*(?:boy|girl|man|woman|mum|mom|mummy|mother|dad|father|daddy|grandma|grandpa|grandmother|grandfather|teacher|doctor|nurse|shopkeeper|assistant|waiter|driver|guide|sir|madam|mr|mrs|ms)\.?\s*[:：]\s*/gi, '$1');
     // 中日韩文字、中文标点、全角字符
     s = s.replace(/[\u3000-\u303f\u4e00-\u9fff\uff00-\uffef]/g, ' ');
     // 方括号里的内容整段丢掉（都是中文答题提示）
@@ -1836,8 +1841,10 @@ const App = {
 
   // 本地音频缓存的键。同一句话在两种音色下是两段不同的音频，键必须分开，
   // 否则谁先取到谁就一直被播（孩子在口语屏听到阿里云的口音就是这么来的）。
-  _ttsKey(text, prefer) {
-    return (prefer ? prefer + '|' : '') + text;
+  // 缓存键。prefer 是通道偏好（'cf'），voice 是角色音色（v166：f1/f2/m1/m2）。
+  // 两者都必须进键 —— 同一句话换个音色就是另一段音频，混用会让男孩读出女声。
+  _ttsKey(text, prefer, voice) {
+    return (prefer ? prefer + '|' : '') + (voice ? 'v:' + voice + '|' : '') + text;
   },
 
   // 某一步会朗读的英文（和各个 step 渲染时读的是同一份文本）
@@ -1854,7 +1861,13 @@ const App = {
       var pairs = this._pairSentences(m);
       return (pairs && pairs[s.si] && pairs[s.si].en) || '';
     }
-    if (s.kind === 'question') return this._questionSpeechText(m, m.questions[s.qi]);
+    if (s.kind === 'question') {
+      var qq = m.questions && m.questions[s.qi];
+      // v166：听力对话改由 _stepDialogTurns 按角色分段、带音色预取，这里不再
+      // 整段预取一份单音色的 —— 那份音频没人会播（男女不分），只是白花字符。
+      if (qq && qq.audio_text && this._dialogTurns(qq.audio_text).length > 1) return '';
+      return this._questionSpeechText(m, qq);
+    }
     // 完形填空逐句翻译（v126）：听的是填满空之后的完整句
     if (s.kind === 'cqtrans') {
       var cs = this._splitSentences(m.passage)[s.si] || '';
@@ -1870,6 +1883,18 @@ const App = {
       return (q && (q.audio_text || q.sentence)) || '';
     }
     return '';
+  },
+
+  // 听力对话这一屏的「角色分段」（v166）。返回空数组 = 不是对话。
+  _stepDialogTurns(steps, dayIdx, i) {
+    var s = steps && steps[i];
+    if (!s || s.kind !== 'question') return [];
+    var day = HOMEWORK_DATA[dayIdx];
+    var m = day && day.modules && day.modules[s.mi];
+    var q = m && m.questions && m.questions[s.qi];
+    if (!q || !q.audio_text) return [];
+    var turns = this._dialogTurns(q.audio_text);
+    return turns.length > 1 ? turns : [];
   },
 
   // 某一步"点了选项之后才会读"的句子。题面本身早就在预取了，但孩子
@@ -1945,6 +1970,11 @@ const App = {
       // writingread 这一屏的句子孩子会一句句点着听，先全取回来
       var curTaps = this._stepTapSpeechTexts(steps, dayIdx, fromIdx);
       for (var n = 0; n < curTaps.length; n++) this.prefetchTts(curTaps[n], fromIdx, curPref);
+      // 听力对话：当前这一屏的每个角色先取回来（带音色，各自一份）
+      var curDlg = this._stepDialogTurns(steps, dayIdx, fromIdx);
+      for (var cd = 0; cd < curDlg.length; cd++) {
+        this.prefetchTts(curDlg[cd].text, fromIdx, '', curDlg[cd].voice);
+      }
     }
 
     for (var i = fromIdx + 1; i <= fromIdx + this.TTS_PREFETCH_AHEAD; i++) {
@@ -1952,6 +1982,11 @@ const App = {
       this.prefetchTts(this._stepSpeechText(steps, dayIdx, i), i, pref);
       var taps = this._stepTapSpeechTexts(steps, dayIdx, i);
       for (var j = 0; j < taps.length; j++) this.prefetchTts(taps[j], i, pref);
+      // 听力对话：每个角色各取一份，带音色（见 _stepDialogTurns）
+      var dlgs = this._stepDialogTurns(steps, dayIdx, i);
+      for (var d = 0; d < dlgs.length; d++) {
+        this.prefetchTts(dlgs[d].text, i, '', dlgs[d].voice);
+      }
     }
     this._ttsTrim();
   },
@@ -1959,12 +1994,13 @@ const App = {
   // 把一句英文排进预取队列。stepIdx 是"这句话属于第几步"—— 取和扔都靠它
   // 排序：越靠近孩子当前这一步，越先取、越不容易被释放。
   // prefer 是音色偏好（'cf' = Cloudflare 母语音色，见 _stepTtsPrefer）。
-  prefetchTts(text, stepIdx, prefer) {
+  prefetchTts(text, stepIdx, prefer, voice) {
     var t = this._ttsText(text);
     if (!t) return;
     t = t.substring(0, 500).trim();
     var pref = prefer || '';
-    var key = this._ttsKey(t, pref);
+    var vc = voice || '';
+    var key = this._ttsKey(t, pref, vc);
     // 单词/字母也要预取：词汇模块"先听一遍"是串行播 5~6 段（逐字母 + 整词），
     // 每段现场去取的话中间全是空档，孩子看着格子干等。现在统一走自家端点
     // （服务端在额度用完时会自动换道有道/百度），取回来存本地，点哪段秒播。
@@ -1984,7 +2020,7 @@ const App = {
     for (var i = 0; i < q.length; i++) {
       if (q[i].key === key) return;                                // 已经排在队里
     }
-    q.push({ key: key, text: t, prefer: pref, step: st });
+    q.push({ key: key, text: t, prefer: pref, voice: vc, step: st });
     this._ttsPump();
   },
 
@@ -2009,7 +2045,8 @@ const App = {
       // 音频记到别人的键上，孩子点读时本地永远没有，白预取一场。
       (function(job) {
         var u = '/api/tts?text=' + encodeURIComponent(job.text)
-              + (job.prefer ? '&prefer=' + encodeURIComponent(job.prefer) : '');
+              + (job.prefer ? '&prefer=' + encodeURIComponent(job.prefer) : '')
+              + (job.voice ? '&voice=' + encodeURIComponent(job.voice) : '');
         fetch(u)
           .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.blob(); })
           .then(function(b) {
@@ -2031,19 +2068,19 @@ const App = {
   },
 
   // 孩子正在等这一句（他刚点下去）—— 把它插到队头，别排在一堆预取后面。
-  _ttsPrioritize(text, prefer) {
+  _ttsPrioritize(text, prefer, voice) {
     var q = this._ttsQueue;
     if (!q) return;
-    var key = this._ttsKey(text, prefer || '');
+    var key = this._ttsKey(text, prefer || '', voice || '');
     for (var i = 0; i < q.length; i++) {
       if (q[i].key === key) { q[i].step = -999; this._ttsPump(); return; }
     }
   },
 
-  _ttsQueued(text, prefer) {
+  _ttsQueued(text, prefer, voice) {
     var q = this._ttsQueue;
     if (!q) return false;
-    var key = this._ttsKey(text, prefer || '');
+    var key = this._ttsKey(text, prefer || '', voice || '');
     for (var i = 0; i < q.length; i++) {
       if (q[i].key === key) return true;
     }
@@ -2126,7 +2163,10 @@ const App = {
     // 音色偏好（v95）：'cf' = 先要 Cloudflare 的母语音色（AI 口语练习用）。
     // 缓存的键和请求参数都要跟着它走，否则会拿到另一条通道的旧音频。
     var prefer = opts.prefer || '';
-    var tkey = this._ttsKey(cleanText, prefer);
+    // 角色音色（v166）：听力对话里男孩/女孩/男人/女人各用各的嗓子。缓存键和
+    // 请求参数都要跟着走，否则会拿到另一个角色的旧音频。
+    var voice = opts.voice || '';
+    var tkey = this._ttsKey(cleanText, prefer, voice);
 
     var audioEl = document.getElementById('tts-player');
     if (!audioEl) { audioEl = new Audio(); }
@@ -2145,7 +2185,9 @@ const App = {
     var isSentence = /\s/.test(cleanText.trim());
     var youdao = 'https://dict.youdao.com/dictvoice?audio=' + encoded + '&type=2';
     var baidu  = 'https://fanyi.baidu.com/gettts?lan=en&text=' + encoded + '&spd=3&source=web';
-    var ownTts = '/api/tts?text=' + encoded + (prefer ? '&prefer=' + encodeURIComponent(prefer) : '');
+    var ownTts = '/api/tts?text=' + encoded
+      + (prefer ? '&prefer=' + encodeURIComponent(prefer) : '')
+      + (voice ? '&voice=' + encodeURIComponent(voice) : '');
     // Sentences go to our own origin FIRST. Routing them to Baidu instead of
     // Youdao fixed nothing on the phones — words still played and sentences
     // still did not, on both iOS Safari and Xiaomi's browser. Both remaining
@@ -2295,15 +2337,15 @@ const App = {
     // 一下并让它插队 —— 直接再发一次请求等于两份音频赛跑，还要跟一堆预取
     // 抢浏览器连接，反而更慢。最多等 2.5 秒，等不到就照旧走网络，行为不变。
     var waitingForPrefetch = !cachedTts
-      && ((self._ttsPending && self._ttsPending[tkey]) || this._ttsQueued(cleanText, prefer));
+      && ((self._ttsPending && self._ttsPending[tkey]) || this._ttsQueued(cleanText, prefer, voice));
     if (waitingForPrefetch) {
-      this._ttsPrioritize(cleanText, prefer);
+      this._ttsPrioritize(cleanText, prefer, voice);
       var waitedMs = 0;
       (function waitForPrefetch() {
         if (self._ttsDone || myToken !== self._speakToken) return;
         var hit = self._ttsBlobs && self._ttsBlobs[tkey];
         if (hit) { ttsUrl = hit; startPlayback(); return; }
-        var busy = (self._ttsPending && self._ttsPending[tkey]) || self._ttsQueued(cleanText, prefer);
+        var busy = (self._ttsPending && self._ttsPending[tkey]) || self._ttsQueued(cleanText, prefer, voice);
         if (waitedMs >= 2500 || !busy) { startPlayback(); return; }
         waitedMs += 120;
         setTimeout(waitForPrefetch, 120);
@@ -2890,6 +2932,90 @@ const App = {
   autoSpeak(text, callback, prefer) {
     if (this.state.audioEnabled && text) {
       this.speak(text, { onDone: callback, prefer: prefer || '' });
+    } else if (callback) {
+      callback();
+    }
+  },
+
+  // ===== 听力对话分角色朗读（v166，家长 2026-10-29）=====
+  // 家长的反馈有两层：
+  //   1) "读出来了 girl woman boy 的这个谁读句子的这个人的称谓"—— 标签被念了
+  //   2) "Boy、girl 都是一个人读的，没有男女的区分"—— 一个嗓子读全场
+  // 做法：把原文按标签拆成「角色 + 台词」，每段用不同音色逐段播；标签本身
+  // 不进朗读文本，也不进跟读文本。
+  //   f1 小女孩 / f2 成年女性 ｜ m1 小男孩 / m2 成年男性
+  // 音色的实际实现（阿里云 Jennifer/Serena/Aiden/Ryan、Cloudflare asteria/
+  // hera/orion/apollo）在 Worker 的 /api/tts?voice= 里，前端只认这四个键。
+  DLG_ROLE: {
+    boy: 'm1', girl: 'f1',
+    man: 'm2', woman: 'f2', sir: 'm2', madam: 'f2', mr: 'm2', mrs: 'f2', ms: 'f2',
+    mum: 'f2', mom: 'f2', mummy: 'f2', mother: 'f2',
+    dad: 'm2', daddy: 'm2', father: 'm2',
+    grandma: 'f2', grandpa: 'm2', grandmother: 'f2', grandfather: 'm2',
+    teacher: 'f2', doctor: 'f2', nurse: 'f2', shopkeeper: 'f2', assistant: 'f2',
+    waiter: 'm2', driver: 'm2', guide: 'f2',
+  },
+
+  // 拆段。没有标签的普通句子返回单段、voice 为空 —— 调用方照旧一个人读。
+  // 标签必须出现在句首或句末标点之后（"the desk. Boy: ..." 这种也算），
+  // 免得把正文里恰好带冒号的词组误当标签切了。
+  _dialogTurns(text) {
+    var raw = String(text === null || text === undefined ? '' : text);
+    var flat = raw.trim();
+    if (!flat) return [];
+    var re = /([A-Za-z]{2,12})\.?\s*[:：]\s*/g;
+    var hits = [];
+    var m;
+    while ((m = re.exec(flat))) {
+      var role = this.DLG_ROLE[String(m[1]).toLowerCase()];
+      if (!role) continue;
+      var prev = (m.index > 0) ? flat.charAt(m.index - 1) : '';
+      if (prev && !/[\s.!?"'’”]/.test(prev)) continue;   // 必须跟在空白/句末之后
+      hits.push({ start: m.index, textStart: m.index + m[0].length, voice: role });
+    }
+    if (!hits.length) return [{ role: '', voice: '', text: flat }];
+    var out = [];
+    // 第一句前面如果有旁白（没有标签的开头），单独作为一段、默认音色
+    if (hits[0].start > 0) {
+      var head = flat.slice(0, hits[0].start).trim();
+      if (head) out.push({ role: '', voice: '', text: head });
+    }
+    for (var i = 0; i < hits.length; i++) {
+      var end = (i + 1 < hits.length) ? hits[i + 1].start : flat.length;
+      var t = flat.slice(hits[i].textStart, end).trim();
+      if (t) out.push({ role: hits[i].voice, voice: hits[i].voice, text: t });
+    }
+    return out.length ? out : [{ role: '', voice: '', text: flat }];
+  },
+
+  // 逐段播：一段读完（onDone）再开下一段，中间不留空档也不叠音。
+  // 用 setTimeout(0) 转下一段而不是直接调用 —— finishTTS 是「先回调、再把
+  // _ttsCallback 置空」，直接调会把下一段刚设好的回调冲掉，第二段之后就哑了。
+  speakDialog(text, opts) {
+    opts = opts || {};
+    var self = this;
+    var turns = this._dialogTurns(text);
+    if (!turns.length) { if (opts.onDone) opts.onDone(); return; }
+    if (turns.length === 1 && !turns[0].voice) {   // 不是对话，走原来的路
+      this.speak(turns[0].text, opts);
+      return;
+    }
+    var i = 0;
+    var step = function() {
+      if (i >= turns.length) { if (opts.onDone) opts.onDone(); return; }
+      var t = turns[i++];
+      self.speak(t.text, {
+        voice: t.voice,
+        prefer: opts.prefer || '',
+        onDone: function() { setTimeout(step, 0); },
+      });
+    };
+    step();
+  },
+
+  autoSpeakDialog(text, callback) {
+    if (this.state.audioEnabled && text) {
+      this.speakDialog(text, { onDone: callback });
     } else if (callback) {
       callback();
     }
@@ -11079,7 +11205,7 @@ const App = {
              + '<p class="sent-words">' + this._wordSpans(m.passage) + '</p></div>';
       }
       if (m.audio_text) {
-        html += '<div class="mb-8"><button class="btn btn-outline btn-sm" onclick="App.speak(\'' + m.audio_text.replace(/'/g,"\\'") + '\')">听录音</button></div>';
+        html += '<div class="mb-8"><button class="btn btn-outline btn-sm" onclick="App.speakDialog(\'' + m.audio_text.replace(/'/g,"\\'") + '\')">听录音</button></div>';
       }
       html += '<div class="stage-q">' + this._renderOneQuestion(m, step.mi, step.qi, dayIdx) + '</div>';
       // 学生路径：题目可跟读时先把 stage-next-btn 锁住，必须跟读 ≥60 分
@@ -11221,7 +11347,7 @@ const App = {
       html += '<div class="card mb-16" style="background:var(--bg)"><div class="fs-12 text-sub mb-4">📄 阅读材料：</div>' + (m.passage_cn||'') + '<br><br>' + m.passage + '</div>';
     }
     if (m.audio_text) {
-      html += '<div class="card mb-16" style="background:var(--info-light)"><button class="speak-btn play" onclick="App.speak(\'' + m.audio_text.replace(/'/g,"\\'") + '\')">🔊 听录音</button>';
+      html += '<div class="card mb-16" style="background:var(--info-light)"><button class="speak-btn play" onclick="App.speakDialog(\'' + m.audio_text.replace(/'/g,"\\'") + '\')">🔊 听录音</button>';
       html += '</div>';
     }
     m.questions.forEach((q, qi) => {
@@ -11234,7 +11360,8 @@ const App = {
     setTimeout(function() {
       if (m.audio_text && self.state.audioEnabled) {
         // Play audio_text first, then first question
-        self.speak(m.audio_text, { onDone: function() {
+        // v166：这段是对话稿（"Girl: ... Mum: ..."）就按角色逐段播，男女分开
+        self.speakDialog(m.audio_text, { onDone: function() {
           self._autoSpeakQuestion(m, mi, 0, dayIdx);
         }});
       } else if (m.questions && m.questions.length > 0) {
@@ -11453,13 +11580,21 @@ const App = {
     // 解锁只是允许他提前选，选完还有一整句示范要听。
     var done = false;
     var open = function() { if (!done) { done = true; unlock(); } };
-    this.autoSpeak(speakText, open);
+    // v166：听力对话稿（"Girl: ... Mum: ..."）逐段播，一人一个嗓子；
+    // 其它题型照旧整句播。
+    var dlgRaw = (m && m.type === 'listening' && q && q.audio_text) ? String(q.audio_text) : '';
+    var dlgTurns = dlgRaw ? this._dialogTurns(dlgRaw) : [];
+    if (dlgTurns.length > 1) this.autoSpeakDialog(dlgRaw, open);
+    else this.autoSpeak(speakText, open);
     // v165：听对话、听短文比听一句长得多，6 秒兜底会把孩子放进去太早（还没
     // 听完就能点，等于没听）。听力题按音频长度放长兜底：约 90ms/字符，最少
-    // 6 秒、最多 18 秒；正常播放完 onDone 会立刻解锁，这里只防朗读卡死。
+    // 6 秒、最多 18 秒；v166 每多一个角色再加 300ms 接缝，正常播放完 onDone
+    // 会立刻解锁，这里只防朗读卡死。
     var waitMs = 6000;
     if (m && m.type === 'listening' && q.audio_text) {
-      waitMs = Math.max(6000, Math.min(18000, Math.round(String(q.audio_text).length * 90)));
+      waitMs = Math.round(String(q.audio_text).length * 90);
+      if (dlgTurns.length > 1) waitMs += (dlgTurns.length - 1) * 300;
+      waitMs = Math.max(6000, Math.min(18000, waitMs));
     }
     setTimeout(open, waitMs);
   },
@@ -11478,10 +11613,14 @@ const App = {
       if (waitEl) waitEl.style.display = 'none';
       return;
     }
-    this.speak(speakText, { onDone: function() {
+    // v166：重听也按角色分声部（"重新听"是孩子最常点的按钮）
+    var onDone = function() {
       if (optsEl) { optsEl.style.opacity = '1'; optsEl.style.pointerEvents = 'auto'; }
       if (waitEl) waitEl.style.display = 'none';
-    }});
+    };
+    var dlgRaw = (q && q.audio_text) ? String(q.audio_text) : '';
+    if (dlgRaw && this._dialogTurns(dlgRaw).length > 1) this.speakDialog(dlgRaw, { onDone: onDone });
+    else this.speak(speakText, { onDone: onDone });
   },
 
   selectAnswer(mi, qi, oi, dayIdx) {
