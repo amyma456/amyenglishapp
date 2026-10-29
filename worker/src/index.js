@@ -313,7 +313,14 @@ async function aliyunTtsAudio(text, env, voiceId) {
 async function cfTtsAudio(text, env, speaker) {
   try {
     const input = speaker ? { text: text, speaker: speaker } : { text: text };
-    const audio = await env.AI.run(TTS_MODEL, input);
+    // 上游卡住时不能把整条 /api/tts 拖死（v166）：6 秒拿不到就当这条通道
+    // 这次不可用，调用方立刻落阿里云 —— 最坏结果是少一个角色音色，绝不能
+    // 是"点了没声音"。
+    const audio = await Promise.race([
+      env.AI.run(TTS_MODEL, input),
+      new Promise((r) => setTimeout(() => r(null), 6000)),
+    ]);
+    if (!audio) return null;
     // The binding returns either a ReadableStream or an object holding base64.
     let body = audio;
     if (audio && typeof audio === 'object' && !(audio instanceof ReadableStream)) {
