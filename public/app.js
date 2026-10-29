@@ -7713,6 +7713,13 @@ const App = {
     html += '<div class="sent-tip">👆 点单词看中文意思 · 点下面听整句英文</div>';
     html += '<div class="sent-listen">'
          + this._gateListenHtml(this._gid('trsg', mi, si), pair.en, '🔊 听整句英文') + '</div>';
+    // v170（家长 2026-10-30）：翻译过一遍之后，正确的译文要常驻在这一屏上，
+    // 不再藏在结果区里 —— 孩子重说的时候要能看着正确译文开口。
+    this._trTried = this._trTried || {};
+    if (this._trTried['tr-' + this.state.currentDay + '-' + mi + '-' + si]) {
+      html += '<div class="tr-block tr-inline"><div class="tr-label">参考译文（可以照着说）</div>'
+           + '<div class="tr-text ref">' + pair.cn + '</div></div>';
+    }
     html += '<div class="sent-hint">先点上面「听整句英文」，再用中文说出这句话的意思</div>';
     // v137：先说中文也得先听英文。家长 2026-10-17：「按住说中文的时候，
     // 之前是要点一下英文听完，然后去说中文，现在不点也能直接说」——
@@ -7753,6 +7760,11 @@ const App = {
       const voiceOk = !heard && self._judgeSilence(out).voiceOk;
       const r = self.scoreTranslation(pair.cn, heard);
 
+      // v170（家长 2026-10-30）：无论对错，说完一遍参考译文就要出来。
+      // 以前只在"识别到话"时才亮，识别没回话但确实出了声时孩子看不到正确译文。
+      this._trTried = this._trTried || {};
+      this._trTried['tr-' + self.state.currentDay + '-' + mi + '-' + si] = true;
+
       let html = '<div class="spell-summary">';
       html += '<div class="ss-head"><span class="ss-score">'
            + (heard ? r.score : (voiceOk ? '✓' : '—')) + '</span>'
@@ -7762,9 +7774,9 @@ const App = {
       if (heard) {
         html += '<div class="tr-block"><div class="tr-label">你说的</div>'
              + '<div class="tr-text">' + heard + '</div></div>';
-        html += '<div class="tr-block"><div class="tr-label">参考答案</div>'
-             + '<div class="tr-text ref">' + pair.cn + '</div></div>';
       }
+      html += '<div class="tr-block"><div class="tr-label">参考答案</div>'
+           + '<div class="tr-text ref">' + pair.cn + '</div></div>';
       if (out.samples) {
         const joined = Recorder.join([out.samples], 0);
         if (joined) html += '<audio controls src="' + URL.createObjectURL(joined.blob)
@@ -7978,6 +7990,13 @@ const App = {
     html += '<div class="sent-tip">👆 点单词看中文意思 · 点下面听整句英文</div>';
     html += '<div class="sent-listen">'
          + this._gateListenHtml(this._gid('cqtrsg', mi, si), shown, '🔊 听整句英文') + '</div>';
+    // v170（家长 2026-10-30）：同阅读逐句 —— 试过一遍后参考译文常驻这一屏。
+    this._trTried = this._trTried || {};
+    const refCnShown = this._clozeSentenceRefCn(m, si, sent);
+    if (this._trTried['cqtr-' + this.state.currentDay + '-' + mi + '-' + si] && refCnShown) {
+      html += '<div class="tr-block tr-inline"><div class="tr-label">参考译文（可以照着说）</div>'
+           + '<div class="tr-text ref">' + refCnShown + '</div></div>';
+    }
     html += '<div class="sent-hint">先听一遍英文，想一想这句是什么意思，再点一下按钮说中文（说完再点一下结束）</div>';
     // v137：同上，完形填空的逐句翻译也要"先听英文，再说中文"。
     html += '<button class="word-read-btn hold-target gate-locked" id="cqtrs-btn-' + mi + '-' + si + '"'
@@ -8053,6 +8072,11 @@ const App = {
       const band = canScore ? self._transBand(heard ? r.score : 0, !!heard)
                             : (heard ? 'pass' : 'retry');
 
+      // v170（家长 2026-10-30）：无论对错，说完一遍参考译文都要出来 ——
+      // 以前"过了"反而不亮，孩子不知道标准说法是什么。
+      this._trTried = this._trTried || {};
+      this._trTried['cqtr-' + self.state.currentDay + '-' + mi + '-' + si] = true;
+
       let html = '<div class="spell-summary">';
       if (canScore) {
         html += '<div class="ss-head"><span class="ss-score">'
@@ -8069,9 +8093,10 @@ const App = {
         html += '<div class="tr-block"><div class="tr-label">你说的</div>'
              + '<div class="tr-text">' + heard + '</div></div>';
       }
-      // 小错 / 大错都亮原文 —— 家长："翻译错了，就出来翻译的原文"
-      if (canScore && band !== 'pass' && refCn) {
-        html += '<div class="tr-block"><div class="tr-label">' + (band === 'soft' ? '参考答案' : '原文（照着说一遍）')
+      // v170：无论对错都亮参考 —— 家长 2026-10-30："无论对错，孩子们翻译完
+      // 一遍之后都出来正确的译文"。过了也让他看到标准说法。
+      if (refCn) {
+        html += '<div class="tr-block"><div class="tr-label">' + (band === 'pass' ? '参考译文' : (band === 'soft' ? '参考答案' : '原文（照着说一遍）'))
              + '</div><div class="tr-text ref">' + refCn + '</div></div>';
       }
       if (out.samples) {
@@ -8664,6 +8689,13 @@ const App = {
     html += '<div class="sent-tip">👆 点单词看中文意思</div>';
     html += '<div class="pf-actions">';
     html += '<button class="btn-ghost" onclick="App.speak(\'' + esc + '\')">听全文</button>';
+    // v170（家长 2026-10-30）：整篇翻译说过一遍后，参考翻译常驻在录音按钮
+    // 上方 —— 孩子重说的时候能看着正确译文开口。
+    this._trTried = this._trTried || {};
+    if (m.passage_cn && this._trTried['pass-' + this.state.currentDay + '-' + mi]) {
+      html += '<div class="tr-block tr-inline"><div class="tr-label">参考翻译（可以照着说）</div>'
+           + '<div class="tr-text ref">' + m.passage_cn + '</div></div>';
+    }
     if (m.passage_cn) {
       html += '<button class="word-read-btn" id="tr-btn-' + mi + '" onclick="App.toggleTranslate(' + mi + ')">开始翻译录音</button>';
     }
@@ -8710,6 +8742,11 @@ const App = {
       // 因为它本来就不判对错（意思覆盖而已）。
       Api.perfEnd({ kind: (heard || voiceOk) ? 'pass' : 'fail' });
 
+      // v170（家长 2026-10-30）：无论对错（哪怕识别没回话但出了声），
+      // 说完一遍参考翻译就要出来，并且常驻在这一屏。
+      this._trTried = this._trTried || {};
+      this._trTried['pass-' + this.state.currentDay + '-' + mi] = true;
+
       let html = '<div class="spell-summary">';
       html += '<div class="ss-head"><span class="ss-score">'
            + (heard ? r.score : (voiceOk ? '✓' : '—')) + '</span>'
@@ -8719,8 +8756,10 @@ const App = {
       if (heard) {
         html += '<div class="tr-block"><div class="tr-label">你说的</div><div class="tr-text">'
              + this._toSimplified(heard) + '</div></div>';
-        html += '<div class="tr-block"><div class="tr-label">参考翻译</div><div class="tr-text ref">'
-             + m.passage_cn + '</div></div>';
+      }
+      html += '<div class="tr-block"><div class="tr-label">参考翻译</div><div class="tr-text ref">'
+           + m.passage_cn + '</div></div>';
+      if (heard) {
         html += '<p class="fs-12 text-sub">翻译没有标准答案，这个分数只看意思覆盖了多少，说法不同不代表错。</p>';
       }
       const joined = out.samples ? Recorder.join([out.samples], 0) : null;

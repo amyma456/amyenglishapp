@@ -98,9 +98,9 @@ section('3. 恢复名单与 showApp 接线');
 
 section('4. 版本号 v162');
 {
-  ok(htmlSrc.includes('app-version" content="169"'), 'index.html app-version=161');
-  ok(/\.js\?v=169/.test(htmlSrc), 'index.html 资源 ?v=169');
-  ok(swSrc.includes('amy-english-v169') && /var V = 169;/.test(swSrc), 'sw.js 版本 161');
+  ok(htmlSrc.includes('app-version" content="170"'), 'index.html app-version=161');
+  ok(/\.js\?v=170/.test(htmlSrc), 'index.html 资源 ?v=170');
+  ok(swSrc.includes('amy-english-v170') && /var V = 170;/.test(swSrc), 'sw.js 版本 161');
   ok(!/content="160"|\?v=160|amy-english-v160/.test(htmlSrc + swSrc), '无 160 残留');
 }
 
