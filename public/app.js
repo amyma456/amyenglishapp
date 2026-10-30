@@ -2937,6 +2937,43 @@ const App = {
     }
   },
 
+  // ===== v173（家长 2026-10-30）：翻译屏进屏就自动读，不用孩子点 =====
+  //
+  // 家长原话：「只要到这个界面里呢，系统就直接先读出来系统的音，不要让学生
+  // 来点，减少时滞。学生直接可以听完就说。」
+  //
+  // 以前这一屏得先点「🔊 听整句英文」，听完那颗「说中文」才摘锁 —— 多一次
+  // 点击、多一次等待，孩子还得先明白"要先去点它"。现在落屏就读：
+  //   · 播完（onDone）立刻 _gateUnlock，孩子抬眼就能点「说中文」；
+  //   · 断网 / 静音时 onDone 永远不来，用 _gateFallbackMs 兜底放行，
+  //     绝不把孩子锁死在这一屏；
+  //   · 那颗按钮留着，改叫「再听一遍」，想重听随时点（门禁仍然认它）。
+  // 音频几乎总是已经在本地（prefetchUpcoming 对 translate/cqtrans 都预取过），
+  // 所以这一遍基本是"落屏即响"，不再等网络合成。
+  _autoSpeakTranslate(kind, m, mi, si, dayIdx) {
+    const self = this;
+    const isCq = kind === 'cqtrans';
+    const gid = this._gid(isCq ? 'cqtrsg' : 'trsg', mi, si);
+    let say = '';
+    if (isCq) {
+      const sent = (this._splitSentences(m.passage) || [])[si] || '';
+      say = this._clozeFillSentence(m, sent, false) || sent;
+    } else {
+      const pair = (this._pairSentences(m) || [])[si];
+      say = (pair && pair.en) || '';
+    }
+    if (!say) { this._gateUnlock(gid); return; }
+    let opened = false;
+    const open = function() {
+      if (opened) return;
+      opened = true;
+      self._gateUnlock(gid);
+    };
+    // 兜底：声音因断网/系统静音没响，onDone 不会来 —— 到点必须放行。
+    setTimeout(open, this._gateFallbackMs(say) + 600);
+    this.autoSpeak(say, open);
+  },
+
   // ===== 听力对话分角色朗读（v166，家长 2026-10-29）=====
   // 家长的反馈有两层：
   //   1) "读出来了 girl woman boy 的这个谁读句子的这个人的称谓"—— 标签被念了
@@ -7710,9 +7747,10 @@ const App = {
     html += '<div class="sent-progress">翻译 ' + (si + 1) + ' / ' + pairs.length + ' 句</div>';
     // 同阅读逐句：词可点（查意思），整句听英文改由下面的按钮承担。
     html += '<div class="sent-text sent-words">' + this._wordSpans(pair.en) + '</div>';
-    html += '<div class="sent-tip">👆 点单词看中文意思 · 点下面听整句英文</div>';
+    // v173（家长 2026-10-30）：进屏系统自己读，不用孩子点（见 _autoSpeakTranslate）
+    html += '<div class="sent-tip">👆 点单词看中文意思 · 英文会自动读，想再听就点下面的按钮</div>';
     html += '<div class="sent-listen">'
-         + this._gateListenHtml(this._gid('trsg', mi, si), pair.en, '🔊 听整句英文') + '</div>';
+         + this._gateListenHtml(this._gid('trsg', mi, si), pair.en, '🔊 再听一遍') + '</div>';
     // v171（家长 2026-10-30 下午）：译文**不再**一说了就常驻 —— 那样孩子会
     // 照着念，等于没思考。现在只有"这一遍没到 60 分"才把参考译文摆出来让
     // 他背；背好了点按钮重说，录音一开始这块会立刻藏起来（_trBlind）。
@@ -7724,7 +7762,7 @@ const App = {
            + '<div class="tr-label">📖 参考译文（背一背，背好再点按钮）</div>'
            + '<div class="tr-text ref">' + pair.cn + '</div></div>';
     }
-    html += '<div class="sent-hint">先点上面「听整句英文」，自己想清楚意思，再点按钮说中文'
+    html += '<div class="sent-hint">英文已经自动读过，听完想清楚意思，再点按钮说中文'
          + (needMemo ? ' · 说的时候答案会藏起来' : '') + '</div>';
     // v137：先说中文也得先听英文。家长 2026-10-17：「按住说中文的时候，
     // 之前是要点一下英文听完，然后去说中文，现在不点也能直接说」——
@@ -7732,6 +7770,7 @@ const App = {
     // 于是孩子可以跳过听力直接把中文蒙一遍。现在挂同一个 gid：
     // 听完那句英文（_gateUnlock）按钮才摘锁，没听就按住会被 _gateNudge
     // 拦下来，并闪一下上面那颗「听整句英文」。
+    // v173：进屏自动朗读，读完立刻 _gateUnlock —— 门还在，但不再需要孩子点。
     html += '<button class="word-read-btn hold-target gate-locked" id="trs-btn-' + mi + '-' + si + '"'
          + ' data-gate="' + this._gid('trsg', mi, si) + '"'
          + ' data-nudge="🔊 先听一遍这句英文，再用中文说意思"'
@@ -8033,9 +8072,9 @@ const App = {
     // 空位在这句里 → 显示填好正确答案的完整句，孩子翻译的是完整的一句话。
     const shown = this._clozeFillSentence(m, sent, false) || sent;
     html += '<div class="sent-text sent-words">' + this._wordSpans(shown) + '</div>';
-    html += '<div class="sent-tip">👆 点单词看中文意思 · 点下面听整句英文</div>';
+    html += '<div class="sent-tip">👆 点单词看中文意思 · 英文会自动读，想再听就点下面的按钮</div>';
     html += '<div class="sent-listen">'
-         + this._gateListenHtml(this._gid('cqtrsg', mi, si), shown, '🔊 听整句英文') + '</div>';
+         + this._gateListenHtml(this._gid('cqtrsg', mi, si), shown, '🔊 再听一遍') + '</div>';
     // v171（家长 2026-10-30）：同阅读逐句 —— 只有没到 60 分才把参考译文摆出来
     // 让他背；录音一开始这块就被 _trBlind 收起来，不能照着念。
     this._trMemo = this._trMemo || {};
@@ -8047,7 +8086,7 @@ const App = {
            + '<div class="tr-label">📖 参考译文（背一背，背好再点按钮）</div>'
            + '<div class="tr-text ref">' + refCnShown + '</div></div>';
     }
-    html += '<div class="sent-hint">先听一遍英文，自己想清楚意思，再点一下按钮说中文'
+    html += '<div class="sent-hint">英文已经自动读过，听完想清楚意思，再点一下按钮说中文'
          + '（说完再点一下结束）' + (needMemo ? ' · 说的时候答案会藏起来' : '') + '</div>';
     // v137：同上，完形填空的逐句翻译也要"先听英文，再说中文"。
     html += '<button class="word-read-btn hold-target gate-locked" id="cqtrs-btn-' + mi + '-' + si + '"'
@@ -8868,6 +8907,9 @@ const App = {
       return;
     }
     this._trRecording = true;
+    // v173：进屏会自动朗读全文，孩子一按录音就先把朗读掐掉 —— 否则示范声
+    // 会被一起录进去，识别出来的中文里掺着英文。
+    this._stopCurrentAudio();
     // v171：开录先把参考翻译和上次结果遮住 —— 不许照着念。
     const memoEl = document.getElementById('tr-memo-' + mi);
     if (memoEl) memoEl.style.display = 'none';
@@ -11309,6 +11351,12 @@ const App = {
       // 完形填空的整篇逐句翻译（v126）：和阅读理解逐句翻译同一套交互。
       html += this.renderClozeTransStep(m, step.mi, step.si, dayIdx);
       this._lockNextOnRender = true;
+      // v173：进屏自动读这句（读完自动解锁「说中文」），不用孩子先点。
+      const selfCq = this;
+      setTimeout(function() {
+        if (!document.getElementById('cqtrs-btn-' + step.mi + '-' + step.si)) return;   // 已经翻走了
+        selfCq._autoSpeakTranslate('cqtrans', m, step.mi, step.si, dayIdx);
+      }, 180);
     } else if (step.kind === 'clozegroup') {
       // 同一句里的多个空合成一屏做完（v126）。
       this._currentClozeGroup = { mi: step.mi, qis: step.qis || [step.qi] };
@@ -11336,9 +11384,24 @@ const App = {
       }
     } else if (step.kind === 'passage') {
       html += this.renderPassageStep(m, step.mi, dayIdx);
+      // v173：这一屏（英中句对不齐时的整篇翻译）落屏也自动读全文，
+      // 孩子一按「开始翻译录音」就停（见 toggleTranslate），不会录进示范声。
+      if (m.passage_cn && m.passage) {
+        const selfPs = this;
+        setTimeout(function() {
+          if (!document.getElementById('tr-btn-' + step.mi)) return;
+          selfPs.autoSpeak(m.passage);
+        }, 180);
+      }
     } else if (step.kind === 'translate') {
       html += this.renderTranslateStep(m, step.mi, step.si, dayIdx);
       this._lockNextOnRender = true;
+      // v173：同上 —— 落屏就读，读完自动解锁，孩子直接开口。
+      const selfTr = this;
+      setTimeout(function() {
+        if (!document.getElementById('trs-btn-' + step.mi + '-' + step.si)) return;
+        selfTr._autoSpeakTranslate('translate', m, step.mi, step.si, dayIdx);
+      }, 180);
     } else if (step.kind === 'question') {
       // English only — the child has already read this passage aloud.
       if (m.passage) {
