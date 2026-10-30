@@ -84,10 +84,10 @@ section('3. previewGo 收口干净（不污染学生状态）');
 
 section('4. 版本号 v158');
 {
-  ok(htmlSrc.includes('app-version" content="173"'), 'index.html app-version=158');
-  ok(/\.js\?v=173/.test(htmlSrc), 'index.html 资源 ?v=158');
-  ok(swSrc.includes('amy-english-v173'), 'sw.js CACHE_NAME=v158');
-  ok(/var V = 173;/.test(swSrc), 'sw.js var V = 158');
+  ok(htmlSrc.includes('app-version" content="174"'), 'index.html app-version=158');
+  ok(/\.js\?v=174/.test(htmlSrc), 'index.html 资源 ?v=158');
+  ok(swSrc.includes('amy-english-v174'), 'sw.js CACHE_NAME=v158');
+  ok(/var V = 174;/.test(swSrc), 'sw.js var V = 158');
   ok(!/\?v=157/.test(htmlSrc) && !/amy-english-v157/.test(swSrc), '无 157 残留');
 }
 
