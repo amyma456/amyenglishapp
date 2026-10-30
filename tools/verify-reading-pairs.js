@@ -75,8 +75,10 @@ ok(tmPairs.length >= 6 && tmPairs.some(p => p.cn.indexOf('博物馆') !== -1),
 ok(tmPairs.every(p => p.en && p.cn), '每一句都有英文原句和中文参考');
 
 // 逐句步骤里词可点（点单词看中文意思）+ 参考答案就是系统里那句中文
+// v171：标签会随"要不要背"变（参考答案 / 参考译文（先背一背）），所以按
+// "标签后面紧跟 pair.cn 的译文块"来认，不再死认某一种标签文字。
 ok(/_wordSpans\(pair\.en\)/.test(appSrc), '逐句翻译页英文按词切分（可点查意思）');
-ok(/参考答案<\/div>\s*'?\s*\+\s*'?'?\s*\+?\s*pair\.cn|tr-label">参考答案/.test(appSrc),
+ok(/tr-label">'\s*[\s\S]{0,160}pair\.cn|tr-label">参考答案/.test(appSrc),
    '逐句翻译的参考答案用的是 passage_cn 里对应的那句（和听力/中文对得上）');
 
 // ② 切分器单元行为

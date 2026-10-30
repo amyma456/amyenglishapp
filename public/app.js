@@ -7713,14 +7713,19 @@ const App = {
     html += '<div class="sent-tip">👆 点单词看中文意思 · 点下面听整句英文</div>';
     html += '<div class="sent-listen">'
          + this._gateListenHtml(this._gid('trsg', mi, si), pair.en, '🔊 听整句英文') + '</div>';
-    // v170（家长 2026-10-30）：翻译过一遍之后，正确的译文要常驻在这一屏上，
-    // 不再藏在结果区里 —— 孩子重说的时候要能看着正确译文开口。
-    this._trTried = this._trTried || {};
-    if (this._trTried['tr-' + this.state.currentDay + '-' + mi + '-' + si]) {
-      html += '<div class="tr-block tr-inline"><div class="tr-label">参考译文（可以照着说）</div>'
+    // v171（家长 2026-10-30 下午）：译文**不再**一说了就常驻 —— 那样孩子会
+    // 照着念，等于没思考。现在只有"这一遍没到 60 分"才把参考译文摆出来让
+    // 他背；背好了点按钮重说，录音一开始这块会立刻藏起来（_trBlind）。
+    this._trMemo = this._trMemo || {};
+    const memoKey = 'tr-' + this.state.currentDay + '-' + mi + '-' + si;
+    const needMemo = !!this._trMemo[memoKey];
+    if (needMemo) {
+      html += '<div class="tr-block tr-inline" id="trs-memo-' + mi + '-' + si + '">'
+           + '<div class="tr-label">📖 参考译文（背一背，背好再点按钮）</div>'
            + '<div class="tr-text ref">' + pair.cn + '</div></div>';
     }
-    html += '<div class="sent-hint">先点上面「听整句英文」，再用中文说出这句话的意思</div>';
+    html += '<div class="sent-hint">先点上面「听整句英文」，自己想清楚意思，再点按钮说中文'
+         + (needMemo ? ' · 说的时候答案会藏起来' : '') + '</div>';
     // v137：先说中文也得先听英文。家长 2026-10-17：「按住说中文的时候，
     // 之前是要点一下英文听完，然后去说中文，现在不点也能直接说」——
     // 这一屏的听入口有 data-gate，但"按住说中文"这颗按钮一直没挂门，
@@ -7731,7 +7736,8 @@ const App = {
          + ' data-gate="' + this._gid('trsg', mi, si) + '"'
          + ' data-nudge="🔊 先听一遍这句英文，再用中文说意思"'
          + ' onpointerdown="App._translateSentence(event,' + mi + ',' + si + ')"'
-         + ' oncontextmenu="return false">🎤 点一下说中文</button>';
+         + ' oncontextmenu="return false">'
+         + (needMemo ? '🎤 我背好了，再说一遍' : '🎤 点一下说中文') + '</button>';
     html += '<div id="trs-status-' + mi + '-' + si + '"></div>';
     html += '<div id="trs-result-' + mi + '-' + si + '"></div>';
     html += '</div>';
@@ -7745,25 +7751,33 @@ const App = {
     if (!pair) return;
     const btn = document.getElementById('trs-btn-' + mi + '-' + si);
     const status = document.getElementById('trs-status-' + mi + '-' + si);
+    // v171：门还没开（没听英文）就什么都别动 —— 别把答案先藏了又不录。
+    if (btn && btn.classList.contains('gate-locked')) return;
     if (btn) btn.classList.add('reading');
 
     // v163 一键录音：第一下开始，再点一下结束。
     if (this._holdKey === 'trs-' + mi + '-' + si) return this._holdEnd();
+    // v171（家长 2026-10-30）：开录的这一刻先把答案遮住 —— 家长原话
+    // 「在录的过程中，把译文隐藏起来」，孩子只能靠自己想出来的说。
+    this._trBlind('trs', mi, si);
     this._holdToggleNext = true;
     this._holdStart(ev, 'trs-' + mi + '-' + si, '这句的意思', status, function (out, text) {
       // 孩子说的是中文 —— 必须用多语种模型识别
       if (btn) btn.classList.remove('reading');
-      if (!out) return;
+      if (!out) { self._trRestore(); return; }
       const heard = text ? self._toSimplified(text) : '';
       // v139：出声了就算数。识别端没回话（晚高峰吐空）不再让孩子重说。
       self._micNote(out, 'v148');
       const voiceOk = !heard && self._judgeSilence(out).voiceOk;
       const r = self.scoreTranslation(pair.cn, heard);
 
-      // v170（家长 2026-10-30）：无论对错，说完一遍参考译文就要出来。
-      // 以前只在"识别到话"时才亮，识别没回话但确实出了声时孩子看不到正确译文。
-      this._trTried = this._trTried || {};
-      this._trTried['tr-' + self.state.currentDay + '-' + mi + '-' + si] = true;
+      // v171：<60 分 → 记成"要背"；达标 → 清掉标记（下次进来不再剧透）。
+      // v170 的"无论对错都出参考译文"仍然保留（结果区里给对照），但译文
+      // 不再常驻在说话按钮上方。
+      const below = !!heard && r.score < self.PASS_SCORE;
+      self._trMemo = self._trMemo || {};
+      const mk = 'tr-' + self.state.currentDay + '-' + mi + '-' + si;
+      if (below) self._trMemo[mk] = true; else delete self._trMemo[mk];
 
       let html = '<div class="spell-summary">';
       html += '<div class="ss-head"><span class="ss-score">'
@@ -7775,17 +7789,25 @@ const App = {
         html += '<div class="tr-block"><div class="tr-label">你说的</div>'
              + '<div class="tr-text">' + heard + '</div></div>';
       }
-      html += '<div class="tr-block"><div class="tr-label">参考答案</div>'
+      html += '<div class="tr-block"><div class="tr-label">'
+           + (below ? '参考译文（先背一背）' : '参考答案') + '</div>'
            + '<div class="tr-text ref">' + pair.cn + '</div></div>';
       if (out.samples) {
         const joined = Recorder.join([out.samples], 0);
         if (joined) html += '<audio controls src="' + URL.createObjectURL(joined.blob)
                          + '" style="width:100%;max-width:280px;height:32px"></audio>';
       }
+      if (below) {
+        html += '<div class="tr-memo-tip">📖 这一遍 ' + r.score + ' 分，还没到 ' + self.PASS_SCORE
+             + ' 分。先背一背上面的参考译文，背好了再点「🎤 我背好了，再说一遍」——'
+             + '录音的时候答案会藏起来，要靠自己说出来。</div>';
+      }
       html += '</div>';
       const slot = document.getElementById('trs-result-' + mi + '-' + si);
-      if (slot) slot.innerHTML = html;
+      if (slot) { slot.style.display = ''; slot.innerHTML = html; }
       if (status) status.innerHTML = '';
+      // 按钮跟着状态走：没达标 → 变成"我背好了，再说一遍"。
+      if (btn) btn.textContent = below ? '🎤 我背好了，再说一遍' : '🎤 点一下说中文';
 
       const passed = heard ? self._gateStep(r.score, true)
                            : (voiceOk ? self._gateStep(self.TRANS_PASS, true) : false);
@@ -7799,6 +7821,30 @@ const App = {
         });
       }
     }, true, 'zh');
+  },
+
+  // ===== v171：录音时"遮答案" ===========================================
+  //
+  // 家长 2026-10-30：「翻译是个大文章，要求孩子们要学会独立思考。说一遍
+  // 没说对，或者是随便点一下就被看译文其实没有起到作用……在录的过程中，
+  // 把译文隐藏起来。然后如果没说对，低于 60 分，让孩子们背一背。」
+  //
+  // 所以：开录那一刻把「背一背」块和上一次的结果区一起收起来 —— 想说就得
+  // 自己记住，不能照着屏幕念。评分完再把结果区放回来（display 复原），
+  // 屏上该显示什么由评分结果决定。
+  _trBlind(prefix, mi, si) {
+    const memo = document.getElementById(prefix + '-memo-' + mi + '-' + si);
+    if (memo) memo.style.display = 'none';
+    const slot = document.getElementById(prefix + '-result-' + mi + '-' + si);
+    if (slot) slot.style.display = 'none';
+  },
+
+  // 录音没开始 / 没录上时把遮起来的块放回原样（不然译文就永久消失了）。
+  _trRestore() {
+    try {
+      const nodes = document.querySelectorAll('[id*="-memo-"],[id*="-result-"]');
+      for (let i = 0; i < nodes.length; i++) nodes[i].style.display = '';
+    } catch (e) {}
   },
 
   // A step is cleared only when the child actually got it. Below the mark
@@ -7990,20 +8036,26 @@ const App = {
     html += '<div class="sent-tip">👆 点单词看中文意思 · 点下面听整句英文</div>';
     html += '<div class="sent-listen">'
          + this._gateListenHtml(this._gid('cqtrsg', mi, si), shown, '🔊 听整句英文') + '</div>';
-    // v170（家长 2026-10-30）：同阅读逐句 —— 试过一遍后参考译文常驻这一屏。
-    this._trTried = this._trTried || {};
+    // v171（家长 2026-10-30）：同阅读逐句 —— 只有没到 60 分才把参考译文摆出来
+    // 让他背；录音一开始这块就被 _trBlind 收起来，不能照着念。
+    this._trMemo = this._trMemo || {};
     const refCnShown = this._clozeSentenceRefCn(m, si, sent);
-    if (this._trTried['cqtr-' + this.state.currentDay + '-' + mi + '-' + si] && refCnShown) {
-      html += '<div class="tr-block tr-inline"><div class="tr-label">参考译文（可以照着说）</div>'
+    const needMemo = !!refCnShown
+      && !!this._trMemo['cqtr-' + this.state.currentDay + '-' + mi + '-' + si];
+    if (needMemo) {
+      html += '<div class="tr-block tr-inline" id="cqtrs-memo-' + mi + '-' + si + '">'
+           + '<div class="tr-label">📖 参考译文（背一背，背好再点按钮）</div>'
            + '<div class="tr-text ref">' + refCnShown + '</div></div>';
     }
-    html += '<div class="sent-hint">先听一遍英文，想一想这句是什么意思，再点一下按钮说中文（说完再点一下结束）</div>';
+    html += '<div class="sent-hint">先听一遍英文，自己想清楚意思，再点一下按钮说中文'
+         + '（说完再点一下结束）' + (needMemo ? ' · 说的时候答案会藏起来' : '') + '</div>';
     // v137：同上，完形填空的逐句翻译也要"先听英文，再说中文"。
     html += '<button class="word-read-btn hold-target gate-locked" id="cqtrs-btn-' + mi + '-' + si + '"'
          + ' data-gate="' + this._gid('cqtrsg', mi, si) + '"'
          + ' data-nudge="🔊 先听一遍这句英文，再用中文说意思"'
          + ' onpointerdown="App._translateClozeSentence(event,' + mi + ',' + si + ')"'
-         + ' oncontextmenu="return false">🎤 点一下说中文</button>';
+         + ' oncontextmenu="return false">'
+         + (needMemo ? '🎤 我背好了，再说一遍' : '🎤 点一下说中文') + '</button>';
     html += '<div id="cqtrs-status-' + mi + '-' + si + '"></div>';
     html += '<div id="cqtrs-result-' + mi + '-' + si + '"></div>';
     html += '</div>';
@@ -8050,14 +8102,17 @@ const App = {
     const refCn = this._clozeSentenceRefCn(m, si, raw);
     const btn = document.getElementById('cqtrs-btn-' + mi + '-' + si);
     const status = document.getElementById('cqtrs-status-' + mi + '-' + si);
+    if (btn && btn.classList.contains('gate-locked')) return;   // v171：门没开别动屏幕
     if (btn) btn.classList.add('reading');
 
     // v163 一键录音：第一下开始，再点一下结束。
     if (this._holdKey === 'cqtrs-' + mi + '-' + si) return this._holdEnd();
+    // v171：开录先把"背一背"块和上次结果遮住（同阅读逐句）。
+    this._trBlind('cqtrs', mi, si);
     this._holdToggleNext = true;
     this._holdStart(ev, 'cqtrs-' + mi + '-' + si, '这句的意思', status, function(out, text) {
       if (btn) btn.classList.remove('reading');
-      if (!out) return;
+      if (!out) { self._trRestore(); return; }
       const heard = text ? self._toSimplified(text) : '';
       const slot = document.getElementById('cqtrs-result-' + mi + '-' + si);
       // 没有参考译文就没法判分 —— 绝不能因此把孩子卡在"出入太大"里
@@ -8072,10 +8127,11 @@ const App = {
       const band = canScore ? self._transBand(heard ? r.score : 0, !!heard)
                             : (heard ? 'pass' : 'retry');
 
-      // v170（家长 2026-10-30）：无论对错，说完一遍参考译文都要出来 ——
-      // 以前"过了"反而不亮，孩子不知道标准说法是什么。
-      this._trTried = this._trTried || {};
-      this._trTried['cqtr-' + self.state.currentDay + '-' + mi + '-' + si] = true;
+      // v171（家长 2026-10-30）：<60 分才记"要背"（背好了重说）；达标就清标记。
+      const below = !!heard && canScore && r.score < self.PASS_SCORE;
+      self._trMemo = self._trMemo || {};
+      const mk = 'cqtr-' + self.state.currentDay + '-' + mi + '-' + si;
+      if (below) self._trMemo[mk] = true; else delete self._trMemo[mk];
 
       let html = '<div class="spell-summary">';
       if (canScore) {
@@ -8104,9 +8160,15 @@ const App = {
         if (joined) html += '<audio controls src="' + URL.createObjectURL(joined.blob)
                          + '" style="width:100%;max-width:280px;height:32px"></audio>';
       }
+      if (below) {
+        html += '<div class="tr-memo-tip">📖 这一遍 ' + r.score + ' 分，还没到 ' + self.PASS_SCORE
+             + ' 分。先背一背上面的参考译文，背好了再点「🎤 我背好了，再说一遍」——'
+             + '录音的时候答案会藏起来，要靠自己说出来。</div>';
+      }
       html += '</div>';
-      if (slot) slot.innerHTML = html;
+      if (slot) { slot.style.display = ''; slot.innerHTML = html; }
       if (status) status.innerHTML = '';
+      if (btn) btn.textContent = below ? '🎤 我背好了，再说一遍' : '🎤 点一下说中文';
 
       // 只有"出入太大"才锁住不放行，并让他照着原文再说一遍。
       // v139：识别端没回话但确实出了声 → 放行，不重说。
@@ -8689,15 +8751,18 @@ const App = {
     html += '<div class="sent-tip">👆 点单词看中文意思</div>';
     html += '<div class="pf-actions">';
     html += '<button class="btn-ghost" onclick="App.speak(\'' + esc + '\')">听全文</button>';
-    // v170（家长 2026-10-30）：整篇翻译说过一遍后，参考翻译常驻在录音按钮
-    // 上方 —— 孩子重说的时候能看着正确译文开口。
-    this._trTried = this._trTried || {};
-    if (m.passage_cn && this._trTried['pass-' + this.state.currentDay + '-' + mi]) {
-      html += '<div class="tr-block tr-inline"><div class="tr-label">参考翻译（可以照着说）</div>'
+    // v171（家长 2026-10-30）：整篇翻译也一样 —— 只有没到 60 分才把参考翻译
+    // 摆出来让他背，开录就藏起来（不许照着念）。
+    this._trMemo = this._trMemo || {};
+    const needMemo = !!m.passage_cn && !!this._trMemo['pass-' + this.state.currentDay + '-' + mi];
+    if (needMemo) {
+      html += '<div class="tr-block tr-inline" id="tr-memo-' + mi + '">'
+           + '<div class="tr-label">📖 参考翻译（背一背，背好再点按钮）</div>'
            + '<div class="tr-text ref">' + m.passage_cn + '</div></div>';
     }
     if (m.passage_cn) {
-      html += '<button class="word-read-btn" id="tr-btn-' + mi + '" onclick="App.toggleTranslate(' + mi + ')">开始翻译录音</button>';
+      html += '<button class="word-read-btn" id="tr-btn-' + mi + '" onclick="App.toggleTranslate(' + mi + ')">'
+           + (needMemo ? '🎤 我背好了，再说一遍' : '开始翻译录音') + '</button>';
     }
     html += '</div>';
     html += '<div id="tr-status-' + mi + '"></div>';
@@ -8725,6 +8790,11 @@ const App = {
       try { out = await Recorder.stop(); } catch (e) {}
       if (!out || !out.blob) {
         if (status) status.innerHTML = '<div class="tap-result bad">没有录到声音，再试一次</div>';
+        // v171：这一遍没录上就把刚才藏起来的参考/结果放回来，别让孩子摸不着北。
+        const memoBack = document.getElementById('tr-memo-' + mi);
+        if (memoBack) memoBack.style.display = '';
+        const resBack = document.getElementById('tr-result-' + mi);
+        if (resBack) resBack.style.display = '';
         return;
       }
       const forAsr = (out.samples && Recorder.padForAsr(out.samples)) || out.blob;
@@ -8742,10 +8812,12 @@ const App = {
       // 因为它本来就不判对错（意思覆盖而已）。
       Api.perfEnd({ kind: (heard || voiceOk) ? 'pass' : 'fail' });
 
-      // v170（家长 2026-10-30）：无论对错（哪怕识别没回话但出了声），
-      // 说完一遍参考翻译就要出来，并且常驻在这一屏。
-      this._trTried = this._trTried || {};
-      this._trTried['pass-' + this.state.currentDay + '-' + mi] = true;
+      // v171（家长 2026-10-30）：低于 60 分 → 记"要背"，重说时先看参考；
+      // 达标 → 清标记，下次进来不再剧透。
+      const below = !!heard && r.score < this.PASS_SCORE;
+      this._trMemo = this._trMemo || {};
+      const mk = 'pass-' + this.state.currentDay + '-' + mi;
+      if (below) this._trMemo[mk] = true; else delete this._trMemo[mk];
 
       let html = '<div class="spell-summary">';
       html += '<div class="ss-head"><span class="ss-score">'
@@ -8765,10 +8837,16 @@ const App = {
       const joined = out.samples ? Recorder.join([out.samples], 0) : null;
       if (joined) html += '<audio controls src="' + URL.createObjectURL(joined.blob)
                        + '" style="width:100%;max-width:280px;height:32px"></audio>';
+      if (below) {
+        html += '<div class="tr-memo-tip">📖 这一遍 ' + r.score + ' 分，还没到 ' + this.PASS_SCORE
+             + ' 分。先背一背上面的参考翻译，背好了再点「🎤 我背好了，再说一遍」——'
+             + '录音的时候答案会藏起来，要靠自己说出来。</div>';
+      }
       html += '</div>';
       const slot = document.getElementById('tr-result-' + mi);
-      if (slot) slot.innerHTML = html;
+      if (slot) { slot.style.display = ''; slot.innerHTML = html; }
       if (status) status.innerHTML = '';
+      if (btn) btn.textContent = below ? '🎤 我背好了，再说一遍' : '开始翻译录音';
 
       Api.submitSpeakingScore({
         studentId: this._myStudentId(), dayIdx: this.state.currentDay,
@@ -8790,6 +8868,11 @@ const App = {
       return;
     }
     this._trRecording = true;
+    // v171：开录先把参考翻译和上次结果遮住 —— 不许照着念。
+    const memoEl = document.getElementById('tr-memo-' + mi);
+    if (memoEl) memoEl.style.display = 'none';
+    const resEl = document.getElementById('tr-result-' + mi);
+    if (resEl) resEl.style.display = 'none';
     if (btn) { btn.textContent = '结束录音'; btn.classList.add('reading'); }
     let secs = 0;
     if (status) status.innerHTML = '<div class="tap-rec"><span class="tap-dot"></span>'
@@ -9893,6 +9976,8 @@ const App = {
       .catch(function() {
         setStatus('<div class="tap-result bad">无法访问麦克风，请允许权限</div>');
         self._holdKey = null;
+        // v171：录音根本没开成 —— 把刚才遮起来的译文/结果放回来。
+        if (self._trRestore) self._trRestore();
       });
     void started;
 
