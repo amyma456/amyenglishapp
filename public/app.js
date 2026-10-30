@@ -11786,6 +11786,19 @@ const App = {
       ansEl.innerHTML = isCorrect ? '✅ 正确！' : '❌ 错误。正确答案：' + String.fromCharCode(65+q.answer);
       if (isCorrect) {
         this._playCorrectSound();
+        // v172（家长 2026-10-30）：老师预览里也要看见孩子那一屏的跟读面板。
+        // 以前老师在预览里点单选只有一句"✅ 正确！"，跟读面板永远是空的 ——
+        // 家长据此判断"单项选择题没有跟读"。现在预览同样把面板端出来（能听
+        // 示范、能点一下录、能出分），只是**不锁**预览的翻页按钮，老师照样
+        // 可以自由翻遍全天的题。
+        const fsent = this._buildReadSentence(m, q);
+        const fEl = document.getElementById('qr-follow-' + mi + '-' + qi);
+        if (fEl && fsent) {
+          this._lastPick = this._lastPick || {};
+          this._lastPick[mi + '-' + qi] = { oi: oi, isCorrect: true };
+          this._renderHoldReadPanel(fEl, mi, qi, dayIdx, fsent);
+          this._gateUnlock(this._gid('hrg', mi, qi));
+        }
       } else {
         this._playWrongSound();
         document.getElementById('exp-' + mi + '-' + qi).classList.add('show');
@@ -11943,6 +11956,20 @@ const App = {
       // 用 _buildReadSentence：剥指令词、剥中文、横杠处用正确答案补全
       const sentence = this._buildReadSentence(m, q);
       this._renderHoldReadPanel(followEl, mi, qi, dayIdx, sentence);
+      // v172（家长 2026-10-30）：单项选择题选对之后，系统先把「填好正确答案
+      // 的整句」读一遍 —— 和阅读理解、完形填空点选项时一样，孩子先听到一句
+      // 完整的话，再跟着读。以前这里只有一声"叮"，示范得孩子自己去点，很多人
+      // 根本没点就开始录，读的自然是半截。
+      // 只在**选对**时读：选错时读整句等于把答案念给他听（选错照旧读他点错的
+      // 那一项，见上面的 !isCorrect 分支）。
+      if (sentence && this.state.audioEnabled) {
+        const selfSpeak = this;
+        setTimeout(function() {
+          // 孩子手快，260ms 内已经按下跟读 —— 这时候不能再放示范，会盖住他的声音。
+          if (selfSpeak._holdReadActive) return;
+          selfSpeak.speak(sentence);
+        }, 260);
+      }
       // v141 关键修复：示范在孩子点选项的那一刻已经整句放过一遍了（见
       // selectAnswer 的 reading 分支），跟读面板不能再锁 —— 以前这里既不
       // 自动放示范也不解锁，「🎤 点我读」灰着点不动，孩子做完题卡在这一屏，
@@ -12822,6 +12849,10 @@ const App = {
     // 主动放弃纠错模式，重新整句朗读。
     if (this._wordRepair) { clearTimeout(this._wordRepair.capTimer); this._wordRepair = null; }
     this._holdReadActive = { mi: mi, qi: qi, dayIdx: dayIdx, sentence: sentence, startedAt: Date.now() };
+    // v172：系统刚播的示范句如果还在响，先掐掉再开麦 —— 否则示范会录进去，
+    // 孩子自己读的那一遍被盖住，分数就乱了。
+    this._stopCurrentAudio();
+    this._showSpeakingIndicator(false);
     Recorder.warmUp(); Api.warmup();
     this._startClipCapture();
 
@@ -13457,6 +13488,9 @@ const App = {
     });
     const mask = this._phraseMask(words);
     let out = '', wi = 0;
+    // v172：这一屏出现的短语全部记下来，渲染完统一预取音频。
+    // 单词不用管（点下去已经是本机语音秒读），短语才是"点了要等网络"的那一类。
+    const phrases = [];
     for (let i = 0; i < toks.length; i++) {
       const tok = toks[i];
       if (!tok) continue;
@@ -13478,6 +13512,7 @@ const App = {
         if (got >= p.len) {
           out += '<span class="lk-word lk-phrase" data-phrase="' + self._escHtml(p.en) + '">'
                + self._escHtml(phrase) + '</span>';
+          phrases.push(p.en);
           wi += p.len;
           i = last;
           continue;
@@ -13489,7 +13524,40 @@ const App = {
            + self._escHtml(mm[3]);
       wi++;
     }
+    if (phrases.length) this._notePhrases(phrases);
     return out;
+  },
+
+  // v172（家长 2026-10-30）：「短语点了之后要等英文发音」。
+  // 短语点开时意思是本地的（立刻出来），声音却是现场去合成 —— 一次网络往返
+  // 加一次模型生成，孩子就是干等。这里在**渲染这一屏的时候**就把短语的读音
+  // 排进预取队列，等孩子真点开时音频已经躺在本地，点下去就响。
+  // 只取短语、不取单词：单词点下去已经走本机语音，零延迟，不必浪费请求。
+  _notePhrases(list) {
+    if (!list || !list.length) return;
+    const self = this;
+    const bag = this._spanPhrases = this._spanPhrases || [];
+    for (let i = 0; i < list.length; i++) {
+      const t = String(list[i] || '').trim();
+      if (t && bag.indexOf(t) < 0) bag.push(t);
+    }
+    // 同一屏会连着调好多次 _wordSpans（句子、范文、选项…），攒 120ms 一次发出去。
+    if (this._spanPhraseTimer) return;
+    this._spanPhraseTimer = setTimeout(function() {
+      self._spanPhraseTimer = null;
+      const arr = self._spanPhrases || [];
+      self._spanPhrases = [];
+      const st = (self.state && typeof self.state.stepIdx === 'number') ? self.state.stepIdx : 0;
+      // 每一步最多取 24 条短语：翻页才重置额度。老师预览会把一整天的题一次
+      // 渲染出来，不设额度会一口气发出上百个 TTS 请求，白花流量也拖慢正题。
+      if (self._spanPhraseStep !== st) { self._spanPhraseStep = st; self._spanPhraseBudget = 24; }
+      let budget = (typeof self._spanPhraseBudget === 'number') ? self._spanPhraseBudget : 24;
+      for (let i = 0; i < arr.length && budget > 0; i++) {
+        self.prefetchTts(arr[i], st, 'cf');
+        budget--;
+      }
+      self._spanPhraseBudget = budget;
+    }, 120);
   },
 
   // ===== Tap-a-word lookup =====
@@ -13703,7 +13771,13 @@ const App = {
               ? '：这里是 <b>' + this._escHtml(ph.surface) + '</b>，来自 <b>' + this._escHtml(ph.en) + '</b>' : '');
       }
       el.querySelector('#ws-zh').textContent = ph.zh;
-      this.speak(ph.en, { prefer: 'cf' });
+      // v172（家长 2026-10-30）：「点开之后还要等英文的发音，不要等，点完就自己
+      // 说出来」。短语读音改成三步：
+      //   ① 这一屏渲染时已经预取好了 → 本地音频，点下去就响（母语音色）；
+      //   ② 没赶上（刚进屏就点）→ 先用本机语音立刻读，一秒都不等；
+      //   ③ 同时把这一条排到预取队头，下次点就是母语音色。
+      if (this._speakPhraseNow) this._speakPhraseNow(ph.en);
+      else this.speak(ph.en, { prefer: 'cf' });
       const binfo0 = await Api.dict(ph.en.split(' ')[0]).catch(function () { return null; });
       if (this._lookupWord !== ph.en.toLowerCase()) return;
       if (binfo0 && binfo0.phon) el.querySelector('#ws-phon').textContent = '/' + binfo0.phon + '/';
@@ -13818,6 +13892,22 @@ App._speakWordInstant = function (word) {
     }
   } catch (e) {}
   App.speak(w, { prefer: 'cf' });
+};
+
+// v172（家长 2026-10-30）：短语点开就响，不等网络。
+// 和单词不同，短语（in the park / used to / the end of）走的是自家 TTS 端点，
+// 现场请求要等一次往返 + 一次合成。这里先看本地有没有预取好的音频：
+//   · 有 → 直接播（母语音色，点下去就响）
+//   · 没有 → 本机语音立刻读（零网络），同时把这条排到预取队头，下一次点
+//            就是母语音色；本机没有英文语音时会自动落回网络通道。
+App._speakPhraseNow = function (text) {
+  const t = String(text || '').trim();
+  if (!t) return;
+  const key = App._ttsKey(t, 'cf', '');
+  if (App._ttsBlobs && App._ttsBlobs[key]) { App.speak(t, { prefer: 'cf' }); return; }
+  App._ttsPrioritize(t, 'cf', '');
+  App.prefetchTts(t, (App.state && typeof App.state.stepIdx === 'number') ? App.state.stepIdx : 0, 'cf');
+  App._speakWordInstant(t);
 };
 
 // 点词查义：全局代理，页面上任何英文单词点一下都有音标、中文意思和读音。

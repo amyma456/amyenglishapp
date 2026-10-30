@@ -294,11 +294,11 @@ ok(src.indexOf('registerStudent(phone, name, knownDevice)') >= 0 && src.indexOf(
   '学生登录进 App 后网络收尾挪到后台（v142：先进入，_commitStudent 才上云）');
 
 const html = fs.readFileSync(BASE + 'index.html', 'utf8');
-ok(html.indexOf('app-version" content="171"') >= 0, 'index.html 版本 = 144');
+ok(html.indexOf('app-version" content="172"') >= 0, 'index.html 版本 = 144');
 ok(html.indexOf('id="login-btn"') >= 0, '登录按钮有 id（反馈要挂在它身上）');
 ok(html.indexOf('.login-btn:active') >= 0, '登录按钮有按压反馈样式');
 const sw = fs.readFileSync(BASE + 'sw.js', 'utf8');
-ok(sw.indexOf("amy-english-v171") >= 0, 'sw.js 缓存名 = v144');
+ok(sw.indexOf("amy-english-v172") >= 0, 'sw.js 缓存名 = v144');
 
 console.log('\n[9] v142：登录不等网络；阅读整句不等朗读');
 
@@ -349,7 +349,7 @@ ok(/if \(!self\._audioStarted\) decide\(\)/.test(src), '1.2 秒还没出声就�
 //     的那一下点击，不能抛 ReferenceError（那看着就是"点了没反应"）。
 {
   const h = fs.readFileSync(BASE + 'index.html', 'utf8');
-  ok(/defer src="app\.js\?v=171"/.test(h), '脚本改成 defer（登录页不再等 1MB JS 下载）');
+  ok(/defer src="app\.js\?v=172"/.test(h), '脚本改成 defer（登录页不再等 1MB JS 下载）');
   ok(h.indexOf('window.__appReady = false') >= 0, '页面先立一个"未就绪"标记');
   ok(/onclick="if\(window\.__appReady\)\{App\.login\(\)\}/.test(h),
     '登录按钮先看标记再调 App.login（未就绪不会报错）');
