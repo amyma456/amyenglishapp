@@ -1,129 +1,165 @@
 {
-  "day_cn": "周四",
-  "day_en": "Thursday",
-  "theme_cn": "阅读理解 + 语法练习 + 听力（选图 / 问答 / 听写）+ 键盘拼写",
-  "listening_name": "听力：选图 + 问答 + 听写",
-  "spell_name": "剪纸这课的字，敲一遍",
-  "reading": {
-    "passage": "Paper cutting is one of China's oldest folk arts. People use red paper and a pair of scissors to cut out flowers, animals and Chinese characters. The art is more than 1500 years old, and it is still popular in villages today. During the Spring Festival, families put red paper cuttings on windows and doors for good luck. Each pattern has its own meaning: a fish stands for a rich year, and a peach stands for long life. Learning paper cutting takes patience, but children love it because a plain sheet of paper can become a beautiful picture in a few minutes.",
-    "passage_cn": "剪纸是中国最古老的民间艺术之一。人们用红纸和一把剪刀剪出花、动物和汉字。这门艺术有一千五百多年历史，今天在乡村依然流行。春节期间，家家户户把红色剪纸贴在窗户和门上，图个吉利。每种图案都有自己的含义：鱼代表年年有余，桃子代表长寿。学剪纸需要耐心，但孩子们很喜欢，因为一张普通的纸几分钟就能变成一幅漂亮的画。",
-    "questions": [
-      {
-        "question": "What do people use to cut the paper?",
-        "options": ["A pair of scissors", "A ruler", "A brush", "A spoon"],
-        "answer": 0,
-        "explanation_cn": "第二句：use red paper and a pair of scissors to cut out...（用红纸和一把剪刀剪出）。"
-      },
-      {
-        "question": "How old is the art of paper cutting?",
-        "options": ["More than 1500 years", "More than 150 years", "About 50 years", "About 100 years"],
-        "answer": 0,
-        "explanation_cn": "第三句：The art is more than 1500 years old。"
-      },
-      {
-        "question": "Where do families put paper cuttings at Spring Festival?",
-        "options": ["On windows and doors", "Under the bed", "In the garden", "On the car"],
-        "answer": 0,
-        "explanation_cn": "第四句：put red paper cuttings on windows and doors for good luck。"
-      },
-      {
-        "question": "What does a fish stand for in paper cutting?",
-        "options": ["A rich year", "Long life", "Good weather", "A big house"],
-        "answer": 0,
-        "explanation_cn": "第五句：a fish stands for a rich year（鱼代表年年有余）。"
-      }
-    ]
-  },
-  "grammar": [
-    {
-      "question": "People cut the red paper ___ a pair of scissors.",
-      "options": ["with", "by", "of", "for"],
-      "answer": 0,
-      "explanation_cn": "表示「用某种工具」用 with：cut the paper with scissors。"
-    },
-    {
-      "question": "In Chinese art, the fish ___ for a rich year.",
-      "options": ["stands", "stand", "standing", "stood"],
-      "answer": 0,
-      "explanation_cn": "主语 the fish 是单数，一般现在时动词加 s：stands for = 代表。"
-    },
-    {
-      "question": "Paper cutting is one of the ___ folk arts in China.",
-      "options": ["oldest", "older", "old", "most old"],
-      "answer": 0,
-      "explanation_cn": "one of the + 最高级 + 复数名词：one of the oldest folk arts。"
-    },
-    {
-      "question": "___ the Spring Festival, we put red cuttings on the windows.",
-      "options": ["During", "Between", "Among", "Inside"],
-      "answer": 0,
-      "explanation_cn": "表示「在……期间」用 during；between 用于两者之间。"
-    },
-    {
-      "question": "Learning paper cutting ___ a lot of patience.",
-      "options": ["needs", "need", "needing", "to need"],
-      "answer": 0,
-      "explanation_cn": "动名词 Learning paper cutting 作主语，谓语用单数 needs。"
-    },
-    {
-      "question": "A red peach ___ long life in Chinese art.",
-      "options": ["means", "mean", "meaning", "meant"],
-      "answer": 0,
-      "explanation_cn": "主语 a red peach 单数，一般现在时用 means（代表、意味着）。"
-    }
-  ],
-  "listening": [
-    {
-      "question": "Which picture matches the sentence you hear?",
-      "audio_text": "Look at the paper fish on the window. It means a rich year.",
-      "picture_options": true,
-      "options": ["🐟", "🍑", "✂️", "🌺"],
-      "answer": 0,
-      "explanation_cn": "句子里说的是 paper fish（纸鱼），所以选 🐟；桃子和剪刀是另外两句里出现的。"
-    },
-    {
-      "question": "Which picture matches the sentence you hear?",
-      "audio_text": "My sister is cutting the red paper with a pair of scissors.",
-      "picture_options": true,
-      "options": ["✂️", "🖌️", "📏", "🔪"],
-      "answer": 0,
-      "explanation_cn": "关键工具是 a pair of scissors（一把剪刀），所以选 ✂️。"
-    },
-    {
-      "question": "Listen to the dialogue. What does Grandma's paper peach mean?",
-      "audio_text": "Boy: What are you making, Grandma? Grandma: I'm cutting a peach for your birthday. It means long life.",
-      "options": ["Long life", "Good luck", "A rich year", "A new job"],
-      "answer": 0,
-      "explanation_cn": "奶奶说 It means long life（代表长寿）。good luck 是贴窗花的用意，a rich year 是鱼的含义。"
-    },
-    {
-      "question": "Listen and fill in the blank: Families put red paper cuttings on the windows for good ___.",
-      "type": "fill",
-      "answer": "luck",
-      "audio_text": "Families put red paper cuttings on the windows for good luck.",
-      "explanation_cn": "听到的是 for good luck（图个吉利），luck 读 /lʌk/。"
-    }
-  ],
-  "spell": [
-    {
-      "question": "剪刀：s________ [填完整单词]",
-      "answer": "scissors",
-      "explanation_cn": "scissors 永远是复数形式，a pair of scissors 才是一把剪刀。"
-    },
-    {
-      "question": "图案：p______ [填完整单词]",
-      "answer": "pattern",
-      "explanation_cn": "pattern 有两个 t 连写，读 /ˈpætn/。"
-    },
-    {
-      "question": "耐心：p_______ [填完整单词]",
-      "answer": "patience",
-      "explanation_cn": "patience 结尾是 ence，读 /ˈpeɪʃns/，注意不是 patient。"
-    },
-    {
-      "question": "窗户：w______ [填完整单词]",
-      "answer": "window",
-      "explanation_cn": "window 中间的 n 不发音，读 /ˈwɪndəʊ/。"
-    }
+ "day_cn": "周四",
+ "day_en": "Thursday",
+ "theme_cn": "阅读理解 + 语法练习 + 听力（选图 / 问答 / 听写）+ 键盘拼写",
+ "listening_name": "听力：选图 + 问答 + 听写",
+ "spell_name": "剪纸这课的字，敲一遍",
+ "reading": {
+  "passage": "Paper cutting is one of China's oldest folk arts. People use red paper and a pair of scissors to cut out flowers, animals and Chinese characters. The art is more than 1500 years old, and it is still popular in villages today. During the Spring Festival, families put red paper cuttings on windows and doors for good luck. Each pattern has its own meaning: a fish stands for a rich year, and a peach stands for long life. Learning paper cutting takes patience, but children love it because a plain sheet of paper can become a beautiful picture in a few minutes.",
+  "passage_cn": "剪纸是中国最古老的民间艺术之一。人们用红纸和一把剪刀剪出花、动物和汉字。这门艺术有一千五百多年历史，今天在乡村依然流行。春节期间，家家户户把红色剪纸贴在窗户和门上，图个吉利。每种图案都有自己的含义：鱼代表年年有余，桃子代表长寿。学剪纸需要耐心，但孩子们很喜欢，因为一张普通的纸几分钟就能变成一幅漂亮的画。",
+  "questions": [
+   {
+    "question": "What do people use to cut the paper?",
+    "options": [
+     "A pair of scissors",
+     "A ruler",
+     "A brush",
+     "A spoon"
+    ],
+    "answer": 0,
+    "explanation_cn": "第二句：use red paper and a pair of scissors to cut out...（用红纸和一把剪刀剪出）。"
+   },
+   {
+    "question": "How old is the art of paper cutting?",
+    "options": [
+     "More than 1500 years",
+     "More than 150 years",
+     "About 50 years",
+     "About 100 years"
+    ],
+    "answer": 0,
+    "explanation_cn": "第三句：The art is more than 1500 years old。"
+   },
+   {
+    "question": "Where do families put paper cuttings at Spring Festival?",
+    "options": [
+     "On windows and doors",
+     "Under the bed",
+     "In the garden",
+     "On the car"
+    ],
+    "answer": 0,
+    "explanation_cn": "第四句：put red paper cuttings on windows and doors for good luck。"
+   },
+   {
+    "question": "What does a fish stand for in paper cutting?",
+    "options": [
+     "A rich year",
+     "Long life",
+     "Good weather",
+     "A big house"
+    ],
+    "answer": 0,
+    "explanation_cn": "第五句：a fish stands for a rich year（鱼代表年年有余）。"
+   }
   ]
+ },
+ "listening": [
+  {
+   "question": "Which picture matches the sentence you hear?",
+   "audio_text": "Look at the paper fish on the window. It means a rich year.",
+   "picture_options": true,
+   "options": [
+    "🐟",
+    "🍑",
+    "✂️",
+    "🌺"
+   ],
+   "answer": 0,
+   "explanation_cn": "句子里说的是 paper fish（纸鱼），所以选 🐟；桃子和剪刀是另外两句里出现的。"
+  },
+  {
+   "question": "Which picture matches the sentence you hear?",
+   "audio_text": "My sister is cutting the red paper with a pair of scissors.",
+   "picture_options": true,
+   "options": [
+    "✂️",
+    "🖌️",
+    "📏",
+    "🔪"
+   ],
+   "answer": 0,
+   "explanation_cn": "关键工具是 a pair of scissors（一把剪刀），所以选 ✂️。"
+  },
+  {
+   "question": "Listen to the dialogue. What does Grandma's paper peach mean?",
+   "audio_text": "Boy: What are you making, Grandma? Grandma: I'm cutting a peach for your birthday. It means long life.",
+   "options": [
+    "Long life",
+    "Good luck",
+    "A rich year",
+    "A new job"
+   ],
+   "answer": 0,
+   "explanation_cn": "奶奶说 It means long life（代表长寿）。good luck 是贴窗花的用意，a rich year 是鱼的含义。"
+  },
+  {
+   "question": "Listen and fill in the blank: Families put red paper cuttings on the windows for good ___.",
+   "type": "fill",
+   "answer": "luck",
+   "audio_text": "Families put red paper cuttings on the windows for good luck.",
+   "explanation_cn": "听到的是 for good luck（图个吉利），luck 读 /lʌk/。"
+  }
+ ],
+ "spell": [
+  {
+   "question": "剪刀：s________ [填完整单词]",
+   "answer": "scissors",
+   "explanation_cn": "scissors 永远是复数形式，a pair of scissors 才是一把剪刀。"
+  },
+  {
+   "question": "图案：p______ [填完整单词]",
+   "answer": "pattern",
+   "explanation_cn": "pattern 有两个 t 连写，读 /ˈpætn/。"
+  },
+  {
+   "question": "耐心：p_______ [填完整单词]",
+   "answer": "patience",
+   "explanation_cn": "patience 结尾是 ence，读 /ˈpeɪʃns/，注意不是 patient。"
+  },
+  {
+   "question": "窗户：w______ [填完整单词]",
+   "answer": "window",
+   "explanation_cn": "window 中间的 n 不发音，读 /ˈwɪndəʊ/。"
+  }
+ ],
+ "mc_name": "there be + a/an/some/any",
+ "mc": [
+  {
+   "question": "用 is / isn't / are / aren't + a / an / some / any 填空：There ___ grapes.",
+   "type": "fill",
+   "answer": "aren't any",
+   "explanation_cn": "grapes 复数 → aren't；否定 → any。"
+  },
+  {
+   "question": "用 is / isn't / are / aren't + a / an / some / any 填空：There ___ eggs.",
+   "type": "fill",
+   "answer": "are some",
+   "explanation_cn": "eggs 复数肯定 → are some。"
+  },
+  {
+   "question": "用 is / isn't / are / aren't + a / an / some / any 填空：There ___ onion.",
+   "type": "fill",
+   "answer": "is an",
+   "explanation_cn": "onion 单数可数，/ˈʌnjən/ 元音音素开头 → an。"
+  },
+  {
+   "question": "用 is / isn't / are / aren't + a / an / some / any 填空：There ___ lemonade.",
+   "type": "fill",
+   "answer": "isn't any",
+   "explanation_cn": "lemonade 汽水，不可数 → is；否定 → isn't any。"
+  },
+  {
+   "question": "用 is / isn't / are / aren't + a / an / some / any 填空：There ___ orange juice.",
+   "type": "fill",
+   "answer": "is some",
+   "explanation_cn": "orange juice 不可数 → is；肯定 → some。"
+  },
+  {
+   "question": "用 is / isn't / are / aren't + a / an / some / any 填空：There ___ carrot.",
+   "type": "fill",
+   "answer": "is a",
+   "explanation_cn": "carrot 可数单数，辅音音素开头 → a。"
+  }
+ ]
 }

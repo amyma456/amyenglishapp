@@ -1,232 +1,345 @@
 {
-  "day_cn": "周五",
-  "day_en": "Friday",
-  "theme_cn": "模板写作 + KET/PET题型 + 语法复习 + 听力 + 键盘拼写",
-  "listening_name": "听力：听对话 + 选图 + 听写",
-  "spell_name": "写作关键词，敲一遍",
-  "writing": {
-    "title": "The Dragon Boat Festival in My Hometown",
-    "keywords": [
-      "in my hometown",
-      "rice dumplings",
-      "dragon boat races",
-      "remember Qu Yuan",
-      "share with neighbours"
-    ],
-    "keywords_cn": [
-      "在我的家乡",
-      "粽子",
-      "龙舟比赛",
-      "纪念屈原",
-      "和邻居分享"
-    ],
-    "template": "The Dragon Boat Festival is very important {{1}}. On that morning, my grandmother and I make {{2}} with sweet rice and red beans. In the afternoon, we go to the river to watch {{3}}. My father tells me the story of the old poet, and we eat zongzi to {{4}}. Every year we cook more than we need, and we {{5}} so that everyone can taste them.",
-    "full_text_cn": "端午节在我的家乡非常重要。那天早上，我和奶奶用糯米和红豆包粽子。下午我们去河边看龙舟比赛。爸爸给我讲那位老诗人的故事，我们吃粽子来纪念屈原。每年我们都会多做一些，然后和邻居分享，让每个人都能尝到。",
-    "explanation_cn": "这篇写作介绍家乡的端午节，五个关键词分别落在五处：1) in my hometown 在我的家乡；2) rice dumplings 粽子；3) dragon boat races 龙舟比赛；4) remember Qu Yuan 纪念屈原；5) share with neighbours 和邻居分享。全文用一般现在时描述每年的固定做法，主语 we / my family 用动词原形。注意 make zongzi with…（用……包粽子）和 so that（以便）两个句型。",
-    "explanation_en": "This piece introduces a hometown festival with five key phrases. Use the simple present for yearly habits. Notice the patterns 'make something with something' and 'so that' for purpose."
+ "day_cn": "周五",
+ "day_en": "Friday",
+ "theme_cn": "模板写作 + KET/PET题型 + 语法复习 + 听力 + 键盘拼写",
+ "listening_name": "听力：听对话 + 选图 + 听写",
+ "spell_name": "写作关键词，敲一遍",
+ "ket_pet": [
+  {
+   "question": "KET: I'd like ___ ticket to Beijing, please.",
+   "options": [
+    "a",
+    "an",
+    "the",
+    "some"
+   ],
+   "answer": 0,
+   "explanation_cn": "ticket 是可数名词单数，泛指「一张」用 a。"
   },
-  "ket_pet": [
-    {
-      "question": "KET: I'd like ___ ticket to Beijing, please.",
-      "options": [
-        "a",
-        "an",
-        "the",
-        "some"
-      ],
-      "answer": 0,
-      "explanation_cn": "ticket 是可数名词单数，泛指「一张」用 a。"
-    },
-    {
-      "question": "KET: ___ is the ticket? — Twenty yuan.",
-      "options": [
-        "How much",
-        "How many",
-        "How long",
-        "How often"
-      ],
-      "answer": 0,
-      "explanation_cn": "问价格用 How much；How many 问可数数量。"
-    },
-    {
-      "question": "PET: This is the station ___ we met last year.",
-      "options": [
-        "where",
-        "which",
-        "when",
-        "whose"
-      ],
-      "answer": 0,
-      "explanation_cn": "先行词是地点 station，从句 we met 不缺宾语，缺地点状语，用 where。"
-    },
-    {
-      "question": "PET: The train was so crowded that we ___ stand all the way.",
-      "options": [
-        "had to",
-        "must",
-        "should",
-        "can"
-      ],
-      "answer": 0,
-      "explanation_cn": "so...that 从句描述过去的情况，用 had to（不得不）表示过去的必须。"
-    },
-    {
-      "question": "PET: She asked me ___ I had finished the project.",
-      "options": [
-        "whether",
-        "that",
-        "what",
-        "which"
-      ],
-      "answer": 0,
-      "explanation_cn": "宾语从句原本是一般疑问句，转述时用 whether/if 引导。"
-    }
-  ],
-  "grammar": [
-    {
-      "question": "My family has lived in this town ___ 2019.",
-      "options": [
-        "since",
-        "for",
-        "in",
-        "from"
-      ],
-      "answer": 0,
-      "explanation_cn": "since + 时间点（2019），for + 一段时间（five years）。"
-    },
-    {
-      "question": "There ___ some milk in the fridge for breakfast.",
-      "options": [
-        "is",
-        "are",
-        "have",
-        "has"
-      ],
-      "answer": 0,
-      "explanation_cn": "There be 就近原则：milk 不可数，用 is。"
-    },
-    {
-      "question": "If it ___ tomorrow, we will stay at home and read.",
-      "options": [
-        "rains",
-        "will rain",
-        "rained",
-        "raining"
-      ],
-      "answer": 0,
-      "explanation_cn": "if 条件句主将从现：主句 will + 动词原形，从句用一般现在时。"
-    },
-    {
-      "question": "Linda is the ___ girl in our class.",
-      "options": [
-        "tallest",
-        "taller",
-        "tall",
-        "most tall"
-      ],
-      "answer": 0,
-      "explanation_cn": "in our class 是范围，用最高级；tall 是单音节词加 est。"
-    },
-    {
-      "question": "I ___ my homework when my mother came home.",
-      "options": [
-        "was doing",
-        "did",
-        "have done",
-        "do"
-      ],
-      "answer": 0,
-      "explanation_cn": "过去某个时刻正在做某事，用过去进行时 was doing。"
-    },
-    {
-      "question": "___ you like to come to my birthday party?",
-      "options": [
-        "Would",
-        "Do",
-        "Are",
-        "Will"
-      ],
-      "answer": 0,
-      "explanation_cn": "Would you like to do sth. 是礼貌邀请的固定句式。"
-    },
-    {
-      "question": "The book ___ by many students in our school.",
-      "options": [
-        "is read",
-        "reads",
-        "is reading",
-        "read"
-      ],
-      "answer": 0,
-      "explanation_cn": "书是「被读」的，用被动语态 be + 过去分词。"
-    }
-  ],
-  "listening": [
-    {
-      "question": "Listen to the dialogue. Why do people eat zongzi?",
-      "audio_text": "Girl: Dad, why do we eat zongzi at the Dragon Boat Festival? Dad: Because we want to remember the poet Qu Yuan. Girl: And what are those long boats for? Dad: They are for the dragon boat races.",
-      "options": [
-        "To remember Qu Yuan",
-        "To welcome spring",
-        "To thank the farmers",
-        "To celebrate a birthday"
-      ],
-      "answer": 0,
-      "explanation_cn": "爸爸说 Because we want to remember the poet Qu Yuan（为了纪念诗人屈原）。后半段说的是龙舟，不是粽子的用意。"
-    },
-    {
-      "question": "Listen to the dialogue. When did Grandma learn to make zongzi?",
-      "audio_text": "Boy: Can you make zongzi, Grandma? Grandma: Yes, I learned it from my mother when I was ten. Boy: It looks difficult. Grandma: It is easy once you try.",
-      "options": [
-        "When she was ten",
-        "Last year",
-        "When she was twenty",
-        "This morning"
-      ],
-      "answer": 0,
-      "explanation_cn": "奶奶说 I learned it from my mother when I was ten（十岁时跟妈妈学的）。"
-    },
-    {
-      "question": "Which picture matches the sentence you hear?",
-      "audio_text": "We watched the dragon boat race on the river yesterday.",
-      "picture_options": true,
-      "options": [
-        "🛶",
-        "🚗",
-        "✈️",
-        "🚲"
-      ],
-      "answer": 0,
-      "explanation_cn": "句子里说的是 dragon boat race（龙舟比赛），船在河上，所以选 🛶。"
-    },
-    {
-      "question": "Listen and fill in the blank: Every year we cook more zongzi than we need and share them with our ___.",
-      "type": "fill",
-      "answer": "friends",
-      "audio_text": "Every year we cook more zongzi than we need and share them with our friends.",
-      "explanation_cn": "听到的是 share them with our friends（和朋友们分享），friends 是复数。"
-    }
-  ],
-  "spell": [
-    {
-      "question": "粽子：d________ [填完整单词]",
-      "answer": "dumpling",
-      "explanation_cn": "dumpling 中间是 mpl，读 /ˈdʌmplɪŋ/；rice dumpling 就是粽子。"
-    },
-    {
-      "question": "节日：f_______ [填完整单词]",
-      "answer": "festival",
-      "explanation_cn": "festival 重音在第一个音节，读 /ˈfestɪvl/。"
-    },
-    {
-      "question": "比赛：r___ [填完整单词]",
-      "answer": "race",
-      "explanation_cn": "race 读 /reɪs/，dragon boat race 就是龙舟比赛。"
-    },
-    {
-      "question": "分享：s____ [填完整单词]",
-      "answer": "share",
-      "explanation_cn": "share sth. with sb. 和某人分享某物，读 /ʃeə/。"
-    }
-  ]
+  {
+   "question": "KET: ___ is the ticket? — Twenty yuan.",
+   "options": [
+    "How much",
+    "How many",
+    "How long",
+    "How often"
+   ],
+   "answer": 0,
+   "explanation_cn": "问价格用 How much；How many 问可数数量。"
+  },
+  {
+   "question": "PET: This is the station ___ we met last year.",
+   "options": [
+    "where",
+    "which",
+    "when",
+    "whose"
+   ],
+   "answer": 0,
+   "explanation_cn": "先行词是地点 station，从句 we met 不缺宾语，缺地点状语，用 where。"
+  },
+  {
+   "question": "PET: The train was so crowded that we ___ stand all the way.",
+   "options": [
+    "had to",
+    "must",
+    "should",
+    "can"
+   ],
+   "answer": 0,
+   "explanation_cn": "so...that 从句描述过去的情况，用 had to（不得不）表示过去的必须。"
+  },
+  {
+   "question": "PET: She asked me ___ I had finished the project.",
+   "options": [
+    "whether",
+    "that",
+    "what",
+    "which"
+   ],
+   "answer": 0,
+   "explanation_cn": "宾语从句原本是一般疑问句，转述时用 whether/if 引导。"
+  }
+ ],
+ "grammar": [
+  {
+   "question": "改错：Both of us is students. 哪个改法是对的？",
+   "type": "choice",
+   "options": [
+    "is→are",
+    "us→we",
+    "of→for",
+    "students→student"
+   ],
+   "answer": 0,
+   "explanation_cn": "both of us / both of them… 作主语是复数概念，动词用 are。"
+  },
+  {
+   "question": "改错：There aren't some apples in the box. 哪个改法是对的？",
+   "type": "choice",
+   "options": [
+    "some→any",
+    "aren't→isn't",
+    "box→boxes",
+    "There→Here"
+   ],
+   "answer": 0,
+   "explanation_cn": "否定句里 some 要改成 any；apples 是复数，aren't 本身没错。"
+  },
+  {
+   "question": "改错：Could you give me any food? 哪个改法是对的？",
+   "type": "choice",
+   "options": [
+    "any→some",
+    "food→foods",
+    "give→gives",
+    "me→my"
+   ],
+   "answer": 0,
+   "explanation_cn": "Could you…? 是委婉请求，希望对方答应，要用 some。"
+  },
+  {
+   "question": "改错：Both of them likes playing basketball. 哪个改法是对的？",
+   "type": "choice",
+   "options": [
+    "likes→like",
+    "them→they",
+    "playing→play",
+    "Both→All"
+   ],
+   "answer": 0,
+   "explanation_cn": "both of them 是复数，动词不加 s：like。"
+  },
+  {
+   "question": "改错：All of us is keen on jazz. 哪个改法是对的？",
+   "type": "choice",
+   "options": [
+    "is→are",
+    "us→we",
+    "on→in",
+    "keen→keenly"
+   ],
+   "answer": 0,
+   "explanation_cn": "all of us（我们所有人）是复数 → are。"
+  }
+ ],
+ "listening": [
+  {
+   "question": "Listen to the dialogue. Why do people eat zongzi?",
+   "audio_text": "Girl: Dad, why do we eat zongzi at the Dragon Boat Festival? Dad: Because we want to remember the poet Qu Yuan. Girl: And what are those long boats for? Dad: They are for the dragon boat races.",
+   "options": [
+    "To remember Qu Yuan",
+    "To welcome spring",
+    "To thank the farmers",
+    "To celebrate a birthday"
+   ],
+   "answer": 0,
+   "explanation_cn": "爸爸说 Because we want to remember the poet Qu Yuan（为了纪念诗人屈原）。后半段说的是龙舟，不是粽子的用意。"
+  },
+  {
+   "question": "Listen to the dialogue. When did Grandma learn to make zongzi?",
+   "audio_text": "Boy: Can you make zongzi, Grandma? Grandma: Yes, I learned it from my mother when I was ten. Boy: It looks difficult. Grandma: It is easy once you try.",
+   "options": [
+    "When she was ten",
+    "Last year",
+    "When she was twenty",
+    "This morning"
+   ],
+   "answer": 0,
+   "explanation_cn": "奶奶说 I learned it from my mother when I was ten（十岁时跟妈妈学的）。"
+  },
+  {
+   "question": "Which picture matches the sentence you hear?",
+   "audio_text": "We watched the dragon boat race on the river yesterday.",
+   "picture_options": true,
+   "options": [
+    "🛶",
+    "🚗",
+    "✈️",
+    "🚲"
+   ],
+   "answer": 0,
+   "explanation_cn": "句子里说的是 dragon boat race（龙舟比赛），船在河上，所以选 🛶。"
+  },
+  {
+   "question": "Listen and fill in the blank: Every year we cook more zongzi than we need and share them with our ___.",
+   "type": "fill",
+   "answer": "friends",
+   "audio_text": "Every year we cook more zongzi than we need and share them with our friends.",
+   "explanation_cn": "听到的是 share them with our friends（和朋友们分享），friends 是复数。"
+  }
+ ],
+ "spell": [
+  {
+   "question": "粽子：d________ [填完整单词]",
+   "answer": "dumpling",
+   "explanation_cn": "dumpling 中间是 mpl，读 /ˈdʌmplɪŋ/；rice dumpling 就是粽子。"
+  },
+  {
+   "question": "节日：f_______ [填完整单词]",
+   "answer": "festival",
+   "explanation_cn": "festival 重音在第一个音节，读 /ˈfestɪvl/。"
+  },
+  {
+   "question": "比赛：r___ [填完整单词]",
+   "answer": "race",
+   "explanation_cn": "race 读 /reɪs/，dragon boat race 就是龙舟比赛。"
+  },
+  {
+   "question": "分享：s____ [填完整单词]",
+   "answer": "share",
+   "explanation_cn": "share sth. with sb. 和某人分享某物，读 /ʃeə/。"
+  }
+ ],
+ "mc_name": "How much / How many",
+ "mc": [
+  {
+   "question": "___ sweets would you like? — A lot. I love them!",
+   "type": "choice",
+   "options": [
+    "How much",
+    "How many",
+    "How long",
+    "How often"
+   ],
+   "answer": 1,
+   "explanation_cn": "sweets 糖果，可数复数 → How many；回答 A lot。"
+  },
+  {
+   "question": "___ bananas do you eat in a week? — Only a few. One or two, maybe.",
+   "type": "choice",
+   "options": [
+    "How much",
+    "How many",
+    "How long",
+    "How often"
+   ],
+   "answer": 1,
+   "explanation_cn": "bananas 可数复数 → How many；回答用 a few（修饰可数）。"
+  },
+  {
+   "question": "___ pasta would you like? — Just a little. I'm not very hungry.",
+   "type": "choice",
+   "options": [
+    "How much",
+    "How many",
+    "How long",
+    "How often"
+   ],
+   "answer": 0,
+   "explanation_cn": "pasta 意面，不可数 → How much；a little 修饰不可数名词。"
+  },
+  {
+   "question": "___ ice cream would you like? — A little, please. It's my favourite!",
+   "type": "choice",
+   "options": [
+    "How much",
+    "How many",
+    "How long",
+    "How often"
+   ],
+   "answer": 0,
+   "explanation_cn": "ice cream 这里按不可数用 → How much；A little 一点点。"
+  },
+  {
+   "question": "___ bread have we got? — Only a little. We need to buy some.",
+   "type": "choice",
+   "options": [
+    "How much",
+    "How many",
+    "How long",
+    "How often"
+   ],
+   "answer": 0,
+   "explanation_cn": "bread 面包，不可数 → How much。"
+  },
+  {
+   "question": "___ oranges are you going to buy? — None. I haven't got any money in my bag.",
+   "type": "choice",
+   "options": [
+    "How much",
+    "How many",
+    "How long",
+    "How often"
+   ],
+   "answer": 1,
+   "explanation_cn": "oranges 可数复数 → How many；None 一个也没有。"
+  }
+ ],
+ "mc2_name": "a few / a little · some / any",
+ "mc2": [
+  {
+   "question": "___ sugar would you like in your milk?",
+   "type": "choice",
+   "options": [
+    "How much",
+    "How many",
+    "A few",
+    "Many"
+   ],
+   "answer": 0,
+   "explanation_cn": "sugar 糖，不可数 → How much。"
+  },
+  {
+   "question": "Don't use ___ salt. It's not good for you.",
+   "type": "choice",
+   "options": [
+    "too much",
+    "too many",
+    "a few",
+    "many"
+   ],
+   "answer": 0,
+   "explanation_cn": "salt 盐不可数 → too much；too many 只修饰可数复数。"
+  },
+  {
+   "question": "There are still ___ carrots in the fridge. We can make soup with them.",
+   "type": "choice",
+   "options": [
+    "a few",
+    "a little",
+    "much",
+    "any"
+   ],
+   "answer": 0,
+   "explanation_cn": "carrots 可数复数 → a few；a little 只修饰不可数。"
+  },
+  {
+   "question": "___ fruit should we eat every day?",
+   "type": "choice",
+   "options": [
+    "How much",
+    "How many",
+    "How long",
+    "How often"
+   ],
+   "answer": 0,
+   "explanation_cn": "fruit 泛指水果时不可数 → How much。"
+  },
+  {
+   "question": "Is there ___ butter left for the cake?",
+   "type": "choice",
+   "options": [
+    "any",
+    "a",
+    "an",
+    "many"
+   ],
+   "answer": 0,
+   "explanation_cn": "butter 黄油不可数，不能用 a；一般疑问句用 any。"
+  },
+  {
+   "question": "Would you like ___ more bread?",
+   "type": "choice",
+   "options": [
+    "some",
+    "a",
+    "any",
+    "many"
+   ],
+   "answer": 0,
+   "explanation_cn": "Would you like…? 是邀请、提供东西，语气希望对方答应 → some。"
+  }
+ ],
+ "grammar_name": "改错小医生"
 }

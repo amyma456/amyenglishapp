@@ -926,6 +926,8 @@ const WordHelp = {
     ['by subway', '乘地铁'], ['by ship', '乘船'],
     ['by hand', '手工'], ['by mistake', '错误地'],
     ['by the end of', '到…末为止'],
+    ['at the weekend', '在周末'], ['do some exercise', '做锻炼'],
+    ['let me know', '告诉我'], ['come with me', '跟我一起来'],
     ['with the help of', '在…帮助下'], ['with pleasure', '乐意地'],
     ['day by day', '一天天'], ['one by one', '一个接一个'],
     ['side by side', '并排'], ['face to face', '面对面'],

@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="175">
+<meta name="app-version" content="176">
 <link rel="manifest" href="manifest.json">
 <!-- v135：登录第一步就是调 api.amyeng.top 验手机号。提前把 DNS + TLS
      握手做掉，接口首调能省几百毫秒 —— 手机弱网下这几百毫秒很显眼。 -->
@@ -656,7 +656,7 @@ body.preview-mode .stage{height:calc(100dvh - var(--nav-h) - var(--pv-h) - var(-
 /* Writing template */
 .writing-template{max-width:600px;margin:0 auto}
 .writing-banner{background:var(--warning-light);border:1px solid var(--warning);border-radius:var(--radius-sm);padding:10px;margin-bottom:16px;font-size:13px;color:var(--warning);display:flex;align-items:center;gap:8px}
-.writing-essay{background:var(--card);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);margin-bottom:16px;line-height:2;font-size:16px}
+.writing-essay{background:var(--card);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);margin-bottom:16px;line-height:2;font-size:16px;white-space:pre-line}
 /* v169：作文正文里的点词盒（与阅读范文同款视觉）。短语自动合并成整盒、
    带「短语」小角标（.lk-phrase::after），孩子看得出来这是个短语，一点就
    出整体意思 + 读音。 */
@@ -1461,9 +1461,9 @@ body.perf-on .content-area{padding-bottom:54vh}
 </div>
 
 <script>window.__appReady = false;</script>
-<script defer src="cloud.js?v=175"></script>
-<script defer src="data.js?v=175"></script>
-<script defer src="data-shuffle.js?v=175"></script>
+<script defer src="cloud.js?v=176"></script>
+<script defer src="data.js?v=176"></script>
+<script defer src="data-shuffle.js?v=176"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
 <!--
   ?v= 必须跟着版本号走（v124 修正）。
@@ -1473,9 +1473,9 @@ body.perf-on .content-area{padding-bottom:54vh}
   这个坑很隐蔽：代码明明改了、也部署上去了，手机上跑的还是几个月前的逻辑。
   以后每次发版，这里跟着 app-version 一起改。
 -->
-<script defer src="recorder.js?v=175"></script>
-<script defer src="api.js?v=175"></script>
-<script defer src="app.js?v=175"></script>
+<script defer src="recorder.js?v=176"></script>
+<script defer src="api.js?v=176"></script>
+<script defer src="app.js?v=176"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {

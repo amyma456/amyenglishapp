@@ -4062,7 +4062,7 @@ const App = {
         m.keywords.forEach(k => html += '<span class="keyword-chip">' + k + '</span>');
         html += '</div>';
         html += '<div class="writing-essay">' + this.renderTemplateText(m) + '</div>';
-        html += '<div class="q-answer">完整范文：' + m.full_text + '</div>';
+        html += '<div class="q-answer">完整范文：<span style="white-space:pre-line">' + m.full_text + '</span></div>';
         html += '<div class="q-explanation show"><div class="cn">📖 ' + (m.explanation_cn||'') + '</div><div class="en">📘 ' + (m.explanation_en||'') + '</div></div>';
         html += '</div>';
       } else if (m.questions) {
@@ -4332,7 +4332,7 @@ const App = {
         m.keywords.forEach(k => html += '<span class="keyword-chip">' + k + '</span>');
         html += '</div>';
         html += '<div class="writing-essay">' + this.renderTemplateText(m) + '</div>';
-        html += '<div class="q-answer">完整范文：' + m.full_text + '</div>';
+        html += '<div class="q-answer">完整范文：<span style="white-space:pre-line">' + m.full_text + '</span></div>';
         html += '<div class="q-explanation show"><div class="cn">📖 ' + m.explanation_cn + '</div><div class="en">📘 ' + m.explanation_en + '</div></div>';
         html += '</div>';
       } else if (m.questions) {
@@ -10755,7 +10755,7 @@ const App = {
     this._saveWritingFill();
     const score = Math.round(correct / total * 100);
     const result = document.getElementById('writing-result-' + mi);
-    result.innerHTML = '<div class="card mt-16" style="background:var(--primary-light)"><div class="card-title">📊 批改结果</div><div class="text-center mb-16"><span style="font-size:36px;font-weight:700;color:' + (score>=80?'var(--success)':score>=60?'var(--warning)':'var(--danger)') + '">' + score + '</span><span class="text-sub">分/100</span></div>' + detail + '<div class="q-explanation show mt-8"><div class="cn">📖 ' + (m.explanation_cn||'') + '</div><div class="en">📘 ' + (m.explanation_en||'') + '</div></div><div class="card mt-16" style="background:var(--success-light)"><div class="card-title fs-12">✅ 完整范文</div><div class="mt-8">' + m.full_text + '</div></div><div class="writing-banner mt-16">📝 请背诵这篇作文！明天将进行挖空默写测试</div></div>';
+    result.innerHTML = '<div class="card mt-16" style="background:var(--primary-light)"><div class="card-title">📊 批改结果</div><div class="text-center mb-16"><span style="font-size:36px;font-weight:700;color:' + (score>=80?'var(--success)':score>=60?'var(--warning)':'var(--danger)') + '">' + score + '</span><span class="text-sub">分/100</span></div>' + detail + '<div class="q-explanation show mt-8"><div class="cn">📖 ' + (m.explanation_cn||'') + '</div><div class="en">📘 ' + (m.explanation_en||'') + '</div></div><div class="card mt-16" style="background:var(--success-light)"><div class="card-title fs-12">✅ 完整范文</div><div class="mt-8" style="white-space:pre-line">' + m.full_text + '</div></div><div class="writing-banner mt-16">📝 请背诵这篇作文！明天将进行挖空默写测试</div></div>';
 
     // 填对了才放行去朗读 —— 要读的必须是写对的那篇作文。空没填对就先
     // 别往下走，改对了再提交一次，「开始朗读」才会亮。
@@ -14167,7 +14167,9 @@ const App = {
     for (let i = 0; i < toks.length; i++) {
       const tok = toks[i];
       if (!tok) continue;
-      if (!info[i]) { out += /^\s+$/.test(tok) ? ' ' : self._escHtml(tok); continue; }
+      // v176：换行不再压成空格（作文信件排版靠它）；.writing-essay 已开
+      // pre-line，别处没有 pre-line 时换行照旧按空格显示，不影响老版面。
+      if (!info[i]) { out += /^\s+$/.test(tok) ? (/[\r\n]/.test(tok) ? '\n' : ' ') : self._escHtml(tok); continue; }
       const p = mask[wi];
       if (p) {
         let phrase = info[i], got = 1, j = i + 1, last = i;
