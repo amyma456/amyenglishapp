@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="174">
+<meta name="app-version" content="175">
 <link rel="manifest" href="manifest.json">
 <!-- v135：登录第一步就是调 api.amyeng.top 验手机号。提前把 DNS + TLS
      握手做掉，接口首调能省几百毫秒 —— 手机弱网下这几百毫秒很显眼。 -->
@@ -744,6 +744,13 @@ body.preview-mode .stage{height:calc(100dvh - var(--nav-h) - var(--pv-h) - var(-
 .a4-sheet .a4-ans{background:#f5f5f5;padding:4px 8px;border-radius:4px;font-size:10pt;margin-top:4px;display:none}
 .a4-sheet .a4-ans.show{display:block}
 .a4-sheet .a4-write-area{border-bottom:1px dashed #ccc;min-height:30px;margin:4px 0 8px}
+/* v175：卷面上的上下文（原文／听力关键信息），黑白打印也要看得清 */
+.a4-sheet .a4-ctx{border:1px solid #ddd;border-radius:4px;padding:5px 8px;margin:4px 0 6px;font-size:9.5pt;line-height:1.6;background:#fafafa}
+.a4-sheet .a4-ctx b{font-weight:bold}
+.a4-sheet .a4-frame{margin-top:3px}
+.a4-sheet .a4-hint{color:#333;margin-top:3px}
+.a4-sheet .a4-passage{margin:3px 0 0;color:#222}
+.a4-sheet .a4-ctx .ef-blank{min-width:70px;border-bottom:1px solid #333;height:1em}
 /* 题目里的填空横线：宽度由答案字数决定（见 app.js 的 _a4QuestionHtml），
    所以这里不写死宽度，只管"长什么样"。横线压在文字基线上，像下划线。 */
 .a4-sheet .a4-blank{display:inline-block;height:1.05em;vertical-align:baseline;border-bottom:1px solid #222;margin:0 3px;max-width:100%}
@@ -896,6 +903,71 @@ button.gate-locked::before{content:'🔒 '}
 .error-item{background:var(--card);border-radius:var(--radius);padding:12px;box-shadow:var(--shadow);margin-bottom:10px;border-left:4px solid var(--danger)}
 .error-item .e-q{font-size:13px;margin-bottom:4px}
 .error-item .e-students{font-size:11px;color:var(--danger);margin-top:4px}
+
+/* ===== v175：错题解析卡（上下文 + 全部选项 + 讲题提示）====================
+   家长 2026-11-01：「改错本里缺少上下文联系……只有选项 B、A，没有 B 和 A
+   的具体解释。」这一组样式就是为这句话加的：每道题摊开成一页小讲义。 */
+.err-card{padding:14px 14px 12px}
+.err-head{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.err-tag{font-size:11px;color:var(--ink-3);background:var(--canvas);padding:2px 9px;border-radius:var(--radius-pill);white-space:nowrap}
+.err-kind{font-size:11px;font-weight:700;color:var(--primary-dark)}
+
+/* 上下文块：听力／原文共用一套外观，只用左侧色条区分 */
+.err-ctx{background:#F4F8FF;border:1px solid #DCE7F8;border-radius:12px;padding:10px 11px;margin:0 0 10px}
+.err-ctx-t{font-size:11px;font-weight:700;color:#3B6FB5;margin-bottom:7px}
+.err-frame{font-size:14px;line-height:2;color:var(--ink);margin-bottom:8px;word-break:break-word}
+.ef-blank{display:inline-block;min-width:62px;height:1.05em;vertical-align:-2px;border-bottom:2px dashed #86AEE0;margin:0 3px}
+.err-keys{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.err-key{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:5px 10px;border-radius:var(--radius-pill);border:1px solid #CFE0F7;background:#FFF;color:#24548F;cursor:pointer;line-height:1.2}
+.err-key b{font-weight:700}
+.err-key i{font-style:normal;font-size:11px;color:var(--ink-3)}
+.err-key .sp{font-size:11px;opacity:.75}
+.err-key:active{background:#E8F1FF}
+.err-replay{font-size:12px;padding:5px 12px;border-radius:var(--radius-pill);border:1px solid #B9D3F2;background:#FFF;color:#24548F;cursor:pointer}
+.err-para{font-size:13px;line-height:1.85;color:var(--ink);word-break:break-word}
+.err-para.cn{color:var(--ink-2);margin-top:6px}
+.err-para mark{background:#FFF3B8;border-radius:3px;padding:0 2px;font-weight:600}
+.err-more{margin-top:6px}
+.err-more summary{font-size:11px;color:#3B6FB5;cursor:pointer;list-style:none}
+.err-more summary::-webkit-details-marker{display:none}
+.err-more summary:before{content:'▸ ';}
+.err-more[open] summary:before{content:'▾ ';}
+
+/* 题干 */
+.err-stem{font-size:14px;line-height:1.8;color:var(--ink);margin:0 0 9px;font-weight:600;word-break:break-word}
+.err-stem .lab{display:inline-block;font-size:10px;font-weight:700;color:#fff;background:var(--ink-3);border-radius:4px;padding:1px 5px;margin-right:6px;vertical-align:1px}
+
+/* 选项：A/B/C/D 全列，正确的打勾，选错的标红 */
+.err-opts{display:flex;flex-direction:column;gap:6px}
+.err-opt{display:flex;align-items:flex-start;gap:8px;font-size:13px;line-height:1.65;padding:7px 9px;border-radius:10px;background:var(--canvas);border:1px solid transparent;color:var(--ink)}
+.err-opt .k{flex:0 0 auto;width:20px;height:20px;border-radius:50%;background:#fff;border:1px solid var(--line);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;color:var(--ink-2)}
+.err-opt .t{flex:1 1 auto;word-break:break-word}
+.err-opt .t .dif{font-style:normal;background:var(--danger-light);color:var(--danger);border-radius:3px;padding:0 2px;font-weight:600}
+.err-opt .tag{flex:0 0 auto;font-size:10px;font-weight:700;padding:2px 7px;border-radius:var(--radius-pill);white-space:nowrap}
+.err-opt .tag.ok{background:var(--success);color:#fff}
+.err-opt .tag.bad{background:var(--danger);color:#fff}
+.err-opt.ok{background:var(--success-light);border-color:#B7EB8F}
+.err-opt.ok .k{border-color:var(--success);color:var(--success);background:#fff}
+.err-opt.picked{background:#FFF6F6;border-color:#FFC9C9}
+.err-opt.picked .k{border-color:var(--danger);color:var(--danger)}
+.err-opt-note{font-size:11.5px;line-height:1.7;color:var(--ink-2);padding:0 9px 2px 37px;margin-top:-2px}
+.err-opt-note b{color:var(--ink);font-weight:700}
+.err-opt-note .h{color:var(--ink-3)}
+.err-opt-note.ok-note{color:#3F7A1E}
+
+/* 填空/打字题的答案 */
+.err-ans{font-size:13px;line-height:1.8;margin:9px 0 0;color:var(--ink)}
+.err-ans b{color:var(--success);font-weight:700}
+.err-ans .h{font-size:11.5px;color:var(--ink-3)}
+.err-mini{border:none;background:transparent;cursor:pointer;font-size:13px;padding:0 2px}
+.err-you{font-size:12px;color:var(--ink-2);margin-top:3px}
+.err-you s{color:var(--danger);text-decoration-thickness:1.5px}
+
+/* 讲解 + 讲题提示 */
+.err-why{margin-top:10px;border-top:1px dashed var(--line);padding-top:9px}
+.err-cn{font-size:12.5px;line-height:1.8;color:var(--ink-2)}
+.err-tip{margin-top:7px;font-size:12px;line-height:1.75;background:var(--warning-light);border:1px solid #FFE7A3;border-radius:10px;padding:8px 10px;color:#6B4E00}
+.err-tip b{color:#8A5B00}
 
 /* Modal */
 .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:1000;display:none;align-items:center;justify-content:center;padding:16px}
@@ -1389,9 +1461,9 @@ body.perf-on .content-area{padding-bottom:54vh}
 </div>
 
 <script>window.__appReady = false;</script>
-<script defer src="cloud.js?v=174"></script>
-<script defer src="data.js?v=174"></script>
-<script defer src="data-shuffle.js?v=174"></script>
+<script defer src="cloud.js?v=175"></script>
+<script defer src="data.js?v=175"></script>
+<script defer src="data-shuffle.js?v=175"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
 <!--
   ?v= 必须跟着版本号走（v124 修正）。
@@ -1401,9 +1473,9 @@ body.perf-on .content-area{padding-bottom:54vh}
   这个坑很隐蔽：代码明明改了、也部署上去了，手机上跑的还是几个月前的逻辑。
   以后每次发版，这里跟着 app-version 一起改。
 -->
-<script defer src="recorder.js?v=174"></script>
-<script defer src="api.js?v=174"></script>
-<script defer src="app.js?v=174"></script>
+<script defer src="recorder.js?v=175"></script>
+<script defer src="api.js?v=175"></script>
+<script defer src="app.js?v=175"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {

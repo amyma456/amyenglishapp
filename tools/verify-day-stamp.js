@@ -233,7 +233,8 @@ console.log('\n=== 3. 整张错题卷跑一遍：每道题都带具体日期 ===
         b.state.answers[Api.answerKey('s1', 2, mi, 0)] = { value: 'zzz', correct: false };
         const h2 = b.renderMyErrors();
         ok(h2.indexOf('[2026-10-14 周三·') >= 0, '学生端我的错题本也带上了具体日期');
-        ok(h2.indexOf('正确答案：') >= 0, '学生端的正确答案照旧');
+        // v175 起正确项改成在选项行上打「✔ 正确答案」标（不再是单独一行"正确答案：B"）
+        ok(h2.indexOf('✔ 正确答案') >= 0 || h2.indexOf('正确答案：') >= 0, '学生端的正确答案照旧（还在卡上）');
 
         finalChecks();
       }).catch(e => {
@@ -246,21 +247,26 @@ console.log('\n=== 3. 整张错题卷跑一遍：每道题都带具体日期 ===
       // =====================================================================
       console.log('\n=== 5. 静态检查：三处渲染都走新写法 ===');
       {
+        // v175 起学生端 / 老师端两张错题本都收敛到 _errCard 里渲染，
+        // 日期标签的调用点因此从三处变成"卡片 + 打印卷"两处 —— 但三处输出
+        // 仍然都带日期，所以这里同时要求两条渲染路径都走 _errCard。
         const tags = src.match(/_dayTag\(/g) || [];
-        ok(tags.length >= 4, '_dayTag 的定义 + 三处调用都在（实际出现 ' + tags.length + ' 次）');
+        ok(tags.length >= 3, '_dayTag 的定义 + 卡片/打印卷两处调用都在（实际出现 ' + tags.length + ' 次）');
         ok(/this\._dayTag\(e\.day, e\.module, e\.dayIdx\)/.test(src), '调用点传的是 dayIdx（才能定位到具体哪天）');
-        ok(/errors\.push\(\{ day: day\.day_cn, module: m\.name_cn, q: q, type: m\.type, dayIdx: di \}\)/.test(src),
+        ok(/_errCard\(e, /.test(src), '学生端和老师端的错题本都走 _errCard（日期只在卡片里写一次）');
+        ok(/errors\.push\(\{ day: day\.day_cn, module: m\.name_cn, m: m, q: q, type: m\.type, dayIdx: di \}\)/.test(src),
            '错题卷的错题条目里带上了 dayIdx');
-        ok(/students: wrongStudents, dayIdx: di \}\)/.test(src), '老师端错题本的条目里带上了 dayIdx');
-        ok(/errors\.push\(\{ day: day\.day_cn, module: m\.name_cn, q: q, dayIdx: di \}\)/.test(src),
+        ok(/students: wrongStudents/.test(src) && /dayIdx: di, students: wrongStudents/.test(src),
+           '老师端错题本的条目里带上了 dayIdx');
+        ok(/errors\.push\(\{ day: day\.day_cn, module: m\.name_cn, m: m, q: q, dayIdx: di, picked: a\.value \}\)/.test(src),
            '学生端错题本的条目里带上了 dayIdx');
         ok(!/strong>' \+ e\.day \+ '·' \+ e\.module \+ '<\/strong>/.test(src),
            '原来"只写周几周几"的写法已经全部换掉了');
         ok(/HOMEWORK_EPOCH/.test(src) && /HOMEWORK_EPOCH/.test(dataSrc),
            'app.js 推算日期用的是 data.js 里的周锚点，不是另写一份');
 
-        ok(/name="app-version" content="174"/.test(htmlSrc), '版本号升到 144');
-        ok(/amy-english-v174/.test(swSrc), 'Service Worker 缓存名同步到 v144（不然手机上还是旧版）');
+        ok(/name="app-version" content="175"/.test(htmlSrc), '版本号升到 144');
+        ok(/amy-english-v175/.test(swSrc), 'Service Worker 缓存名同步到 v144（不然手机上还是旧版）');
       }
 
       console.log('\n' + (fail ? '❌ ' + fail + ' 项未通过' : '✅ 全部通过'));

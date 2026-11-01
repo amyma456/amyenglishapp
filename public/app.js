@@ -4593,20 +4593,17 @@ const App = {
               if (a && !a.correct) wrongStudents.push(s.name);
             });
             if (wrongStudents.length > 0) {
-              errors.push({ day: day.day_cn, module: m.name_cn, question: q.question || q.sentence, answer: q.options ? String.fromCharCode(65+q.answer) : q.answer, explanation_cn: q.explanation_cn, explanation_en: q.explanation_en, students: wrongStudents, dayIdx: di });
+              // v175：整道题原样带下去，由 _errCard 统一渲染上下文/选项/讲题提示 ——
+              // 以前这里只剩"正确答案 B"，老师拿它没法讲题，还得自己翻回题库。
+              errors.push({ day: day.day_cn, module: m.name_cn, m: m, q: q, dayIdx: di, students: wrongStudents });
             }
           });
         }
       });
     });
     errors.sort((a,b) => b.students.length - a.students.length);
-    errors.forEach(e => {
-      html += '<div class="error-item">';
-      html += '<div class="e-q"><strong>' + this._dayTag(e.day, e.module, e.dayIdx) + '</strong> ' + e.question + '</div>';
-      html += '<div class="q-answer">正确答案：' + e.answer + '</div>';
-      html += '<div class="e-students">❌ 做错学生(' + e.students.length + '人)：' + e.students.join('、') + '</div>';
-      html += '<div class="q-explanation show"><div class="cn">📖 ' + e.explanation_cn + '</div><div class="en">📘 ' + e.explanation_en + '</div></div>';
-      html += '</div>';
+    errors.forEach((e, i) => {
+      html += this._errCard(e, i);
     });
     if (errors.length === 0) html += '<p class="text-sub text-center">暂无错题记录</p>';
     return html;
@@ -4720,7 +4717,8 @@ const App = {
           m.questions.forEach((q, qi) => {
             const a = this._lookupWrongAnswer(student.id, di, mi, qi);
             if (a && !a.correct) {
-              errors.push({ day: day.day_cn, module: m.name_cn, q: q, type: m.type, dayIdx: di });
+              // v175：卷面上也要有上下文（原文／听力关键信息），不能只给一道光秃秃的题
+              errors.push({ day: day.day_cn, module: m.name_cn, m: m, q: q, type: m.type, dayIdx: di });
             }
           });
         }
@@ -4752,6 +4750,7 @@ const App = {
       errors.forEach((e, i) => {
         html += '<div class="a4-q">';
         html += '<div class="a4-q-num">' + (i+1) + '. ' + this._dayTag(e.day, e.module, e.dayIdx) + ' ' + this._a4QuestionHtml(e.q) + '</div>';
+        html += this._errA4ContextHtml(e.m, e.q);
         if (e.q.options) {
           e.q.options.forEach((o, oi) => {
             html += '<div style="margin-left:20px">' + String.fromCharCode(65+oi) + '. ' + o + '</div>';
@@ -13320,6 +13319,620 @@ const App = {
     }
   },
 
+  // ==========================================================================
+  // v175 错题解析：一道错题要能自己把"前因后果"讲清楚
+  //
+  // 家长 2026-11-01 的原话：
+  //   「改错本里缺少上下文联系。第一题是听力题，听不出来原文是什么，当然不用
+  //    写出来 —— 听力不用把听力原文放出来，但是要把听力的内容给展现出来。
+  //    为什么要选这个空？比如说听数字就用单词把这个数字写出来：数字是三千，
+  //    就要把 3000 的英文单词写出来，让孩子去把这个 3000 往上填。」
+  //   「完形填空、阅读理解，你列给我都只有选项 B、A，没有 B 和 A 的具体解释。
+  //    A 为什么选，也要有一个适当的提示，让老师知道这个题是怎么回事，可以
+  //    想到这个场景给学生去讲。所有错题本的题逻辑都是这样的，不能断章取义。」
+  //
+  // 所以每道错题都补四样东西：
+  //   ① 上下文 —— 阅读/完形给出原文并标出依据句；听力给出"挖空的关键信息句
+  //      + 可点的关键词"，而不是把听力原文整句摊开（摊开等于白听）；
+  //   ② 全部选项 —— A/B/C/D 一字不落，正确的打勾、孩子选的那个标出来；
+  //   ③ 每一项差在哪 —— 错项与正确项做词级对齐，指出"lunch → breakfast"，
+  //      能查到词形的顺手说清（did 是 do 的过去式）；
+  //   ④ 讲题提示 —— 一句老师能照着说的话：先说什么、再问什么。
+  // ==========================================================================
+
+  // 题型 → 徽标 + 讲题口径
+  _ERR_KIND: {
+    listening: { icon: '🎧', name: '听力' },
+    reading: { icon: '📄', name: '阅读理解' },
+    cloze: { icon: '🧩', name: '完形填空' },
+    grammar: { icon: '📐', name: '语法' },
+    multiple_choice: { icon: '✏️', name: '单项选择' },
+    ket_pet: { icon: '🎯', name: 'KET/PET' },
+    tense: { icon: '⌨️', name: '填空拼写' },
+    speaking: { icon: '🗣️', name: '口语问答' },
+    vocabulary_game: { icon: '📚', name: '高频词汇' },
+    writing_template: { icon: '✍️', name: '写作' }
+  },
+
+  // 差异词里的"虚词"：这些词不一样不代表考点，别拿来当关键信息。
+  _ERR_STOP: ('a an the is am are was were be been being to of in on at for and or but '
+    + "i you he she it we they me him her us them my your his its our their this that these those "
+    + 'do does did has have had will would can could shall should may might must not no yes '
+    + 'so as with by from there here than then very too also just only').split(/\s+/),
+
+  // 常见词的中文（只收题库选项里真出现过的高频实词，拿不准的不写，
+  // 宁可只显示英文对照，也不给孩子一个错的意思）。
+  _ERR_CN_SRC: ('school 学校|teacher 老师|teachers 老师|student 学生|students 学生|parents 父母|'
+    + 'mother 妈妈|father 爸爸|brother 兄弟|sister 姐妹|friend 朋友|friends 朋友|family 家庭|'
+    + 'children 孩子们|people 人们|farmers 农民|boy 男孩|girl 女孩|grandma 奶奶|doctor 医生|'
+    + 'yesterday 昨天|tomorrow 明天|today 今天|now 现在|night 夜晚|morning 早上|afternoon 下午|'
+    + 'evening 傍晚|week 星期|weekend 周末|month 月|year 年|years 岁|day 天|days 天|birthday 生日|'
+    + 'summer 夏天|winter 冬天|spring 春天|autumn 秋天|march 三月|last 上一个|next 下一个|'
+    + 'breakfast 早餐|lunch 午餐|dinner 晚餐|food 食物|water 水|milk 牛奶|apple 苹果|bread 面包|'
+    + 'rice 米饭|meat 肉|egg 鸡蛋|cake 蛋糕|tea 茶|juice 果汁|fruit 水果|vegetables 蔬菜|'
+    + 'home 家|house 房子|park 公园|zoo 动物园|shop 商店|city 城市|cities 城市|china 中国|'
+    + 'beijing 北京|shanghai 上海|mountain 山|river 河|wall 墙|window 窗户|desk 桌子|'
+    + 'hospital 医院|hospitals 医院|space 太空|mars 火星|museum 博物馆|library 图书馆|'
+    + 'station 车站|street 街道|farm 农场|money 钱|paper 纸|book 书|books 书|homework 作业|'
+    + 'bike 自行车|car 汽车|cars 汽车|bus 公交车|buses 公交车|game 游戏|games 游戏|tv 电视|'
+    + 'film 电影|trip 旅行|photo 照片|dream 梦想|job 工作|work 工作|time 时间|question 问题|'
+    + 'answer 答案|story 故事|letter 信|holiday 假期|weather 天气|clothes 衣服|shoes 鞋|'
+    + 'dress 连衣裙|skirt 半身裙|hat 帽子|glasses 眼镜|wallet 钱包|change 零钱|scissors 剪刀|'
+    + 'peach 桃子|fish 鱼|animal 动物|animals 动物|monkey 猴子|elephant 大象|tiger 老虎|'
+    + 'panda 熊猫|dog 狗|cat 猫|bird 鸟|paper 纸|race 比赛|poet 诗人|festival 节日|'
+    + 'big 大的|small 小的|long 长的|short 短的|old 老的／旧的|young 年轻的|new 新的|'
+    + 'good 好的|bad 坏的|happy 高兴的|sad 难过的|easy 容易的|difficult 困难的|hard 难的|'
+    + 'expensive 贵的|cheap 便宜的|fast 快的|slow 慢的|heavy 重的|light 轻的|clean 干净的|'
+    + 'dirty 脏的|hot 热的|cold 冷的|warm 暖和的|cool 凉爽的|busy 忙的|free 空闲的|'
+    + 'important 重要的|interesting 有趣的|beautiful 美丽的|delicious 美味的|healthy 健康的|'
+    + 'safe 安全的|dangerous 危险的|quiet 安静的|loud 大声的|low 低的|high 高的|near 近的|'
+    + 'far 远的|rich 富有的|poor 贫穷的|same 相同的|different 不同的|best 最好的|better 更好的|'
+    + 'more 更多|most 最多|many 许多（可数）|much 许多（不可数）|little 少的|few 很少|'
+    + 'some 一些|any 任何|all 全部|both 两者都|each 每个|every 每个|'
+    + 'go 去|goes 去|went 去了|get 得到|got 得到|do 做|did 做了|does 做|have 有|had 有|'
+    + 'make 制作|made 做了|take 拿|took 拿了|give 给|gave 给了|see 看见|saw 看见|'
+    + 'come 来|came 来了|eat 吃|ate 吃了|drink 喝|drank 喝了|buy 买|bought 买了|'
+    + 'sell 卖|sold 卖了|pay 付钱|paid 付了钱|cost 花费|spend 花（时间/钱）|spent 花了|'
+    + 'bring 带来|brought 带来了|keep 保持|kept 保持|leave 离开|left 离开|find 找到|found 找到|'
+    + 'feel 感觉|felt 感觉|know 知道|knew 知道|think 认为|thought 认为|tell 告诉|told 告诉|'
+    + 'say 说|said 说了|speak 说（语言）|spoke 说了|talk 谈话|read 读|write 写|wrote 写了|'
+    + 'learn 学习|learned 学了|teach 教|taught 教了|study 学习|play 玩|played 玩了|'
+    + 'watch 观看|watched 看了|look 看|listen 听|hear 听见|heard 听见了|run 跑|ran 跑了|'
+    + 'walk 走|jump 跳|swim 游泳|swam 游泳|sleep 睡觉|slept 睡了|sit 坐|sat 坐|'
+    + 'stand 站|stood 站|open 打开|close 关上|start 开始|starts 开始|begin 开始|'
+    + 'finish 完成|finished 完成了|help 帮助|need 需要|use 使用|live 居住|lives 居住|'
+    + 'love 爱|like 喜欢|want 想要|hope 希望|try 尝试|wait 等待|meet 遇见|met 遇见|'
+    + 'call 打电话|visit 拜访|cook 做饭|wash 洗|carry 携带|build 建造|built 建造了|'
+    + 'grow 生长|grew 生长|pick 摘|plant 种植|share 分享|send 寄|sent 寄了|'
+    + 'show 展示|showed 展示了|choose 选择|chose 选择了|wear 穿着|wore 穿着|worn 穿旧|'
+    + 'put 放|cut 切|hold 握住|held 握住|hang 挂|hung 挂了|'
+    + 'hundred 百|thousand 千|million 百万|first 第一|second 第二|third 第三'),
+
+  _errCnMap() {
+    if (this._ERR_CN) return this._ERR_CN;
+    const map = {};
+    String(this._ERR_CN_SRC || '').split('|').forEach(function (pair) {
+      const i = pair.indexOf(' ');
+      if (i > 0) map[pair.slice(0, i).trim().toLowerCase()] = pair.slice(i + 1).trim();
+    });
+    this._ERR_CN = map;
+    return map;
+  },
+
+  _errEsc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  },
+
+  // 阿拉伯数字 → 英文单词。家长点名要的：3000 要写成 three thousand，
+  // 让孩子对着空格把词填回去。
+  _NUM1: ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine',
+    'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen',
+    'seventeen', 'eighteen', 'nineteen'],
+  _NUM10: ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'],
+  _numToEnglish(n) {
+    n = Math.floor(Math.abs(Number(n)));
+    if (!isFinite(n)) return '';
+    if (n < 20) return this._NUM1[n];
+    if (n < 100) {
+      const t = Math.floor(n / 10), r = n % 10;
+      return this._NUM10[t] + (r ? '-' + this._NUM1[r] : '');
+    }
+    if (n < 1000) {
+      const h = Math.floor(n / 100), r = n % 100;
+      return this._NUM1[h] + ' hundred' + (r ? ' and ' + this._numToEnglish(r) : '');
+    }
+    const units = [[1e9, 'billion'], [1e6, 'million'], [1e3, 'thousand']];
+    for (let i = 0; i < units.length; i++) {
+      if (n >= units[i][0]) {
+        const q = Math.floor(n / units[i][0]), r = n % units[i][0];
+        return this._numToEnglish(q) + ' ' + units[i][1] + (r ? ' ' + this._numToEnglish(r) : '');
+      }
+    }
+    return '';
+  },
+
+  // 拆 token，标点单独留一份，好让差异高亮不破坏原来的标点。
+  _errTok(s) {
+    const out = [];
+    const re = /[A-Za-z0-9']+|[^A-Za-z0-9']+/g;
+    let m;
+    while ((m = re.exec(String(s == null ? '' : s)))) {
+      out.push({ w: m[0], isWord: /[A-Za-z0-9']/.test(m[0].charAt(0)) });
+    }
+    return out;
+  },
+  _errWords(s) {
+    return String(s == null ? '' : s).match(/[A-Za-z0-9']+/g) || [];
+  },
+
+  // 词级 LCS，返回 same / del(正确句多出来的) / ins(错项多出来的)
+  _errLcsOps(a, b) {
+    const n = a.length, m = b.length;
+    if (!n || !m) {
+      const ops = [];
+      a.forEach(function (x) { ops.push({ t: 'del', x: x }); });
+      b.forEach(function (x) { ops.push({ t: 'ins', x: x }); });
+      return ops;
+    }
+    const dp = [];
+    for (let i = 0; i <= n; i++) dp.push(new Array(m + 1).fill(0));
+    for (let i = n - 1; i >= 0; i--) {
+      for (let j = m - 1; j >= 0; j--) {
+        dp[i][j] = a[i].toLowerCase() === b[j].toLowerCase()
+          ? dp[i + 1][j + 1] + 1
+          : Math.max(dp[i + 1][j], dp[i][j + 1]);
+      }
+    }
+    const ops = [];
+    let i = 0, j = 0;
+    while (i < n && j < m) {
+      if (a[i].toLowerCase() === b[j].toLowerCase()) { ops.push({ t: 'same', x: a[i] }); i++; j++; }
+      else if (dp[i + 1][j] >= dp[i][j + 1]) { ops.push({ t: 'del', x: a[i] }); i++; }
+      else { ops.push({ t: 'ins', x: b[j] }); j++; }
+    }
+    while (i < n) ops.push({ t: 'del', x: a[i++] });
+    while (j < m) ops.push({ t: 'ins', x: b[j++] });
+    return ops;
+  },
+
+  // 正确项 vs 错项：连续的不同归成一组，得到 "lunch → breakfast"
+  _errDiffPairs(correct, other) {
+    const ops = this._errLcsOps(this._errWords(correct), this._errWords(other));
+    const pairs = [];
+    let cur = null;
+    ops.forEach(function (op) {
+      if (op.t === 'same') { if (cur) { pairs.push(cur); cur = null; } return; }
+      cur = cur || { from: [], to: [] };
+      if (op.t === 'del') cur.from.push(op.x); else cur.to.push(op.x);
+    });
+    if (cur) pairs.push(cur);
+    return pairs.map(function (p) {
+      return { from: p.from.join(' '), to: p.to.join(' ') };
+    });
+  },
+
+  // 把错项里"跟正确项不一样"的词标红。差异太多就不标（满屏红反而看不清）。
+  _errMarkOther(correct, other) {
+    const cw = this._errWords(correct);
+    const ops = this._errLcsOps(cw, this._errWords(other));
+    const marks = {};
+    let wi = 0;
+    ops.forEach(function (op) {
+      if (op.t === 'ins') { marks[wi] = true; wi++; }
+      else if (op.t === 'same') wi++;
+    });
+    const nMark = Object.keys(marks).length;
+    if (!nMark || nMark > Math.max(6, Math.ceil(cw.length * 0.6))) {
+      return { html: this._errEsc(other), marked: 0 };
+    }
+    const self = this;
+    let wi2 = 0, html = '';
+    this._errTok(other).forEach(function (t) {
+      if (!t.isWord) { html += self._errEsc(t.w); return; }
+      html += marks[wi2] ? '<em class="dif">' + self._errEsc(t.w) + '</em>' : self._errEsc(t.w);
+      wi2++;
+    });
+    return { html: html, marked: nMark };
+  },
+
+  // 一个词的"说法"：数字给英文，变形给"谁的过去式"，认识的给中文
+  _errWordHint(raw) {
+    const s = String(raw == null ? '' : raw).trim();
+    if (!s) return '';
+    const num = s.replace(/,/g, '');
+    if (/^\d+(\.\d+)?$/.test(num)) {
+      const en = this._numToEnglish(parseFloat(num));
+      return en ? ('数字 ' + s + ' = ' + en) : '';
+    }
+    const w = s.toLowerCase().replace(/[^a-z']/g, '');
+    if (!w) return '';
+    const inf = (typeof WordHelp !== 'undefined' && WordHelp.inflectionOf)
+      ? WordHelp.inflectionOf(w) : null;
+    if (inf && inf.base && inf.base !== w) {
+      const label = (inf.labels && inf.labels.length) ? inf.labels[0] : '变形';
+      return w + ' 是 ' + inf.base + ' 的' + label;
+    }
+    const cn = this._errCnMap()[w];
+    if (cn) return w + '：' + cn;
+    return '';
+  },
+
+  // 剥掉两个选项共同的开头和结尾，只留真正不同的那一截
+  _errTrimPair(correct, other) {
+    const a = this._errWords(correct), b = this._errWords(other);
+    let i = 0;
+    while (i < a.length && i < b.length && a[i].toLowerCase() === b[i].toLowerCase()) i++;
+    let j = 0;
+    while (j < a.length - i && j < b.length - i
+      && a[a.length - 1 - j].toLowerCase() === b[b.length - 1 - j].toLowerCase()) j++;
+    return {
+      from: a.slice(i, a.length - j).join(' '),
+      to: b.slice(i, b.length - j).join(' ')
+    };
+  },
+
+  // 错项相对正确项"差在哪"，给老师/孩子一句能看懂的话
+  _errDiffNote(correct, other) {
+    const pairs = this._errDiffPairs(correct, other);
+    if (!pairs.length) return '';
+    const self = this;
+    if (pairs.length === 1) {
+      const p = pairs[0];
+      const hint = this._errWordHint(p.to) || this._errWordHint(p.from);
+      const core = p.from && p.to
+        ? '<b>' + this._errEsc(p.from) + '</b> → <b>' + this._errEsc(p.to) + '</b>'
+        : (p.to ? '多出 <b>' + this._errEsc(p.to) + '</b>' : '少了 <b>' + this._errEsc(p.from) + '</b>');
+      return '这一处和正确答案不同：' + core + (hint ? '<span class="h">（' + this._errEsc(hint) + '）</span>' : '');
+    }
+    if (pairs.length <= 3) {
+      // 两处以上时，"剥掉共同的头尾"比逐段列更接近人话：
+      // The Palace Museum / The Summer Palace → "Palace Museum → Summer Palace"
+      const cut = this._errTrimPair(correct, other);
+      if (cut.from && cut.to) {
+        const hint = this._errWordHint(cut.to) || this._errWordHint(cut.from);
+        return '说法不同：<b>' + this._errEsc(cut.from) + '</b> → <b>' + this._errEsc(cut.to) + '</b>'
+          + (hint ? '<span class="h">（' + this._errEsc(hint) + '）</span>' : '');
+      }
+      return '差 ' + pairs.length + ' 处：' + pairs.map(function (p) {
+        if (!p.from) return '多了 <b>' + self._errEsc(p.to) + '</b>';
+        if (!p.to) return '少了 <b>' + self._errEsc(p.from) + '</b>';
+        return '<b>' + self._errEsc(p.from) + '</b>→<b>' + self._errEsc(p.to) + '</b>';
+      }).join('、');
+    }
+    return '整句说法不同（见红色词）';
+  },
+
+  // 听力题的关键信息：数字转英文，其余取"正确项里有、别的选项里没有"的实词。
+  // 只给词条，不给整句 —— 让错题本还能当听力练。
+  _errListenKeys(q) {
+    const out = [];
+    const seen = {};
+    const self = this;
+    function push(en, cn) {
+      const k = String(en || '').toLowerCase();
+      if (!k || seen[k]) return;
+      seen[k] = 1;
+      out.push({ en: String(en), cn: cn || '' });
+    }
+    const ci = Number(q.answer);
+    if (!Array.isArray(q.options)) {
+      // 听写填空：答案本身就是要听出来的那个词
+      push(String(q.answer == null ? '' : q.answer), self._errWordHint(q.answer));
+      return out;
+    }
+    const correct = q.options[ci] || '';
+    // ① 正确项里的数字 → 英文单词（3000 → three thousand）
+    (String(correct).match(/\d[\d,\.]*/g) || []).forEach(function (n) {
+      const en = self._numToEnglish(parseFloat(n.replace(/,/g, '')));
+      if (en) push(en, '数字 ' + n);
+    });
+    // ② 正确项独有的实词就是"听出来的关键信息"
+    const others = [];
+    q.options.forEach(function (o, i) { if (i !== ci) others.push(self._errWords(o).map(function (x) { return x.toLowerCase(); })); });
+    this._errWords(correct).forEach(function (w) {
+      const lw = w.toLowerCase();
+      if (self._ERR_STOP.indexOf(lw) >= 0 || lw.length < 2) return;
+      const unique = others.every(function (t) { return t.indexOf(lw) < 0; });
+      if (!unique) return;
+      push(w, self._errWordHint(w));
+    });
+    return out.slice(0, 6);
+  },
+
+  // 听力"骨架句"：把要听出来的信息挖空，其余照旧 —— 孩子能顺着句子回想，
+  // 又不用白读一遍原文。选项是 emoji 或单词的题不生成骨架。
+  _errListenFrame(q) {
+    const ci = Number(q.answer);
+    if (!Array.isArray(q.options)) {
+      let s = String(q.question || '').replace(/^Listen and fill in the blank[:：]\s*/i, '');
+      if (!s) return null;
+      return { html: this._errEsc(s).replace(/_{2,}/g, '<span class="ef-blank"></span>') };
+    }
+    const correct = q.options[ci] || '';
+    const words = this._errWords(correct);
+    if (words.length < 5) return null;
+    const marks = {};
+    const self = this;
+    q.options.forEach(function (o, i) {
+      if (i === ci) return;
+      const ops = self._errLcsOps(words, self._errWords(o));
+      let ai = 0;
+      ops.forEach(function (op) {
+        if (op.t === 'same') ai++;
+        else if (op.t === 'del') { marks[ai] = 1; ai++; }
+      });
+    });
+    const nMark = Object.keys(marks).length;
+    if (!nMark || nMark > Math.ceil(words.length * 0.6)) return null;
+    let wi = 0, html = '';
+    this._errTok(correct).forEach(function (t) {
+      if (!t.isWord) { html += self._errEsc(t.w); return; }
+      html += marks[wi] ? '<span class="ef-blank"></span>' : self._errEsc(t.w);
+      wi++;
+    });
+    return { html: html };
+  },
+
+  // 阅读/完形：把原文摆出来，并定位到"依据句"
+  _errPassageHtml(m, q) {
+    const passage = String(m.passage || '');
+    if (!passage) return '';
+    const sents = passage.match(/[^.!?]+[.!?]*/g) || [passage];
+    const self = this;
+    let hit = -1;
+    let why = '';
+
+    // ① 完形填空：题号 1 → 原文里的 "1___"
+    const num = (String(q.question || '').match(/^\s*(\d+)\s*_/) || [])[1];
+    if (num) {
+      hit = sents.findIndex(function (s) {
+        return new RegExp('\\b' + num + '\\s*_+').test(s) || s.indexOf(num + '___') >= 0;
+      });
+      if (hit >= 0) why = '第' + (hit + 1) + '句';
+    }
+    // ② 解析里引了英文原句的，直接拿那句去原文里找
+    if (hit < 0) {
+      const quotes = String(q.explanation_cn || '').match(/[“"']([A-Za-z][^”"']{5,90})[”"']/g) || [];
+      for (let i = 0; i < quotes.length && hit < 0; i++) {
+        const core = quotes[i].replace(/^[“"']|[”"']$/g, '').trim().toLowerCase();
+        const idx = sents.findIndex(function (s) { return s.toLowerCase().indexOf(core) >= 0; });
+        if (idx >= 0) { hit = idx; why = '第' + (idx + 1) + '句'; }
+      }
+    }
+    // ③ 兜底：正确答案的关键词命中最多的一句
+    if (hit < 0) {
+      const ci = Number(q.answer);
+      const correct = Array.isArray(q.options) ? (q.options[ci] || '') : String(q.answer || '');
+      const kws = this._errWords(correct).filter(function (w) {
+        return w.length > 2 && self._ERR_STOP.indexOf(w.toLowerCase()) < 0;
+      });
+      if (kws.length) {
+        let best = -1, bestScore = 0;
+        sents.forEach(function (s, i) {
+          const low = s.toLowerCase();
+          let sc = 0;
+          kws.forEach(function (k) { if (low.indexOf(k.toLowerCase()) >= 0) sc++; });
+          if (sc > bestScore) { bestScore = sc; best = i; }
+        });
+        if (best >= 0 && bestScore >= Math.min(2, kws.length)) { hit = best; why = '第' + (best + 1) + '句'; }
+      }
+    }
+
+    const body = sents.map(function (s, i) {
+      const t = self._errEsc(String(s).trim());
+      return i === hit ? '<mark>' + t + '</mark>' : t;
+    }).join(' ');
+
+    let html = '<div class="err-ctx err-passage"><div class="err-ctx-t">📄 原文' +
+      (hit >= 0 ? '（依据在' + why + '，已标黄）' : '') + '</div>';
+    if (passage.length <= 480 || hit < 0) {
+      html += '<p class="err-para">' + body + '</p>';
+    } else {
+      html += '<p class="err-para">… <mark>' + this._errEsc(String(sents[hit]).trim()) + '</mark> …</p>';
+      html += '<details class="err-more"><summary>看完整原文</summary><p class="err-para">' + body + '</p></details>';
+    }
+    if (m.passage_cn) {
+      html += '<details class="err-more"><summary>看中文大意</summary><p class="err-para cn">' +
+        this._errEsc(m.passage_cn) + '</p></details>';
+    }
+    html += '</div>';
+    return html;
+  },
+
+  // 听力原文里的「Boy: / Woman:」是给角色音色用的，念之前先剥掉，
+  // 不然"再听一遍"会先读一个 Boy 出来。
+  _errNoSpeakers(text) {
+    return String(text == null ? '' : text)
+      .replace(/\b(Boy|Girl|Man|Woman|Mum|Mom|Dad|Grandma|Grandpa|Teacher|Student|Tom|Lily|Ben|Anna|Amy|Mike|Sam|Lucy)\s*[:：]\s*/g, ' ')
+      .replace(/\s{2,}/g, ' ')
+      .trim();
+  },
+
+  // 上下文块总入口：听力 / 阅读 / 完形 各一套
+  _errContextHtml(m, q) {
+    const type = m.type;
+    if (type === 'listening') {
+      const frame = this._errListenFrame(q);
+      const keys = this._errListenKeys(q);
+      if (!frame && !keys.length) return '';
+      let html = '<div class="err-ctx err-listen"><div class="err-ctx-t">🎧 听到的内容（关键信息，不摊原文）</div>';
+      if (frame && frame.html) html += '<div class="err-frame">' + frame.html + '</div>';
+      if (keys.length) {
+        html += '<div class="err-keys">';
+        keys.forEach(function (k) {
+          html += '<button class="err-key" data-say="' + this._errEsc(k.en) + '" onclick="App._errSay(this)">'
+            + '<b>' + this._errEsc(k.en) + '</b>'
+            + (k.cn ? '<i>' + this._errEsc(k.cn) + '</i>' : '')
+            + '<span class="sp">🔊</span></button>';
+        }, this);
+        html += '</div>';
+      }
+      if (q.audio_text) {
+        html += '<button class="err-replay" data-say="' + this._errEsc(this._errNoSpeakers(q.audio_text)) + '" onclick="App._errSay(this)">🎧 再听一遍</button>';
+      }
+      html += '</div>';
+      return html;
+    }
+    if (type === 'reading' || type === 'cloze') return this._errPassageHtml(m, q);
+    return '';
+  },
+
+  // 正确项"为什么是它"：取解析的第一句（考点句），太长就截断 ——
+  // 家长要的是 A、B 两边都有说法，不是只给一个字母。
+  _errWhyItHtml(q) {
+    const txt = String(q.explanation_cn || '').replace(/\s+/g, ' ').trim();
+    if (!txt) return '';
+    let first = txt.split(/[。；;]/)[0].trim().replace(/^[:：,，]\s*/, '');
+    // "第一句：xxx" 这种前缀在标签后面会变成两个冒号，剥掉
+    first = first.replace(/^第[一二三四五六七八九十\d]+[句段][:：]\s*/, '');
+    if (!first) return '';
+    if (first.length > 76) first = first.slice(0, 76) + '…';
+    return '依据：' + this._errEsc(first);
+  },
+
+  // 打印卷上的上下文（不带答案）：阅读给原文，听力给挖空的关键信息句 +
+  // 中文提示 —— 家长照着读原句，孩子把英文填回去，卷子才做得下去。
+  _errA4ContextHtml(m, q) {
+    if (!m) return '';
+    if (m.type === 'listening') {
+      const frame = this._errListenFrame(q);
+      const keys = this._errListenKeys(q);
+      const hint = keys.map(function (k) { return k.cn; }).filter(Boolean).join('；');
+      if (!frame && !hint) return '';
+      let html = '<div class="a4-ctx"><b>🎧 听力</b>（请家长／老师先读一遍原句，再作答）';
+      if (frame && frame.html) html += '<div class="a4-frame">' + frame.html + '</div>';
+      if (hint) html += '<div class="a4-hint">关键词提示：' + this._errEsc(hint) + '</div>';
+      return html + '</div>';
+    }
+    if ((m.type === 'reading' || m.type === 'cloze') && m.passage) {
+      return '<div class="a4-ctx"><b>📄 原文</b><p class="a4-passage">' + this._errEsc(m.passage) + '</p></div>';
+    }
+    return '';
+  },
+
+  // 全部选项，一个不落；正确项打勾，孩子选的那个标出来，每项差在哪写在下面
+  _errOptionsHtml(q, picked) {
+    if (!Array.isArray(q.options) || !q.options.length) return '';
+    const ci = Number(q.answer);
+    let html = '<div class="err-opts">';
+    for (let i = 0; i < q.options.length; i++) {
+      const o = q.options[i];
+      const ok = i === ci;
+      const pick = picked != null && String(picked) === String(i);
+      html += '<div class="err-opt' + (ok ? ' ok' : '') + (pick && !ok ? ' picked' : '') + '">';
+      html += '<span class="k">' + String.fromCharCode(65 + i) + '</span>';
+      html += '<span class="t">' + (ok ? this._errEsc(o) : this._errMarkOther(q.options[ci], o).html) + '</span>';
+      if (ok) html += '<span class="tag ok">✔ 正确答案</span>';
+      else if (pick) html += '<span class="tag bad">✗ 你选的</span>';
+      html += '</div>';
+      if (!ok) {
+        const note = this._errDiffNote(q.options[ci], o);
+        if (note) html += '<div class="err-opt-note">↳ ' + note + '</div>';
+      } else {
+        // 正确项也要说清"为什么是它"——家长要的是 A 和 B 都有解释，不是只给答案字母
+        const why = this._errWhyItHtml(q);
+        if (why) html += '<div class="err-opt-note ok-note">↳ ' + why + '</div>';
+      }
+    }
+    html += '</div>';
+    return html;
+  },
+
+  // 讲题提示：老师照着念就能上课
+  _errTeachTip(m, q) {
+    const type = m.type;
+    const point = String(q.explanation_cn || '').split(/[。；;]/)[0].trim();
+    let pre = (point && point.length <= 44) ? '考点：' + point + '。' : '';
+    if (type === 'listening') {
+      const keys = this._errListenKeys(q).slice(0, 3).map(function (k) { return k.en; }).join(' / ');
+      return pre + '先让孩子只听不看，说出听到的关键信息' + (keys ? '（' + keys + '）' : '')
+        + '，再问一句「你选的那句里，哪一处跟听到的不一样？」——能说出这一处，才算真的听懂了。';
+    }
+    if (type === 'reading') {
+      return pre + '带孩子回到标黄的原文句读一遍，先问「文章里写的是谁／什么时候／做了什么」，再回头看选项；别让孩子凭印象选。';
+    }
+    if (type === 'cloze') {
+      return pre + '把空格前一句和后一句连起来读，先判断这里缺什么词性（名词／动词／形容词），再挑选项；选完把整段再读一遍，看通不通。';
+    }
+    if (type === 'tense') {
+      return pre + '让孩子把整句读一遍，先想缺什么词、什么形式（时态／单三／复数），说得出理由再动手拼写。';
+    }
+    if (type === 'speaking') {
+      return pre + '先放标准答案让孩子听两遍、跟着说一遍，再问"题目问的是什么"——答错多半是没听懂问句，不是不会说。';
+    }
+    return pre + '先让孩子说出考点是什么（时态／固定搭配／词义辨析），再让他用排除法讲清每个错项错在哪里；讲得出来才算会。';
+  },
+
+  // 点关键词/再听一遍 —— 走本地语音通道，点下去就响
+  _errSay(el) {
+    const t = el && el.getAttribute ? el.getAttribute('data-say') : '';
+    if (!t) return;
+    if (this._speakPhraseNow) this._speakPhraseNow(t);
+    else this.speak(t, { prefer: 'cf' });
+  },
+
+  // 一张错题卡
+  _errCard(e, idx) {
+    const q = e.q || {};
+    const m = e.m || {};
+    const kind = this._ERR_KIND[m.type] || { icon: '📝', name: e.module || '练习' };
+    const self = this;
+    let html = '<div class="error-item err-card">';
+    html += '<div class="err-head"><span class="err-tag">' + this._dayTag(e.day, e.module, e.dayIdx) + '</span>'
+      + '<span class="err-kind">' + kind.icon + ' ' + kind.name + '</span></div>';
+
+    html += this._errContextHtml(m, q);
+
+    const stem = q.question || q.sentence || '';
+    if (stem) {
+      // 完形填空的题干就是"3___"，光看这个不知道是第几空，标签直接写出来
+      let lab = '题目';
+      let stemTxt = stem;
+      if (m.type === 'cloze') {
+        const no = String(stem).match(/^\s*(\d+)\s*_+/);
+        lab = no ? ('第 ' + no[1] + ' 空') : '填空';
+        // 题干只有"1___"时，数字已经在标签里说过了，别再重复一遍
+        if (/^\s*\d+\s*_+\s*$/.test(stem)) stemTxt = '____';
+      }
+      html += '<div class="err-stem"><span class="lab">' + lab + '</span>'
+        + this._errEsc(stemTxt).replace(/_{2,}/g, '<span class="ef-blank"></span>') + '</div>';
+    }
+
+    html += this._errOptionsHtml(q, e.picked);
+
+    if (!Array.isArray(q.options)) {
+      const ans = String(q.answer == null ? '' : q.answer);
+      const hint = this._errWordHint(ans);
+      if (ans) {
+        html += '<div class="err-ans">✅ 正确答案：<b>' + this._errEsc(ans) + '</b>'
+          + (hint ? '<span class="h">（' + this._errEsc(hint) + '）</span>' : '')
+          + '<button class="err-mini" data-say="' + this._errEsc(ans) + '" onclick="App._errSay(this)">🔊</button></div>';
+      }
+      if (e.picked != null && String(e.picked).trim()) {
+        html += '<div class="err-you">✍️ 你写的是：<s>' + this._errEsc(e.picked) + '</s></div>';
+      }
+    }
+
+    html += '<div class="err-why">';
+    if (q.explanation_cn) html += '<div class="err-cn">📖 ' + this._errEsc(q.explanation_cn) + '</div>';
+    const tip = this._errTeachTip(m, q);
+    if (tip) html += '<div class="err-tip">💡 <b>讲题提示</b>：' + this._errEsc(tip) + '</div>';
+    html += '</div>';
+
+    if (e.students && e.students.length) {
+      html += '<div class="e-students">❌ 做错学生(' + e.students.length + '人)：' + this._errEsc(e.students.join('、')) + '</div>';
+    }
+
+    if (e.allowPractice) {
+      html += '<button class="btn btn-outline btn-sm mt-8" onclick="App.practiceSimilar(' + idx + ')">🔄 做相似题</button>';
+      html += '<div id="similar-' + idx + '"></div>';
+    }
+    html += '</div>';
+    return html;
+  },
+
   // ===== Student/Parent: My Errors =====
   renderMyErrors() {
     let html = '<h2 style="color:var(--primary-dark);margin-bottom:12px">❌ 我的错题本</h2>';
@@ -13333,7 +13946,8 @@ const App = {
           m.questions.forEach((q, qi) => {
             const a = this.state.answers[Api.answerKey(sid, di, mi, qi)];
             if (a && !a.correct) {
-              errors.push({ day: day.day_cn, module: m.name_cn, q: q, dayIdx: di });
+              // m 一起带下去：阅读/完形要用它的 passage 定位依据句
+              errors.push({ day: day.day_cn, module: m.name_cn, m: m, q: q, dayIdx: di, picked: a.value });
             }
           });
         }
@@ -13342,14 +13956,10 @@ const App = {
     if (errors.length === 0) {
       html += '<div class="card text-center text-sub">暂无错题，继续加油！</div>';
     } else {
+      html += '<p class="text-sub mb-12">每道错题都带着原文／听力关键信息、全部选项和讲解，不用再翻回题目去对。</p>';
       errors.forEach((e, i) => {
-        html += '<div class="error-item">';
-        html += '<div class="e-q"><strong>' + this._dayTag(e.day, e.module, e.dayIdx) + '</strong> ' + (e.q.question || e.q.sentence) + '</div>';
-        html += '<div class="q-answer">正确答案：' + (e.q.options ? String.fromCharCode(65+e.q.answer) : e.q.answer) + '</div>';
-        html += '<div class="q-explanation show"><div class="cn">📖 ' + (e.q.explanation_cn||'') + '</div></div>';
-        html += '<button class="btn btn-outline btn-sm mt-8" onclick="App.practiceSimilar(' + i + ')">🔄 做相似题</button>';
-        html += '<div id="similar-' + i + '"></div>';
-        html += '</div>';
+        e.allowPractice = true;
+        html += this._errCard(e, i);
       });
     }
     return html;
