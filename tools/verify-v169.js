@@ -103,11 +103,11 @@ section('3. 写作模板正文可点（单词 + 短语标识）');
 // ---------------------------------------------------------------------------
 section('4. 版本钉子 = 169');
 {
-  ok(/name="app-version" content="177"/.test(htmlSrc), 'index.html app-version = 169');
-  ok((htmlSrc.match(/\?v=177/g) || []).length === 6, 'index.html 6 处 ?v=177', (htmlSrc.match(/\?v=177/g) || []).length);
+  ok(/name="app-version" content="178"/.test(htmlSrc), 'index.html app-version = 169');
+  ok((htmlSrc.match(/\?v=178/g) || []).length === 6, 'index.html 6 处 ?v=178', (htmlSrc.match(/\?v=178/g) || []).length);
   ok(!/\?v=16[0-8]\b/.test(htmlSrc), 'index.html 没有残留旧 ?v=');
-  ok(/var V = 177;/.test(swSrc), 'sw.js var V = 169');
-  ok(/amy-english-v177/.test(swSrc), 'sw.js CACHE_NAME = amy-english-v177');
+  ok(/var V = 178;/.test(swSrc), 'sw.js var V = 169');
+  ok(/amy-english-v178/.test(swSrc), 'sw.js CACHE_NAME = amy-english-v178');
   ok(!/amy-english-v16[0-8]\b/.test(swSrc), 'sw.js 没有残留旧缓存名');
 }
 

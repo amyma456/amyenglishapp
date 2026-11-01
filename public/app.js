@@ -10135,8 +10135,13 @@ const App = {
     html += '<div class="writing-kwbar">';
     html += '<div class="wk-title">📌 参考单词（点一下听发音 → 找出它的中文意思）</div>';
     html += '<div class="writing-keywords">';
+    // v178（家长）：「写的时候，我的英文就是要藏起来，不让学生看」——
+    // 配对全做完、横线一解锁，词条就翻面成「中文朝上」：英文全部藏到眼睛
+    // 后面，想不起来的词点 👁 才能瞟一眼（1.5 秒后自动遮回）。配对阶段
+    // 照旧（那个环节考的就是看英文找中文）。
+    const kwBlind = !this.isTeacher() && this._kwAllPaired(mi, m);
     kws.forEach((it, ki) => {
-      html += this._kwChipHtml(mi, ki, it, !!this._kwState(mi)[ki], this._kwShown(mi, ki));
+      html += this._kwChipHtml(mi, ki, it, !!this._kwState(mi)[ki], this._kwShown(mi, ki), kwBlind);
     });
     html += '</div>';
     // 中文候选池：默认不出现，点了英文词才摊开，配对成功就收回去
@@ -10163,9 +10168,15 @@ const App = {
     const inputs = {};
     m.blanks.forEach((b, bi) => {
       const v = prevVal(bi);
+      // v178（家长 2026-11-02）：横线输入框的字号必须 ≥16px —— 手机上小于
+      // 16px 的输入框一聚焦 iOS 就整页放大，界面一下子变得又小又乱；再加
+      // focus/blur 处理（见 _writingInputFocus），键盘弹出来后自动把光标
+      // 所在的那一行滚到屏幕中间，不再被输入法挡住、也不再"跳到别的一行"。
       inputs[b.id] = '<input type="text" class="writing-blank-input' + (fillOpen ? '' : ' locked') + '" data-blank="' + b.id + '" data-answer="' + b.answer + '" value="' + v + '" placeholder="' + b.hint_cn + '"'
         + (fillOpen ? '' : ' readonly onclick="App._writingLockedClick(' + mi + ')"')
-        + ' autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" style="border:none;border-bottom:2px solid var(--primary);text-align:center;color:var(--primary);font-weight:600;width:120px;background:transparent;font-size:14px">';
+        + ' autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="done"'
+        + ' onfocus="App._writingInputFocus(event)" onblur="App._writingInputBlur(event,' + mi + ',' + bi + ')"'
+        + ' style="border:none;border-bottom:2px solid var(--primary);text-align:center;color:var(--primary);font-weight:600;width:140px;background:transparent;font-size:16px;padding:3px 10px;margin:0 2px;border-radius:10px 10px 0 0">';
     });
     const self = this;
     String(m.template).split(/(\{\{[0-9A-Za-z_-]+\}\})/).forEach(function (seg) {
@@ -10289,19 +10300,43 @@ const App = {
   // 一个参考单词长什么样：
   //   没配对 → 🔊 best friend                      （点它＝听发音 + 开始配中文）
   //   配好了 → ✓ best friend  👁  + 被眼睛遮住的中文（点 👁 才露出来）
-  _kwChipHtml(mi, ki, it, paired, revealed) {
+  //   v178 翻面模式(blind) → ✓ 中文  👁 + 被眼睛遮住的英文（写的时候不能
+  //   让英文一直摊在眼前 —— 点 👁 瞟一眼，KW_HIDE_MS 后自动遮回）
+  _kwChipHtml(mi, ki, it, paired, revealed, blind) {
     const e = this._escHtml;
     let h = '<div class="keyword-chip kw-tap' + (paired ? ' paired' : '') + (revealed ? ' reveal' : '')
+          + (blind ? ' blind' : '')
           + '" id="kw-' + mi + '-' + ki + '">';
     h += '<button type="button" class="kw-hit" id="kwhit-' + mi + '-' + ki + '"'
        + ' onclick="App._kwPeek(' + mi + ',' + ki + ')" aria-pressed="false">'
-       + '<span class="kw-en">' + e(it.en) + '</span></button>';
+       + '<span class="kw-en">' + e(it.en) + '</span>'
+       + (blind ? '<span class="kw-hit-cn">' + e(it.cn) + '</span>' : '')
+       + '</button>';
     h += '<button type="button" class="kw-eye" id="kweye-' + mi + '-' + ki + '"'
-       + ' onclick="App._kwReveal(' + mi + ',' + ki + ')" aria-label="看中文意思">'
+       + ' onclick="App.' + (blind ? '_kwEnPeek(' + mi + ',' + ki + ')' : '_kwReveal(' + mi + ',' + ki + ')') + '"'
+       + ' aria-label="' + (blind ? '瞟一眼英文' : '看中文意思') + '">'
        + '<svg class="icon"><use href="#' + (revealed ? 'i-eye' : 'i-eye-off') + '"/></svg></button>';
     h += '<span class="kw-cn">' + e(it.cn) + '</span>';
     h += '</div>';
     return h;
+  },
+
+  // v178 翻面模式：点眼睛瞟一眼英文拼写，1.5 秒后自动遮回 ——
+  // 「不会的时候才去翻」；英文一直摊着，填空就退化成照抄。
+  _kwEnPeek(mi, ki) {
+    const m = this._kwModule(mi);
+    if (!m) return;
+    const kws = this._kwList(m);
+    if (kws[ki] && kws[ki].en) this.speak(kws[ki].en);
+    const chip = document.getElementById('kw-' + mi + '-' + ki);
+    if (!chip || !chip.classList) return;
+    chip.classList.add('peek');
+    clearTimeout(this._kwEnTimer && this._kwEnTimer[mi + '-' + ki]);
+    if (!this._kwEnTimer) this._kwEnTimer = {};
+    this._kwEnTimer[mi + '-' + ki] = setTimeout(function () {
+      const c = document.getElementById('kw-' + mi + '-' + ki);
+      if (c && c.classList) c.classList.remove('peek');
+    }, this.KW_HIDE_MS);
   },
 
   // 点眼睛：把遮住的中文露出来；再点一下重新遮上。
@@ -10400,6 +10435,8 @@ const App = {
     const key = this._writingReadKey(mi);
     const pick = this._kwPickMap()[key];
     const picking = (pick != null && !paired[pick]) ? pick : null;
+    // v178：配对全做完（学生端）词条翻面 —— 英文藏到眼睛后面
+    const blind = !this.isTeacher() && kws.length > 0 && this._kwUnpairedCount(mi, m) === 0;
 
     kws.forEach((it, ki) => {
       const chip = document.getElementById('kw-' + mi + '-' + ki);
@@ -10407,13 +10444,17 @@ const App = {
       const on = !!paired[ki];
       chip.classList.toggle('paired', on);
       chip.classList.toggle('picking', picking === ki);
-      chip.classList.toggle('reveal', on && this._kwShown(mi, ki));
+      chip.classList.toggle('blind', blind);
+      if (blind) chip.classList.remove('reveal');
+      else chip.classList.toggle('reveal', on && this._kwShown(mi, ki));
       const hit = document.getElementById('kwhit-' + mi + '-' + ki);
       if (hit) hit.setAttribute('aria-pressed', picking === ki ? 'true' : 'false');
       const eye = document.getElementById('kweye-' + mi + '-' + ki);
       if (eye) {
         eye.innerHTML = '<svg class="icon"><use href="#'
-          + (this._kwShown(mi, ki) ? 'i-eye' : 'i-eye-off') + '"/></svg>';
+          + (blind ? 'i-eye-off' : (this._kwShown(mi, ki) ? 'i-eye' : 'i-eye-off'))
+          + '"/></svg>';
+        if (blind) eye.setAttribute('onclick', 'App._kwEnPeek(' + mi + ',' + ki + ')');
       }
     });
 
@@ -10482,6 +10523,49 @@ const App = {
       const l = document.getElementById('wf-lock-' + mi);
       if (l && l.classList) l.classList.remove('shake');
     }, 700);
+  },
+
+  // ===== v178：横线输入的键盘/光标处理 =====
+  // 家长反馈：手机上写单词时输入法把字挡住；想写"游泳"那一行，视图却跳到
+  // "入口"那一行。三件事：
+  //   1) 聚焦后（等键盘弹完）把光标所在的那一行滚到屏幕中间 —— 字永远看得见，
+  //      光标就待在点到的那一行，不乱跑；
+  //   2) 键盘高度变化（visualViewport resize）时再校一次位置；
+  //   3) 打字期间给 body 挂 wf-typing：粘性的参考单词条让位收起，整段英文
+  //      拿回全部空间（配合 CSS）。
+  _writingInputFocus(ev) {
+    const el = ev && ev.target;
+    if (!el || !el.classList || !el.classList.contains('writing-blank-input')) return;
+    document.body.classList.add('wf-typing');
+    const scrollHere = function () {
+      try { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) {
+        try { el.scrollIntoView(); } catch (e2) {}
+      }
+    };
+    clearTimeout(this._wfFocusTimer);
+    this._wfFocusTimer = setTimeout(scrollHere, 350);   // 键盘弹起动画结束后
+    if (window.visualViewport) {
+      const self = this;
+      if (this._wfVvHandler) window.visualViewport.removeEventListener('resize', this._wfVvHandler);
+      this._wfVvHandler = scrollHere;
+      window.visualViewport.addEventListener('resize', this._wfVvHandler);
+    }
+  },
+  _writingInputBlur(ev, mi, bi) {
+    document.body.classList.remove('wf-typing');
+    clearTimeout(this._wfFocusTimer);
+    if (window.visualViewport && this._wfVvHandler) {
+      window.visualViewport.removeEventListener('resize', this._wfVvHandler);
+      this._wfVvHandler = null;
+    }
+    // 打一半切到别的空 / 退出屏幕：先把值存下，别让孩子白打（提交时才判对错）
+    const el = ev && ev.target;
+    if (el && el.value != null) {
+      const st = this._writingFillState(mi);
+      st[bi] = st[bi] || {};
+      st[bi].v = el.value;
+      this._saveWritingFill();
+    }
   },
 
   // ===== 写作：写完之后的朗读全文 =====

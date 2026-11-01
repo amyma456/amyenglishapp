@@ -100,8 +100,8 @@ process.on('unhandledRejection', () => {});
 
 // ---------------------------------------------------------------------------
 section('0. 版本与装载');
-ok(/content="177"/.test(htmlSrc), 'index.html 版本钉子 = 175');
-ok(/amy-english-v177/.test(swSrc) && /var V = 177;/.test(swSrc), 'sw.js 缓存名与 V = 175');
+ok(/content="178"/.test(htmlSrc), 'index.html 版本钉子 = 175');
+ok(/amy-english-v178/.test(swSrc) && /var V = 178;/.test(swSrc), 'sw.js 缓存名与 V = 175');
 ok(!loadErr, 'app.js 能完整装载（含 data.js / api.js）', loadErr);
 ok(App && DATA && DATA.length === 7, '拿到 7 天题库');
 
@@ -124,16 +124,19 @@ ok(App._numToEnglish(203040) === 'two hundred and three thousand and forty'
   || App._numToEnglish(203040).indexOf('two hundred') === 0, '六位数能拆开念', App._numToEnglish(203040));
 
 // 找一道"听数字"的听力题：正确项里带 3000
+// v178 注：原来只在「当前周」里找 —— 11-02 起当前周切到 W6，W5 的那道
+// oracle bones 听力题就不在 DATA 里了，断言会随日期假死。改成跨全部周找。
+const ALL_WEEKS = new Function(dataSrc + '; return HOMEWORK_WEEKS;')();
 let listenQ = null, listenM = null, listenDi = -1;
-DATA.forEach((day, di) => day.modules.forEach(m => {
-  if (m.type !== 'listening') return;
+ALL_WEEKS.forEach(wk => wk.forEach((day, di) => day.modules.forEach(m => {
+  if (m.type !== 'listening' || listenQ) return;
   (m.questions || []).forEach(q => {
     if (listenQ) return;
     if (!Array.isArray(q.options)) return;
     const correct = q.options[Number(q.answer)] || '';
     if (/\b3000\b/.test(correct)) { listenQ = q; listenM = m; listenDi = di; }
   });
-}));
+})));
 ok(!!listenQ, '题库里找到一道"听数字"的听力题');
 
 if (listenQ) {

@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="177">
+<meta name="app-version" content="178">
 <link rel="manifest" href="manifest.json">
 <!-- v135：登录第一步就是调 api.amyeng.top 验手机号。提前把 DNS + TLS
      握手做掉，接口首调能省几百毫秒 —— 手机弱网下这几百毫秒很显眼。 -->
@@ -690,6 +690,19 @@ body.preview-mode .stage{height:calc(100dvh - var(--nav-h) - var(--pv-h) - var(-
 .keyword-chip.paired .kw-eye{display:inline-flex}
 .keyword-chip .kw-eye .icon{width:14px;height:14px}
 .keyword-chip.paired.reveal .kw-eye{color:var(--orange)}
+/* v178：写的时候英文藏起来 —— 配对全做完词条翻面，中文朝上、英文在眼睛后面。
+   点眼睛（或点中文听发音）瞟一眼英文，1.5 秒后自动遮回。 */
+.keyword-chip.blind .kw-en{display:none}
+.keyword-chip.blind.peek .kw-en{display:inline}
+.keyword-chip.blind .kw-hit-cn{color:var(--orange);font-weight:600}
+.keyword-chip.blind .kw-hit-cn::before{content:'✓ ';font-size:11px}
+.keyword-chip.blind > .kw-cn{display:none}
+/* 打字期间：粘性参考条收起，整段英文拿回全部空间（键盘 + 屏幕不再挤） */
+body.wf-typing .writing-kwbar{display:none}
+body.wf-typing .writing-banner{display:none}
+/* 横线聚焦滚动时给上下都留位：上不钻进粘性条，下不被键盘挡住 */
+.writing-blank-input{scroll-margin:130px 0 45vh}
+.stage-q{scroll-padding-bottom:45vh}
 /* 横线上的锁：参考单词没配对完就填不了 */
 .wf-lock{margin:0 0 10px;padding:9px 12px;border-radius:var(--radius-sm);font-size:12px;
   background:var(--warning-light);border:1px solid var(--warning);color:var(--warning)}
@@ -1041,7 +1054,7 @@ button.gate-locked::before{content:'🔒 '}
   .day-card .day-modules{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .stat-box .label{font-size:10px}
   .q-option{font-size:12px;padding:10px 8px}
-  .writing-essay{font-size:14px;padding:14px}
+  .writing-essay{font-size:16px;padding:14px;line-height:2.1}
   .module-body{padding:12px}
   .login-box-compact{padding:16px 14px;max-width:340px}
   .login-page{padding:8px}
@@ -1472,9 +1485,9 @@ body.perf-on .content-area{padding-bottom:54vh}
 </div>
 
 <script>window.__appReady = false;</script>
-<script defer src="cloud.js?v=177"></script>
-<script defer src="data.js?v=177"></script>
-<script defer src="data-shuffle.js?v=177"></script>
+<script defer src="cloud.js?v=178"></script>
+<script defer src="data.js?v=178"></script>
+<script defer src="data-shuffle.js?v=178"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
 <!--
   ?v= 必须跟着版本号走（v124 修正）。
@@ -1484,9 +1497,9 @@ body.perf-on .content-area{padding-bottom:54vh}
   这个坑很隐蔽：代码明明改了、也部署上去了，手机上跑的还是几个月前的逻辑。
   以后每次发版，这里跟着 app-version 一起改。
 -->
-<script defer src="recorder.js?v=177"></script>
-<script defer src="api.js?v=177"></script>
-<script defer src="app.js?v=177"></script>
+<script defer src="recorder.js?v=178"></script>
+<script defer src="api.js?v=178"></script>
+<script defer src="app.js?v=178"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {

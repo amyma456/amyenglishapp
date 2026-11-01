@@ -571,7 +571,9 @@ console.log('\n=== 5. 语法填空：不报答案，首字母 → 全词逐级�
       const qs = mods[i].questions;
       if (!qs) continue;
       for (let j = 0; j < qs.length; j++) {
-        if (!qs[j].options && qs[j].answer != null) { dayIdx = d; mi = i; qi = j; q = qs[j]; break; }
+        // v178 注：答案长度 ≥3 再测 —— W6 周一的 a/an 填空答案只有一个字母，
+        // 「提示里不出现答案」这类 indexOf 断言对单字母没有意义。
+        if (!qs[j].options && qs[j].answer != null && String(qs[j].answer).length >= 3) { dayIdx = d; mi = i; qi = j; q = qs[j]; break; }
       }
       if (dayIdx >= 0) break;
     }

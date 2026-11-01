@@ -259,6 +259,9 @@ App._writingAllRead = () => true;
 App.state.answers = {};
 HOMEWORK_DATA[DAY].modules.forEach((m, mi) => {
   if (m.questions) m.questions.forEach((q, qi) => { App.state.answers[akey(DAY, mi, qi)] = { correct: false }; });
+  // v178 注：W6 起周一就有作文挖空 —— 挖空不是 questions，resume 的 writing
+  // 分支按「空答过没有」判完成，这里也要把它们标成做过（day 里有作文时才需要）。
+  if (m.blanks) m.blanks.forEach((b, bi) => { App.state.answers[akey(DAY, mi, bi)] = { correct: true }; });
 });
 const stepsFull = App._buildSteps(DAY);
 const retryIdxFull = stepsFull.findIndex(x => x.kind === 'retry');

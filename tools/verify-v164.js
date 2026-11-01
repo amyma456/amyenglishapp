@@ -115,11 +115,11 @@ section('4. 周包自动出题工具链');
 
 section('5. 版本号 v164 全线一致');
 {
-  const refs = (htmlSrc.match(/\?v=177/g) || []).length;
+  const refs = (htmlSrc.match(/\?v=178/g) || []).length;
   ok(refs === 6, 'index.html 6 个脚本引用都是 v164', refs);
-  ok(/app-version"\s+content="177"/.test(htmlSrc), 'app-version = 164');
-  ok(/amy-english-v177/.test(swSrc), 'sw.js CACHE_NAME 升到 v164');
-  ok(/var V = 177;/.test(swSrc), 'sw.js var V = 164');
+  ok(/app-version"\s+content="178"/.test(htmlSrc), 'app-version = 164');
+  ok(/amy-english-v178/.test(swSrc), 'sw.js CACHE_NAME 升到 v164');
+  ok(/var V = 178;/.test(swSrc), 'sw.js var V = 164');
   ok(htmlSrc.indexOf('v=163') < 0, 'index.html 没有残留 v163');
 }
 
@@ -128,7 +128,13 @@ section('6. 周号推进：11-02 起自动切到 W6');
   const epoch = new Function(dataSrc + '; return HOMEWORK_EPOCH;')();
   const idx = new Function(dataSrc + '; return HOMEWORK_WEEK_IDX;')();
   ok(epoch instanceof Date || typeof epoch === 'string' || typeof epoch === 'number', 'HOMEWORK_EPOCH 存在');
-  ok(idx === 4, '本周（10-26）仍是第 5 周 idx=4', idx);
+  // v178 注：断言改成「周号 = 今天相对锚点所在的周」——写死 idx=4 会在
+  // 11-02 切周那天假死。锚点 2026-09-28（周一），一周一跳、夹取兜底不变。
+  const epochMs = epoch instanceof Date ? epoch.getTime()
+    : new Date(epoch).getTime();
+  const expectIdx = Math.min(new Function(dataSrc + '; return HOMEWORK_WEEKS.length;')() - 1,
+    Math.floor((Date.now() - epochMs) / (7 * 24 * 3600 * 1000)));
+  ok(idx === expectIdx, '周号 = 今天相对锚点算出的周（idx=' + idx + '，期望 ' + expectIdx + '）', idx);
   ok(/HOMEWORK_WEEKS\.length - 1/.test(dataSrc), '周号越界有夹取兜底（内容不够时不会崩）');
 }
 

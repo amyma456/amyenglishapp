@@ -124,8 +124,22 @@ try {
 }
 
 // 找一屏阅读和一份写作
-const READ = { day: 0, mi: HOMEWORK_DATA[0].modules.findIndex(m => m.passage && m.type === 'reading') };
-const WRITE = { day: 4, mi: HOMEWORK_DATA[4].modules.findIndex(m => m.type === 'writing_template') };
+// v178 注：W6 起阅读在周二/周四、写作挪到周一（家长排布），写死 day 0 / day 4
+// 会随周内容假死 —— 改成在整周里找第一份。
+let READ = null;
+HOMEWORK_DATA.forEach((day, d) => {
+  if (READ) return;
+  const mi = day.modules.findIndex(m => m.passage && m.type === 'reading');
+  if (mi >= 0) READ = { day: d, mi: mi };
+});
+if (!READ) READ = { day: 0, mi: -1 };
+let WRITE = null;
+HOMEWORK_DATA.forEach((day, d) => {
+  if (WRITE) return;
+  const mi = day.modules.findIndex(m => m.type === 'writing_template');
+  if (mi >= 0) WRITE = { day: d, mi: mi };
+});
+if (!WRITE) WRITE = { day: 4, mi: -1 };
 
 // ---------------------------------------------------------------------------
 console.log('=== 1. _wordSpans：把词包成可点的盒子，标点留在外面 ===');
