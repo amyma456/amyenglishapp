@@ -32,7 +32,7 @@ W6.forEach((d, di) => {
   d.modules.forEach((m) => {
     const enS = m.passage ? (String(m.passage).replace(/\s+/g, ' ').match(/[^.!?]+[.!?]+["']?(?=\s|$)/g) || []).length : 0;
     units += (m.words ? m.words.length : 0) + (m.questions ? m.questions.length : 0) + (m.blanks ? m.blanks.length : 0) + (m.passage ? 2 * enS : 0) +
-      (m.type === 'writing_template' ? (String(m.full_text || '').replace(/\s+/g, ' ').match(/[^.!?]+[.!?]+["']?(?=\s|$)/g) || []).length : 0);
+      (m.type === 'writing_template' || m.type === 'writing_drill' ? (String(m.full_text || '').replace(/\s+/g, ' ').match(/[^.!?]+[.!?]+["']?(?=\s|$)/g) || []).length : 0);
   });
   ok(units === 30, '周' + '一二三四五六日'[di] + ' 真实动作 = 30（实际 ' + units + '）');
 });
@@ -58,11 +58,11 @@ ok(monG.length === 1 && monG[0].questions.length === 4, '周一冠词模块 4 �
 ok(stemOf(0).join('\n').includes('___ umbrella') && stemOf(0).join('\n').includes('___ honest boy'), '周一 a/an 有 umbrella / honest boy 这类易错词');
 
 const tueMc = modOf(1, 'multiple_choice');
-ok(tueMc.length === 1 && tueMc[0].questions.length === 6, '周二 6 道 some/any·there be');
-ok(/orange juice/.test(stemOf(1).join('\n')) && /Why don't we buy ___ books\?/.test(stemOf(1).join('\n')), '周二有 some/any 否定与建议句');
+ok(tueMc.length === 1 && tueMc[0].questions.length === 3, '周二 3 道 some/any·there be（v177 匀出 3 道给作文跟读）');
+ok(/I can't find ___ skirts/.test(stemOf(1).join('\n')) && /Why don't we buy ___ books\?/.test(stemOf(1).join('\n')), '周二有 some/any 否定与建议句（v177 保留的 3 道）');
 
 const wedG = modOf(2, 'grammar')[0], wedMc = modOf(2, 'multiple_choice')[0], wedMc2 = modOf(2, 'multiple_choice').length > 1 ? modOf(2, 'multiple_choice')[1] : null;
-ok(wedG && wedG.questions.length === 7, '周三冠词模块 7 题');
+ok(wedG && wedG.questions.length === 4, '周三冠词模块 4 题（v177：a/an 周一已练，匀出 3 道）');
 ok(wedMc && /planes land and take off/.test(wedMc.questions[0].question) && wedMc.questions.length === 5, '周三 Exercise 01 猜单词 5 题（airport/address/actors/aeroplane/agent）');
 ok(wedMc2 && wedMc2.questions.length === 4 && /bangryappleacrossalready/.test(wedMc2.questions[0].question), '周三字谜 4 题，题干带字母串');
 const wedFills = wedMc2.questions.every((q) => q.type === 'fill');
@@ -70,11 +70,11 @@ ok(wedFills, '字谜是填空题（孩子把词拼出来）');
 ok(/apples|angry|already|across/.test(JSON.stringify(wedMc2.questions.map((q) => q.answer))), '字谜答案覆盖 apples/angry/already/across');
 
 const thuMc = modOf(3, 'multiple_choice');
-ok(thuMc.length === 1 && thuMc[0].questions.length === 6, '周四 there be + 量词 6 题');
-ok(JSON.stringify(thuMc[0].questions.map((q) => q.answer)).includes('are some') && JSON.stringify(thuMc[0].questions.map((q) => q.answer)).includes("isn't any"), 'there be 答案含 are some / isn\'t any 两词组合');
+ok(thuMc.length === 1 && thuMc[0].questions.length === 3, '周四 there be + 量词 3 题（v177 匀出 3 道给作文跟读）');
+ok(JSON.stringify(thuMc[0].questions.map((q) => q.answer)).includes('are some') && JSON.stringify(thuMc[0].questions.map((q) => q.answer)).includes('is an'), 'there be 答案含 are some / is an 两种组合');
 
 const friMc = modOf(4, 'multiple_choice');
-ok(friMc.length === 2 && friMc[0].questions.length === 6 && friMc[1].questions.length === 6, '周五 How much/many ×6 + 量词 ×6');
+ok(friMc.length === 2 && friMc[0].questions.length === 6 && friMc[1].questions.length === 3, '周五 How much/many ×6 + 量词 ×3（v177 匀出 3 道给作文跟读）');
 ok(friMc[0].questions.every((q) => q.options.length === 4), 'How much/many 每题 4 个选项');
 const friG = modOf(4, 'grammar')[0];
 ok(friG && friG.questions.length === 5 && /Both of us is students/.test(friG.questions[0].question), '周五改错小医生 5 题（Both of us is→are 打头）');
@@ -83,8 +83,8 @@ const satMc = modOf(5, 'multiple_choice');
 ok(satMc.length === 2, '周六两个选择题组（代词/词组）');
 const satPron = satMc.find((m) => /name is Tom/.test(JSON.stringify(m.questions.map((q) => q.question))));
 ok(satPron && satPron.questions.length === 5, '周六代词 5 题');
-const satPhr = satMc.find((m) => (m.questions[0].question || '').includes('wild ___'));
-ok(satPhr && satPhr.questions.length === 7 && satPhr.questions[6].answer === 'answer', '周六词组填空 7 题（wild animals … answer questions）');
+const satPhr = satMc.find((m) => (m.questions[0].question || '').includes('be ___ to do sth'));
+ok(satPhr && satPhr.questions.length === 4 && satPhr.questions[0].answer === 'able', '周六词组填空 4 题（be able to / be afraid of / agree with / a long time ago）');
 const satG = modOf(5, 'grammar')[0];
 ok(satG && satG.questions.length === 4 && satG.questions.every((q) => q.answer === 'some') && /photos/.test(JSON.stringify(satG.questions.map((q) => q.question))), '周六 some/any 进阶 4 题全考 some（请求/提议）');
 
@@ -124,10 +124,10 @@ const html = fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8');
 ok(/\.writing-essay\{[^}]*white-space:pre-line/.test(html), '写作正文 white-space:pre-line（信件换行能显示）');
 
 // —— 5) 版本钉 v176 ——
-ok(/content="176"/.test(html), 'index.html app-version=176');
-ok((html.match(/\?v=176/g) || []).length >= 6, '静态资源 ?v=176 ≥ 6 处');
+ok(/content="177"/.test(html), 'index.html app-version=176');
+ok((html.match(/\?v=177/g) || []).length >= 6, '静态资源 ?v=177 ≥ 6 处');
 const sw = fs.readFileSync(path.join(ROOT, 'public', 'sw.js'), 'utf8');
-ok(/var V = 176;/.test(sw) && /amy-english-v176/.test(sw), 'sw.js 版本与缓存名 = 176');
+ok(/var V = 177;/.test(sw) && /amy-english-v177/.test(sw), 'sw.js 版本与缓存名 = 176');
 ok(!/amy-english-v175|var V = 175;|content="175"|=175/.test(html + sw), '旧版本钉已清干净');
 
 console.log('\n' + (fail === 0 ? '✅ 全部 ' + pass + ' 项通过' : '❌ ' + fail + ' 项失败 / ' + pass + ' 项通过'));

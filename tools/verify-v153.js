@@ -86,6 +86,7 @@ function part2() {
         if (m.words) n += m.words.length;
         if (m.passage) n += 2 * sentsEN(m.passage).length;   // 读一句 + 译一句
         if (m.type === 'writing_template') n += sentsEN(m.full_text).length; // 朗读作文逐句
+        if (m.type === 'writing_drill') n += sentsEN(m.full_text || '').length; // v177 作文跟读 // 朗读作文逐句
       });
       if (n !== 30) { allOk = false; detail.push('W' + (wi + 1) + d.day_cn + '=' + n); }
     }));
@@ -187,9 +188,9 @@ function part2() {
 
   console.log('\n== 6. 版本号 = 153 ==');
   {
-    ok(/app-version" content="176"/.test(htmlSrc), 'index.html meta = 153');
-    ok((htmlSrc.match(/\?v=176/g) || []).length >= 5, '脚本引用 ?v=176（' + (htmlSrc.match(/\?v=176/g) || []).length + ' 处）');
-    ok(/amy-english-v176/.test(swSrc) && /var V = 176;/.test(swSrc), 'sw.js 缓存名与 V = 153');
+    ok(/app-version" content="177"/.test(htmlSrc), 'index.html meta = 153');
+    ok((htmlSrc.match(/\?v=177/g) || []).length >= 5, '脚本引用 ?v=177（' + (htmlSrc.match(/\?v=177/g) || []).length + ' 处）');
+    ok(/amy-english-v177/.test(swSrc) && /var V = 177;/.test(swSrc), 'sw.js 缓存名与 V = 153');
   }
 
   console.log('');

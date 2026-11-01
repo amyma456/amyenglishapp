@@ -219,7 +219,7 @@ function enumerate(App, sandbox) {
         });
       }
       if (t === 'reading' || t === 'cloze') sentences(m.passage).forEach(add);
-      if (t === 'writing_template') {
+      if (t === 'writing_template' || t === 'writing_drill') {
         add(m.title);
         add(m.template);
         add(m.full_text);

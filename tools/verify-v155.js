@@ -36,6 +36,7 @@ const unitsOf = m => {
   if (m.blanks) n += m.blanks.length;
   if (m.passage) n += 2 * sentsEN(m.passage).length;
   if (m.type === 'writing_template') n += sentsEN(m.full_text || '').length;
+  if (m.type === 'writing_drill') n += sentsEN(m.full_text || '').length; // v177 作文跟读
   return n;
 };
 
@@ -127,10 +128,10 @@ section('2. app.js 按真实动作计数（行为级，W1 周一）');
 
 section('3. 版本号 = 155');
 {
-  ok(/app-version" content="176"/.test(htmlSrc), 'index.html app-version = 155');
-  ok((htmlSrc.match(/\?v=176/g) || []).length === 6, 'index.html 6 处 ?v=176', (htmlSrc.match(/\?v=176/g) || []).length);
-  ok(/amy-english-v176/.test(swSrc), 'sw.js 缓存名 v155');
-  ok(/var V = 176;/.test(swSrc), 'sw.js var V = 155');
+  ok(/app-version" content="177"/.test(htmlSrc), 'index.html app-version = 155');
+  ok((htmlSrc.match(/\?v=177/g) || []).length === 6, 'index.html 6 处 ?v=177', (htmlSrc.match(/\?v=177/g) || []).length);
+  ok(/amy-english-v177/.test(swSrc), 'sw.js 缓存名 v155');
+  ok(/var V = 177;/.test(swSrc), 'sw.js var V = 155');
 }
 
 console.log('\n———————————————');

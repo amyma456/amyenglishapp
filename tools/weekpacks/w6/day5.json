@@ -1,7 +1,26 @@
 {
  "day_cn": "周六",
  "day_en": "Saturday",
- "theme_cn": "AI口语 + 高频词汇 + 阅读理解 + 键盘拼写",
+ "theme_cn": "作文跟读 + AI口语 + 高频词汇 + 阅读理解 + 键盘拼写",
+ "writing_drill": {
+  "name_cn": "作文跟读 · 背诵",
+  "title": "中段抽读（邀请 · 锻炼 · 回复）",
+  "focus_cn": "Would you like to come with me? 要说到不用看提示",
+  "sentences": [
+   {
+    "en": "Would you like to come with me?",
+    "cn": "你愿意和我一起来吗？"
+   },
+   {
+    "en": "It would be great to do some exercise at the weekend.",
+    "cn": "周末做些锻炼真是太好了。"
+   },
+   {
+    "en": "Let me know your idea.",
+    "cn": "告诉我你的想法吧。"
+   }
+  ]
+ },
  "spell_name": "今天学的词，敲一遍",
  "speaking": [
   {
@@ -269,22 +288,10 @@
  "mc2_name": "词组填空",
  "mc2": [
   {
-   "question": "词组补充——野生动物：wild ___",
-   "type": "fill",
-   "answer": "animals",
-   "explanation_cn": "wild animals 野生动物；animal 泛指一类用复数。"
-  },
-  {
    "question": "词组补充——有能力做某事：be ___ to do sth",
    "type": "fill",
    "answer": "able",
    "explanation_cn": "be able to do sth 有能力做某事。"
-  },
-  {
-   "question": "词组补充——课堂活动：classroom ___",
-   "type": "fill",
-   "answer": "activities",
-   "explanation_cn": "activity 的复数：y 变 i 加 es → activities。"
   },
   {
    "question": "词组补充——害怕：be ___ of",
@@ -303,12 +310,6 @@
    "type": "fill",
    "answer": "ago",
    "explanation_cn": "a long time ago 很久以前。"
-  },
-  {
-   "question": "词组补充——回答问题：___ questions",
-   "type": "fill",
-   "answer": "answer",
-   "explanation_cn": "answer questions 回答问题。"
   }
  ],
  "grammar_name": "some / any（2）",

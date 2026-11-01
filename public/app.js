@@ -404,6 +404,7 @@ const App = {
       if (m.blanks) n += m.blanks.length;
       if (m.passage) n += 2 * this._splitSentences(m.passage).length;   // 逐句读 + 逐句译
       if (m.type === 'writing_template') n += this._writingSentences(m).length; // 朗读全文逐句
+      if (m.type === 'writing_drill') n += this._writingSentences(m).length;    // v177 作文跟读逐句
     });
     return n;
   },
@@ -4054,6 +4055,8 @@ const App = {
           html += '<div class="mt-8">通关阶段：' + w.stages.map(s => this.getStageName(s.type)).join(' → ') + '</div>';
           html += '</div>';
         });
+      } else if (m.type === 'writing_drill') {
+        html += this._writingDrillPreviewHtml(m);
       } else if (m.type === 'writing_template') {
         html += '<div class="q-item">';
         html += '<div class="q-text">📝 ' + m.title + '</div>';
@@ -4090,7 +4093,7 @@ const App = {
   },
 
   getModuleIcon(type) {
-    const icons = { speaking:'🎤', vocabulary_game:'🎮', reading:'📖', grammar:'📐', multiple_choice:'📝', listening:'👂', cloze:'🔗', tense:'⏰', writing_template:'✍️', ket_pet:'🏆' };
+    const icons = { speaking:'🎤', vocabulary_game:'🎮', reading:'📖', grammar:'📐', multiple_choice:'📝', listening:'👂', cloze:'🔗', tense:'⏰', writing_template:'✍️', writing_drill:'🎙️', ket_pet:'🏆' };
     return icons[type] || '📚';
   },
 
@@ -4324,6 +4327,8 @@ const App = {
           });
           html += '</div>';
         });
+      } else if (m.type === 'writing_drill') {
+        html += this._writingDrillPreviewHtml(m);
       } else if (m.type === 'writing_template') {
         html += '<div class="q-item">';
         html += '<div class="q-text">✍️ ' + m.title + '</div>';
@@ -5892,6 +5897,8 @@ const App = {
       return this.renderVocabGame(m, mi, dayIdx);
     } else if (m.type === 'writing_template') {
       return this.renderWritingTemplate(m, mi, dayIdx);
+    } else if (m.type === 'writing_drill') {
+      return this.renderWritingRead(m, mi, dayIdx);
     } else if (m.questions) {
       return this.renderQuestionsStudent(m, mi, dayIdx);
     }
@@ -10481,7 +10488,15 @@ const App = {
   // 作文的英文按句拆开 —— 和阅读模块的逐句跟读是同一份规则
   //（_splitSentences 的 lookbehind 切句 + 逗号不进句尾）。
   _writingSentences(m) {
-    return this._splitSentences((m && m.full_text) || '');
+    const all = this._splitSentences((m && m.full_text) || '');
+    // v177：信末尾的署名（"Luca" / "Li Hua"）单独一行、没有句末标点 —— 那不是
+    // 要朗读的句子，不该占一个动作、也不该单独出张卡让孩子念名字。
+    // 判据：两个词以上，或者带句末标点（"Thanks!" 这种一个字也算一句）。
+    return all.filter(function (s) {
+      const t = String(s).trim();
+      if (!/\w/.test(t)) return false;
+      return t.split(/\s+/).length >= 2 || /[.!?]$/.test(t);
+    });
   },
 
   // 读对过哪几句存在本机（localStorage）。刷新 / 重进这一屏不用重读已经
@@ -10537,9 +10552,21 @@ const App = {
     Recorder.warmUp(); Api.warmup();
 
     let html = '<div class="writing-read">';
-    html += '<div class="wr-head">🎤 朗读全文</div>';
-    html += '<div class="wr-sub">点单词看中文意思，点 🔊 先听一遍，再点一下按钮跟读（读完再点一下结束）。读对全部 '
-         + sents.length + ' 句才能进入下一题。</div>';
+    const isDrill = m.type === 'writing_drill';
+    html += '<div class="wr-head">' + (isDrill ? '🎤 作文跟读 · 背诵' : '🎤 朗读全文') + '</div>';
+    if (isDrill && (m.title || m.focus_cn)) {
+      html += '<div class="wr-focus">'
+           + (m.title ? '<b>' + this._escHtml(m.title) + '</b>' : '')
+           + (m.focus_cn ? '<span class="hint">' + this._escHtml(m.focus_cn) + '</span>' : '')
+           + '</div>';
+    }
+    html += '<div class="wr-sub">'
+         + (isDrill
+            ? '先点「系统先带读一遍」，让机器把这 ' + sents.length + ' 句连起来读给你听；再一句一句跟读，每句读满 60 分过关。全过完，今天这段背诵就打卡了。'
+            : '点单词看中文意思，点 🔊 先听一遍，再点一下按钮跟读（读完再点一下结束）。读对全部 ' + sents.length + ' 句才能进入下一题。')
+         + '</div>';
+    html += '<button type="button" class="wr-lead" id="wr-lead-' + mi + '"'
+         + ' onclick="App._leadReadDrill(' + mi + ')">▶ 系统先带读一遍（' + sents.length + ' 句）</button>';
     html += '<div class="wr-progress" id="wr-progress-' + mi + '"></div>';
     sents.forEach((s, si) => {
       const ok = !!st.passed[si];
@@ -10566,6 +10593,61 @@ const App = {
     // 渲染完把进度条和门禁状态按已有记录补一次
     setTimeout(() => this._refreshWritingRead(mi, m), 0);
     return html;
+  },
+
+  // ===== v177：系统带读一遍 =====
+  // 家长 2026-11-01：「机器系统能先带着读，学生能跟读」。点一下，从第一句
+  // 连着读到这一屏的最后一句：读到哪句，那句就高亮并滚进视野；每读完一句，
+  // 那句的麦克风随即解锁（和「点 🔊 听这句」用的是同一个门），孩子顺手就能读。
+  // 正在读的时候再点一下 = 停（不然一条长句能把孩子锁在那儿等）。
+  _leadReadDrill(mi) {
+    const self = this;
+    const day = HOMEWORK_DATA[this.state.currentDay];
+    const m = day && day.modules && day.modules[mi];
+    if (!m) return;
+    const sents = this._writingSentences(m);
+    if (!sents.length) return;
+    const btn = document.getElementById('wr-lead-' + mi);
+    const idle = function (txt) {
+      if (btn) { btn.textContent = txt; btn.classList.remove('playing'); }
+    };
+    if (this._leadReadStop) {                       // 正在带读 → 再点一下停
+      this._leadReadStop = true;
+      try { this._stopCurrentAudio(); } catch (e) {}
+      (document.querySelectorAll('.wr-item.lead-cur') || []).forEach(function (el) {
+        el.classList.remove('lead-cur');
+      });
+      idle('▶ 再带读一遍（' + sents.length + ' 句）');
+      return;
+    }
+    this._leadReadStop = false;
+    if (btn) { btn.textContent = '⏸ 正在带读…（点一下停）'; btn.classList.add('playing'); }
+    let i = 0;
+    const tick = function () {
+      if (self._leadReadStop) return;
+      if (i >= sents.length) {
+        self._leadReadDone = true;
+        idle('▶ 再带读一遍（' + sents.length + ' 句）');
+        return;
+      }
+      const idx = i++;
+      const item = document.getElementById('wr-item-' + mi + '-' + idx);
+      if (item) {
+        item.classList.add('lead-cur');
+        try { item.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
+      }
+      self.speak(sents[idx], {
+        onDone: function () {
+          if (self._leadReadStop) return;
+          const el = document.getElementById('wr-item-' + mi + '-' + idx);
+          if (el) el.classList.remove('lead-cur');
+          // 这一句听过了 → 它的麦克风解锁（跟「点 🔊 听这句」走同一个门）
+          self._gateUnlock(self._gid('wrg', mi, idx));
+          setTimeout(tick, 320);
+        },
+      });
+    };
+    tick();
   },
 
   _readWritingSentence(ev, mi, si) {
@@ -10635,9 +10717,14 @@ const App = {
         });
       }
       const allOk = !!text && wrongs.length === 0;
+      // v177：作文跟读按家长定的口径「60 分过关」—— 每天 3 句，读顺比读准重要，
+      // 个别词没咬准也让孩子过去（红字已经标出来，明天还会再读这几句）。
+      // 周一「背诵作文」那一屏不改，仍然要求逐词读对，那是要默写的。
+      const drillPass = m.type === 'writing_drill' && !!text
+        && a.score >= (m.pass_score || self.PASS_SCORE);
 
       // v139：识别端空手而归但确实出了声 —— 这句算过。
-      if (allOk || (voiceOk && !text)) self._markWritingSentenceDone(mi, si, m);
+      if (allOk || drillPass || (voiceOk && !text)) self._markWritingSentenceDone(mi, si, m);
       else if (slot) {
         if (wrongs.length) self._renderSentenceRepair('wr', mi, si, wrongs);
         else slot.insertAdjacentHTML('beforeend', self._retryHint(false, !!text));
@@ -10705,7 +10792,37 @@ const App = {
     if (this.isTeacher()) this._unlockStep();
   },
 
+  // v177：老师预览里「作文跟读」这一屏只有句子，没有空也没有题 —— 得能看见
+  // 今天读哪几句、对应中文，老师才好带着孩子过。
+  _writingDrillPreviewHtml(m) {
+    const sents = this._writingSentences(m);
+    const cn = m.cn_list || [];
+    let html = '<div class="q-item">';
+    html += '<div class="q-text">🎙️ ' + this._escHtml(m.title || m.name_cn || '作文跟读') + '</div>';
+    if (m.focus_cn) {
+      html += '<div class="fs-12 text-sub" style="margin-bottom:6px">' + this._escHtml(m.focus_cn) + '</div>';
+    }
+    sents.forEach((s, i) => {
+      html += '<div style="margin:6px 0;line-height:1.6;font-size:15px">' + (i + 1) + '. ' + this._escHtml(s)
+           + (cn[i] ? '<div class="fs-12 text-sub">' + this._escHtml(cn[i]) + '</div>' : '') + '</div>';
+    });
+    html += '<div class="fs-12 text-sub" style="margin-top:6px">跟读要求：先听「系统带读」，再逐句跟读，每句 '
+         + (m.pass_score || 60) + ' 分过关。</div>';
+    html += '</div>';
+    return html;
+  },
+
   _writingTranslationHtml(m) {
+    // v177：作文跟读只有 3 句，逐句对照更好背（整段中文反而找不到对应）
+    if (m.cn_list && m.cn_list.length) {
+      let list = '<div class="wr-cn">';
+      list += '<div class="wr-cn-title">🀄 中文对照（读顺了再背，明天还要读）</div>';
+      m.cn_list.forEach(function (c, i) {
+        list += '<div class="wr-cn-line"><span class="n">' + (i + 1) + '</span><span>' + c + '</span></div>';
+      });
+      list += '</div>';
+      return list;
+    }
     if (!m.full_text_cn) return '';
     let html = '<div class="wr-cn">';
     html += '<div class="wr-cn-title">🀄 全文中文翻译</div>';
@@ -10997,6 +11114,12 @@ const App = {
     if (!day || !day.modules) return steps;
     day.modules.forEach((m, mi) => {
       if (m.type === 'vocabulary_game')       { steps.push({ mi, kind: 'vocab' }); return; }
+      // v177：作文跟读（每天 3 句轮换）—— 只有"朗读"这一屏，没有挖空。
+      // 家长：「每天都去跟读作文……系统带着读，让孩子们读熟背诵」。
+      if (m.type === 'writing_drill') {
+        if (this._writingSentences(m).length) steps.push({ mi, kind: 'writingread' });
+        return;
+      }
       if (m.type === 'writing_template') {
         // 写完作文之后朗读全文，是独立的一屏：读对全部句子才放行下一题
         steps.push({ mi, kind: 'writing' });
@@ -13351,7 +13474,8 @@ const App = {
     tense: { icon: '⌨️', name: '填空拼写' },
     speaking: { icon: '🗣️', name: '口语问答' },
     vocabulary_game: { icon: '📚', name: '高频词汇' },
-    writing_template: { icon: '✍️', name: '写作' }
+    writing_template: { icon: '✍️', name: '写作' },
+    writing_drill: { icon: '🎙️', name: '作文跟读' }
   },
 
   // 差异词里的"虚词"：这些词不一样不代表考点，别拿来当关键信息。

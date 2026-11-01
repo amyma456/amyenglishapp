@@ -47,7 +47,7 @@ for (let w = 0; w < WEEKS.length; w++) {
       if (m.id) allIds.add(m.id);
 
       const qs = m.questions || [];
-      if (m.type !== 'vocabulary_game' && m.type !== 'writing_template') {
+      if (m.type !== 'vocabulary_game' && m.type !== 'writing_template' && m.type !== 'writing_drill') {
         ok(qs.length >= 3, mt + ' 题目数 < 3');
       }
 

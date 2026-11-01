@@ -27,6 +27,7 @@ const unitsOf = (m) => {
   if (m.blanks) n += m.blanks.length;
   if (m.passage) n += 2 * sentsEN(m.passage).length;
   if (m.type === 'writing_template') n += sentsEN(m.full_text || '').length;
+  if (m.type === 'writing_drill') n += sentsEN(m.full_text || '').length; // v177 作文跟读
   return n;
 };
 
@@ -114,11 +115,11 @@ section('4. 周包自动出题工具链');
 
 section('5. 版本号 v164 全线一致');
 {
-  const refs = (htmlSrc.match(/\?v=176/g) || []).length;
+  const refs = (htmlSrc.match(/\?v=177/g) || []).length;
   ok(refs === 6, 'index.html 6 个脚本引用都是 v164', refs);
-  ok(/app-version"\s+content="176"/.test(htmlSrc), 'app-version = 164');
-  ok(/amy-english-v176/.test(swSrc), 'sw.js CACHE_NAME 升到 v164');
-  ok(/var V = 176;/.test(swSrc), 'sw.js var V = 164');
+  ok(/app-version"\s+content="177"/.test(htmlSrc), 'app-version = 164');
+  ok(/amy-english-v177/.test(swSrc), 'sw.js CACHE_NAME 升到 v164');
+  ok(/var V = 177;/.test(swSrc), 'sw.js var V = 164');
   ok(htmlSrc.indexOf('v=163') < 0, 'index.html 没有残留 v163');
 }
 

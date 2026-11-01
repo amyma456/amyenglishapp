@@ -19,8 +19,12 @@ const DATA = path.join(ROOT, 'public', 'data.js');
 // ECHO_STEM：听原句选原句的固定题干；LISTEN_STEM_EN：其余英文听力题干前缀。
 const ECHO_STEM = /^(?:which sentence do you hear|听到的句子是什么)/i;
 const LISTEN_STEM_EN = /^(?:which picture matches|listen to the dialogue|listen and fill)/i;
-const MOD_ORDER = ['speaking', 'vocab', 'reading', 'mc', 'grammar', 'tense', 'tense2', 'mc2', 'cloze', 'listening', 'ket_pet', 'writing', 'spell'];
+// v177（家长 2026-11-01）：每天一开口先跟读作文（机器带读 + 学生跟读 + 60 分过关），
+// 所以 writing_drill 排在最前面 —— 背作文靠天天读，不靠一天猛背。
+const MOD_ORDER = ['writing_drill', 'speaking', 'vocab', 'reading', 'mc', 'grammar', 'tense', 'tense2', 'mc2', 'cloze', 'listening', 'ket_pet', 'writing', 'spell'];
 const MOD_META = {
+  // v177：作文跟读（每天 3 句轮换，读全篇靠一周累积）
+  writing_drill: { type: 'writing_drill', name_cn: '作文跟读 · 背诵', duration: 6 },
   speaking: { type: 'speaking', name_cn: 'AI口语练习', duration: 30 },
   vocab: { type: 'vocabulary_game', name_cn: '高频词汇', duration: 5 },
   reading: { type: 'reading', name_cn: '阅读理解', duration: 10 },
@@ -149,6 +153,22 @@ function buildWeek(pack, meta) {
         modules.push(base);
         return;
       }
+      if (key === 'writing_drill') {
+        // 作文跟读：只带句子，不带空、不带题 —— 前端用「朗读全文」那一套屏
+        // （先听示范 → 跟读 → 打分 ≥60 过关），只是句子少几句、每天轮换。
+        const list = (src.sentences || []).filter((s) => s && s.en);
+        if (!list.length) return;
+        base.id = prefix + '-wd';
+        base.name_cn = src.name_cn || mm.name_cn;
+        base.title = src.title || '';
+        base.focus_cn = src.focus_cn || '';
+        base.full_text = list.map((s) => String(s.en).trim()).join(' ');
+        base.cn_list = list.map((s) => String(s.cn || '').trim());
+        base.full_text_cn = base.cn_list.join('');
+        base.pass_score = src.pass_score || 60;
+        modules.push(base);
+        return;
+      }
       if (key === 'writing') {
         const w = src;
         base.title = w.title;
@@ -262,7 +282,8 @@ function validate(week, meta, allWeeks) {
       const enS = m.passage ? (String(m.passage).replace(/\s+/g, ' ').match(/[^.!?]+[.!?]+["']?(?=\s|$)/g) || []).length : 0;
       units += (m.words ? m.words.length : 0) + (m.questions ? m.questions.length : 0) +
         (m.blanks ? m.blanks.length : 0) + (m.passage ? 2 * enS : 0) +
-        (m.type === 'writing_template' ? (String(m.full_text || '').replace(/\s+/g, ' ').match(/[^.!?]+[.!?]+["']?(?=\s|$)/g) || []).length : 0);
+        (m.type === 'writing_template' || m.type === 'writing_drill'
+          ? (String(m.full_text || '').replace(/\s+/g, ' ').match(/[^.!?]+[.!?]+["']?(?=\s|$)/g) || []).length : 0);
     });
     if (units !== 30) errs.push(tag + ' 真实动作必须 30，实际 ' + units);
     // v165（家长 2026-10-29）：「敲键盘的拼写题不要在同一天，分布到每一天」

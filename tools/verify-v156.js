@@ -176,10 +176,10 @@ section('3. 录音时句子吸顶（rd-rec）');
 // ===== 4. 版本号 = 156 ====================================================
 section('4. 版本号 = 156');
 {
-  ok(/app-version" content="176"/.test(htmlSrc), 'index.html app-version = 156');
-  const refs = (htmlSrc.match(/\.js\?v=176/g) || []).length;
+  ok(/app-version" content="177"/.test(htmlSrc), 'index.html app-version = 156');
+  const refs = (htmlSrc.match(/\.js\?v=177/g) || []).length;
   ok(refs === 6, '6 个 script 引用都升到 v163', refs);
-  ok(/amy-english-v176/.test(swSrc), 'sw.js CACHE_NAME = amy-english-v176');
+  ok(/amy-english-v177/.test(swSrc), 'sw.js CACHE_NAME = amy-english-v177');
 }
 
 // ===== 5. 回归：计数口径没被碰坏 =========================================

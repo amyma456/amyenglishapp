@@ -1,7 +1,26 @@
 {
  "day_cn": "周二",
  "day_en": "Tuesday",
- "theme_cn": "阅读理解 + 语法练习 + 听力对话 + 键盘拼写",
+ "theme_cn": "作文跟读 + 阅读理解 + 语法练习 + 听力对话 + 键盘拼写",
+ "writing_drill": {
+  "name_cn": "作文跟读 · 背诵",
+  "title": "第 1~3 句 · 开头与邀请",
+  "focus_cn": "先把 I'm writing to you because… 读顺，再接住邀请句",
+  "sentences": [
+   {
+    "en": "Dear Toni, I'm writing to you because I'm going swimming this Saturday.",
+    "cn": "亲爱的Toni，我写信给你是因为这周六我要去游泳。"
+   },
+   {
+    "en": "Would you like to come with me?",
+    "cn": "你愿意和我一起来吗？"
+   },
+   {
+    "en": "It would be great to do some exercise at the weekend.",
+    "cn": "周末做些锻炼真是太好了。"
+   }
+  ]
+ },
  "listening_name": "听力：听对话 + 听写填空",
  "spell_name": "支付常用词，敲一遍",
  "reading": {
@@ -119,12 +138,6 @@
  "mc_name": "some / any · there be",
  "mc": [
   {
-   "question": "There isn't ___ orange juice in the bottle.",
-   "type": "fill",
-   "answer": "any",
-   "explanation_cn": "否定句用 any；orange juice 不可数，be 动词用 isn't（原卷印的是 aren't，正确应为 isn't）。"
-  },
-  {
    "question": "I can't find ___ skirts I like.",
    "type": "fill",
    "answer": "any",
@@ -137,22 +150,10 @@
    "explanation_cn": "Why don't we…? 是提建议，期待对方答应，这种问句用 some。"
   },
   {
-   "question": "I usually buy ___ bread for breakfast in the morning.",
-   "type": "fill",
-   "answer": "some",
-   "explanation_cn": "肯定句用 some；bread 不可数，没有复数。"
-  },
-  {
    "question": "用 is / isn't / are / aren't + a / an / some / any 填空：There ___ apples.",
    "type": "fill",
    "answer": "are some",
    "explanation_cn": "apples 复数 → are；肯定句 → some。"
-  },
-  {
-   "question": "用 is / isn't / are / aren't + a / an / some / any 填空：There ___ cheese.",
-   "type": "fill",
-   "answer": "isn't any",
-   "explanation_cn": "cheese 不可数 → is；否定 → isn't any。"
   }
  ]
 }

@@ -1,7 +1,26 @@
 {
  "day_cn": "周四",
  "day_en": "Thursday",
- "theme_cn": "阅读理解 + 语法练习 + 听力（选图 / 问答 / 听写）+ 键盘拼写",
+ "theme_cn": "作文跟读 + 阅读理解 + 语法练习 + 听力（选图 / 问答 / 听写）+ 键盘拼写",
+ "writing_drill": {
+  "name_cn": "作文跟读 · 背诵",
+  "title": "第 5~7 句 · 结尾（回复与期待）",
+  "focus_cn": "Let me know your idea. 和 I hope to see you there. 要能脱口而出",
+  "sentences": [
+   {
+    "en": "I will go there by bike because the weather will be good on Saturday.",
+    "cn": "我打算骑自行车去，因为周六天气会很好。"
+   },
+   {
+    "en": "Let me know your idea.",
+    "cn": "告诉我你的想法吧。"
+   },
+   {
+    "en": "I hope to see you there.",
+    "cn": "希望在那儿见到你。"
+   }
+  ]
+ },
  "listening_name": "听力：选图 + 问答 + 听写",
  "spell_name": "剪纸这课的字，敲一遍",
  "reading": {
@@ -142,24 +161,6 @@
    "type": "fill",
    "answer": "is an",
    "explanation_cn": "onion 单数可数，/ˈʌnjən/ 元音音素开头 → an。"
-  },
-  {
-   "question": "用 is / isn't / are / aren't + a / an / some / any 填空：There ___ lemonade.",
-   "type": "fill",
-   "answer": "isn't any",
-   "explanation_cn": "lemonade 汽水，不可数 → is；否定 → isn't any。"
-  },
-  {
-   "question": "用 is / isn't / are / aren't + a / an / some / any 填空：There ___ orange juice.",
-   "type": "fill",
-   "answer": "is some",
-   "explanation_cn": "orange juice 不可数 → is；肯定 → some。"
-  },
-  {
-   "question": "用 is / isn't / are / aren't + a / an / some / any 填空：There ___ carrot.",
-   "type": "fill",
-   "answer": "is a",
-   "explanation_cn": "carrot 可数单数，辅音音素开头 → a。"
   }
  ]
 }
