@@ -11996,6 +11996,8 @@ const App = {
   //     而且**把这一句里所有的空都填上答案**（v126）。以前读作 blank，孩子
   //     听到 "You blank take care of it ... blank"，既不成句也不知道填哪儿；
   //     今天这句挖了 4、5 两个空，两个空一起补全才是人话。
+  //   - 键盘拼写听写题（v180）："乘客：p________" 只露首字母的这种，朗读
+  //     读**整词**——屏幕上藏着，耳朵里给全，孩子听到再拼出来。
   //   - 都没有英文可读（例如纯中文题干又没原文）→ 返回空串，不朗读
   // 解释（explanation_cn / explanation_en）从来不在这里，答题对错才显示。
   _questionSpeechText(m, q) {
@@ -12008,6 +12010,37 @@ const App = {
         const filled = this._clozeFillSentence(m, sent, false);
         const t = this._ttsText(filled);
         if (t) return t;
+      }
+    }
+    // v180：键盘拼写的「听写题」（"乘客：p________ [填完整单词]"）。屏幕上
+    // 只给首字母和空格，以前朗读照念题干 —— 中文剥掉后只剩 "p blank"，
+    // 孩子听到一声孤零零的 P，根本不知道要写哪个词（家长 2026-11-02：
+    // passport 只读了个 P）。改成：**屏幕照旧只露首字母，朗读改读整词** ——
+    // 孩子听到 passenger，再把拼写写回横线上，这才是真正的听写。
+    // 判定（全满足才走这条路）：
+    //   ① 不是选择题（选择题的答案在选项里，读出来等于报答案）；
+    //   ② 空格紧贴在一个字母后面，且这个字母和答案的首字母一致；
+    //   ③ 答案是单个英文单词；
+    //   ④ 题干去掉中文和 [提示] 后剩下的「骨架」只有字母段和空格段，把
+    //      空格当通配符能拼出答案 —— "p________" 和 "P____port"（首字母
+    //      +中间挖空+尾巴）都算；"She ___ (go) to school." 这种句子有括号
+    //      有别的词，骨架对不上答案，自然不会误伤。
+    if (!q.options && !q.audio_text) {
+      var raw = String(q.question || '');
+      var lead = raw.match(/([A-Za-z])\s*_{2,}/);
+      var ans = (q.answer == null) ? '' : String(q.answer).trim();
+      if (lead && /^[A-Za-z][A-Za-z'-]*$/.test(ans)
+          && lead[1].toLowerCase() === ans.charAt(0).toLowerCase()) {
+        var skel = raw.replace(/\[[^\]]*\]/g, ' ')
+          .replace(/[\u3000-\u303f\u4e00-\u9fff\uff00-\uffef]/g, ' ').trim();
+        if (/^[\sA-Za-z_']+$/.test(skel)) {
+          var reStr = '^' + skel.split(/_{2,}/).map(function (p) {
+            return p.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          }).join('[A-Za-z]*') + '$';
+          try {
+            if (new RegExp(reStr, 'i').test(ans)) return this._ttsText(ans);
+          } catch (e) {}
+        }
       }
     }
     // "KET: Choose the correct answer." 这类指令不读，只读题目本体
