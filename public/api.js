@@ -2528,7 +2528,36 @@ const Api = {
     return this.FILLERS.indexOf(t) >= 0 || this.FILLERS.indexOf(t.replace(/\.$/, '')) >= 0;
   },
 
+  // v179（家长 2026-11-02 晚）：整条识别链路的**最后一道墙**。
+  //
+  // 家长报「华为 nova 13 Pro 自带浏览器，做到 20 多题提交读音后一直卡在
+  // 『正在出分』，刷新、退回去重做都一样」。查下来链路上还有一个没有任何
+  // 时限的 await：`res.json()` —— 响应头到了、body 却迟迟不吐（华为浏览器
+  // 常见：代理/省电策略把长连接挂住），而 AbortController 的定时器在拿到
+  // 响应头那一刻就被清掉了，于是这个 await 可以永远不回来。
+  // 下面这层 Promise.race 是兜底：不管里面卡在哪一步，到点就交 null 回去，
+  // 上层按"识别端没回话"处理（还有本地录音判"有没有出声"那一条），
+  // 孩子一定能往下走。
+  ASR_HARD_CAP_MS: 12000,
+
   async transcribe(blob, meta, opts) {
+    if (!blob) return null;
+    const cap = (opts && opts.budgeted)
+      ? Math.min(this.ASR_HARD_CAP_MS, this.ASR_BUDGET_MS + 4000)
+      : this.ASR_HARD_CAP_MS;
+    const flow = this._transcribeFlow(blob, meta, opts);
+    let timer = null;
+    const wall = new Promise(function (resolve) {
+      timer = setTimeout(function () { resolve(null); }, cap);
+    });
+    const out = await Promise.race([flow, wall]);
+    if (timer) clearTimeout(timer);
+    // 里面晚到的结果直接丢掉：调用方已经按"没听清"往下走了，不能二刷。
+    flow.catch(function () {});
+    return out;
+  },
+
+  async _transcribeFlow(blob, meta, opts) {
     if (!blob) return null;
     // v124：空返回 / 网络抖动自动再试一次。
     //
@@ -2587,9 +2616,10 @@ const Api = {
         body: blob,
         signal: ctrl ? ctrl.signal : undefined,
       });
-      if (timer) clearTimeout(timer);
-      // v131：诊断用的响应头。跨域/老 Worker 可能一个都没有 —— 取不到就留空，
-      // 绝不能因为读头而抛错。headers.get 在缺失时本来就返回 null。
+      // v179：这里**不能**清定时器。以前一拿到响应头就 clearTimeout，
+      // 于是 `res.json()` 这一段完全没有时限 —— 响应头回来了、body 卡住
+      // （华为系浏览器实测）就成了一个永不到头的 await。现在定时器留到
+      // finally 才清，abort 能把 body 一起打断。
       headers = res.headers;
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
@@ -2598,7 +2628,6 @@ const Api = {
       this.perfHop({ ms: this._elapsed(t0), headers, text, empty: !text });
       return { text, words: data.words || null };
     } catch (e) {
-      if (timer) clearTimeout(timer);
       errName = (e && e.name === 'AbortError') ? 'timeout' : String((e && e.message) || e);
       console.warn('transcribe failed:', e && e.name === 'AbortError' ? 'timeout' : e);
       this._noteSpent(t0);
@@ -2606,6 +2635,9 @@ const Api = {
       // Park it so a later attempt can fill the transcript in.
       if (meta && meta.clipId) this._queueTranscribe(meta.clipId);
       return null;
+    } finally {
+      // v179：成功 / 失败都在这儿清 —— 让 abort 定时器盖住 res.json()。
+      if (timer) clearTimeout(timer);
     }
   },
 

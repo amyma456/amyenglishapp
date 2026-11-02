@@ -59,7 +59,10 @@ section('2. 三个场景都能取到标准译文（不是空手亮个标签）')
 
 section('3. 旧底线不回退');
 {
-  ok(/gate-locked[\s\S]{0,300}点一下说中文|gate-locked[\s\S]{0,300}我背好了/.test(appSrc),
+  // v179：窗口 300 → 420。v173 在这颗按钮上加了自动朗读/背一背那一串属性，
+  // 文案离 gate-locked 已有 ~310 字符 —— 原来的 300 是"差不多就在附近"的
+  // 近似值，不是真正的边界。意图没变：gate-locked 和这两句文案必须在一起。
+  ok(/gate-locked[\s\S]{0,420}点一下说中文|gate-locked[\s\S]{0,420}我背好了/.test(appSrc),
      '逐句翻译按钮仍挂门禁（先听英文）');
   ok(/renderTranslateStep[\s\S]{0,900}sent-words/.test(appSrc), '翻译屏的词仍可点');
   ok(/没参考 = 只要说了就算过|canScore/.test(appSrc), '没有参考译文时不把孩子卡死（v127 底线）');

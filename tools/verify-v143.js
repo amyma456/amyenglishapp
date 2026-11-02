@@ -102,7 +102,10 @@ console.log('\n1. 登录：本机有凭据就直进（开屏脚本 + 自动登�
     /getElementById\('boot-splash'\)[\s\S]{0,80}?removeChild/.test(appSrc));
   ok('自动登录不再等 Promise 拿凭据', /__bootSavedLogin/.test(appSrc));
   ok('登录按钮上不再写「正在核对…」', !/gateBtn\.innerHTML = '⏳ 正在核对/.test(appSrc));
-  ok('init 先同步读数据再自动登录', /loadDataSync\(\)[\s\S]{0,600}?tryAutoLogin\(\)/.test(appSrc));
+  // v179：窗口 600 → 900。v144 的 _hydrateLoginForm、v148 的 micdiag 分支都插在
+  // 这两步之间，实测已有 ~610 字符 —— 断言的意图（先同步读数据、再自动登录）
+  // 没变，只是"中间隔了多远"这个近似值该放了。
+  ok('init 先同步读数据再自动登录', /loadDataSync\(\)[\s\S]{0,900}?tryAutoLogin\(\)/.test(appSrc));
 }
 
 console.log('\n2. 周日不再同时出现阅读理解 + 完形填空');

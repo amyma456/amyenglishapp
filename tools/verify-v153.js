@@ -31,7 +31,9 @@ console.log('== 1. 华为卡死根治：三层保险 ==');
   ok(/getTracks\(\)\.forEach/.test(recSrc) && /gaveUp/.test(recSrc), '被放弃的流事后会被关掉（麦克风不常亮）');
 
   // ② app.js：两条打分链路都有 25 秒看门狗 + settled 防二刷
-  ok(/const watchdog = setTimeout\(function \(\) \{\s*if \(settled\) return;[\s\S]{0,120}force settle/.test(appSrc), '口语出分有 25 秒总看门狗');
+  // v179：25 秒 → 9 秒（孩子体感上 25 秒等于卡死；识别预算本身只有 5 秒）。
+  ok(/watchdog = setTimeout\(function \(\) \{\s*if \(settled\) return;[\s\S]{0,120}force settle/.test(appSrc), '口语出分有总看门狗');
+  ok(/\}, 9000\);/.test(appSrc) && !/\}, 25000\);/.test(appSrc), '看门狗时限是 9 秒（v179 收紧）');
   ok((appSrc.match(/settle\(null, null, null, true\)/g) || []).length === 2, '看门狗强制按「确实读了」结算（两条链路）');
   ok((appSrc.match(/let settled = false;/g) || []).length >= 2, '晚到的正常结果被 settled 挡住，不会二刷');
   ok(/clearTimeout\(watchdog\)/.test(appSrc), '正常出分后看门狗被摘掉');
@@ -188,9 +190,9 @@ function part2() {
 
   console.log('\n== 6. 版本号 = 153 ==');
   {
-    ok(/app-version" content="178"/.test(htmlSrc), 'index.html meta = 153');
-    ok((htmlSrc.match(/\?v=178/g) || []).length >= 5, '脚本引用 ?v=178（' + (htmlSrc.match(/\?v=178/g) || []).length + ' 处）');
-    ok(/amy-english-v178/.test(swSrc) && /var V = 178;/.test(swSrc), 'sw.js 缓存名与 V = 153');
+    ok(/app-version" content="179"/.test(htmlSrc), 'index.html meta = 153');
+    ok((htmlSrc.match(/\?v=179/g) || []).length >= 5, '脚本引用 ?v=179（' + (htmlSrc.match(/\?v=179/g) || []).length + ' 处）');
+    ok(/amy-english-v179/.test(swSrc) && /var V = 179;/.test(swSrc), 'sw.js 缓存名与 V = 153');
   }
 
   console.log('');

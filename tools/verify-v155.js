@@ -128,10 +128,10 @@ section('2. app.js 按真实动作计数（行为级，W1 周一）');
 
 section('3. 版本号 = 155');
 {
-  ok(/app-version" content="178"/.test(htmlSrc), 'index.html app-version = 155');
-  ok((htmlSrc.match(/\?v=178/g) || []).length === 6, 'index.html 6 处 ?v=178', (htmlSrc.match(/\?v=178/g) || []).length);
-  ok(/amy-english-v178/.test(swSrc), 'sw.js 缓存名 v155');
-  ok(/var V = 178;/.test(swSrc), 'sw.js var V = 155');
+  ok(/app-version" content="179"/.test(htmlSrc), 'index.html app-version = 155');
+  ok((htmlSrc.match(/\?v=179/g) || []).length === 6, 'index.html 6 处 ?v=179', (htmlSrc.match(/\?v=179/g) || []).length);
+  ok(/amy-english-v179/.test(swSrc), 'sw.js 缓存名 v155');
+  ok(/var V = 179;/.test(swSrc), 'sw.js var V = 155');
 }
 
 console.log('\n———————————————');

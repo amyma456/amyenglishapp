@@ -126,7 +126,9 @@ console.log('== 3. 判定用设备自己的基准（只在降采样时放宽） 
 console.log('== 4. 「没录到声音」的判定收成一个出口（不再各写一遍） ==');
 {
   ok(/_judgeSilence\(out, minSec\)/.test(appSrc), '有统一的 _judgeSilence');
-  const code = appSrc.split('\n').map(function (l) { return l.replace(/\/\/.*$/, ''); }).join('\n');
+  // 去掉 CRLF 的 \r 再剥注释：否则 `//.*$` 在 Windows 换行下匹配不上，
+  // 注释里的示例代码会被当成真代码（本机 CRLF 文件上这条断言会假红）。
+  const code = appSrc.split('\n').map(function (l) { return l.replace(/\r$/, '').replace(/\/\/.*$/, ''); }).join('\n');
   const left = (code.match(/voiceOk\s*=\s*!\w+\s*&&\s*(self|this)\._voiceOk\(out\)/g) || []).length;
   ok(left === 0, '★ 页面里不再有各写一遍的 _voiceOk(out)', '还剩 ' + left + ' 处');
   const used = (appSrc.match(/_judgeSilence\(out\)\.voiceOk/g) || []).length;

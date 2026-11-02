@@ -668,6 +668,8 @@ const App = {
     window.addEventListener('online', () => {
       try { Api.flushCheckinQueue(); } catch (e) {}
     });
+    // v179：出分卡死的最后一道保险（见 _stallGuardStart 的注释）。
+    try { this._stallGuardStart(); } catch (e) {}
   },
 
   // 进「孩子打卡 / 完成率对比」之前拉一次后台。失败保持本机数据不动 ——
@@ -6323,21 +6325,32 @@ const App = {
     const liveP = this._liveStop();
     const clipP = this._finishClipCapture();
     // v153：出分总看门狗。家长实测（华为 nova 14 自带浏览器）：卡在
-    // 「正在出分…」永远不动。不管 Promise.all 挂在哪一步，25 秒后强制
+    // 「正在出分…」永远不动。不管 Promise.all 挂在哪一步，到点强制
     // 按"确实读了"结算，孩子永远能进下一题。晚到的正常结果被 settled 挡住，
     // 不会二刷界面。
+    // v179：25 秒 → 9 秒。家长 2026-11-02 报 nova 13 Pro 上"一直显示正在出分"：
+    // 孩子不可能对着一个转圈等半分钟，25 秒在体感上就等于"卡死了"。识别预算
+    // 本身只有 5 秒，9 秒足够兜住晚到的正常结果。
+    // 另外给 settle 套了 try/catch：结算代码本身抛错（渲染/本地存储）以前会
+    // 把界面永久留在「正在出分」，现在出错也把按钮放回可读状态。
     let settled = false;
+    let watchdog = null;
     const settle = function (spoken, source, verdict, voiceOk) {
       if (settled) return;
       settled = true;
       clearTimeout(watchdog);
-      self._spShowResult(mi, qi, dayIdx, ctx, spoken, source, verdict, voiceOk);
+      try {
+        self._spShowResult(mi, qi, dayIdx, ctx, spoken, source, verdict, voiceOk);
+      } catch (e) {
+        console.warn('Speaking settle failed:', e);
+        try { self._spReadUI(mi, qi, dayIdx, 'noaudio'); } catch (e2) {}
+      }
     };
-    const watchdog = setTimeout(function () {
+    watchdog = setTimeout(function () {
       if (settled) return;
-      console.warn('Speaking scoring watchdog (25s) fired — force settle');
+      console.warn('Speaking scoring watchdog (9s) fired — force settle');
       settle(null, null, null, true);
-    }, 25000);
+    }, 9000);
     Promise.all([liveP, clipP]).then(async function(res) {
       // 两路择优（v98）：A 路（手机自带识别）判过就立即出分，判不过才等
       // B 路（云端）复核 —— 见 _bestTranscript 的注释。
@@ -6358,9 +6371,24 @@ const App = {
     });
   },
 
+  // ===== v179：核对不上时的放行规则 =====
+  // 家长 2026-11-02（华为 nova 13 Pro 自带浏览器）：「提交读音后一直显示
+  // 正在出分，刷新、退回去重做都一样」。识别链路现在处处有时限了，但万一
+  // 这台机器的录音/识别就是不通，孩子会一遍遍重读、永远过不去 —— 那是比
+  // 卡住更糟的死循环。规则：同一道题连续 3 次"核对不上"，这一遍按通过算，
+  // 录音照样上传留档，老师事后能听。宁可老师听一遍，也不让孩子做不完作业。
+  STALL_PASS_TRIES: 3,
+  _stallBump(key) {
+    this._stalls = this._stalls || {};
+    this._stalls[key] = (this._stalls[key] || 0) + 1;
+    return this._stalls[key];
+  },
+  _stallClear(key) { if (this._stalls) delete this._stalls[key]; },
+
   // 出分：逐词上色（绿勾/红波浪线），≥60 过、<60 锁下一题必须重读。
   _spShowResult(mi, qi, dayIdx, ctx, spoken, source, verdict, voiceOk) {
     const sentence = ctx.sentence;
+    const stallKey = 'sp-' + dayIdx + '-' + mi + '-' + qi;
     // 出分了，句子不再需要吸顶（结果面板会接住孩子的视线）。
     this._setSentenceSticky(mi, qi, false);
     if (!spoken) {
@@ -6368,6 +6396,7 @@ const App = {
       // 家长 2026-10-17：「明明说得很清楚，他就说没听清，孩子要重复四五遍」——
       // 这一条就是那个"四五遍"的口子，现在堵上。
       if (voiceOk) {
+        this._stallClear(stallKey);
         this._clearReadMarks(mi, qi);
         this._playCorrectSound();
         this._spReadUI(mi, qi, dayIdx, 'passed', null);
@@ -6378,9 +6407,19 @@ const App = {
       }
       // 真的没录到声音：只提示这一件事，让孩子再来一次。
       this._clearReadMarks(mi, qi);
+      // v179：连续 3 次核对不上 → 放行（录音留档，老师能听）。
+      if (this._stallBump(stallKey) >= this.STALL_PASS_TRIES) {
+        this._stallClear(stallKey);
+        this._spReadUI(mi, qi, dayIdx, 'passed', null);
+        this._persistSpeakingClip(mi, qi, dayIdx, ctx.q, null, {
+          spoken: '', source: 'voice', lenient: true, stall: true,
+        });
+        return;
+      }
       this._spReadUI(mi, qi, dayIdx, 'noaudio');
       return;
     }
+    this._stallClear(stallKey);
     // 判定和上色同源：都用同一个对齐结果，红词不会再因为显示格子对不上而错算。
     const v = verdict || this._readVerdict(sentence, spoken);
     this._markReadProgress(mi, qi, sentence, spoken, false, v.align);
@@ -6421,11 +6460,58 @@ const App = {
     });
   },
 
+  // v179：出分卡死的最后一道保险。
+  //
+  // 家长 2026-11-02：华为 nova 13 Pro 自带浏览器，做到 20 多题后提交读音，
+  // 一直显示「正在出分」；刷新、退回上一题再回来，还是同一个样子。
+  // 上面几条路径现在都有自己的 9 秒看门狗，但看门狗本身也是 setTimeout ——
+  // 只要有一条意料之外的路径没走到 settle（页面刚被切回前台、结算时抛错、
+  // 按钮被别的代码重画过），孩子手上就是一个永远灰着、按不动的按钮。
+  // 所以再放一个"扫全屏"的定时器：带 data-scoring-at 的按钮超过 14 秒还没
+  // 恢复，一律复位成"可以重读"。它只认这个属性，不猜业务、不碰别的按钮。
+  STALL_MS: 14000,
+  // 打/摘时间戳。属性操作全用 try 兜住：老浏览器和测试桩上不一定有这两个方法，
+  // 绝对不能因为"标记"这件事把出分流程本身弄挂。
+  _markScoring(btn, on) {
+    if (!btn) return;
+    try {
+      if (on) btn.setAttribute('data-scoring-at', String(Date.now()));
+      else btn.removeAttribute('data-scoring-at');
+    } catch (e) {}
+  },
+  _stallGuardStart() {
+    if (this._stallGuard) return;
+    const self = this;
+    this._stallGuard = setInterval(function () {
+      let els = null;
+      try { els = document.querySelectorAll('[data-scoring-at]'); } catch (e) { return; }
+      if (!els || !els.length) return;
+      const now = Date.now();
+      for (let i = 0; i < els.length; i++) {
+        const el = els[i];
+        const at = parseInt(el.getAttribute('data-scoring-at') || '0', 10) || 0;
+        if (!at || now - at < self.STALL_MS) continue;
+        try { el.removeAttribute('data-scoring-at'); } catch (e) {}
+        const id = String(el.id || '');
+        const mt = id.match(/^(sphr|hr)-(\d+)-(\d+)$/);
+        if (!mt) continue;
+        console.warn('Scoring stall guard reset:', id);
+        try {
+          if (mt[1] === 'sphr') self._spReadUI(parseInt(mt[2], 10), parseInt(mt[3], 10), self.state.currentDay, 'noaudio');
+          else self._setHoldReadUI(parseInt(mt[2], 10), parseInt(mt[3], 10), 'noaudio', null, false);
+        } catch (e) {}
+      }
+    }, 2000);
+  },
+
   // status: 'recording' | 'scoring' | 'mistap' | 'passed' | 'failed' | 'noaudio'
   _spReadUI(mi, qi, dayIdx, status, score, extra) {
     const btn = document.getElementById('sphr-' + mi + '-' + qi);
     const statusEl = document.getElementById('sp-status-' + mi + '-' + qi);
     if (!btn) return;
+    // v179：出分状态的"时间戳"。落在这个属性上的按钮会被 _stallGuardStart
+    // 的定时器盯着 —— 它要是十几秒还停在「正在出分…」，就直接复位成可重读。
+    this._markScoring(btn, status === 'scoring');
     const m = HOMEWORK_DATA[dayIdx] && HOMEWORK_DATA[dayIdx].modules[mi];
     if (status === 'recording') {
       btn.style.background = 'var(--danger)';
@@ -10071,7 +10157,7 @@ const App = {
       return;
     }
 
-    if (statusEl && needs) statusEl.innerHTML = '<div class="tap-rec"><span class="tap-spin"></span>核对中，马上出分…</div>';
+    if (statusEl && needs) statusEl.innerHTML = '<div class="tap-rec"><span class="tap-spin"></span>核对中，最多 10 秒…</div>';
     var out = null;
     try { out = await Recorder.stop(); } catch (e) { console.warn('hold stop failed', e); }
     if (!out || !out.blob) {
@@ -10081,6 +10167,33 @@ const App = {
     }
     // Pieces of a word are practice, not a test — no upload, no recognition.
     if (!needs) { if (onDone) onDone(out, null); return; }
+
+    // v179（家长 2026-11-02 晚，华为 nova 13 Pro 自带浏览器）：
+    // 「提交读音后一直显示正在出分，刷新、退回去重做都一样」。
+    // 这条路径（作文朗读、阅读逐句跟读、单词跟读都走它）以前**没有**总看门狗，
+    // 识别链路上任何一个 await 不回来，孩子就被永久锁在「核对中」——
+    // 按钮是灰的，点不动，只能关页面。现在整段最多 9 秒：到点就当"识别端
+    // 没回话"结算（上层会用本地录音判断到底有没有出声，出了声照样算过）。
+    var done = false;
+    var slowHint = null, hardCap = null;
+    var finish = function(payload, txt) {
+      if (done) return;
+      done = true;
+      clearTimeout(hardCap);
+      clearTimeout(slowHint);
+      if (statusEl) statusEl.innerHTML = '';
+      if (onDone) { try { onDone(payload, txt); } catch (e) { console.warn('hold onDone failed:', e); } }
+    };
+    slowHint = setTimeout(function() {
+      if (done || !statusEl) return;
+      statusEl.innerHTML = '<div class="tap-rec"><span class="tap-spin"></span>网络有点慢，还在核对…</div>';
+    }, 4000);
+    hardCap = setTimeout(function() {
+      if (done) return;
+      console.warn('Hold scoring watchdog (9s) fired — settle without transcript');
+      finish(out, null);
+    }, 9000);
+
     // Send the padded copy — short clips make Whisper hallucinate.
     var forAsr = (out.samples && Recorder.padForAsr(out.samples)) || out.blob;
     // 中文也走 turbo（mode=zh），worker 会传 language=zh + 简体提示词；
@@ -10100,7 +10213,7 @@ const App = {
     } catch (e) { console.warn('hold transcribe failed:', e); }
     var text = res && res.text ? res.text : null;
     if (Api.isFillerTranscript(text)) text = null;
-    if (onDone) { try { onDone(out, text); } catch (e) { console.warn('hold onDone failed:', e); } }
+    finish(out, text);
   },
 
   // Writing template
@@ -10808,8 +10921,20 @@ const App = {
         && a.score >= (m.pass_score || self.PASS_SCORE);
 
       // v139：识别端空手而归但确实出了声 —— 这句算过。
-      if (allOk || drillPass || (voiceOk && !text)) self._markWritingSentenceDone(mi, si, m);
-      else if (slot) {
+      // v179：连续 3 次连声音都没核对上，也放行（录音留档给老师）——
+      // 不能让孩子在一句上永远过不去。
+      const wkey = 'wr-' + self.state.currentDay + '-' + mi + '-' + si;
+      if (allOk || drillPass || (voiceOk && !text)) {
+        self._stallClear(wkey);
+        self._markWritingSentenceDone(mi, si, m);
+      } else if (!text && self._stallBump(wkey) >= self.STALL_PASS_TRIES) {
+        self._stallClear(wkey);
+        self._markWritingSentenceDone(mi, si, m);
+        if (slot) {
+          slot.insertAdjacentHTML('beforeend',
+            '<div class="fs-12 text-sub">网络一直没核对上，这一句先通过（录音已经交给老师听）。</div>');
+        }
+      } else if (slot) {
         if (wrongs.length) self._renderSentenceRepair('wr', mi, si, wrongs);
         else slot.insertAdjacentHTML('beforeend', self._retryHint(false, !!text));
       }
@@ -12964,6 +13089,20 @@ const App = {
     if (btn) { btn.innerHTML = '⏳ 核对中…'; btn.disabled = true; }
     if (hint) hint.textContent = '正在听你读「' + (R.word || '') + '」';
     const self = this;
+    // v179：单读一个词也会卡在「核对中…」—— 这条路径以前同样没有看门狗，
+    // 识别不回来按钮就一直灰着。9 秒到点按"有没有出声"结算，绝不锁死。
+    let done = false;
+    const settleRepair = function (text) {
+      if (done) return;
+      done = true;
+      clearTimeout(wd);
+      self._wordRepairJudge(text, !text && self._lastClipVoiceOk());
+    };
+    const wd = setTimeout(function () {
+      if (done) return;
+      console.warn('Word repair watchdog (9s) fired — settle without transcript');
+      settleRepair(null);
+    }, 9000);
     this._finishClipCapture().then(async function(blob) {
       let text = null;
       if (blob) {
@@ -12980,7 +13119,10 @@ const App = {
         Api.perfEnd({ kind: text ? 'pass' : 'fail' });
       }
       // v139：把"本地有没有出声"一起交给判定 —— 识别端没回话时靠它放行。
-      self._wordRepairJudge(text, !text && self._lastClipVoiceOk());
+      settleRepair(text);
+    }).catch(function (e) {
+      console.warn('word repair capture failed:', e);
+      settleRepair(null);
     });
   },
 
@@ -13170,19 +13312,26 @@ const App = {
     const clipP = this._finishClipCapture();
 
     // v153：跟读出分总看门狗（和口语那条路同一个道理，华为 nova 14 实测
-    // 会永远停在「正在出分…」）。25 秒强制结算，晚到的结果不二刷。
+    // 会永远停在「正在出分…」）。到点强制结算，晚到的结果不二刷。
+    // v179：25 秒 → 9 秒；settle 里的结算代码出错也不再把界面锁死。
     let settled = false;
+    let watchdog = null;
     const settle = function (spoken, source, verdict, voiceOk) {
       if (settled) return;
       settled = true;
       clearTimeout(watchdog);
-      self._showHoldReadResult(mi, qi, dayIdx, ctx.sentence, spoken, source, verdict, voiceOk);
+      try {
+        self._showHoldReadResult(mi, qi, dayIdx, ctx.sentence, spoken, source, verdict, voiceOk);
+      } catch (e) {
+        console.warn('Hold-read settle failed:', e);
+        try { self._setHoldReadUI(mi, qi, 'noaudio', null, false); } catch (e2) {}
+      }
     };
-    const watchdog = setTimeout(function () {
+    watchdog = setTimeout(function () {
       if (settled) return;
-      console.warn('Hold-read scoring watchdog (25s) fired — force settle');
+      console.warn('Hold-read scoring watchdog (9s) fired — force settle');
       settle(null, null, null, true);
-    }, 25000);
+    }, 9000);
 
     Promise.all([liveP, clipP]).then(async function(res) {
       // 两路择优（v98）：A 路判过就立即出分，判不过才等 B 路复核。
@@ -13207,6 +13356,8 @@ const App = {
     const btn = document.getElementById('hr-' + mi + '-' + qi);
     const statusEl = document.getElementById('qr-status-' + mi + '-' + qi);
     if (!btn) return;
+    // v179：同 _spReadUI —— 给看门狗留时间戳。
+    this._markScoring(btn, status === 'scoring');
     if (status === 'recording') {
       btn.style.background = 'var(--danger)';
       btn.innerHTML = '🔴 录音中… 读完了点我';
@@ -13230,6 +13381,16 @@ const App = {
       btn.innerHTML = '🎤 点我读';
       btn.disabled = false;
       if (statusEl) statusEl.innerHTML = '<span style="color:var(--danger)">⚠️ 时间太短了，点一下开始，读完再点一下</span>';
+      return;
+    }
+    if (status === 'noaudio') {
+      // v179：出分链路真的没回来（识别端没回话 / 结算代码抛错）时的复位。
+      // 关键只有一件事：按钮必须重新可按，孩子不能被一个灰按钮锁死。
+      btn.style.background = 'var(--primary)';
+      btn.innerHTML = '🎤 再读一遍';
+      btn.disabled = false;
+      if (statusEl) statusEl.innerHTML =
+        '<span style="color:var(--danger)">这次没核对上（网络不稳），点一下再读一遍就行</span>';
       return;
     }
     if (status === 'passed') {
