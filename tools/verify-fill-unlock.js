@@ -194,7 +194,9 @@ console.log('\n=== 2. 填空题没做对时：底部「下一题」先锁着（�
   const html = App.renderStage(DAY);
   ok(html.indexOf('stage-next-btn') >= 0, '这一屏有底部「下一题」按钮');
   ok(html.indexOf('id="fill-' + GMI + '-' + FQI + '"') >= 0, '填空题渲染的是输入框（不是 ABCD 选项）');
-  ok(html.indexOf('qr-follow-' + GMI + '-' + FQI) < 0, '填空题**没有**跟读区（这就是病根：无处可通过）');
+  // v181（家长 2026-11-02）：填空题答对后也要跟读了 —— qr-follow 容器改成
+  // 所有题都渲染（没答对时是空壳），这条断言从"没有跟读区"反转为"有容器"。
+  ok(html.indexOf('qr-follow-' + GMI + '-' + FQI) >= 0, '填空题渲染跟读容器（v181：答对后在这里跟读）');
   ok(App._lockNextOnRender === true, '没写对 → 渲染时标记"要锁住下一题"');
   App._applyStepLock();
   ok(getEl('stage-next-btn').disabled === true, '应用后按钮确实是灰的');
@@ -312,13 +314,20 @@ console.log('\n=== 8. 静态检查：新写法在位 ===');
   ok(/_unlockStep\(\)/.test(sub), '解锁确实在 submitFill 里（不是别处顺手写的）');
   ok(sub.indexOf("ansEl.innerHTML = '✅ 正确！点下面的「'") >= 0,
      '答对文案直接告诉孩子点下面的按钮（"而不是虚的显示，让学生点不了"）');
-  // 学生路径上不能只剩"✅ 正确！"这一句（老师端预览没有底部按钮，保留原样）
-  const studentPath = sub.replace(/if \(this\.isTeacher\(\)\) \{[\s\S]*?\}/, '');
-  ok(studentPath.indexOf("ansEl.innerHTML = '✅ 正确！';") < 0,
-     '学生路径上不再有"只显示正确、不给下一步"的写法（老师端预览保留原样）');
+  // 学生路径上不能只剩"✅ 正确！"这一句（老师端预览没有底部按钮，保留原样）。
+  // v181：submitFill 里的老师分支不止一个（跟读路径 + 凑不出完整句的兜底），
+  // 原来"剥掉第一个 isTeacher 块"的正则剥不干净 —— 改成逐个检查：这句裸文案
+  // 只允许出现在 isTeacher() 分支里（往前 200 字符内必须能看到 isTeacher）。
+  let bareOk = true, bareIdx = -1;
+  const bareNeedle = "ansEl.innerHTML = '✅ 正确！';";
+  while ((bareIdx = sub.indexOf(bareNeedle, bareIdx + 1)) >= 0) {
+    const ctx = sub.slice(Math.max(0, bareIdx - 200), bareIdx);
+    if (!/isTeacher\(\)/.test(ctx)) { bareOk = false; break; }
+  }
+  ok(bareOk, '学生路径上不再有"只显示正确、不给下一步"的写法（老师端预览保留原样）');
 
-  ok(/name="app-version" content="180"/.test(htmlSrc), '版本号升到 144');
-  ok(/amy-english-v180/.test(swSrc), 'Service Worker 缓存名同步到 v144（不然手机上还是旧版）');
+  ok(/name="app-version" content="181"/.test(htmlSrc), '版本号升到 144');
+  ok(/amy-english-v181/.test(swSrc), 'Service Worker 缓存名同步到 v144（不然手机上还是旧版）');
 }
 
 console.log('\n' + (fail ? '❌ ' + fail + ' 项未通过' : '✅ 全部通过'));

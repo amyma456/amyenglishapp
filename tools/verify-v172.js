@@ -75,8 +75,11 @@ section('A2. 跟读打分：点一下开录、再点一下结束、低于 60 分
   const lowSeg = appSrc.slice(appSrc.indexOf("    // 没通过：有读错的词"),
                              appSrc.indexOf("    // 没通过：有读错的词") + 900);
   ok(/next\.disabled = true/.test(lowSeg), '没通过：底部「下一题」继续锁着');
+  // v181：_showHoldReadResult 头部插入了填空跟读的结算分支（~2300 字符），
+  // `if (passed)` 被推出了原来的 5000 字符窗口 —— 意图没变（只有通过才
+  // 解锁下一题），窗口放宽到 8000。
   ok(/if \(passed\) \{[\s\S]{0,1500}next\.disabled = false/.test(
-      appSrc.slice(appSrc.indexOf('  _showHoldReadResult('), appSrc.indexOf('  _showHoldReadResult(') + 5000)),
+      appSrc.slice(appSrc.indexOf('  _showHoldReadResult('), appSrc.indexOf('  _showHoldReadResult(') + 8000)),
      '只有通过才解锁「下一题」');
   ok(/_stopCurrentAudio\(\);\s*\n\s*this\._showSpeakingIndicator\(false\);\s*\n\s*Recorder\.warmUp\(\);/.test(hrSeg),
      '开录前先掐掉示范声（示范不会被录进去）');

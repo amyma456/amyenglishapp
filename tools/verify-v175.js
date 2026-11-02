@@ -100,8 +100,8 @@ process.on('unhandledRejection', () => {});
 
 // ---------------------------------------------------------------------------
 section('0. 版本与装载');
-ok(/content="180"/.test(htmlSrc), 'index.html 版本钉子 = 175');
-ok(/amy-english-v180/.test(swSrc) && /var V = 180;/.test(swSrc), 'sw.js 缓存名与 V = 175');
+ok(/content="181"/.test(htmlSrc), 'index.html 版本钉子 = 175');
+ok(/amy-english-v181/.test(swSrc) && /var V = 181;/.test(swSrc), 'sw.js 缓存名与 V = 175');
 ok(!loadErr, 'app.js 能完整装载（含 data.js / api.js）', loadErr);
 ok(App && DATA && DATA.length === 7, '拿到 7 天题库');
 

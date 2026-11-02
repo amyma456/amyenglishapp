@@ -155,9 +155,9 @@ async function beaconPayload(b) {
 
   console.log('\n== 7. 版本号 = 152 ==');
   {
-    ok(/app-version" content="180"/.test(htmlSrc), 'index.html meta = 152');
-    ok((htmlSrc.match(/\?v=180/g) || []).length >= 5, '脚本引用 ?v=180（' + (htmlSrc.match(/\?v=180/g) || []).length + ' 处）');
-    ok(/amy-english-v180/.test(swSrc) && /var V = 180;/.test(swSrc), 'sw.js 缓存名与 V = 152');
+    ok(/app-version" content="181"/.test(htmlSrc), 'index.html meta = 152');
+    ok((htmlSrc.match(/\?v=181/g) || []).length >= 5, '脚本引用 ?v=181（' + (htmlSrc.match(/\?v=181/g) || []).length + ' 处）');
+    ok(/amy-english-v181/.test(swSrc) && /var V = 181;/.test(swSrc), 'sw.js 缓存名与 V = 152');
   }
 
   console.log('');

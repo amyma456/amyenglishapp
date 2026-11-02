@@ -11988,6 +11988,54 @@ const App = {
     return p.a ? (p.q + ' ' + p.a) : p.q;
   },
 
+  // v181：填空题答对后的「完整句子」——把题干里的空用正确答案补上。
+  // 家长 2026-11-02：「像这种题，把正确的答案写上去，There are some
+  // apples。学生就顺便去跟着系统读……所有的题都是这样，以后的也都是
+  // 这个逻辑。」
+  // 提法：题干是"用 is/are + a/an/some/any 填空: There ___ apples."这种，
+  // 完整句只要**含空的那一段**，别把词库一起带进去 —— 所以按中文和
+  // [提示] 切开，取含空的那块；再剥掉 (visit) 这类括号提示，把空换答案。
+  // 多空的题凑不出一个"整句"（答案只有一个），宁可不跟读也不端出怪句。
+  _fillReadSentence(m, q) {
+    const raw = String((q && q.question) || '');
+    const ans = (q && q.answer != null) ? String(q.answer).trim() : '';
+    if (!raw || !ans) return '';
+    if ((raw.match(/_{2,}/g) || []).length !== 1) return '';   // 多空不凑合
+    let chunk = raw.split(/\[[^\]]*\]|[\u3000-\u303f\u4e00-\u9fff\uff00-\uffef]+/)
+      .filter(function (c) { return /_{2,}/.test(c); })[0] || '';
+    if (!chunk) return '';
+    chunk = chunk.replace(/\([^)]*\)/g, ' ');
+    // 块首残留的分隔符剥掉："填空: There ___ apples." 的半角冒号贴在中文
+    // 后面切不干净，词库斜杠同理 —— 只剥头，句尾标点要留。
+    chunk = chunk.replace(/^[\s:：,，.。;；、!！?？\/+\-—]+/, '');
+    // 空槽：**紧贴字母**的下划线和那些字母一起是"答案的骨架"（p________、
+    // P____port，v180 听写题的写法）—— 整个槽一起换成答案；只换空的话
+    // 会拼出 "ppassenger" 这种怪词。骨架字母和答案对不上（罕见脏数据）
+    // 才退回只换空。前后都有空格的空（There ___ apples）不受影响。
+    chunk = chunk.replace(/([A-Za-z][A-Za-z'-]*)?_{2,}([A-Za-z'-]*)?/, function (m0, pre, post) {
+      const low = ans.toLowerCase();
+      const preOk = !pre || low.indexOf(pre.toLowerCase()) === 0;
+      const postOk = !post || low.slice(-post.length) === post.toLowerCase();
+      return (preOk && postOk) ? ans : m0.replace(/_{2,}/, ans);
+    });
+    chunk = chunk.replace(/\s{2,}/g, ' ').replace(/\s+([,.!?;:])/g, '$1').trim();
+    if (!/[A-Za-z]/.test(chunk)) return '';
+    return chunk;
+  },
+
+  // v181：完整句展示 —— 补进去的答案加粗标橙，孩子一眼看到"答案落在哪"。
+  _fillSentenceHtml(chunk, ans) {
+    const esc = this._escHtml ? this._escHtml(String(chunk || '')) : String(chunk || '');
+    const a = String(ans || '').trim();
+    if (!a) return esc;
+    const escA = this._escHtml ? this._escHtml(a) : a;
+    const i = esc.indexOf(escA);
+    if (i < 0) return esc;
+    return esc.slice(0, i)
+      + '<b style="color:var(--primary-dark)">' + escA + '</b>'
+      + esc.slice(i + escA.length);
+  },
+
   // 一道题该朗读哪一段英文。规则只有一条：读题，不读答案，不读中文。
   //   - 听力题：读 audio_text（听力原文）；题干（v167 起是英文，如
   //     "Listen to the dialogue. ..."）也不读 —— 孩子要听的是原文本身，
@@ -12123,9 +12171,11 @@ const App = {
     // Follow-read area: after the child picks an ABCD option, we force them to
     // read the question sentence aloud. score >= 60 unlocks either finishing
     // (if the pick was right) or re-picking (if it was wrong).
-    if (q.options) {
-      html += '<div id="qr-follow-' + mi + '-' + qi + '" class="qr-follow"></div>';
-    }
+    // v181：跟读容器**所有题都渲染**（以前只有选择题有）。填空题答对后
+    // 也要在这格里挂「系统先读、学生跟读」的面板（家长 2026-11-02：
+    // There ___ apples 填对后要把 There are some apples 写出来并跟着读，
+    // 所有的题都是这个逻辑，以后的题也是）。
+    html += '<div id="qr-follow-' + mi + '-' + qi + '" class="qr-follow"></div>';
     html += '</div>';
     return html;
   },
@@ -12501,11 +12551,14 @@ const App = {
   // 点击跟读面板。点一下麦克风开始录音，读完再点一下就结束并打分。
   // 相比按住不放，孩子不用一直压着按钮，读长句也不会手累；15 秒兜底
   // 自动收一次，防止忘了点停止、麦克风一直开着。
-  _renderHoldReadPanel(followEl, mi, qi, dayIdx, sentence) {
+  _renderHoldReadPanel(followEl, mi, qi, dayIdx, sentence, promptText) {
     const sid = 'hr-' + mi + '-' + qi;
     const stid = 'qr-status-' + mi + '-' + qi;
     const sentid = 'rd-sent-' + mi + '-' + qi;
     const gid = this._gid('hrg', mi, qi);
+    // v181：提示语可换 —— 阅读理解/选择题保持原文案；填空题答对后的跟读
+    // 传自己的（"请朗读你刚补好的完整句子"），别再说"问句和答案都读出来"。
+    const prompt = promptText || '请朗读下面这句完整的话（问句和答案都读出来）：';
     // v156：问答句拆成「问句一行、答句一行」，标点也要显示。
     // parts 从 _buildReadParts 拿（和 sentence 同一个来源），拼回去必须
     // 等于 sentence 才拆行 —— 对不上（万一将来调用方传了别的句子）就
@@ -12520,7 +12573,7 @@ const App = {
     }
     if (!sentHtml) sentHtml = this._readSentenceHtml(sentence);
     followEl.innerHTML = '<div class="speak-record show" style="text-align:center">'
-      + '<p class="fs-12 text-sub">请朗读下面这句完整的话（问句和答案都读出来）：</p>'
+      + '<p class="fs-12 text-sub">' + prompt + '</p>'
       + '<div class="rd-sentence" id="' + sentid + '">' + sentHtml + '</div>'
       + '<div class="rd-live-hint" id="rd-live-' + mi + '-' + qi + '"></div>'
       + '<div class="gate-bar">' + this._gateListenHtml(gid, sentence, '🔊 先听一遍示范') + '</div>'
@@ -13514,6 +13567,69 @@ const App = {
       if (spoken || voiceOk) this._playCorrectSound();
       return;
     }
+    // v181：填空题答对后的跟读结算 —— 走在 _lastPick 之前（填空没有
+    // lastPick）。答案在 submitFill 里已经记过了，这里只管"读没读够"：
+    //   通过（60 分 / 没识别到但确实出声 / 错词全部纠完）→ 解锁下一题；
+    //   没通过 → 和选择题同一套：有错词就逐词原处重读，没有就整句重来。
+    if (this._fillReadPending && this._fillReadPending[mi + '-' + qi]) {
+      if (!spoken) {
+        if (voiceOk) {
+          this._fillReadPending[mi + '-' + qi] = false;
+          this._clearReadMarks(mi, qi);
+          this._playCorrectSound();
+          this._setHoldReadUI(mi, qi, 'passed', null, true);
+          const fAnsEl = document.getElementById('ans-' + mi + '-' + qi);
+          if (fAnsEl) fAnsEl.innerHTML = '✅ 读到了，通过';
+          if (this._stepBelongsTo(mi, qi)) {
+            const fNext = document.getElementById('stage-next-btn');
+            if (fNext) { fNext.disabled = false; fNext.classList.add('nudge'); }
+          }
+          return;
+        }
+        this._clearReadMarks(mi, qi);
+        this._setHoldReadUI(mi, qi, 'noaudio', null, false);
+        return;
+      }
+      const fV = verdict || this._readVerdict(sentence, spoken);
+      this._markReadProgress(mi, qi, sentence, spoken, false, fV.align);
+      this.readLedgerSave(mi, qi, dayIdx, {
+        pass: fV.passed, score: fV.score,
+        bad: fV.badWords.map(function (x) { return x.expected; }),
+      });
+      if (fV.passed) {
+        this._fillReadPending[mi + '-' + qi] = false;
+        this._clearReadMarks(mi, qi);
+        const fAnsEl2 = document.getElementById('ans-' + mi + '-' + qi);
+        if (fAnsEl2) fAnsEl2.innerHTML = '✅ 跟读通过！ ' + fV.score + ' 分';
+        this._playCorrectSound();
+        this._setHoldReadUI(mi, qi, 'passed', fV.score, true);
+        if (this._stepBelongsTo(mi, qi)) {
+          const fNext2 = document.getElementById('stage-next-btn');
+          if (fNext2) { fNext2.disabled = false; fNext2.classList.add('nudge'); }
+        }
+        return;
+      }
+      // 没通过：有错词 → 逐词原处重读（纠完走 _fillRepairDone）；
+      // 没有明确错词 → 整句重来。下一题保持锁住。
+      if (this._stepBelongsTo(mi, qi)) {
+        const fNext3 = document.getElementById('stage-next-btn');
+        if (fNext3) { fNext3.disabled = true; fNext3.classList.remove('nudge'); }
+      }
+      this._playWrongSound();
+      if (fV.badWords.length) {
+        this._setHoldReadUI(mi, qi, 'repair', fV.score, false, { badCount: fV.badWords.length });
+        const selfFill = this;
+        this._startWordRepair(mi, qi, sentence, 'qr-status-' + mi + '-' + qi, function () {
+          selfFill._fillRepairDone(mi, qi, dayIdx, fV.score);
+        }, function () {
+          selfFill._replayReadSentence(mi, qi);
+        });
+      } else {
+        this._setHoldReadUI(mi, qi, 'failed', fV.score, false, { badWords: fV.badWords });
+      }
+      return;
+    }
+
     const lastPick = this._lastPick && this._lastPick[mi + '-' + qi];
     if (!lastPick) return;
     const { oi, isCorrect } = lastPick;
@@ -13625,6 +13741,24 @@ const App = {
   },
 
   // 错词全部纠正完 → 走和整句通过一样的收尾：记答案、亮选项、解锁下一题。
+  // v181：填空跟读的错词全部纠完 → 和 _holdRepairDone 同款收尾，但没有
+  // 选项可亮、答案也早已记过 —— 只管放音效、开下一题。
+  _fillRepairDone(mi, qi, dayIdx, score) {
+    this.readLedgerSave(mi, qi, dayIdx, { pass: true, score: score, bad: [] });
+    if (this._fillReadPending) this._fillReadPending[mi + '-' + qi] = false;
+    const ansEl = document.getElementById('ans-' + mi + '-' + qi);
+    if (ansEl) {
+      ansEl.style.display = 'block';
+      ansEl.innerHTML = '✅ 每个词都读对了，通过！';
+    }
+    this._playCorrectSound();
+    this._setHoldReadUI(mi, qi, 'passed', score, true);
+    if (this._stepBelongsTo(mi, qi)) {
+      const next = document.getElementById('stage-next-btn');
+      if (next) { next.disabled = false; next.classList.add('nudge'); }
+    }
+  },
+
   _holdRepairDone(mi, qi, dayIdx, score) {
     const m = HOMEWORK_DATA[dayIdx].modules[mi];
     const q = m.questions[qi];
@@ -13674,13 +13808,48 @@ const App = {
       input.style.borderColor = 'var(--success)';
       input.style.color = 'var(--success)';
       this._playCorrectSound();
-      // 填空题的门槛到此为止：写对了就把底部「下一题」点亮（橙色轻推）。
-      // 以前只显示"✅ 正确！"、按钮还是灰的，孩子以为卡住了，只能把同一句
-      // 答案再写一遍 —— 家长 2026-10-14：「写对了没有任何错误，就弹出来
-      // 下一题这个可选的项，而不是虚的显示，让学生点不了」。
-      if (this.isTeacher()) {
+      // v181（家长 2026-11-02）：填空答对不算完 —— 把正确答案补回句子里
+      // （There are some apples.）写给孩子看，系统先读一遍，孩子跟着读，
+      // 读够了才解锁下一题。和阅读理解/选择题的跟读是同一套面板、同一个
+      // 门槛（60 分 / 确实出声也放行 / 错词原处重读），**所有**填空题都走
+      // 这条逻辑（按题干结构判定，以后的题不用改数据）。
+      const fillSent = this._fillReadSentence(m, q);
+      const fillEl = document.getElementById('qr-follow-' + mi + '-' + qi);
+      if (fillSent && fillEl) {
+        const done = '✅ 正确！完整句子：' + this._fillSentenceHtml(fillSent, ans);
+        const isWord = !/\s/.test(fillSent.trim());
+        const prompt = isWord ? '这个单词你拼对了，请跟着读一遍：'
+                              : '请朗读你刚补好的完整句子：';
+        if (this.isTeacher()) {
+          // v172 同款：老师预览也把面板端出来（能听示范、能录、能出分），
+          // 只是不锁预览翻页。
+          ansEl.innerHTML = done;
+          this._renderHoldReadPanel(fillEl, mi, qi, dayIdx, fillSent, prompt);
+          this._gateUnlock(this._gid('hrg', mi, qi));
+        } else {
+          ansEl.innerHTML = done
+            + '<div class="fs-12 text-sub" style="margin-top:4px">点下方按钮跟着读一遍（读完就解锁下一题）</div>';
+          this._fillReadPending = this._fillReadPending || {};
+          this._fillReadPending[mi + '-' + qi] = true;
+          this._renderHoldReadPanel(fillEl, mi, qi, dayIdx, fillSent, prompt);
+          // v172 同款：选对/填对的那一刻系统先把整句读一遍，孩子先听到
+          // 完整的话再跟读。孩子手快已经开始录时不再放示范（会盖住声音）。
+          if (this.state.audioEnabled) {
+            const selfSpeak = this;
+            setTimeout(function () {
+              if (selfSpeak._holdReadActive) return;
+              selfSpeak.speak(fillSent);
+            }, 260);
+          }
+          // 示范自动放过了，跟读门直接开（「先听一遍」按钮保留，随时可点）
+          this._gateUnlock(this._gid('hrg', mi, qi));
+          // 注意：这里**不** _unlockStep —— 下一题等跟读结算（见
+          // _showHoldReadResult 的 _fillReadPending 分支）再开。
+        }
+      } else if (this.isTeacher()) {
         ansEl.innerHTML = '✅ 正确！';
       } else {
+        // 凑不出完整句（多空/无空的罕见题）：保持老行为，直接放行
         this._unlockStep();
         const nb = document.getElementById('stage-next-btn');
         const nbName = (nb && nb.textContent) ? nb.textContent.trim() : '下一题';
