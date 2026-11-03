@@ -1,339 +1,340 @@
 {
- "day_cn": "周三",
- "day_en": "Wednesday",
- "theme_cn": "作文跟读 + AI口语 + 高频词汇 + 阅读理解 + 键盘拼写",
- "writing_drill": {
-  "name_cn": "作文跟读 · 背诵",
-  "title": "第 3~5 句 · 主体（锻炼 · 地点 · 交通）",
-  "focus_cn": "这三句最长，读慢一点：at the stadium / by bike 别吞音",
-  "sentences": [
-   {
-    "en": "It would be great to do some exercise at the weekend.",
-    "cn": "周末做些锻炼真是太好了。"
-   },
-   {
-    "en": "The swimming pool is at the stadium downtown, and we can meet at the entrance.",
-    "cn": "游泳池在市中心的体育馆里，我们可以在入口处碰面。"
-   },
-   {
-    "en": "I will go there by bike because the weather will be good on Saturday.",
-    "cn": "我打算骑自行车去，因为周六天气会很好。"
-   }
+  "day_cn": "周三",
+  "day_en": "Wednesday",
+  "theme_cn": "作文跟读 + AI口语 + 高频词汇 + Exercise 01 专项（猜词/字谜/词组）",
+  "writing_drill": {
+    "name_cn": "作文跟读 · 背诵",
+    "title": "第 3~5 句 · 主体（锻炼 · 地点 · 交通）",
+    "focus_cn": "这三句最长，读慢一点：at the stadium / by bike 别吞音",
+    "sentences": [
+      {
+        "en": "It would be great to do some exercise at the weekend.",
+        "cn": "周末做些锻炼真是太好了。"
+      },
+      {
+        "en": "The swimming pool is at the stadium downtown, and we can meet at the entrance.",
+        "cn": "游泳池在市中心的体育馆里，我们可以在入口处碰面。"
+      },
+      {
+        "en": "I will go there by bike because the weather will be good on Saturday.",
+        "cn": "我打算骑自行车去，因为周六天气会很好。"
+      }
+    ]
+  },
+  "spell_name": "Exercise 01 词组，敲一遍",
+  "speaking": [
+    {
+      "sentence": "What is your favourite festival? Tell me about it.",
+      "sentence_cn": "你最喜欢的节日是什么？说一说。",
+      "options": [
+        "My favourite festival is the Spring Festival, because the whole family eats together.",
+        "There are many festivals in China.",
+        "I was very busy last week.",
+        "My birthday is in June."
+      ],
+      "options_cn": [
+        "我最喜欢的节日是春节，因为全家人一起吃饭。",
+        "中国有很多节日。",
+        "我上周很忙。",
+        "我的生日在六月。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "favourite /ˈfeɪvərɪt/ 三个音节，because 后面稍作停顿再说理由",
+      "explanation_cn": "问「最喜欢的节日，并说一说」，答句要说出节日名 + 一两句说明。A 说了 Spring Festival 和原因；B 只是泛泛而谈；C、D 跟节日无关。",
+      "explanation_en": "The question asks for one festival plus some details. A names the Spring Festival and gives a reason; B only says festivals exist and C and D are off topic.",
+      "answer_cn_hint": "先说节日的名字，再说为什么喜欢它，最好提到人和活动。"
+    },
+    {
+      "sentence": "How do you help your parents at home?",
+      "sentence_cn": "你在家怎么帮父母？",
+      "options": [
+        "I wash the dishes after dinner and walk the dog on Sundays.",
+        "My parents are both very busy.",
+        "We live in a small flat.",
+        "I helped them last year."
+      ],
+      "options_cn": [
+        "晚饭后我洗碗，星期天我去遛狗。",
+        "我父母都很忙。",
+        "我们住在一套小公寓里。",
+        "我去年帮过他们。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "dishes /ˈdɪʃɪz/ 词尾读 /ɪz/，walk the dog 连读自然",
+      "explanation_cn": "问「怎么帮」，要用一般现在时说出一两件具体的事。A 举了洗碗和遛狗。B 说父母忙；C 说住哪里；D 说的是去年。",
+      "explanation_en": "The question asks how you help, so list one or two regular chores in the simple present. A gives two clear examples; B, C and D do not describe help.",
+      "answer_cn_hint": "答句里要有动作，比如 wash the dishes、clean the room、walk the dog。"
+    },
+    {
+      "sentence": "How was your last weekend? What did you do?",
+      "sentence_cn": "你上周末过得怎么样？做了什么？",
+      "options": [
+        "I went hiking with my cousin and took many photos.",
+        "I usually do my homework on Saturday.",
+        "I will visit my grandma next week.",
+        "Weekends are shorter than holidays."
+      ],
+      "options_cn": [
+        "我和表哥去爬山，拍了很多照片。",
+        "我通常星期六做作业。",
+        "我下周要去看外婆。",
+        "周末比假期短。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "hiking /ˈhaɪkɪŋ/ 注意 i 读 /aɪ/，went 与 and 之间可弱读",
+      "explanation_cn": "last weekend 是过去时间，答句用过去式。A 用 went / took。B 用一般现在时；C 说下周；D 是观点。",
+      "explanation_en": "Last weekend is in the past, so the answer needs the past tense. A uses 'went' and 'took'; B uses the present, C talks about next week and D gives an opinion.",
+      "answer_cn_hint": "问的是上周末，动词要用过去式，比如 went、played、visited。"
+    },
+    {
+      "sentence": "Which is better for you, studying in the morning or in the evening?",
+      "sentence_cn": "对你来说，早上学习好还是晚上学习好？",
+      "options": [
+        "Studying in the morning is better for me because my head is clear.",
+        "I study every day after school.",
+        "My desk is next to the window.",
+        "Evening comes after the afternoon."
+      ],
+      "options_cn": [
+        "早上学习对我更好，因为我头脑清醒。",
+        "我每天放学后都学习。",
+        "我的书桌在窗边。",
+        "晚上在下午之后。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "clear /klɪə/ 注意 l 音要发出来，because 重音在第二音节",
+      "explanation_cn": "二选一的问题要先选一个再给理由。A 选了 morning 并说明 head is clear。B 没说哪个更好；C、D 无关。",
+      "explanation_en": "An either-or question needs a choice plus a reason. A chooses the morning and explains why; B does not compare, and C and D are unrelated.",
+      "answer_cn_hint": "先明确选一个（A is better for me），再用 because 说一条理由。"
+    },
+    {
+      "sentence": "What should we do to keep our classroom clean?",
+      "sentence_cn": "要保持教室干净，我们应该怎么做？",
+      "options": [
+        "We should put rubbish in the bin and clean the desks every day.",
+        "Our classroom is on the second floor.",
+        "I cleaned it yesterday with Tom.",
+        "The teacher is very strict with us."
+      ],
+      "options_cn": [
+        "我们应该把垃圾放进垃圾桶，每天擦桌子。",
+        "我们教室在二楼。",
+        "我昨天和汤姆打扫过。",
+        "老师对我们很严格。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "rubbish /ˈrʌbɪʃ/ 注意重音在前，should 词尾 d 不发音",
+      "explanation_cn": "should 提问建议，回答用 We should + 动词原形。A 给了两条建议。B 说位置；C 说昨天做过；D 说老师严格。",
+      "explanation_en": "The question asks for advice, so answer with 'We should + base verb'. A gives two suggestions; B, C and D do not offer advice.",
+      "answer_cn_hint": "用 We should + 动词原形给出建议，说两条就更完整。"
+    }
+  ],
+  "vocab": [
+    {
+      "word": "calendar",
+      "phonetic": "/ˈkælɪndə/",
+      "meaning": "日历",
+      "emoji": "📅",
+      "example_en": "I marked the exam day on my calendar.",
+      "example_cn": "我在日历上标出了考试那天。",
+      "hint_cn": "一个月一个月排下来的那张纸",
+      "syllables": [
+        "cal",
+        "en",
+        "dar"
+      ]
+    },
+    {
+      "word": "harvest",
+      "phonetic": "/ˈhɑːvɪst/",
+      "meaning": "收获",
+      "emoji": "🧺",
+      "example_en": "The farmers had a good harvest this autumn.",
+      "example_cn": "今年秋天农民收成很好。",
+      "hint_cn": "秋天把庄稼收回家",
+      "syllables": [
+        "har",
+        "vest"
+      ]
+    },
+    {
+      "word": "grain",
+      "phonetic": "/ɡreɪn/",
+      "meaning": "谷物",
+      "emoji": "🌾",
+      "example_en": "Rice is an important grain in Asia.",
+      "example_cn": "稻米是亚洲重要的谷物。",
+      "hint_cn": "磨成面粉做馒头的小颗粒",
+      "syllables": [
+        "grain"
+      ]
+    },
+    {
+      "word": "tradition",
+      "phonetic": "/trəˈdɪʃn/",
+      "meaning": "传统",
+      "emoji": "🏮",
+      "example_en": "Eating dumplings at New Year is a Chinese tradition.",
+      "example_cn": "过年吃饺子是中国的传统。",
+      "hint_cn": "一代一代传下来的做法",
+      "syllables": [
+        "tra",
+        "di",
+        "tion"
+      ]
+    },
+    {
+      "word": "custom",
+      "phonetic": "/ˈkʌstəm/",
+      "meaning": "习俗",
+      "emoji": "🎎",
+      "example_en": "Giving red packets is a popular custom in my town.",
+      "example_cn": "发红包在我们这儿是很流行的习俗。",
+      "hint_cn": "一个地方大家习惯了的做法",
+      "syllables": [
+        "cus",
+        "tom"
+      ]
+    }
+  ],
+  "spell": [
+    {
+      "question": "害怕：a______ [填完整单词]",
+      "answer": "afraid",
+      "explanation_cn": "整条词组是 be afraid of（害怕……）。afraid 读音 /əˈfreɪd/，只能用在 be 动词后面。"
+    },
+    {
+      "question": "同意：a_____ [填完整单词]",
+      "answer": "agree",
+      "explanation_cn": "整条词组是 agree with sb（同意某人）。agree 读音 /əˈɡriː/。"
+    },
+    {
+      "question": "很久以前：a__ [填完整单词]",
+      "answer": "ago",
+      "explanation_cn": "整条词组是 a long time ago（很久以前），ago 要放在时间词的后面。"
+    }
+  ],
+  "grammar_name": "Exercise 01 · 词组补充",
+  "grammar": [
+    {
+      "question": "选词补全词组（词库：animals / activities / advanced / answer / able）：野生动物 wild ___",
+      "type": "fill",
+      "answer": "animals",
+      "explanation_cn": "wild animals 野生动物；这里说一群野生动物，animal 要用复数 animals。"
+    },
+    {
+      "question": "选词补全词组（词库：animals / activities / advanced / answer / able）：高级课程 ___ course",
+      "type": "fill",
+      "answer": "advanced",
+      "explanation_cn": "advanced course 高级课程；advanced 高级的、进阶的。"
+    },
+    {
+      "question": "选词补全词组（词库：animals / activities / advanced / answer / able）：有能力做某事 be ___ to do sth",
+      "type": "fill",
+      "answer": "able",
+      "explanation_cn": "be able to do sth 有能力做某事，意思和 can 很近：I am able to swim = I can swim。"
+    },
+    {
+      "question": "选词补全词组（词库：animals / activities / advanced / answer / able）：课堂活动 classroom ___",
+      "type": "fill",
+      "answer": "activities",
+      "explanation_cn": "classroom activities 课堂活动；activity 变复数要 y 变 i 加 es：activities。"
+    },
+    {
+      "question": "选词补全词组（词库：animals / activities / advanced / answer / able）：回答问题 ___ questions",
+      "type": "fill",
+      "answer": "answer",
+      "explanation_cn": "answer questions 回答问题；answer 也可以作名词：the answer to this question 这个问题的答案。"
+    }
+  ],
+  "mc_name": "Exercise 01 · 猜单词",
+  "mc": [
+    {
+      "question": "It's a place where planes land and take off. What is it?",
+      "type": "choice",
+      "options": [
+        "an airport 机场",
+        "an address 地址",
+        "an actor 演员",
+        "an agent 代理人"
+      ],
+      "answer": 0,
+      "explanation_cn": "land 着陆、take off 起飞 → airport 机场。"
+    },
+    {
+      "question": "If you want to send someone a letter, you will need this. What is it?",
+      "type": "choice",
+      "options": [
+        "an address 地址",
+        "an airport 机场",
+        "an egg 鸡蛋",
+        "an activity 活动"
+      ],
+      "answer": 0,
+      "explanation_cn": "寄信一定要写上地址 → address 地址。"
+    },
+    {
+      "question": "You can see these people on television or in films. Who are they?",
+      "type": "choice",
+      "options": [
+        "actors 演员",
+        "farmers 农民",
+        "pilots 飞行员",
+        "agents 代理人"
+      ],
+      "answer": 0,
+      "explanation_cn": "电视和电影里演的人 → actors 演员。"
+    },
+    {
+      "question": "It's a big machine with wings and engines and it can fly. What is it?",
+      "type": "choice",
+      "options": [
+        "an aeroplane 飞机",
+        "an underground 地铁",
+        "an umbrella 雨伞",
+        "an insect 昆虫"
+      ],
+      "answer": 0,
+      "explanation_cn": "wings 机翼、engines 发动机、还会飞 → aeroplane 飞机。"
+    },
+    {
+      "question": "A person whose job is to manage the affairs of other people. Who is it?",
+      "type": "choice",
+      "options": [
+        "an agent 代理人",
+        "an actor 演员",
+        "an engineer 工程师",
+        "an artist 艺术家"
+      ],
+      "answer": 0,
+      "explanation_cn": "替别人打理事务的人 → agent 经纪人／代理人。"
+    }
+  ],
+  "mc2_name": "字谜填词",
+  "mc2": [
+    {
+      "question": "字谜串 bangryappleacrossalready（里面藏着 angry 生气 / apple 苹果 / across 穿过 / already 已经）。I like ___, but I don't like oranges.",
+      "type": "fill",
+      "answer": "apples",
+      "explanation_cn": "藏在串里的是 apple，但 like 后可数名词要用复数表示一类：I like apples。"
+    },
+    {
+      "question": "字谜串 bangryappleacrossalready（里面藏着 angry 生气 / apple 苹果 / across 穿过 / already 已经）。In some countries, red is an ___ colour.",
+      "type": "fill",
+      "answer": "angry",
+      "explanation_cn": "an 后面接元音音素开头的词：angry。红色是一种\"让人着急\"的颜色。"
+    },
+    {
+      "question": "字谜串 bangryappleacrossalready（里面藏着 angry 生气 / apple 苹果 / across 穿过 / already 已经）。Before humans lived on the earth, whales ___ lived in the sea.",
+      "type": "fill",
+      "answer": "already",
+      "explanation_cn": "already 已经——人类出现之前，鲸鱼早就住在大海里了。"
+    },
+    {
+      "question": "字谜串 bangryappleacrossalready（里面藏着 angry 生气 / apple 苹果 / across 穿过 / already 已经）。The library is ___ from the cinema.",
+      "type": "fill",
+      "answer": "across",
+      "explanation_cn": "across from 在……对面：图书馆在电影院对面。"
+    }
   ]
- },
- "spell_name": "今天学的词，敲一遍",
- "speaking": [
-  {
-   "sentence": "What is your favourite festival? Tell me about it.",
-   "sentence_cn": "你最喜欢的节日是什么？说一说。",
-   "options": [
-    "My favourite festival is the Spring Festival, because the whole family eats together.",
-    "There are many festivals in China.",
-    "I was very busy last week.",
-    "My birthday is in June."
-   ],
-   "options_cn": [
-    "我最喜欢的节日是春节，因为全家人一起吃饭。",
-    "中国有很多节日。",
-    "我上周很忙。",
-    "我的生日在六月。"
-   ],
-   "answer": 0,
-   "pronunciation_tips": "favourite /ˈfeɪvərɪt/ 三个音节，because 后面稍作停顿再说理由",
-   "explanation_cn": "问「最喜欢的节日，并说一说」，答句要说出节日名 + 一两句说明。A 说了 Spring Festival 和原因；B 只是泛泛而谈；C、D 跟节日无关。",
-   "explanation_en": "The question asks for one festival plus some details. A names the Spring Festival and gives a reason; B only says festivals exist and C and D are off topic.",
-   "answer_cn_hint": "先说节日的名字，再说为什么喜欢它，最好提到人和活动。"
-  },
-  {
-   "sentence": "How do you help your parents at home?",
-   "sentence_cn": "你在家怎么帮父母？",
-   "options": [
-    "I wash the dishes after dinner and walk the dog on Sundays.",
-    "My parents are both very busy.",
-    "We live in a small flat.",
-    "I helped them last year."
-   ],
-   "options_cn": [
-    "晚饭后我洗碗，星期天我去遛狗。",
-    "我父母都很忙。",
-    "我们住在一套小公寓里。",
-    "我去年帮过他们。"
-   ],
-   "answer": 0,
-   "pronunciation_tips": "dishes /ˈdɪʃɪz/ 词尾读 /ɪz/，walk the dog 连读自然",
-   "explanation_cn": "问「怎么帮」，要用一般现在时说出一两件具体的事。A 举了洗碗和遛狗。B 说父母忙；C 说住哪里；D 说的是去年。",
-   "explanation_en": "The question asks how you help, so list one or two regular chores in the simple present. A gives two clear examples; B, C and D do not describe help.",
-   "answer_cn_hint": "答句里要有动作，比如 wash the dishes、clean the room、walk the dog。"
-  },
-  {
-   "sentence": "How was your last weekend? What did you do?",
-   "sentence_cn": "你上周末过得怎么样？做了什么？",
-   "options": [
-    "I went hiking with my cousin and took many photos.",
-    "I usually do my homework on Saturday.",
-    "I will visit my grandma next week.",
-    "Weekends are shorter than holidays."
-   ],
-   "options_cn": [
-    "我和表哥去爬山，拍了很多照片。",
-    "我通常星期六做作业。",
-    "我下周要去看外婆。",
-    "周末比假期短。"
-   ],
-   "answer": 0,
-   "pronunciation_tips": "hiking /ˈhaɪkɪŋ/ 注意 i 读 /aɪ/，went 与 and 之间可弱读",
-   "explanation_cn": "last weekend 是过去时间，答句用过去式。A 用 went / took。B 用一般现在时；C 说下周；D 是观点。",
-   "explanation_en": "Last weekend is in the past, so the answer needs the past tense. A uses 'went' and 'took'; B uses the present, C talks about next week and D gives an opinion.",
-   "answer_cn_hint": "问的是上周末，动词要用过去式，比如 went、played、visited。"
-  },
-  {
-   "sentence": "Which is better for you, studying in the morning or in the evening?",
-   "sentence_cn": "对你来说，早上学习好还是晚上学习好？",
-   "options": [
-    "Studying in the morning is better for me because my head is clear.",
-    "I study every day after school.",
-    "My desk is next to the window.",
-    "Evening comes after the afternoon."
-   ],
-   "options_cn": [
-    "早上学习对我更好，因为我头脑清醒。",
-    "我每天放学后都学习。",
-    "我的书桌在窗边。",
-    "晚上在下午之后。"
-   ],
-   "answer": 0,
-   "pronunciation_tips": "clear /klɪə/ 注意 l 音要发出来，because 重音在第二音节",
-   "explanation_cn": "二选一的问题要先选一个再给理由。A 选了 morning 并说明 head is clear。B 没说哪个更好；C、D 无关。",
-   "explanation_en": "An either-or question needs a choice plus a reason. A chooses the morning and explains why; B does not compare, and C and D are unrelated.",
-   "answer_cn_hint": "先明确选一个（A is better for me），再用 because 说一条理由。"
-  },
-  {
-   "sentence": "What should we do to keep our classroom clean?",
-   "sentence_cn": "要保持教室干净，我们应该怎么做？",
-   "options": [
-    "We should put rubbish in the bin and clean the desks every day.",
-    "Our classroom is on the second floor.",
-    "I cleaned it yesterday with Tom.",
-    "The teacher is very strict with us."
-   ],
-   "options_cn": [
-    "我们应该把垃圾放进垃圾桶，每天擦桌子。",
-    "我们教室在二楼。",
-    "我昨天和汤姆打扫过。",
-    "老师对我们很严格。"
-   ],
-   "answer": 0,
-   "pronunciation_tips": "rubbish /ˈrʌbɪʃ/ 注意重音在前，should 词尾 d 不发音",
-   "explanation_cn": "should 提问建议，回答用 We should + 动词原形。A 给了两条建议。B 说位置；C 说昨天做过；D 说老师严格。",
-   "explanation_en": "The question asks for advice, so answer with 'We should + base verb'. A gives two suggestions; B, C and D do not offer advice.",
-   "answer_cn_hint": "用 We should + 动词原形给出建议，说两条就更完整。"
-  }
- ],
- "vocab": [
-  {
-   "word": "calendar",
-   "phonetic": "/ˈkælɪndə/",
-   "meaning": "日历",
-   "emoji": "📅",
-   "example_en": "I marked the exam day on my calendar.",
-   "example_cn": "我在日历上标出了考试那天。",
-   "hint_cn": "一个月一个月排下来的那张纸",
-   "syllables": [
-    "cal",
-    "en",
-    "dar"
-   ]
-  },
-  {
-   "word": "harvest",
-   "phonetic": "/ˈhɑːvɪst/",
-   "meaning": "收获",
-   "emoji": "🧺",
-   "example_en": "The farmers had a good harvest this autumn.",
-   "example_cn": "今年秋天农民收成很好。",
-   "hint_cn": "秋天把庄稼收回家",
-   "syllables": [
-    "har",
-    "vest"
-   ]
-  },
-  {
-   "word": "grain",
-   "phonetic": "/ɡreɪn/",
-   "meaning": "谷物",
-   "emoji": "🌾",
-   "example_en": "Rice is an important grain in Asia.",
-   "example_cn": "稻米是亚洲重要的谷物。",
-   "hint_cn": "磨成面粉做馒头的小颗粒",
-   "syllables": [
-    "grain"
-   ]
-  },
-  {
-   "word": "tradition",
-   "phonetic": "/trəˈdɪʃn/",
-   "meaning": "传统",
-   "emoji": "🏮",
-   "example_en": "Eating dumplings at New Year is a Chinese tradition.",
-   "example_cn": "过年吃饺子是中国的传统。",
-   "hint_cn": "一代一代传下来的做法",
-   "syllables": [
-    "tra",
-    "di",
-    "tion"
-   ]
-  },
-  {
-   "word": "custom",
-   "phonetic": "/ˈkʌstəm/",
-   "meaning": "习俗",
-   "emoji": "🎎",
-   "example_en": "Giving red packets is a popular custom in my town.",
-   "example_cn": "发红包在我们这儿是很流行的习俗。",
-   "hint_cn": "一个地方大家习惯了的做法",
-   "syllables": [
-    "cus",
-    "tom"
-   ]
-  }
- ],
- "spell": [
-  {
-   "question": "日历：c_______ [填完整单词]",
-   "answer": "calendar",
-   "explanation_cn": "calendar 中间是 len 不是 land，结尾是 dar，读 /ˈkælɪndə/。"
-  },
-  {
-   "question": "收获：h_______ [填完整单词]",
-   "answer": "harvest",
-   "explanation_cn": "harvest 既能作名词（收成）也能作动词（收割），读 /ˈhɑːvɪst/。"
-  },
-  {
-   "question": "传统：t________ [填完整单词]",
-   "answer": "tradition",
-   "explanation_cn": "tradition 结尾是 tion，读 /ʃn/，重音在第二音节。"
-  },
-  {
-   "question": "习俗：c_____ [填完整单词]",
-   "answer": "custom",
-   "explanation_cn": "custom 指一个地方的风俗习惯；customs 还有「海关」的意思。"
-  }
- ],
- "grammar_name": "冠词 a / an（2）",
- "grammar": [
-  {
-   "question": "用 a 或 an 填空：___ old book",
-   "type": "fill",
-   "answer": "an",
-   "explanation_cn": "old /əʊld/ 元音音素开头 → an。"
-  },
-  {
-   "question": "用 a 或 an 填空：___ ID card",
-   "type": "fill",
-   "answer": "an",
-   "explanation_cn": "ID 读作字母名 /aɪ ˈdiː/，/aɪ/ 是元音 → an。"
-  },
-  {
-   "question": "用 a 或 an 填空：___ unusual experience",
-   "type": "fill",
-   "answer": "an",
-   "explanation_cn": "unusual /ʌnˈjuːʒuəl/ 以 /ʌ/ 开头 → an。"
-  },
-  {
-   "question": "用 a 或 an 填空：___ European country",
-   "type": "fill",
-   "answer": "a",
-   "explanation_cn": "European 读 /jʊərəˈpiːən/，j 是辅音音素，所以用 a。"
-  }
- ],
- "mc_name": "Exercise 01 · 猜单词",
- "mc": [
-  {
-   "question": "It's a place where planes land and take off. What is it?",
-   "type": "choice",
-   "options": [
-    "an airport",
-    "an address",
-    "an actor",
-    "an agent"
-   ],
-   "answer": 0,
-   "explanation_cn": "land 着陆、take off 起飞 → airport 机场。"
-  },
-  {
-   "question": "If you want to send someone a letter, you will need this. What is it?",
-   "type": "choice",
-   "options": [
-    "an address",
-    "an airport",
-    "an egg",
-    "an activity"
-   ],
-   "answer": 0,
-   "explanation_cn": "寄信一定要写上地址 → address 地址。"
-  },
-  {
-   "question": "You can see these people on television or in films. Who are they?",
-   "type": "choice",
-   "options": [
-    "actors",
-    "farmers",
-    "pilots",
-    "agents"
-   ],
-   "answer": 0,
-   "explanation_cn": "电视和电影里演的人 → actors 演员。"
-  },
-  {
-   "question": "It's a big machine with wings and engines and it can fly. What is it?",
-   "type": "choice",
-   "options": [
-    "an aeroplane",
-    "an underground",
-    "an umbrella",
-    "an insect"
-   ],
-   "answer": 0,
-   "explanation_cn": "wings 机翼、engines 发动机、还会飞 → aeroplane 飞机。"
-  },
-  {
-   "question": "A person whose job is to manage the affairs of other people. Who is it?",
-   "type": "choice",
-   "options": [
-    "an agent",
-    "an actor",
-    "an engineer",
-    "an artist"
-   ],
-   "answer": 0,
-   "explanation_cn": "替别人打理事务的人 → agent 经纪人／代理人。"
-  }
- ],
- "mc2_name": "字谜填词",
- "mc2": [
-  {
-   "question": "字谜串 bangryappleacrossalready（里面藏着 angry / apple / across / already）。I like ___, but I don't like oranges.",
-   "type": "fill",
-   "answer": "apples",
-   "explanation_cn": "藏在串里的是 apple，但 like 后可数名词要用复数表示一类：I like apples。"
-  },
-  {
-   "question": "字谜串 bangryappleacrossalready（里面藏着 angry / apple / across / already）。In some countries, red is an ___ colour.",
-   "type": "fill",
-   "answer": "angry",
-   "explanation_cn": "an 后面接元音音素开头的词：angry。红色是一种\"让人着急\"的颜色。"
-  },
-  {
-   "question": "字谜串 bangryappleacrossalready（里面藏着 angry / apple / across / already）。Before humans lived on the earth, whales ___ lived in the sea.",
-   "type": "fill",
-   "answer": "already",
-   "explanation_cn": "already 已经——人类出现之前，鲸鱼早就住在大海里了。"
-  },
-  {
-   "question": "字谜串 bangryappleacrossalready（里面藏着 angry / apple / across / already）。The library is ___ from the cinema.",
-   "type": "fill",
-   "answer": "across",
-   "explanation_cn": "across from 在……对面：图书馆在电影院对面。"
-  }
- ]
 }

@@ -62,7 +62,13 @@ ok(tueMc.length === 1 && tueMc[0].questions.length === 3, '周二 3 道 some/any
 ok(/I can't find ___ skirts/.test(stemOf(1).join('\n')) && /Why don't we buy ___ books\?/.test(stemOf(1).join('\n')), '周二有 some/any 否定与建议句（v177 保留的 3 道）');
 
 const wedG = modOf(2, 'grammar')[0], wedMc = modOf(2, 'multiple_choice')[0], wedMc2 = modOf(2, 'multiple_choice').length > 1 ? modOf(2, 'multiple_choice')[1] : null;
-ok(wedG && wedG.questions.length === 4, '周三冠词模块 4 题（v177：a/an 周一已练，匀出 3 道）');
+// v182（家长 2026-11-03）：Exercise 01 词组入周三，a/an 冠词题让位。
+// 词组补充 5 题、每题题干带词库（学生自己能配对找到答案）。
+ok(wedG && wedG.questions.length === 5, '周三词组补充模块 5 题（v182：Exercise 01 词组入周三）');
+ok(wedG.questions.every((q) => /词库：animals \/ activities \/ advanced \/ answer \/ able/.test(q.question)),
+   '词组题每题都带词库（学生自己能找到答案）');
+ok(['animals','advanced','able','activities','answer'].every((a) => wedG.questions.some((q) => q.answer === a)),
+   '词组答案覆盖 animals/advanced/able/activities/answer');
 ok(wedMc && /planes land and take off/.test(wedMc.questions[0].question) && wedMc.questions.length === 5, '周三 Exercise 01 猜单词 5 题（airport/address/actors/aeroplane/agent）');
 ok(wedMc2 && wedMc2.questions.length === 4 && /bangryappleacrossalready/.test(wedMc2.questions[0].question), '周三字谜 4 题，题干带字母串');
 const wedFills = wedMc2.questions.every((q) => q.type === 'fill');
@@ -124,10 +130,10 @@ const html = fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8');
 ok(/\.writing-essay\{[^}]*white-space:pre-line/.test(html), '写作正文 white-space:pre-line（信件换行能显示）');
 
 // —— 5) 版本钉 v176 ——
-ok(/content="181"/.test(html), 'index.html app-version=176');
-ok((html.match(/\?v=181/g) || []).length >= 6, '静态资源 ?v=181 ≥ 6 处');
+ok(/content="182"/.test(html), 'index.html app-version=176');
+ok((html.match(/\?v=182/g) || []).length >= 6, '静态资源 ?v=182 ≥ 6 处');
 const sw = fs.readFileSync(path.join(ROOT, 'public', 'sw.js'), 'utf8');
-ok(/var V = 181;/.test(sw) && /amy-english-v181/.test(sw), 'sw.js 版本与缓存名 = 176');
+ok(/var V = 182;/.test(sw) && /amy-english-v182/.test(sw), 'sw.js 版本与缓存名 = 176');
 ok(!/amy-english-v175|var V = 175;|content="175"|=175/.test(html + sw), '旧版本钉已清干净');
 
 console.log('\n' + (fail === 0 ? '✅ 全部 ' + pass + ' 项通过' : '❌ ' + fail + ' 项失败 / ' + pass + ' 项通过'));
