@@ -306,6 +306,88 @@ async function aliyunTtsAudio(text, env, voiceId) {
   return buf;
 }
 
+// ---------------------------------------------------------------------------
+// 微软 Azure 神经语音（v183，家长 2026-11-04「又好又便宜」）：
+// 免费层 F0 每月 50 万字符神经网络合成免费 —— 平台朗读用量约 20 万/月，
+// 全装得进去 → 这条通道边际成本为零。音色是业界公认顶流：英文 Jenny/Aria/
+// Andrew 像真人外教，中文晓晓和阿里云持平。定位：**主通道**，阿里云降为备胎
+// （key 没配/月度超额/上游抖动时自动落回，孩子永远不会没声音）。
+// 环境变量（wrangler secret put 配置；两个都配了这条通道才激活）：
+//   AZURE_TTS_KEY     — Azure 语音服务的密钥
+//   AZURE_TTS_REGION  — 区域名（如 eastasia）
+const AZURE_TTS_URL = (region) => 'https://' + region + '.tts.speech.microsoft.com/cognitiveservices/v1';
+// 角色音色映射（对齐 TTS_VOICES_EN 的四个抽象键）：
+//   f1 用 Ana —— Azure 少见的"真·儿童"音色，小女孩台词不再是大人装嫩；
+//   m1/m2 用 Andrew/Brian，和 f 系一耳朵分得开。
+const AZURE_VOICE_CN = 'zh-CN-XiaoxiaoNeural';
+const AZURE_VOICE_EN = 'en-US-EmmaNeural';
+const AZURE_VOICES = {
+  f1: 'en-US-AnaNeural',
+  f2: 'en-US-AriaNeural',
+  m1: 'en-US-AndrewNeural',
+  m2: 'en-US-BrianNeural',
+};
+// 月度字符闸：免费层 50 万/月，留出余量按 40 万封顶。超了当天起自动走阿里云
+// （¥0.8/万字符，按字符计费照旧便宜），绝不产生 Azure 意外账单。
+const AZURE_TTS_MONTHLY_CHAR_CAP = 400000;
+let azureTableReady = false;
+async function azureCharsThisMonth(env) {
+  if (!env.DB) return { used: 0, add: function () {} };
+  const month = new Date().toISOString().slice(0, 7);
+  try {
+    if (!azureTableReady) {
+      await env.DB.prepare(
+        'CREATE TABLE IF NOT EXISTS azure_usage (month TEXT PRIMARY KEY, chars INTEGER NOT NULL DEFAULT 0)'
+      ).run();
+      azureTableReady = true;
+    }
+    const row = await env.DB.prepare('SELECT chars FROM azure_usage WHERE month = ?1').bind(month).first();
+    return {
+      used: (row && row.chars) || 0,
+      add: async function (n) {
+        try {
+          await env.DB.prepare(
+            'INSERT INTO azure_usage (month, chars) VALUES (?1, ?2) ON CONFLICT(month) DO UPDATE SET chars = chars + ?2'
+          ).bind(month, n).run();
+        } catch (e) {}
+      },
+    };
+  } catch (e) {
+    return { used: 0, add: function () {} };
+  }
+}
+function azureSsml(text, voiceId) {
+  const hasCJK = /[\u4e00-\u9fff\u3400-\u4dbf]/.test(text);
+  const pick = AZURE_VOICES[voiceId];
+  // 角色音色只对纯英文台词生效（同阿里云的道理）：中英混排仍用晓晓。
+  const name = hasCJK ? AZURE_VOICE_CN : ((voiceId && pick) || AZURE_VOICE_EN);
+  const lang = hasCJK ? 'zh-CN' : 'en-US';
+  const esc = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return "<speak version='1.0' xml:lang='" + lang + "'><voice name='" + name + "'>"
+    + "<prosody rate='-5%'>" + esc + '</prosody></voice></speak>';
+}
+async function azureTtsAudio(text, env, voiceId) {
+  const key = (env && env.AZURE_TTS_KEY) || '';
+  const region = (env && env.AZURE_TTS_REGION) || '';
+  if (!key || !region) throw new Error('azure_key_missing');
+  const usage = await azureCharsThisMonth(env);
+  if (usage.used >= AZURE_TTS_MONTHLY_CHAR_CAP) throw new Error('azure_monthly_cap');
+  const res = await fetch(AZURE_TTS_URL(region), {
+    method: 'POST',
+    headers: {
+      'Ocp-Apim-Subscription-Key': key,
+      'Content-Type': 'application/ssml+xml',
+      'X-Microsoft-OutputFormat': 'audio-24khz-48kbitrate-mono-mp3',
+      'User-Agent': 'amyenglish-pwa',
+    },
+    body: azureSsml(text, voiceId),
+  });
+  if (!res.ok) throw new Error('azure_tts_http_' + res.status);
+  const buf = await res.arrayBuffer();
+  if (buf.byteLength < 500) throw new Error('azure_tts_too_small');
+  return buf;
+}
+
 // Cloudflare Workers AI 的 TTS（Deepgram aura，英语母语音色）。
 // 返回 null 表示这条通道这次不可用（每日 neurons 额度耗尽 / 模型报错），
 // 由调用方决定往哪儿降级；不在这里吞掉整条请求。
@@ -345,6 +427,7 @@ async function tts(request, env, ctx) {
 
   // 缓存键带版本：朗读路由一变就 +1，让旧读音立刻全部失效（immutable
   // 缓存赖一年）。v2 = 字母改走有道；v3 = 英文音色换人 + 新增 prefer 维度。
+  // v4 = 默认通道换 Azure（Emma/晓晓），旧键里的阿里云读音全部让位。
   // engine / prefer 也要进键：同一段文字不同通道音色不同，不能互相串。
   const forceTtsQ = (url.searchParams.get('engine') || '').toLowerCase();
   const preferCf = (url.searchParams.get('prefer') || '').toLowerCase() === 'cf';
@@ -390,7 +473,7 @@ async function tts(request, env, ctx) {
     }
   }
 
-  const cacheKey = new Request(url.origin + '/api/tts?v3'
+  const cacheKey = new Request(url.origin + '/api/tts?v4'
     + (forceTtsQ ? '&engine=' + forceTtsQ : '')
     + (preferCf ? '&prefer=cf' : '')
     + (voice ? '&voice=' + voice : '')
@@ -406,6 +489,9 @@ async function tts(request, env, ctx) {
   const isSingleLetter = /^[a-z]$/i.test(text.trim());
   let body = null;
   let source = 'aliyun';
+  // Azure 通道是否激活：两个环境变量都配了才算（v183）。没配时整条 Azure
+  // 分支都不进门，行为和 v182 完全一致。
+  const azureReady = !!(env.AZURE_TTS_KEY && env.AZURE_TTS_REGION);
   if (isSingleLetter && forceTtsQ !== 'cf') {
     try {
       body = await ttsFallbackAudio(text);
@@ -414,19 +500,49 @@ async function tts(request, env, ctx) {
       body = null;   // 有道挂了才落到下面的免费模型，读到什么算什么
     }
   }
+  // engine=azure（A/B 试听页 / 排查用）：点名要 Azure，插队最前面。
+  if (!body && azureReady && forceTtsQ === 'azure') {
+    try {
+      body = await azureTtsAudio(text, env, voice);
+      if (body) source = 'azure';
+    } catch (e) {
+      body = null;   // 月度超额/上游抖动 —— 落回默认链路，孩子不会没声音
+    }
+  }
   // prefer=cf（AI 口语练习）：先用 Cloudflare 的母语音色。额度用完/上游报错
   // 时 body 还是 null，下面照常落阿里云 —— 孩子不会因为额度耗尽就没声音。
   if (!body && preferCf && forceTtsQ !== 'ali') {
     body = await cfTtsAudio(text, env, cfSpeaker);
     if (body) source = 'cf';
   }
-  // 带角色音色时也先走 Cloudflare（v166）：aura-2 的 asteria/hera/orion/apollo
-  // 都是英语母语的男女声，两个性别一耳朵就能分开；阿里云那几档是老外腔，
-  // 家长对发音挑得很。额度耗尽/上游报错时下面照常落阿里云同色音色，孩子
-  // 至少还能听到"两个人"。
+  // 带角色音色时（v166 对话分角色）先试 Azure（v183）：Ana 是"真·儿童"音色，
+  // 小女孩台词不再是大人装嫩；Andrew/Brian 和 f 系一耳朵分得开。Azure 没配/
+  // 超额时照旧落 Cloudflare 母语声，再落阿里云 —— 层层都有人接。
+  if (!body && voice && forceTtsQ !== 'ali') {
+    if (azureReady && forceTtsQ !== 'cf') {
+      try {
+        body = await azureTtsAudio(text, env, voice);
+        if (body) source = 'azure';
+      } catch (e) {
+        body = null;
+      }
+    }
+  }
   if (!body && voice && forceTtsQ !== 'ali') {
     body = await cfTtsAudio(text, env, cfSpeaker);
     if (body) source = 'cf';
+  }
+  // 默认朗读走 Azure（v183）：免费层装得下平台全部朗读用量，边际成本为零，
+  // 英文音色（Emma）比阿里云 Jennifer 更"外教腔"。没配 key/月度超额/上游
+  // 报错时 body 还是 null，下面照常落阿里云 —— 备胎一直是热的。
+  if (!body && azureReady && !preferCf && !voice
+      && forceTtsQ !== 'ali' && forceTtsQ !== 'cf') {
+    try {
+      body = await azureTtsAudio(text, env, voice);
+      if (body) source = 'azure';
+    } catch (e) {
+      body = null;   // 静默落阿里云，孩子这边永远感觉不到换道
+    }
   }
   if (!body && forceTtsQ !== 'cf') {
     const usage = await ttsCharsToday(env);

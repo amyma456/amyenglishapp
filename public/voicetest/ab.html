@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>发音 A/B 试听 · 阿里云 vs Azure</title>
+<style>
+  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; margin: 0; padding: 16px; background: #f5f7fa; color: #222; }
+  h1 { font-size: 18px; margin: 4px 0 2px; }
+  .sub { font-size: 13px; color: #667; margin-bottom: 14px; line-height: 1.6; }
+  .card { background: #fff; border-radius: 12px; padding: 14px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+  .en { font-size: 16px; font-weight: 600; line-height: 1.5; }
+  .cn { font-size: 13px; color: #889; margin-top: 2px; }
+  .row { display: flex; gap: 8px; margin-top: 10px; }
+  button { flex: 1; border: 0; border-radius: 10px; padding: 10px 6px; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .b-ali { background: #eef3ff; color: #2456d6; }
+  .b-az { background: #eafaf1; color: #0a7d43; }
+  .src { font-size: 11px; color: #99a; margin-top: 6px; min-height: 14px; }
+  .pick { margin-top: 8px; display: flex; gap: 8px; }
+  .pick button { background: #fff; border: 1px solid #dde; color: #556; font-weight: 500; }
+  .pick button.on { background: #fff7e0; border-color: #e8b93e; color: #8a6100; }
+  .tally { position: sticky; top: 0; background: #f5f7fa; padding: 8px 2px; font-size: 13px; color: #556; }
+  .tally b { color: #222; }
+</style>
+</head>
+<body>
+<h1>发音 A/B 试听</h1>
+<p class="sub">每句先点左（阿里云，现在的声音）再点右（Azure），听完点下面"哪个好"记一笔。Azure 没配密钥时两边是同一个声音（响应头会如实显示谁在答）。</p>
+<div class="tally" id="tally"></div>
+<div id="list"></div>
+<p class="sub">试听完把结果告诉 Amy 老师：哪个音色留下，就按哪个当主通道。</p>
+<script>
+var SAMPLES = [
+  { t: "passport", cn: "单词 · 护照（昨天的听写题）" },
+  { t: "There are some apples.", cn: "句子 · 昨天的填空跟读" },
+  { t: "Which picture matches the sentence you hear?", cn: "指令 · 听力题干" },
+  { t: "What's your favorite subject at school?", cn: "口语 · 常用问句" },
+  { t: "be afraid of", cn: "词组 · 害怕（本周拼写）" },
+  { t: "wild animals", cn: "词组 · 野生动物" },
+  { t: "a long time ago", cn: "词组 · 很久以前" }
+];
+var picks = {};
+try { picks = JSON.parse(localStorage.getItem('tts-ab-picks') || '{}'); } catch (e) {}
+var list = document.getElementById('list');
+function srcLabel(x) {
+  var m = { static: '静态缓存', azure: 'Azure ✓', aliyun: '阿里云 ✓', cf: 'Cloudflare', youdao: '有道', fallback: '免费兜底' };
+  return '实际发音：' + (m[x] || x);
+}
+SAMPLES.forEach(function (s, i) {
+  var d = document.createElement('div');
+  d.className = 'card';
+  d.innerHTML = '<div class="en">' + s.t + '</div><div class="cn">' + s.cn + '</div>'
+    + '<div class="row">'
+    + '<button class="b-ali" data-i="' + i + '" data-e="ali">▶ 阿里云</button>'
+    + '<button class="b-az" data-i="' + i + '" data-e="azure">▶ Azure</button>'
+    + '</div><div class="src" id="src-' + i + '"></div>'
+    + '<div class="pick"><button data-i="' + i + '" data-p="ali">👍 阿里云好</button>'
+    + '<button data-i="' + i + '" data-p="azure">👍 Azure 好</button></div>';
+  list.appendChild(d);
+});
+var audio = new Audio();
+list.addEventListener('click', function (ev) {
+  var b = ev.target.closest('button');
+  if (!b) return;
+  var i = b.getAttribute('data-i');
+  var e = b.getAttribute('data-e');
+  var p = b.getAttribute('data-p');
+  if (e) {
+    audio.pause();
+    fetch('/api/tts?engine=' + e + '&text=' + encodeURIComponent(SAMPLES[i].t))
+      .then(function (r) { var v = r.headers.get('X-TTS-Source') || '?'; document.getElementById('src-' + i).textContent = srcLabel(v); return r.blob(); })
+      .then(function (blob) { audio.src = URL.createObjectURL(blob); return audio.play(); })
+      .catch(function (err) { document.getElementById('src-' + i).textContent = '播放失败：' + err; });
+  } else if (p) {
+    picks[i] = p;
+    try { localStorage.setItem('tts-ab-picks', JSON.stringify(picks)); } catch (err) {}
+    var btns = b.parentNode.querySelectorAll('button');
+    for (var k = 0; k < btns.length; k++) btns[k].className = (btns[k] === b ? 'on' : '');
+    tally();
+  }
+});
+function tally() {
+  var a = 0, z = 0;
+  for (var k in picks) { if (picks[k] === 'ali') a++; else z++; }
+  document.getElementById('tally').innerHTML = '当前评分 — 阿里云 <b>' + a + '</b> 票 · Azure <b>' + z + '</b> 票';
+}
+tally();
+</script>
+</body>
+</html>

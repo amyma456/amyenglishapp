@@ -170,7 +170,10 @@ function loadApp() {
 
   let appSrc = fs.readFileSync(path.join(PUBLIC_DIR, 'app.js'), 'utf8');
   // 去掉结尾的 App.init()：我们只要它的纯函数，不要它去碰 DOM。
-  const tail = appSrc.lastIndexOf('\n// Init\nApp.init();');
+  // v183：仓库是 CRLF，老写法 lastIndexOf('\n// Init\n') 永远匹配不上 ——
+  // init 真跑了（Api 未定义的一串报错全靠 init 内部 try/catch 侥幸兜住）。
+  // 改成正则，\r?\n 通吃。
+  const tail = appSrc.search(/\/\/ Init\s*\r?\n\s*App\.init\(\);/);
   if (tail > 0) appSrc = appSrc.slice(0, tail);
   vm.runInContext(appSrc, sandbox, { filename: 'app.js' });
 
