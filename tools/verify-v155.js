@@ -130,8 +130,8 @@ section('3. 版本号 = 155');
 {
   ok(/app-version" content="184"/.test(htmlSrc), 'index.html app-version = 155');
   ok((htmlSrc.match(/\?v=184/g) || []).length === 6, 'index.html 6 处 ?v=184', (htmlSrc.match(/\?v=184/g) || []).length);
-  ok(/amy-english-v184/.test(swSrc), 'sw.js 缓存名 v155');
-  ok(/var V = 184;/.test(swSrc), 'sw.js var V = 155');
+  ok(/amy-english-v185/.test(swSrc), 'sw.js 缓存名 v155');
+  ok(/var V = 185;/.test(swSrc), 'sw.js var V = 155');
 }
 
 console.log('\n———————————————');

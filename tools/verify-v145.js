@@ -94,7 +94,7 @@ console.log('== 6. 版本号 147 三处同步 ==');
 {
   ok(/app-version" content="184"/.test(htmlSrc), 'index.html meta = 145');
   ok((htmlSrc.match(/\?v=184/g) || []).length >= 5, '脚本引用 ?v=184（' + (htmlSrc.match(/\?v=184/g) || []).length + ' 处）');
-  ok(/amy-english-v184/.test(swSrc) && /var V = 184;/.test(swSrc), 'sw.js 缓存名与 V = 145');
+  ok(/amy-english-v185/.test(swSrc) && /var V = 185;/.test(swSrc), 'sw.js 缓存名与 V = 145');
 }
 
 console.log(fail === 0 ? '\n全部通过 ✅' : '\n有 ' + fail + ' 项失败 ❌');

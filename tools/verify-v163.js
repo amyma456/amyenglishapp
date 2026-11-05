@@ -210,7 +210,7 @@ section('5. 版本号 = 163');
   ok(/app-version" content="184"/.test(htmlSrc), 'index.html app-version = 163');
   const refs = (htmlSrc.match(/\.js\?v=184/g) || []).length;
   ok(refs >= 6, '6 个 script 引用都升到 v163', refs);
-  ok(/amy-english-v184/.test(swSrc) && /var V = 184;/.test(swSrc), 'sw.js 缓存名与 V = 163');
+  ok(/amy-english-v185/.test(swSrc) && /var V = 185;/.test(swSrc), 'sw.js 缓存名与 V = 163');
 }
 
 console.log('\n结果: ' + pass + ' 通过, ' + fail + ' 失败');

@@ -385,6 +385,9 @@ async function azureTtsAudio(text, env, voiceId) {
   if (!res.ok) throw new Error('azure_tts_http_' + res.status);
   const buf = await res.arrayBuffer();
   if (buf.byteLength < 500) throw new Error('azure_tts_too_small');
+  // 记账（v185）：免费层是「每月 50 万字符」的硬额度，不记就永远算不出还剩多少，
+  // 上面那道月闸也就形同虚设。写失败不能影响出声，所以吞掉异常。
+  try { await usage.add(text.length); } catch (e) {}
   return buf;
 }
 

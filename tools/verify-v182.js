@@ -69,7 +69,7 @@ ok(d5ph.length === 4, '周六保留 4 道词组题作复习（周三学、周六
 ok(dataSrc.indexOf('选词补全词组（词库：' + BANK + '）') >= 0, 'data.js 已重建（词组题入 WEEK6）');
 ok(/content="184"/.test(idxSrc) && !/content="18[01]"/.test(idxSrc), 'index.html meta 版本钉在 182');
 ok((idxSrc.match(/\?v=184/g) || []).length === 6, 'index.html 6 处 ?v=184');
-ok(/var V = 184;/.test(swSrc) && /amy-english-v184/.test(swSrc), 'sw.js 版本钉在 182');
+ok(/var V = 185;/.test(swSrc) && /amy-english-v185/.test(swSrc), 'sw.js 版本钉在 182');
 
 console.log('\n--- B. 功能级：真调 App 的朗读与补句 ---');
 const document = { getElementById: () => null, createElement: () => ({ style: {}, setAttribute() {}, appendChild() {} }), body: { appendChild() {} }, addEventListener() {}, documentElement: { style: {} }, querySelectorAll: () => [] };

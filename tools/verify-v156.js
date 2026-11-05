@@ -179,7 +179,7 @@ section('4. 版本号 = 156');
   ok(/app-version" content="184"/.test(htmlSrc), 'index.html app-version = 156');
   const refs = (htmlSrc.match(/\.js\?v=184/g) || []).length;
   ok(refs === 6, '6 个 script 引用都升到 v163', refs);
-  ok(/amy-english-v184/.test(swSrc), 'sw.js CACHE_NAME = amy-english-v184');
+  ok(/amy-english-v185/.test(swSrc), 'sw.js CACHE_NAME = amy-english-v185');
 }
 
 // ===== 5. 回归：计数口径没被碰坏 =========================================

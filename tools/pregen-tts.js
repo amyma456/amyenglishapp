@@ -14,6 +14,9 @@
  *   默认 = 直连阿里云 qwen3-tts-flash / Jennifer，跟现在孩子听到的完全一致 ——
  *   换静态文件不会让音色发生变化。阿里云的 WAV 会转成 48kbps MP3（体积八分之一）。
  *   --engine=cf 换成 Cloudflare Deepgram 音色（免费，但每天额度有限，跑不完整批）。
+ *   --engine=azure 换成微软 Azure 神经语音（v185 起线上主通道）。直连 Azure，
+ *   音色映射与 SSML 和 worker 里的 azureSsml 逐字一致；返回就是 mp3，不用转码。
+ *   全量语料约 7.5 万字符，只占 Azure 免费层（50 万/月）的零头。
  *
  * 用法
  *   node tools/pregen-tts.js --dry               只统计要生成多少条，不发请求
@@ -21,6 +24,7 @@
  *   node tools/pregen-tts.js --limit=20          本次最多生成 20 条（先小批试跑用这个）
  *   node tools/pregen-tts.js --audit             体检已生成的音频，时长不合常理的挑出来重做
  *   node tools/pregen-tts.js --engine=cf         换成 Cloudflare 音色
+ *   node tools/pregen-tts.js --engine=azure      换成 Azure 神经语音（全量换主通道）
  *   node tools/pregen-tts.js --select=short      只做「单词 / 2~3 词短语」
  *   node tools/pregen-tts.js --select=short --force --engine=cf
  *                                                把短词的示范音换成 CF 音色（v98）
@@ -325,9 +329,24 @@ async function runAudit(lame) {
 }
 
 // fetchOne 的单次版本（不做重试包装），体检重做时用。
+// Azure 直连（v185）：音色映射和 SSML 在本地实现一份（与 worker 逐字一致），
+// 不绕 worker —— 见 fetchAzureDirect 上面的说明。返回的就是 mp3，不用转码。
+function viaWorker(engine) {
+  return engine === 'cf';
+}
+const NEEDS_MP3 = (engine) => isAliEngine(engine);
+function isAliEngine(engine) {
+  return !engine || engine === 'ali';
+}
+async function fetchOneFor(text, engine, lame) {
+  const got = engine === 'cf' ? await fetchViaWorker(text, 'cf')
+    : engine === 'azure' ? await fetchAzureDirect(text)
+      : await fetchAliyunDirect(text);
+  return { buf: NEEDS_MP3(engine) ? wavToMp3(got.buf, lame) : got.buf, source: got.source };
+}
+
 async function fetchOneRaw(text, lame) {
-  const got = ENGINE === 'cf' ? await fetchViaWorker(text, 'cf') : await fetchAliyunDirect(text);
-  return { buf: ENGINE === 'cf' ? got.buf : wavToMp3(got.buf, lame) };
+  return fetchOneFor(text, ENGINE, lame);
 }
 
 
@@ -402,6 +421,49 @@ async function fetchAliyunDirect(text) {
   return { buf, source: 'aliyun' };
 }
 
+// 直连 Azure 神经语音（v185，线上主通道）。SSML 与 worker/src/index.js 的
+// azureSsml 必须逐字一致 —— 静态文件和在线上临时合成出来的得是同一个人。
+// 这里只做默认音色：角色音色（voice=f1/m1…）在 worker 里本来就会绕开静态表。
+const AZURE_VOICES = {
+  f1: 'en-US-AnaNeural',
+  f2: 'en-US-AriaNeural',
+  m1: 'en-US-AndrewNeural',
+  m2: 'en-US-BrianNeural',
+};
+const AZURE_VOICE_EN = 'en-US-EmmaNeural';
+const AZURE_VOICE_CN = 'zh-CN-XiaoxiaoNeural';
+function azureSsml(text, voiceId) {
+  const hasCJK = /[\u4e00-\u9fff\u3400-\u4dbf]/.test(text);
+  const pick = AZURE_VOICES[voiceId];
+  const name = hasCJK ? AZURE_VOICE_CN : ((voiceId && pick) || AZURE_VOICE_EN);
+  const lang = hasCJK ? 'zh-CN' : 'en-US';
+  const esc = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return "<speak version='1.0' xml:lang='" + lang + "'><voice name='" + name + "'>"
+    + "<prosody rate='-5%'>" + esc + '</prosody></voice></speak>';
+}
+// 为什么不走自家 worker：实测经 worker 转一手，一条要 4 秒上下（多一跳 D1 +
+// 一条下载通道），2777 条要跑三小时；直连 Azure 一条不到 1 秒，整批十几分钟。
+async function fetchAzureDirect(text) {
+  const key = process.env.AZURE_TTS_KEY || '';
+  const region = process.env.AZURE_TTS_REGION || 'eastus';
+  if (!key) throw new Error('缺 AZURE_TTS_KEY（先 source ~/.workbuddy/secrets/azure.env）');
+  const res = await fetch('https://' + region + '.tts.speech.microsoft.com/cognitiveservices/v1', {
+    method: 'POST',
+    headers: {
+      'Ocp-Apim-Subscription-Key': key,
+      'Content-Type': 'application/ssml+xml',
+      'X-Microsoft-OutputFormat': 'audio-24khz-48kbitrate-mono-mp3',
+      'User-Agent': 'amyenglish-pregen',
+    },
+    body: azureSsml(text),
+    signal: AbortSignal.timeout(30000),
+  });
+  if (!res.ok) throw new Error('azure_http_' + res.status);
+  const buf = Buffer.from(await res.arrayBuffer());
+  if (buf.length < 500) throw new Error('音频过短 ' + buf.length + 'B');
+  return { buf, source: 'azure' };
+}
+
 // 走自家 worker（--engine=cf 时用）。
 async function fetchViaWorker(text, engine) {
   const qs = '?text=' + encodeURIComponent(text) + (engine ? '&engine=' + engine : '');
@@ -416,18 +478,30 @@ async function fetchViaWorker(text, engine) {
   if (buf.length < 200) throw new Error('音频过短 ' + buf.length + 'B');
   if (ct && !/audio|octet-stream|mpeg|wav/i.test(ct)) throw new Error('content-type ' + ct);
   const source = res.headers.get('x-tts-source') || 'worker';
-  // 指定了 engine=cf 却拿到别的来源（额度耗尽时 worker 会落到免费兜底通道）：
+  // 指定了 engine 却拿到别的来源（额度耗尽时 worker 会落到免费兜底通道）：
   // 这不是我们要的音色，当失败处理，让上层重试 / 留给人工。
   if (engine === 'cf' && source !== 'cf') throw new Error('不是 cf 音色（source=' + source + '）');
+  if (engine === 'azure' && source !== 'azure') throw new Error('不是 azure 音色（source=' + source + '）');
   return { buf, source };
+}
+
+// 硬超时保险（v185）：实测整批跑到尾巴上会卡死 —— 个别请求在本地代理这条路上
+// 既不返回也不抛错，AbortSignal 也不一定救得回来（13 分钟零进度，日志停在
+// 2740/2757）。外面再套一层 Promise.race，到点就当这条失败、换下一条，整批
+// 永远不会被一条卡住的连接拖死。
+function hardTimeout(p, ms, tag) {
+  let timer = null;
+  return Promise.race([
+    p.finally(() => clearTimeout(timer)),
+    new Promise((_, rej) => { timer = setTimeout(() => rej(new Error('hard_timeout ' + ms + 'ms ' + (tag || ''))), ms); }),
+  ]);
 }
 
 async function fetchOne(text, lame) {
   let lastErr = null;
   for (let k = 0; k < RETRY; k++) {
     try {
-      const got = ENGINE === 'cf' ? await fetchViaWorker(text, 'cf') : await fetchAliyunDirect(text);
-      return { buf: ENGINE === 'cf' ? got.buf : wavToMp3(got.buf, lame), source: got.source };
+      return await hardTimeout(fetchOneFor(text, ENGINE, lame), 45000, JSON.stringify(text.slice(0, 24)));
     } catch (e) {
       lastErr = e;
       await new Promise((r) => setTimeout(r, 800 * (k + 1)));
@@ -514,6 +588,10 @@ async function main() {
     if (FORCE) return true;
     const f = state.files[t];
     if (!f) return true;
+    // 换音色会换文件名（fileNameFor 把 engine 编进哈希）。这里必须比对文件名，
+    // 否则换成 azure 之后，状态里记着的旧 ali 文件还在盘上，整批都会被当成
+    // "已生成"跳过去 —— 白跑一趟还什么都换不掉。
+    if (f.file !== fileNameFor(t, ENGINE)) return true;
     return !fs.existsSync(path.join(OUT_DIR, f.file));
   });
   const batch = LIMIT > 0 ? todo.slice(0, LIMIT) : todo;
@@ -527,7 +605,7 @@ async function main() {
   });
 
   const lame = loadLame();
-  if (ENGINE !== 'cf' && !lame) {
+  if (ENGINE === 'ali' && !lame) {
     console.error('\n找不到 lamejs（MP3 编码器）。阿里云只返回 WAV，1888 条会撑到 150MB+，');
     console.error('必须先转 MP3。装一下再跑：');
     console.error('  cd C:/Users/amyma/.workbuddy/binaries/node/workspace');
@@ -539,7 +617,9 @@ async function main() {
   console.log('  待生成 ' + todo.length + ' 条，本次跑 ' + batch.length + ' 条（并发 ' + CONCURRENCY + '）');
   console.log('  通道 ' + (ENGINE === 'cf'
     ? 'Cloudflare Deepgram 音色（经 ' + ENDPOINT + '）'
-    : '直连阿里云 ' + ALIYUN_TTS_MODEL + ' / ' + ALIYUN_TTS_VOICE_EN + '（→ 48kbps MP3）'));
+    : ENGINE === 'azure'
+      ? 'Azure 神经语音（直连，音色与 worker 的 azureSsml 逐字一致）'
+      : '直连阿里云 ' + ALIYUN_TTS_MODEL + ' / ' + ALIYUN_TTS_VOICE_EN + '（→ 48kbps MP3）'));
   console.log('');
 
   let done = 0, fail = 0, bytes = 0;
@@ -553,10 +633,13 @@ async function main() {
       const file = fileNameFor(text, ENGINE);
       try {
         const { buf, source } = await fetchOne(text, lame);
-        // 体积体检：同一段文字换音色，时长不会差出好几倍。差太多说明合成跑偏了
-        // —— 阿里云出过"forget 生成 10.8 秒日文"这种，换 CF 也一样要防。
+        // 体积体检：**同一个通道**重做同一段文字，时长不会差出好几倍，差太多说明
+        // 合成跑偏了 —— 阿里云出过"forget 生成 10.8 秒日文"这种。
+        // 换引擎那一版不做这个比对：两个引擎念同一句本来就差得远（v185 实测
+        // "tro" 阿里云 1.7KB、Azure 11KB），拿旧音色的体积当尺子只会误杀。
         const prev = state.files[text];
-        if (prev && prev.bytes && (buf.length > prev.bytes * 6 || buf.length < prev.bytes / 6)) {
+        if (prev && prev.source === source && prev.bytes
+            && (buf.length > prev.bytes * 6 || buf.length < prev.bytes / 6)) {
           throw new Error('体积异常 ' + buf.length + 'B vs 上一版 ' + prev.bytes + 'B');
         }
         fs.writeFileSync(path.join(OUT_DIR, file), buf);
@@ -578,6 +661,21 @@ async function main() {
   await Promise.all(Array.from({ length: CONCURRENCY }, worker));
 
   writeState(state);
+
+  // 题库里已经删掉的文本：状态里还记着，文件就永远留着 —— 既占仓库体积，也
+  // 会继续躺在静态清单里（虽然没人会请求）。只在「全量」这一趟里清，带
+  // --limit / --select 的时候不能碰别人的条目。
+  if (!SELECT && !LIMIT) {
+    const poolSet = new Set(pool);
+    let stale = 0;
+    Object.keys(state.files).forEach((t) => {
+      if (!poolSet.has(t)) { delete state.files[t]; stale++; }
+    });
+    if (stale) {
+      writeState(state);
+      console.log('  清掉题库里已删除的 ' + stale + ' 条记录（对应文件随孤儿清理一并收走）');
+    }
+  }
 
   // 孤儿清理：只有 state 里记着的文件才算"在用"。被换掉的旧音色文件、或者
   // 生成到一半留下的半成品，都在这儿收走 —— 不然每换一次音色，仓库里就多
