@@ -2582,6 +2582,19 @@ const App = {
     this._syncGates();
   },
 
+  // v184（家长 2026-11-05「有的必须听完，有的不用听完也能读」）：门禁按
+  // 「这一次看到这道题」算 —— 面板渲染前先摘旧锁。
+  // 病根：_gates 一旦解锁就整场会话有效，_syncGates 每次重渲染都把门重新
+  // 打开 —— 孩子退出一道题再进来（或做完了回头重看），门是开的，不听示范
+  // 直接就能录。第一次做要听、回头再做不用听，这就是"时灵时不灵"。
+  // 现在每个挂门禁的渲染入口（跟读面板/口语/翻译屏/逐句/连读/作文朗读/纠错）
+  // 都先 _gateReset：开门只剩两条路 —— 听完示范 onDone（点 🔊 或落屏自动播），
+  // 或调用方明确的"示范刚播过、立即开门"。
+  _gateReset(gid) {
+    if (!gid) return;
+    delete this._gates[gid];
+  },
+
   // 按当前 _gates 把（可能刚重建过的）DOM 重新点亮一遍。
   // 面板每次重渲染都是新节点，带上 gate-locked，所以渲染后要 sync 一次，
   // 免得"已经听过了却还是灰的"。
@@ -2957,6 +2970,7 @@ const App = {
     const self = this;
     const isCq = kind === 'cqtrans';
     const gid = this._gid(isCq ? 'cqtrsg' : 'trsg', mi, si);
+    this._gateReset(gid);   // v184：重进这一屏 = 重新先听（自动示范播完才开门）
     let say = '';
     if (isCq) {
       const sent = (this._splitSentences(m.passage) || [])[si] || '';
@@ -6208,6 +6222,7 @@ const App = {
         + '<div class="rd-aline">' + this._readSentenceHtml(parts.a) + '</div>'
       : this._readSentenceHtml(sentence);
     const gid = this._gid('sp', mi, qi);
+    this._gateReset(gid);   // v184：重进这道口语题 = 重新先听（详见 _gateReset 注释）
     readArea.innerHTML = '<div class="speak-record show" style="text-align:center">'
       + '<p class="fs-12 text-sub">请把问句和答句连起来读：</p>'
       + '<div class="rd-sentence" id="rd-sent-' + mi + '-' + qi + '">' + sentHtml + '</div>'
@@ -8613,6 +8628,7 @@ const App = {
     // 落地这一屏仍会自动播一遍整句并把门禁放行（见 _speakOnRender），
     // 按钮是给孩子"再听一遍"用的。
     const gid = this._gid('sentg', mi, si);
+    this._gateReset(gid);   // v184：重进这一屏 = 重新先听（落屏自动播完才开门）
     let html = '<div class="sent-step hold-zone">';
     html += '<div class="sent-progress">第 ' + (si + 1) + ' / ' + sents.length + ' 句</div>';
     html += '<div class="sent-text sent-words" id="sent-' + mi + '-' + si + '">'
@@ -9840,6 +9856,7 @@ const App = {
     // v119：这是整个词卡流程里**唯一**的一段示范（逐字母那一屏的示范去掉了，
     // 家长只留这一处）。它在逐字母那一屏就已经预取过，这里点下去即出声音。
     var cgid = this._gid('contg', mi);
+    this._gateReset(cgid);   // v184：重进连读屏 = 重新先听示范串（详见 _gateReset 注释）
     var contDemo = this._spellDemo(sp.kind, sp.units, sp.word);
     this.prefetchTts(contDemo);
     var html = '<div class="gate-bar"><button type="button" class="gate-listen" data-gate="' + cgid
@@ -10770,6 +10787,9 @@ const App = {
       // v109 同阅读逐句：句子分成"可点的词"和"独立的听示范按钮"两块 ——
       // 以前整句就是听入口，孩子点单词只会听整句，查不到意思。
       const gid = this._gid('wrg', mi, si);
+      // v184：作文跟读列表每次渲染都把没读过的句子重新上锁 —— 已读过的句子
+      // 不受影响（gate 只管那颗麦克风按钮，done 句本来就不必再读）。
+      if (!ok) this._gateReset(gid);
       html += '<div class="wr-item' + (ok ? ' done' : '') + '" id="wr-item-' + mi + '-' + si + '">';
       html += '<div class="wr-sent">'
            + '<span class="wr-no">' + (si + 1) + '</span>'
@@ -12556,6 +12576,7 @@ const App = {
     const stid = 'qr-status-' + mi + '-' + qi;
     const sentid = 'rd-sent-' + mi + '-' + qi;
     const gid = this._gid('hrg', mi, qi);
+    this._gateReset(gid);   // v184：重渲染 = 重新要求先听（详见 _gateReset 注释）
     // v181：提示语可换 —— 阅读理解/选择题保持原文案；填空题答对后的跟读
     // 传自己的（"请朗读你刚补好的完整句子"），别再说"问句和答案都读出来"。
     const prompt = promptText || '请朗读下面这句完整的话（问句和答案都读出来）：';
@@ -13081,6 +13102,7 @@ const App = {
     R.word = word;
     // 每个词单独一道门禁：换词就重新要求先听一遍（id 里带上词本身）
     const wgid = this._gid('wrep', R.mi, R.qi, word);
+    this._gateReset(wgid);   // v184：纠错卡重渲染 = 重新先听这个词（详见 _gateReset 注释）
     if (statusEl) {
       statusEl.innerHTML =
         '<div class="rd-repair-card">'
