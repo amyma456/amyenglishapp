@@ -98,7 +98,7 @@ section('4. 版本号 v160');
 {
   ok(htmlSrc.includes('app-version" content="184"'), 'index.html app-version=160');
   ok(/\.js\?v=184/.test(htmlSrc), 'index.html 资源 ?v=184');
-  ok(swSrc.includes('amy-english-v185') && /var V = 185;/.test(swSrc), 'sw.js 版本 160');
+  ok(swSrc.includes('amy-english-v186') && /var V = 186;/.test(swSrc), 'sw.js 版本 160');
   ok(!/content="159"|\?v=159|amy-english-v159/.test(htmlSrc + swSrc), '无 159 残留');
 }
 

@@ -157,7 +157,7 @@ async function beaconPayload(b) {
   {
     ok(/app-version" content="184"/.test(htmlSrc), 'index.html meta = 152');
     ok((htmlSrc.match(/\?v=184/g) || []).length >= 5, '脚本引用 ?v=184（' + (htmlSrc.match(/\?v=184/g) || []).length + ' 处）');
-    ok(/amy-english-v185/.test(swSrc) && /var V = 185;/.test(swSrc), 'sw.js 缓存名与 V = 152');
+    ok(/amy-english-v186/.test(swSrc) && /var V = 186;/.test(swSrc), 'sw.js 缓存名与 V = 152');
   }
 
   console.log('');

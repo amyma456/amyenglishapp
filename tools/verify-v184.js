@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * v185 校验：跟读门禁「每次看到这道题都要重新听」。
+ * v186 校验：跟读门禁「每次看到这道题都要重新听」。
  *
  * 家长 2026-11-05：「孩子们不用听就能自己跟读，这个不太稳，有的必须听完，
  * 有的不用听完也能读下一句。」
@@ -40,7 +40,7 @@ ok(/_gid\('sentg', mi, si\);\s*\r?\n\s*this\._gateReset\(gid\)/.test(appSrc),
    '④ 阅读逐句跟读屏');
 ok(/_gid\('contg', mi\);\s*\r?\n\s*this\._gateReset\(cgid\)/.test(appSrc),
    '⑤ 单词连读屏');
-ok(/_gid\('wrg', mi, si\);\s*\r?\n\s*\/\/ v185[\s\S]{0,160}if \(!ok\) this\._gateReset\(gid\);/.test(appSrc),
+ok(/_gid\('wrg', mi, si\);\s*\r?\n\s*\/\/ v186[\s\S]{0,160}if \(!ok\) this\._gateReset\(gid\);/.test(appSrc),
    '⑥ 作文跟读列表（已读过的句子不重新上锁）');
 ok(/_gid\('wrep', R\.mi, R\.qi, word\);\s*\r?\n\s*this\._gateReset\(wgid\)/.test(appSrc),
    '⑦ 错词纠错卡');
@@ -123,5 +123,5 @@ if (App) {
   } catch (e) { fail++; console.log('  ✗ 运行级测试异常: ' + e.message); }
 }
 
-console.log('\n' + (fail ? '✗ ' : '✓ ') + 'v185 校验：' + pass + ' 通过 / ' + fail + ' 失败');
+console.log('\n' + (fail ? '✗ ' : '✓ ') + 'v186 校验：' + pass + ' 通过 / ' + fail + ' 失败');
 process.exit(fail ? 1 : 0);

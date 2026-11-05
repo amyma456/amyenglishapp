@@ -133,7 +133,7 @@ ok(/\.writing-essay\{[^}]*white-space:pre-line/.test(html), '写作正文 white-
 ok(/content="184"/.test(html), 'index.html app-version=176');
 ok((html.match(/\?v=184/g) || []).length >= 6, '静态资源 ?v=184 ≥ 6 处');
 const sw = fs.readFileSync(path.join(ROOT, 'public', 'sw.js'), 'utf8');
-ok(/var V = 185;/.test(sw) && /amy-english-v185/.test(sw), 'sw.js 版本与缓存名 = 176');
+ok(/var V = 186;/.test(sw) && /amy-english-v186/.test(sw), 'sw.js 版本与缓存名 = 176');
 ok(!/amy-english-v175|var V = 175;|content="175"|=175/.test(html + sw), '旧版本钉已清干净');
 
 console.log('\n' + (fail === 0 ? '✅ 全部 ' + pass + ' 项通过' : '❌ ' + fail + ' 项失败 / ' + pass + ' 项通过'));

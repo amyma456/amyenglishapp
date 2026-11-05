@@ -2047,7 +2047,8 @@ const App = {
       // 共享的，回调异步跑起来时早就被下一次迭代覆盖了 —— 那会把取回来的
       // 音频记到别人的键上，孩子点读时本地永远没有，白预取一场。
       (function(job) {
-        var u = '/api/tts?text=' + encodeURIComponent(job.text)
+        var u = '/api/tts?av=' + self.ttsVer()
+              + '&text=' + encodeURIComponent(job.text)
               + (job.prefer ? '&prefer=' + encodeURIComponent(job.prefer) : '')
               + (job.voice ? '&voice=' + encodeURIComponent(job.voice) : '');
         fetch(u)
@@ -2088,6 +2089,17 @@ const App = {
       if (q[i].key === key) return true;
     }
     return false;
+  },
+
+  // 读音网址的版本参数（v186）。/api/tts 的响应头是一年 immutable，浏览器会把
+  // 旧音频在本地缓存一整年 —— 换发音引擎后孩子刷新页面听到的还是老声音
+  // （家长 2026-11-06 实测）。把 app-version 编进请求网址，每次发版浏览器
+  // 自然改道重新取，不用清缓存也不用重新登录。
+  ttsVer() {
+    try {
+      var m = document.querySelector('meta[name="app-version"]');
+      return (m && m.content) || '0';
+    } catch (e) { return '0'; }
   },
 
   // 释放本地音频。扔的顺序不是"谁先取回来谁先走" —— 那正好会把孩子马上
@@ -2188,7 +2200,7 @@ const App = {
     var isSentence = /\s/.test(cleanText.trim());
     var youdao = 'https://dict.youdao.com/dictvoice?audio=' + encoded + '&type=2';
     var baidu  = 'https://fanyi.baidu.com/gettts?lan=en&text=' + encoded + '&spd=3&source=web';
-    var ownTts = '/api/tts?text=' + encoded
+    var ownTts = '/api/tts?av=' + self.ttsVer() + '&text=' + encoded
       + (prefer ? '&prefer=' + encodeURIComponent(prefer) : '')
       + (voice ? '&voice=' + encodeURIComponent(voice) : '');
     // Sentences go to our own origin FIRST. Routing them to Baidu instead of
@@ -9251,7 +9263,7 @@ const App = {
     const SENT = 'Tom is a 10-year-old boy from England.';
     const enc = encodeURIComponent;
     const srcs = [
-      ['同源 /api/tts', t => '/api/tts?text=' + enc(t)],
+      ['同源 /api/tts', t => '/api/tts?av=' + this.ttsVer() + '&text=' + enc(t)],
       ['有道 dictvoice', t => 'https://dict.youdao.com/dictvoice?audio=' + enc(t) + '&type=2'],
       ['百度 gettts',    t => 'https://fanyi.baidu.com/gettts?lan=en&text=' + enc(t) + '&spd=3&source=web'],
     ];
