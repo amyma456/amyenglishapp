@@ -1,0 +1,213 @@
+{
+ "day_cn": "周六",
+ "day_en": "Saturday",
+ "theme_cn": "AI口语 + 高频词汇（沙漠治沙）+ 阅读理解（城市地铁）+ 键盘拼写",
+ "reading_name": "阅读理解 · 上海地铁",
+ "spell_name": "今天学的词，敲一遍",
+ "speaking": [
+  {
+   "sentence": "How do you usually go to school, and why?",
+   "sentence_cn": "你通常怎么去上学？为什么？",
+   "options": [
+    "I usually go to school by subway, because it is quick and never late.",
+    "My school is ten minutes' walk from my home.",
+    "I went to school at seven this morning.",
+    "There are many bikes near the school gate."
+   ],
+   "options_cn": [
+    "我通常坐地铁上学，因为它很快而且从不迟到。",
+    "我家到学校走路只要十分钟。",
+    "今天早上我七点去上学。",
+    "学校门口有很多自行车。"
+   ],
+   "answer": 0,
+   "pronunciation_tips": "usually /ˈjuːʒuəli/ 中间是 /ʒ/，subway 重音在前，never late 连读自然",
+   "explanation_cn": "问句有两问：怎么去 + 为什么。A 两个都答了（by subway + because）；B 只说距离；C 说今天的时间；D 说门口的自行车。",
+   "answer_cn_hint": "先说交通方式（by bus / by subway / on foot），再用 because 说一条理由。"
+  },
+  {
+   "sentence": "What is the best way to travel in a big city?",
+   "sentence_cn": "在大城市里出行，最好的方式是什么？",
+   "options": [
+    "The best way is to take the subway, because it is fast and there are no traffic jams.",
+    "Big cities are usually very busy.",
+    "I have a new bike at home.",
+    "Taxis in the city are yellow."
+   ],
+   "options_cn": [
+    "最好的方式是坐地铁，因为它快而且不会堵车。",
+    "大城市通常很繁忙。",
+    "我家里有一辆新自行车。",
+    "城里的出租车是黄色的。"
+   ],
+   "answer": 0,
+   "pronunciation_tips": "traffic /ˈtræfɪk/ 重音在前，jams /dʒæmz/ 词尾要出声",
+   "explanation_cn": "问「最好的方式」，答句要用 The best way is… 给出方法并说明理由。A 两项都有；B、D 是描述；C 说家里有什么。",
+   "answer_cn_hint": "用 The best way is to + 动词原形，再说 because 讲理由。"
+  },
+  {
+   "sentence": "Why do people like the subway better than cars in big cities?",
+   "sentence_cn": "在大城市里，人们为什么更喜欢地铁而不是开车？",
+   "options": [
+    "Because the subway is faster in busy hours and we can read on the train.",
+    "Because cars are expensive to buy.",
+    "Because the subway was built many years ago.",
+    "Because my mother cannot drive."
+   ],
+   "options_cn": [
+    "因为高峰时地铁更快，我们还能在车上读书。",
+    "因为买车很贵。",
+    "因为地铁是很多年前修的。",
+    "因为我妈妈不会开车。"
+   ],
+   "answer": 0,
+   "pronunciation_tips": "busy hours 连读 /ˈbɪziˈaʊəz/，than 在句中弱读成 /ðən/",
+   "explanation_cn": "Why 问原因，要用 because 讲出好处。A 说了两点（更快、能读书）；B 说的是买车的价格；C 说修建时间；D 说妈妈，都不是「更喜欢」的理由。",
+   "answer_cn_hint": "用 Because + 完整句子说出好处，比如 faster、no traffic jams、can read。"
+  },
+  {
+   "sentence": "What would you like to change about the transport in your city?",
+   "sentence_cn": "你希望自己城市的交通有什么改变？",
+   "options": [
+    "I would like more buses at night, so that people can go home later.",
+    "There are three bus lines near my home.",
+    "The transport in my city is very good now.",
+    "I take the bus with my mother every Sunday."
+   ],
+   "options_cn": [
+    "我希望晚上有更多公交车，这样人们可以晚一点回家。",
+    "我家附近有三条公交线路。",
+    "我们城市的交通现在很好。",
+    "每个星期天我和妈妈坐公交车。"
+   ],
+   "answer": 0,
+   "pronunciation_tips": "change /tʃeɪndʒ/ 词尾是 /dʒ/，so that 连读，later /ˈleɪtə/ 注意卷舌",
+   "explanation_cn": "问「希望改变什么」，答句要用 I would like… 提出具体建议。A 提出晚上加开车次；B、D 说现状；C 说现在很好，都没有提改变。",
+   "answer_cn_hint": "用 I would like + 名词/更多车次 说出一个具体愿望，再说这有什么好处。"
+  },
+  {
+   "sentence": "What should you do when you see an old man standing on the subway?",
+   "sentence_cn": "在地铁上看到一位老人站着，你应该怎么做？",
+   "options": [
+    "I should give my seat to him and help him hold his bag.",
+    "Old people often take the subway in the morning.",
+    "The subway train is very long.",
+    "I usually listen to music on the subway."
+   ],
+   "options_cn": [
+    "我应该把座位让给他，还帮他拿一下包。",
+    "老人常常早上去坐地铁。",
+    "地铁列车很长。",
+    "我坐地铁时通常听音乐。"
+   ],
+   "answer": 0,
+   "pronunciation_tips": "seat /siːt/ 和 sit /sɪt/ 要区分，should /ʃʊd/ 的 l 不发音",
+   "explanation_cn": "问「应该怎么做」，答句要给行动。A 给了让座、帮拿包两件事；B、C 是描述；D 说自己平时的习惯，都没回答「应该」。",
+   "answer_cn_hint": "用 I should + 动词原形说出应该做的事，比如 give my seat to him。"
+  }
+ ],
+ "vocab": [
+  {
+   "word": "sand",
+   "phonetic": "/sænd/",
+   "meaning": "沙子",
+   "emoji": "🏜️",
+   "example_en": "The wind blew the sand over the farms.",
+   "example_cn": "风把沙子吹到了农田上。",
+   "hint_cn": "沙漠和海边那种细细的黄色小颗粒",
+   "syllables": ["sand"]
+  },
+  {
+   "word": "straw",
+   "phonetic": "/strɔː/",
+   "meaning": "稻草",
+   "emoji": "🌾",
+   "example_en": "Villagers pressed dry straw into the sand in squares.",
+   "example_cn": "村民们把干稻草一格一格压进沙里。",
+   "hint_cn": "稻子收割后剩下的干秆子",
+   "syllables": ["straw"]
+  },
+  {
+   "word": "grid",
+   "phonetic": "/ɡrɪd/",
+   "meaning": "方格",
+   "emoji": "🔲",
+   "example_en": "Grass grows well inside each straw grid.",
+   "example_cn": "草在每个稻草方格里长得很好。",
+   "hint_cn": "用线条画出来的一格一格的小方块",
+   "syllables": ["grid"]
+  },
+  {
+   "word": "survive",
+   "phonetic": "/səˈvaɪv/",
+   "meaning": "存活",
+   "emoji": "🌱",
+   "example_en": "Young trees can survive in the desert with little water.",
+   "example_cn": "小树在沙漠里靠很少的水也能存活。",
+   "hint_cn": "在很难的环境里还能活着",
+   "syllables": ["sur", "vive"]
+  },
+  {
+   "word": "grass",
+   "phonetic": "/ɡrɑːs/",
+   "meaning": "小草",
+   "emoji": "🌿",
+   "example_en": "Small grass is growing again in the desert.",
+   "example_cn": "沙漠里的小草又长出来了。",
+   "hint_cn": "地上短短绿绿的植物，羊爱吃",
+   "syllables": ["grass"]
+  }
+ ],
+ "reading": {
+  "passage": "Shanghai has the longest subway system in China, and more than twenty lines run under the city. The first line opened in 1993, and today millions of people take the subway every day. At the station you buy a ticket from a machine or use your phone, and then you wait behind the yellow line. Trains come every two or three minutes, so you never wait for long. Inside the train there is a map above the doors, and a voice tells you the next station. My father says the subway is the fastest way to cross the city in the morning.",
+  "passage_cn": "上海有中国最长的地铁系统，二十多条线路在城市地下穿行。第一条线路在一九九三年开通，今天每天有几百万人坐地铁。在车站你可以从机器上买票，也可以用手机，然后站在黄线后面等车。列车每两三分钟就来一趟，所以你从来不用等很久。车厢里门上方的位置有线路图，还有广播告诉你下一站。我爸爸说，早上市里最快的过城方式就是地铁。",
+  "questions": [
+   {
+    "question": "How many subway lines run under Shanghai?",
+    "options": ["More than twenty", "About three", "Only one", "Fifty"],
+    "answer": 0,
+    "explanation_cn": "第一句说 more than twenty lines run under the city（二十多条线路）。"
+   },
+   {
+    "question": "When did the first subway line open?",
+    "options": ["In 1993", "In 2003", "In 1983", "In 2019"],
+    "answer": 0,
+    "explanation_cn": "第二句说 The first line opened in 1993（一九九三年开通）。"
+   },
+   {
+    "question": "Where should people wait at the station?",
+    "options": ["Behind the yellow line", "On the train", "In the ticket office", "At the gate"],
+    "answer": 0,
+    "explanation_cn": "第三句说 wait behind the yellow line（在黄线后面等车）。"
+   },
+   {
+    "question": "Why do people never wait long for a train?",
+    "options": ["Trains come every two or three minutes", "The station is very small", "There are no other people", "The trains never stop"],
+    "answer": 0,
+    "explanation_cn": "第四句说 Trains come every two or three minutes（每两三分钟就有一趟）。"
+   }
+  ]
+ },
+ "spell": [
+  {
+   "question": "沙子：s___ [填完整单词]",
+   "answer": "sand",
+   "explanation_cn": "sand 读 /sænd/，中间的 a 是梅花音，结尾是 nd。"
+  },
+  {
+   "question": "稻草：s____ [填完整单词]",
+   "answer": "straw",
+   "explanation_cn": "straw 开头是 str 三个辅音，结尾是 aw，读 /strɔː/。"
+  },
+  {
+   "question": "方格：g___ [填完整单词]",
+   "answer": "grid",
+   "explanation_cn": "grid 读 /ɡrɪd/，中间是短音 /ɪ/，别写成 greed。"
+  },
+  {
+   "question": "存活：s_____ [填完整单词]",
+   "answer": "survive",
+   "explanation_cn": "survive = sur + vive，结尾的 v 要发出声音，读 /səˈvaɪv/。"
+  }
+ ]
+}

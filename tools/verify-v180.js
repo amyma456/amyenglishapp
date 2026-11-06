@@ -177,10 +177,10 @@ console.log('\n--- B. 功能级：真调 _questionSpeechText ---');
   }
 
   console.log('\n--- D. 版本钉 v180 ---');
-  ok(/content="184"/.test(idxSrc), 'index.html meta content="184"');
-  ok((idxSrc.match(/\?v=184/g) || []).length >= 5, 'index.html ?v=184 资源钉 ≥5 处');
-  ok(/var CACHE_NAME = 'amy-english-v186'/.test(swSrc), 'sw.js CACHE_NAME v180');
-  ok(/var V = 186;/.test(swSrc), 'sw.js var V = 180');
+  ok(/content="187"/.test(idxSrc), 'index.html meta content="187"');
+  ok((idxSrc.match(/\?v=187/g) || []).length >= 5, 'index.html ?v=187 资源钉 ≥5 处');
+  ok(/var CACHE_NAME = 'amy-english-v187'/.test(swSrc), 'sw.js CACHE_NAME v180');
+  ok(/var V = 187;/.test(swSrc), 'sw.js var V = 180');
 
   console.log('\n' + (fail ? '✗ ' : '✓ ') + 'v180 校验：' + pass + ' 通过 / ' + fail + ' 失败');
   process.exit(fail ? 1 : 0);

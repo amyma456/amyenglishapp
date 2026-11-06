@@ -1,0 +1,213 @@
+{
+ "day_cn": "周三",
+ "day_en": "Wednesday",
+ "theme_cn": "AI口语 + 高频词汇（皮影戏）+ 阅读理解（沙漠治沙）+ 键盘拼写",
+ "reading_name": "阅读理解 · 库布其治沙",
+ "spell_name": "今天学的词，敲一遍",
+ "speaking": [
+  {
+   "sentence": "What do you think of the old arts in China, such as shadow puppetry?",
+   "sentence_cn": "你觉得皮影戏这样的中国老艺术怎么样？",
+   "options": [
+    "I think they are amazing, because a small puppet can tell a whole story.",
+    "There are many old arts in China.",
+    "I watched a cartoon about a cat yesterday.",
+    "My grandpa is seventy years old this year."
+   ],
+   "options_cn": [
+    "我觉得它们很了不起，因为一个小皮影就能讲完一整个故事。",
+    "中国有很多古老的艺术。",
+    "我昨天看了一部关于猫的动画片。",
+    "我爷爷今年七十岁。"
+   ],
+   "answer": 0,
+   "pronunciation_tips": "amazing /əˈmeɪzɪŋ/ 重音在第二音节，puppetry /ˈpʌpɪtri/ 三个音节都要清楚",
+   "explanation_cn": "问的是「你觉得怎么样」，必须先表态再给理由。A 有 I think they are amazing + because；B 是客观叙述；C、D 完全没有说看法。",
+   "answer_cn_hint": "先说 I think they are …，再用 because 说一条理由，比如有意思、有历史。"
+  },
+  {
+   "sentence": "Would you like to learn shadow puppetry? Why?",
+   "sentence_cn": "你想学皮影戏吗？为什么？",
+   "options": [
+    "Yes, I would love to, because I want to make my own puppet and tell a story with it.",
+    "Shadow puppetry is performed behind a screen.",
+    "I am very busy with my homework this week.",
+    "Many visitors watch puppet shows in the museum."
+   ],
+   "options_cn": [
+    "想，我很愿意，因为我想自己做一个皮影，用它来讲故事。",
+    "皮影戏是在幕布后面表演的。",
+    "我这周作业很多，很忙。",
+    "很多游客在博物馆看皮影戏。"
+   ],
+   "answer": 0,
+   "pronunciation_tips": "Would you 连读 /wʊdʒu/，puppet /ˈpʌpɪt/ 两个 p 只发一个音",
+   "explanation_cn": "Would you like to…? 要先答 Yes 或 No，再讲原因。A 两项都有；B 是知识；C 说忙但没表态；D 说别人，答非所问。",
+   "answer_cn_hint": "先回答 Yes, I would love to 或 No, thanks，再用 because 说原因。"
+  },
+  {
+   "sentence": "What do you usually do in your art class at school?",
+   "sentence_cn": "你们学校的美术课通常做什么？",
+   "options": [
+    "We usually draw pictures and sometimes make things with paper and clay.",
+    "My art teacher is a young woman.",
+    "I forgot to bring my colour pencils today.",
+    "There are forty students in my class."
+   ],
+   "options_cn": [
+    "我们通常画画，有时候用纸和橡皮泥做手工。",
+    "我的美术老师是一位年轻的女老师。",
+    "我今天忘了带彩笔。",
+    "我们班有四十个学生。"
+   ],
+   "answer": 0,
+   "pronunciation_tips": "usually /ˈjuːʒuəli/ 中间读 /ʒ/，clay /kleɪ/ 是橡皮泥、黏土的意思",
+   "explanation_cn": "问「通常做什么」，要用一般现在时讲习惯。A 说了画画的两种常做的事；B、D 介绍人和班级；C 说今天的一次疏忽。",
+   "answer_cn_hint": "用 We usually + 动词原形，说出美术课上常做的两件事。"
+  },
+  {
+   "sentence": "Which is more interesting to you, watching a film or watching a puppet show?",
+   "sentence_cn": "对你来说，看电影和看皮影戏哪个更有意思？",
+   "options": [
+    "Watching a puppet show is more interesting, because the puppets are moved by real hands.",
+    "Films are shown in cinemas and on phones.",
+    "I watched two films during the holiday.",
+    "My cousin likes cartoon films very much."
+   ],
+   "options_cn": [
+    "看皮影戏更有意思，因为皮影是真人的手在操纵的。",
+    "电影在电影院和手机上都能看到。",
+    "假期里我看了两部电影。",
+    "我表弟非常喜欢动画电影。"
+   ],
+   "answer": 0,
+   "pronunciation_tips": "interesting /ˈɪntrəstɪŋ/ 重音在第一个音节，puppet 里的 t 要轻爆破",
+   "explanation_cn": "这是二选一，答句要选边并说明理由。A 选了皮影戏并给原因；B 讲电影的播放方式；C、D 说的是数量和别人，都没有比较。",
+   "answer_cn_hint": "用 … is more interesting, because … 先选一个再讲理由。"
+  },
+  {
+   "sentence": "How do old arts become popular again with young people?",
+   "sentence_cn": "老艺术怎样才能重新在年轻人中流行起来？",
+   "options": [
+    "Old arts can become popular if schools teach them and videos show them in a fun way.",
+    "Old arts are hundreds of years old.",
+    "Some old arts are difficult to learn.",
+    "My teacher told us about an old art last week."
+   ],
+   "options_cn": [
+    "如果学校教这些老艺术，视频又把它拍得有趣，它们就能流行起来。",
+    "老艺术都有几百年历史了。",
+    "有些老艺术很难学。",
+    "上周老师给我们讲了一种老艺术。"
+   ],
+   "answer": 0,
+   "pronunciation_tips": "popular /ˈpɒpjələ/ 重音在前，if 引导条件句时读得轻快",
+   "explanation_cn": "How 问方法，答句要给出做法。A 说了两条办法（学校教、视频拍得有趣）；B、C 是现状描述；D 说老师讲的内容，都没给办法。",
+   "answer_cn_hint": "用 … can … if … 说出办法，比如进课堂、拍短视频、做文创。"
+  }
+ ],
+ "vocab": [
+  {
+   "word": "shadow",
+   "phonetic": "/ˈʃædəʊ/",
+   "meaning": "影子",
+   "emoji": "🌑",
+   "example_en": "The puppet's shadow moves on the white screen.",
+   "example_cn": "皮影的影子在白幕上移动。",
+   "hint_cn": "灯照过来时，后面黑黑的那一块",
+   "syllables": ["sha", "dow"]
+  },
+  {
+   "word": "puppet",
+   "phonetic": "/ˈpʌpɪt/",
+   "meaning": "木偶",
+   "emoji": "🎭",
+   "example_en": "The old man made a puppet out of leather.",
+   "example_cn": "老人用皮革做了一只木偶。",
+   "hint_cn": "有人用线或棍子操纵的小人偶",
+   "syllables": ["pup", "pet"]
+  },
+  {
+   "word": "leather",
+   "phonetic": "/ˈleðə/",
+   "meaning": "皮革",
+   "emoji": "🐄",
+   "example_en": "The puppets are cut from thin leather.",
+   "example_cn": "皮影是用薄皮革剪出来的。",
+   "hint_cn": "用动物皮做成的材料，可以做鞋和皮影",
+   "syllables": ["lea", "ther"]
+  },
+  {
+   "word": "screen",
+   "phonetic": "/skriːn/",
+   "meaning": "幕布",
+   "emoji": "🎬",
+   "example_en": "A lamp shines behind the white screen.",
+   "example_cn": "一盏灯在白幕后面照着。",
+   "hint_cn": "演戏时挡在前面的一块大白布",
+   "syllables": ["screen"]
+  },
+  {
+   "word": "perform",
+   "phonetic": "/pəˈfɔːm/",
+   "meaning": "表演",
+   "emoji": "🎪",
+   "example_en": "Two artists will perform a puppet show for us.",
+   "example_cn": "两位艺人要为我们表演一场皮影戏。",
+   "hint_cn": "在观众面前唱歌、跳舞或者演戏",
+   "syllables": ["per", "form"]
+  }
+ ],
+ "reading": {
+  "passage": "Kubuqi is a large desert in Inner Mongolia, and it is close to the Yellow River. Long ago the wind blew the sand into the river and over the farms, so people could not grow food there. In 1988 a farmer named Wang Wenbiao started to plant sand willows to stop the sand. Villagers also put dry straw into square grids on the sand, and grass came back inside the grids. Today more than half of the desert is green again, and birds and foxes have returned. Trains on the railway there no longer stop because of sandstorms.",
+  "passage_cn": "库布其是内蒙古的一片大沙漠，它离黄河很近。很久以前，风把沙子吹进黄河、又吹到农田上，人们在那里种不出粮食。一九八八年，一位叫王文彪的农民开始种沙柳，用来挡住沙子。村民们还把干稻草铺成一个个方格压在沙上，草就在方格里长了出来。今天这片沙漠有一半以上又变绿了，鸟和狐狸也回来了。那里的火车再也不会因为沙尘暴而停下来。",
+  "questions": [
+   {
+    "question": "Where is the Kubuqi desert?",
+    "options": ["In Inner Mongolia", "In Guangdong", "On an island", "Near Shanghai"],
+    "answer": 0,
+    "explanation_cn": "第一句说 Kubuqi is a large desert in Inner Mongolia（在内蒙古），它靠近黄河。"
+   },
+   {
+    "question": "What did the villagers put on the sand?",
+    "options": ["Dry straw in square grids", "Wet paper in big boxes", "Plastic bags and bottles", "Salt water from the sea"],
+    "answer": 0,
+    "explanation_cn": "第四句说 villagers put dry straw into square grids（把干稻草铺成方格），草就在方格里长出来。"
+   },
+   {
+    "question": "What happens inside the grids after the straw work?",
+    "options": ["Grass grows back", "The sand turns into stone", "The river moves away", "The desert gets bigger"],
+    "answer": 0,
+    "explanation_cn": "第四句后半说 grass came back inside the grids（方格里长回了草）。"
+   },
+   {
+    "question": "Why does the writer say trains no longer stop there?",
+    "options": ["Because the sandstorms have been stopped", "Because the trains are faster now", "Because the station is closed", "Because nobody takes the train"],
+    "answer": 0,
+    "explanation_cn": "最后一句说火车不再因沙尘暴停下，说明前面的固沙让沙尘暴少了，是治沙的效果。"
+   }
+  ]
+ },
+ "spell": [
+  {
+   "question": "影子：s_____ [填完整单词]",
+   "answer": "shadow",
+   "explanation_cn": "shadow 读 /ˈʃædəʊ/，中间是 dow，不要写成 shaddow。"
+  },
+  {
+   "question": "皮革：l______ [填完整单词]",
+   "answer": "leather",
+   "explanation_cn": "leather 中间是 ea，结尾是 ther，读 /ˈleðə/。"
+  },
+  {
+   "question": "幕布：s______ [填完整单词]",
+   "answer": "screen",
+   "explanation_cn": "screen 里有 ee，读 /skriːn/，开头是 scr 三个辅音。"
+  },
+  {
+   "question": "表演：p______ [填完整单词]",
+   "answer": "perform",
+   "explanation_cn": "perform = per + form，重音在第二音节 /pəˈfɔːm/，名词是 performance。"
+  }
+ ]
+}

@@ -96,10 +96,10 @@ section('3. 恢复名单与 showApp 接线');
 
 section('4. 版本号 v160');
 {
-  ok(htmlSrc.includes('app-version" content="184"'), 'index.html app-version=160');
-  ok(/\.js\?v=184/.test(htmlSrc), 'index.html 资源 ?v=184');
-  ok(swSrc.includes('amy-english-v186') && /var V = 186;/.test(swSrc), 'sw.js 版本 160');
-  ok(!/content="159"|\?v=159|amy-english-v159/.test(htmlSrc + swSrc), '无 159 残留');
+  ok(htmlSrc.includes('app-version" content="187"'), 'index.html app-version=160');
+  ok(/\.js\?v=187/.test(htmlSrc), 'index.html 资源 ?v=187');
+  ok(swSrc.includes('amy-english-v187') && /var V = 187;/.test(swSrc), 'sw.js 版本 160');
+  ok(!/content="(?!187)\d{3}"/.test(htmlSrc) && !/\.js\?v=(?!187)\d{2,3}/.test(htmlSrc) && !/amy-english-v(?!187)\d{3}/.test(swSrc), '无旧版本残留（字符类负向断言）');
 }
 
 console.log('\n结果: ' + pass + ' 通过, ' + fail + ' 失败');

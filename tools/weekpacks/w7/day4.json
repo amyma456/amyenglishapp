@@ -1,0 +1,156 @@
+{
+ "day_cn": "周五",
+ "day_en": "Friday",
+ "theme_cn": "语法（介词）+ 听力（地铁）+ KET/PET + 写作模板 + 键盘拼写",
+ "grammar_name": "介词 in / on / at",
+ "listening_name": "听力 · 地铁出行",
+ "writing_name": "背诵作文 · 写给朋友的邮件",
+ "spell_name": "今天的重点词，敲一遍",
+ "grammar": [
+  {
+   "question": "用 in / on / at 填空：We will meet ___ the gate of the puppet theatre at five o'clock.",
+   "type": "fill",
+   "answer": "at",
+   "explanation_cn": "表示在某个具体的小地点（门口、车站）用 at；at the gate 在大门口。"
+  },
+  {
+   "question": "用 in / on / at 填空：The show starts ___ seven in the evening.",
+   "type": "fill",
+   "answer": "at",
+   "explanation_cn": "具体钟点前用 at，at seven 在七点；in the evening 是固定搭配。"
+  },
+  {
+   "question": "用 in / on / at 填空：My birthday is ___ May, so I am a spring child.",
+   "type": "fill",
+   "answer": "in",
+   "explanation_cn": "月份前用 in，in May 在五月；具体某一天才用 on。"
+  },
+  {
+   "question": "用 in / on / at 填空：There is a big map of the city ___ the wall of the station.",
+   "type": "fill",
+   "answer": "on",
+   "explanation_cn": "贴在表面上用 on，on the wall 在墙上。"
+  },
+  {
+   "question": "We arrived ___ Hangzhou ___ Sunday morning.",
+   "type": "choice",
+   "options": ["in / on", "at / in", "on / at", "to / on"],
+   "answer": 0,
+   "explanation_cn": "大地方（城市）用 arrive in；具体到某一天的上午用 on，所以是 in Hangzhou on Sunday morning。"
+  },
+  {
+   "question": "The cat is sleeping ___ the box under the table.",
+   "type": "choice",
+   "options": ["in", "on", "at", "to"],
+   "answer": 0,
+   "explanation_cn": "在盒子里面有空间，用 in the box；on 是「在……上面」。"
+  },
+  {
+   "question": "I get up ___ six o'clock ___ the morning.",
+   "type": "choice",
+   "options": ["at / in", "in / at", "on / in", "at / on"],
+   "answer": 0,
+   "explanation_cn": "钟点用 at，早上/下午/晚上这一整段时间用 in，at six o'clock in the morning。"
+  }
+ ],
+ "listening": [
+  {
+   "question": "Listen to the dialogue. Which line goes to the city museum?",
+   "audio_text": "Woman: Excuse me, which line goes to the city museum? Man: Line Two, and the museum is the third stop. Woman: Thank you very much.",
+   "options": ["Line Two", "Line Five", "Line Three", "Line One"],
+   "answer": 0,
+   "explanation_cn": "男士说 Line Two（二号线），the third stop 是「第三站」，不是三号线。"
+  },
+  {
+   "question": "Listen to the dialogue. How will the girl go to school today?",
+   "audio_text": "Dad: The road is busy this morning, so we will take the subway. Girl: Good idea, it is faster than the bus. Dad: We need to change at the next station.",
+   "options": ["By subway", "By bus", "By car", "On foot"],
+   "answer": 0,
+   "explanation_cn": "爸爸说 we will take the subway（我们坐地铁），因为地铁比公交车快。"
+  },
+  {
+   "question": "Which picture matches the sentence you hear?",
+   "audio_text": "Many people are waiting for the train on the platform.",
+   "options": ["🚇", "🚕", "⛴️", "🚁"],
+   "picture_options": true,
+   "answer": 0,
+   "explanation_cn": "句子里说 waiting for the train on the platform（在站台等地铁），所以选 🚇。"
+  },
+  {
+   "type": "fill",
+   "question": "Listen and fill in the blank: Please stand behind the yellow ___.",
+   "audio_text": "Please stand behind the yellow line and let the people get off first.",
+   "answer": "line",
+   "explanation_cn": "听到 stand behind the yellow line（站在黄线后面），所以填 line。"
+  }
+ ],
+ "ket_pet": [
+  {
+   "question": "KET: The subway is ___ than the bus in this city.",
+   "type": "choice",
+   "options": ["faster", "fast", "fastest", "more fast"],
+   "answer": 0,
+   "explanation_cn": "有 than 用比较级 faster；fastest 是最高级。"
+  },
+  {
+   "question": "KET: ___ does the first train leave? — At five thirty.",
+   "type": "choice",
+   "options": ["When", "Where", "Who", "Why"],
+   "answer": 0,
+   "explanation_cn": "回答是时间 At five thirty，所以问句用 When（什么时候）。"
+  },
+  {
+   "question": "KET: You ___ buy a ticket before you get on the train.",
+   "type": "choice",
+   "options": ["must", "can't", "needn't", "mustn't"],
+   "answer": 0,
+   "explanation_cn": "上车前买票是必须做的事，用 must；needn't 是「不必」，mustn't 是「禁止」。"
+  },
+  {
+   "question": "PET: If you ___ early, you will get a seat on the train.",
+   "type": "choice",
+   "options": ["arrive", "arrived", "will arrive", "arriving"],
+   "answer": 0,
+   "explanation_cn": "if 引导的条件句「主将从现」：主句用 will，从句用一般现在时 arrive。"
+  },
+  {
+   "question": "PET: The museum ___ we visited last week is near the canal.",
+   "type": "choice",
+   "options": ["which", "where", "who", "when"],
+   "answer": 0,
+   "explanation_cn": "先行词 museum 是物，从句 we visited 缺宾语，用关系代词 which；where 要在从句里作地点状语。"
+  }
+ ],
+ "writing": {
+  "title": "An e-mail to a friend（给朋友的邮件 · 皮影戏）",
+  "requirement_cn": "先把整封邮件大声读三遍，再把 5 个空填好，最后背诵全文。这是本周的背诵任务！",
+  "keywords": ["puppet", "leather", "screen", "story", "Saturday"],
+  "keywords_cn": ["木偶（皮影）", "皮革", "幕布", "故事", "星期六"],
+  "template": "Dear Amy,\nLast week I saw a wonderful {{1}} show in the city museum. The little figures are made of {{2}}, and they dance behind a white {{3}}. The old man told a funny {{4}} and sang all the time. Would you like to go with me this {{5}}? Please write back and tell me your idea.\nLin",
+  "full_text_cn": "亲爱的Amy：上周我在城市博物馆看了一场很棒的皮影戏。那些小人是用皮革做的，它们在白幕后面跳舞。老人讲了一个好笑的故事，还一直在唱。这个星期六你愿意和我一起去看吗？请回信告诉我你的想法。林",
+  "explanation_cn": "背诵重点短语：a puppet show（皮影戏）· be made of（由……做成）· behind a screen（在幕布后面）· tell a story（讲故事）· Would you like to…?（你愿意……吗）。邮件结构：开头说明写信缘由 → 中间描述看到的东西 → 结尾发出邀请并等回复。",
+  "explanation_en": "A short e-mail about a puppet show: what you saw (a puppet show), what it is made of (leather), where it happens (behind a screen), what the man did (told a story), and a friendly invitation. Note 'be made of' for materials and 'Would you like to...?' for inviting."
+ },
+ "spell": [
+  {
+   "question": "票：t_____ [填完整单词]",
+   "answer": "ticket",
+   "explanation_cn": "ticket 读 /ˈtɪkɪt/，中间是 ck，结尾是 et。"
+  },
+  {
+   "question": "博物馆：m_____ [填完整单词]",
+   "answer": "museum",
+   "explanation_cn": "museum 三个音节 /mjuːˈziːəm/，中间是 se，重音在第二音节。"
+  },
+  {
+   "question": "车站：s______ [填完整单词]",
+   "answer": "station",
+   "explanation_cn": "station 结尾是 tion，读 /ʃn/，读 /ˈsteɪʃn/。"
+  },
+  {
+   "question": "星期六：s_______ [填完整单词]",
+   "answer": "saturday",
+   "explanation_cn": "Saturday 注意中间的 tur，读 /ˈsætədeɪ/，别漏掉第二个 a。"
+  }
+ ]
+}

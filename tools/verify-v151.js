@@ -125,10 +125,10 @@ console.log('\n== 2. 成绩分析 / 错题本也只算本班 ==');
 
 console.log('\n== 3. 版本号 = 151 ==');
 {
-  ok(/app-version" content="184"/.test(htmlSrc), 'index.html meta = 151');
-  ok((htmlSrc.match(/\?v=184/g) || []).length >= 5, '脚本引用 ?v=184（' + (htmlSrc.match(/\?v=184/g) || []).length + ' 处）');
-  ok(/amy-english-v186/.test(swSrc) && /var V = 186;/.test(swSrc), 'sw.js 缓存名与 V = 151（旧缓存整体作废）');
-  ok(!/content="150"|amy-english-v150|\?v=150/.test(htmlSrc + swSrc), '没有残留 150 的引用');
+  ok(/app-version" content="187"/.test(htmlSrc), 'index.html meta = 151');
+  ok((htmlSrc.match(/\?v=187/g) || []).length >= 5, '脚本引用 ?v=187（' + (htmlSrc.match(/\?v=187/g) || []).length + ' 处）');
+  ok(/amy-english-v187/.test(swSrc) && /var V = 187;/.test(swSrc), 'sw.js 缓存名与 V = 151（旧缓存整体作废）');
+  ok(!/\.js\?v=(?!187)\d{2,3}/.test(htmlSrc) && !/amy-english-v(?!187)\d{3}/.test(swSrc), '没有旧版本残留（脚本引用与缓存名都只有 187）');
 }
 
 console.log('');

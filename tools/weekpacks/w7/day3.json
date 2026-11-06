@@ -1,0 +1,132 @@
+{
+ "day_cn": "周四",
+ "day_en": "Thursday",
+ "theme_cn": "阅读理解（城市绿道）+ 语法（比较级）+ 听力 + 键盘拼写",
+ "reading_name": "阅读理解 · 城市绿道",
+ "grammar_name": "形容词比较级",
+ "spell_name": "阅读里的重点词，敲一遍",
+ "reading": {
+  "passage": "Last month our city opened a new greenway along an old railway line. The greenway is eleven kilometres long, and no cars are allowed on it. There are two lines on the road: one for walking and one for bikes. Young trees and flowers grow on both sides, and the lamps there get power from the sun. My family walks there after dinner, and I have met many neighbours on the way. At the weekend a small bus comes to the gate, so people do not need to drive.",
+  "passage_cn": "上个月我们城市沿着一条旧铁路线新开了一条绿道。这条绿道有十一公里长，上面不允许汽车通行。路上分成两条道：一条给步行的，一条给自行车的。两侧长着小树和花，那里的路灯靠太阳发电。我们全家晚饭后去那里散步，我在路上认识了很多邻居。周末有一辆小公交开到入口，所以人们不用开车来。",
+  "questions": [
+   {
+    "question": "What was there before the greenway was built?",
+    "options": ["An old railway line", "A big shopping mall", "A football field", "A swimming pool"],
+    "answer": 0,
+    "explanation_cn": "第一句说 opened a new greenway along an old railway line（沿着旧铁路线修绿道）。"
+   },
+   {
+    "question": "Who can use the greenway?",
+    "options": ["People on foot and people on bikes", "People in cars", "Only children under ten", "Only bus drivers"],
+    "answer": 0,
+    "explanation_cn": "第二、三句说 no cars are allowed，并分成 walking 和 bikes 两条道。"
+   },
+   {
+    "question": "Where do the lamps get their power?",
+    "options": ["From the sun", "From the wind", "From the river", "From the bikes"],
+    "answer": 0,
+    "explanation_cn": "第四句说 the lamps there get power from the sun（靠太阳发电）。"
+   },
+   {
+    "question": "How can people get to the greenway at the weekend?",
+    "options": ["By a small bus", "By plane", "By boat", "By train"],
+    "answer": 0,
+    "explanation_cn": "最后一句说 a small bus comes to the gate, so people do not need to drive。"
+   }
+  ]
+ },
+ "grammar": [
+  {
+   "question": "用括号里形容词的正确形式填空：This greenway is ___ (long) than the one near my home.",
+   "type": "fill",
+   "answer": "longer",
+   "explanation_cn": "有 than 就是比较级；long 是短词，直接加 er → longer。"
+  },
+  {
+   "question": "用括号里形容词的正确形式填空：Bikes are ___ (fast) than walking in the park.",
+   "type": "fill",
+   "answer": "faster",
+   "explanation_cn": "than 前面用比较级，fast 加 er → faster。"
+  },
+  {
+   "question": "The new park near the canal is much ___ than the old one.",
+   "type": "choice",
+   "options": ["bigger", "big", "biggest", "more big"],
+   "answer": 0,
+   "explanation_cn": "much 修饰比较级；big 是重读闭音节，要双写 g 再加 er → bigger。"
+  },
+  {
+   "question": "Walking is ___ than driving in the city centre at eight in the morning.",
+   "type": "choice",
+   "options": ["slower", "slow", "slowest", "more slow"],
+   "answer": 0,
+   "explanation_cn": "句中有 than，要用比较级 slower；双音节词 slow 直接加 er。"
+  },
+  {
+   "question": "Which is ___, the greenway or the old road?",
+   "type": "choice",
+   "options": ["longer", "long", "longest", "the longest"],
+   "answer": 0,
+   "explanation_cn": "两者比较用比较级 longer；the longest 是三者以上最高级。"
+  },
+  {
+   "question": "用括号里形容词的正确形式填空：These lamps are ___ (bright) than the old ones.",
+   "type": "fill",
+   "answer": "brighter",
+   "explanation_cn": "than 提示比较级，bright 加 er → brighter，注意中间 gh 不发音。"
+  }
+ ],
+ "listening": [
+  {
+   "question": "Listen to the dialogue. How long is the greenway?",
+   "audio_text": "Boy: Mum, how long is this greenway? Mum: It is eleven kilometres long, so we can only walk six today. Boy: OK, let's go to the bridge first.",
+   "options": ["Eleven kilometres", "Six kilometres", "Seventeen kilometres", "One kilometre"],
+   "answer": 0,
+   "explanation_cn": "妈妈说 It is eleven kilometres long（十一公里）；六公里是今天打算走的距离。"
+  },
+  {
+   "question": "Listen to the dialogue. What must keep out of the greenway?",
+   "audio_text": "Girl: Dad, can I ride my bike here? Dad: Yes, you can, but cars and motorbikes must keep out. Girl: Great, the bike line looks new.",
+   "options": ["Cars and motorbikes", "Bikes", "People who walk", "Dogs on a lead"],
+   "answer": 0,
+   "explanation_cn": "爸爸说 cars and motorbikes must keep out（汽车和摩托车不许进），自行车可以骑。"
+  },
+  {
+   "question": "Which picture matches the sentence you hear?",
+   "audio_text": "My father and I are riding our bikes along the greenway after dinner.",
+   "options": ["🚲", "🚗", "🚌", "✈️"],
+   "picture_options": true,
+   "answer": 0,
+   "explanation_cn": "句子里说的是 riding our bikes（骑自行车），所以选 🚲。"
+  },
+  {
+   "type": "fill",
+   "question": "Listen and fill in the blank: There are tall ___ on both sides of the greenway.",
+   "audio_text": "There are tall trees on both sides of the greenway, and they give us cool shade.",
+   "answer": "trees",
+   "explanation_cn": "听到 tall trees（高大的树），trees 是复数，结尾有 s。"
+  }
+ ],
+ "spell": [
+  {
+   "question": "绿道：g_______ [填完整单词]",
+   "answer": "greenway",
+   "explanation_cn": "green + way 合成一个词 = 绿道，中间不空格。"
+  },
+  {
+   "question": "公里：k________ [填完整单词]",
+   "answer": "kilometre",
+   "explanation_cn": "kilometre = kilo（千）+ metre（米），英式拼写结尾是 re。"
+  },
+  {
+   "question": "花：f______ [填完整单词]",
+   "answer": "flower",
+   "explanation_cn": "flower 中间是 ow，读 /ˈflaʊə/，别和 floor（地板）混。"
+  },
+  {
+   "question": "铁路：r_______ [填完整单词]",
+   "answer": "railway",
+   "explanation_cn": "railway = rail（铁轨）+ way（路），读 /ˈreɪlweɪ/。"
+  }
+ ]
+}

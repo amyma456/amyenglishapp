@@ -1,0 +1,213 @@
+{
+ "day_cn": "周一",
+ "day_en": "Monday",
+ "theme_cn": "AI口语 + 高频词汇（京杭大运河）+ 阅读理解 + 键盘拼写",
+ "reading_name": "阅读理解 · 京杭大运河",
+ "spell_name": "今天学的词，敲一遍",
+ "speaking": [
+  {
+   "sentence": "Have you ever travelled on a boat along a river or a lake?",
+   "sentence_cn": "你坐过船在河上或湖上游玩吗？",
+   "options": [
+    "Yes, I took a boat on the West Lake last summer, and the water was very clear.",
+    "The West Lake is a lake in Hangzhou.",
+    "Most small boats are made of wood.",
+    "I will go to the lake with my cousin tomorrow."
+   ],
+   "options_cn": [
+    "坐过，去年夏天我在西湖坐了船，水非常清。",
+    "西湖是杭州的一个湖。",
+    "大多数小船是用木头做的。",
+    "明天我要和表哥去湖边。"
+   ],
+   "answer": 0,
+   "pronunciation_tips": "travelled /ˈtrævld/ 词尾 d 很轻，along 读 /əˈlɒŋ/，clear 里的 /ɪə/ 要滑动",
+   "explanation_cn": "问的是「你坐过吗 + 什么感觉」，答句要表态再说经历。A 有 Yes、时间地点和感受；B、C 是常识介绍；D 说的是明天的计划，都没回答「坐过没有」。",
+   "answer_cn_hint": "先用 Yes 或 No 表态，再说什么时候、在哪里坐的船，最后补一句感受。"
+  },
+  {
+   "sentence": "Why do people build canals?",
+   "sentence_cn": "人们为什么要修运河？",
+   "options": [
+    "People build canals so that boats can carry heavy things between cities.",
+    "Canals are usually full of water all year round.",
+    "Some canals in China are more than one thousand years old.",
+    "I like watching boats go slowly along the canal."
+   ],
+   "options_cn": [
+    "人们修运河是为了让船在城市之间运送很重的东西。",
+    "运河通常一年到头都装满了水。",
+    "中国有些运河已经有一千多年历史了。",
+    "我喜欢看船沿着运河慢慢开。"
+   ],
+   "answer": 0,
+   "pronunciation_tips": "canal /kəˈnæl/ 重音在第二音节，so that 连读 /səʊðət/，heavy /ˈhevi/ 注意 v 的唇齿音",
+   "explanation_cn": "Why 问原因，答句要用 because 或 so that 说出目的。A 说出了运货这个目的；B、C 是描述事实；D 说的是自己的喜好，都没有回答「为什么」。",
+   "answer_cn_hint": "用 …so that… 或 because 讲出目的，比如运货物、送粮食。"
+  },
+  {
+   "sentence": "Which do you like better, travelling by train or by boat?",
+   "sentence_cn": "你更喜欢哪个：坐火车旅行还是坐船旅行？",
+   "options": [
+    "I like travelling by train better, because it is fast and I can read on the way.",
+    "Trains and boats are both very old inventions.",
+    "I went to Shanghai by train with my aunt last year.",
+    "My uncle works on a big boat near the sea."
+   ],
+   "options_cn": [
+    "我更喜欢坐火车旅行，因为它很快，我还能在路上看书。",
+    "火车和船都是很老的发明。",
+    "去年我和姑姑坐火车去了上海。",
+    "我叔叔在海边的一艘大船上工作。"
+   ],
+   "answer": 0,
+   "pronunciation_tips": "travelling 英式双写 l，better 里的 tt 在美音里读成轻快的 /d/，because 重音在后",
+   "explanation_cn": "这是二选一的问题，要先选一个再给理由。A 选了火车并说明原因；B 只是比较年代；C 讲一次经历；D 说叔叔的工作，都没有做选择。",
+   "answer_cn_hint": "先说 I like … better，再用 because 说一条理由，两边都要说到。"
+  },
+  {
+   "sentence": "If you could visit one place along the old canal, where would you go?",
+   "sentence_cn": "如果可以去运河沿线的某个地方，你会去哪里？",
+   "options": [
+    "I would go to Suzhou, because I want to see the old stone bridges there.",
+    "The canal is about 1,800 kilometres long.",
+    "Suzhou is a beautiful city in the south of China.",
+    "I went to Suzhou with my parents by car."
+   ],
+   "options_cn": [
+    "我会去苏州，因为我想看看那里古老的石桥。",
+    "这条运河大约有一千八百公里长。",
+    "苏州是中国南方一座美丽的城市。",
+    "我和爸爸妈妈开车去过苏州。"
+   ],
+   "answer": 0,
+   "pronunciation_tips": "would /wʊd/ 不要读成 will，Suzhou 读 /suːˈdʒəʊ/，bridges /ˈbrɪdʒɪz/ 词尾要出声",
+   "explanation_cn": "这是假设句，答句要用 I would go to… 说出地点，再给理由。A 两项都有；B、C 是客观介绍；D 说的是真实发生过的事，时态不对。",
+   "answer_cn_hint": "用 I would go to + 地名，再用 because 说想在那里看什么、做什么。"
+  },
+  {
+   "sentence": "How can we keep the water in rivers and canals clean?",
+   "sentence_cn": "我们怎样让河流和运河里的水保持干净？",
+   "options": [
+    "We can stop throwing rubbish into the river and use fewer plastic bags.",
+    "Water is very important for every living thing.",
+    "The river near my home is wide and deep.",
+    "There are many fish in the river this year."
+   ],
+   "options_cn": [
+    "我们可以不再往河里扔垃圾，还可以少用塑料袋。",
+    "水对每一种生物都非常重要。",
+    "我家附近的河又宽又深。",
+    "今年河里的鱼很多。"
+   ],
+   "answer": 0,
+   "pronunciation_tips": "rubbish /ˈrʌbɪʃ/ 注意 sh 音，plastic /ˈplæstɪk/ 重音在前，fewer 和 less 别混用",
+   "explanation_cn": "How 问方法，答句要给具体做法。A 给了两条（不丢垃圾、少用塑料袋）；B 是道理；C、D 是描述，都没有给出办法。",
+   "answer_cn_hint": "用 We can + 动词原形说出两三件具体的事，比如不丢垃圾、多种树。"
+  }
+ ],
+ "vocab": [
+  {
+   "word": "canal",
+   "phonetic": "/kəˈnæl/",
+   "meaning": "运河",
+   "emoji": "🚢",
+   "example_en": "Boats still travel along the Grand Canal today.",
+   "example_cn": "今天船队仍然沿着京杭大运河航行。",
+   "hint_cn": "人工挖出来、能让船走的大水道",
+   "syllables": ["ca", "nal"]
+  },
+  {
+   "word": "dynasty",
+   "phonetic": "/ˈdɪnəsti/",
+   "meaning": "朝代",
+   "emoji": "🏯",
+   "example_en": "People began to dig the canal in the Sui Dynasty.",
+   "example_cn": "人们在隋朝开始挖这条运河。",
+   "hint_cn": "古代一个家族连续做皇帝的那几百年",
+   "syllables": ["dy", "nas", "ty"]
+  },
+  {
+   "word": "transport",
+   "phonetic": "/ˈtrænspɔːt/",
+   "meaning": "运输",
+   "emoji": "🚚",
+   "example_en": "The canal helped transport rice to the north.",
+   "example_cn": "这条运河帮助把大米运到北方。",
+   "hint_cn": "把人和货物从一个地方运到另一个地方",
+   "syllables": ["trans", "port"]
+  },
+  {
+   "word": "length",
+   "phonetic": "/leŋθ/",
+   "meaning": "长度",
+   "emoji": "📏",
+   "example_en": "The length of the canal is about 1,800 kilometres.",
+   "example_cn": "这条运河的长度大约是一千八百公里。",
+   "hint_cn": "从一头到另一头有多长",
+   "syllables": ["length"]
+  },
+  {
+   "word": "engineer",
+   "phonetic": "/ˌendʒɪˈnɪə/",
+   "meaning": "工程师",
+   "emoji": "👷",
+   "example_en": "An engineer showed us how the water gate works.",
+   "example_cn": "一位工程师给我们讲了船闸是怎么工作的。",
+   "hint_cn": "设计桥梁、机器和水闸的人",
+   "syllables": ["en", "gi", "neer"]
+  }
+ ],
+ "reading": {
+  "passage": "The Grand Canal of China is the longest man-made waterway in the world, and it runs from Beijing in the north to Hangzhou in the south. It is about 1,800 kilometres long, which is longer than many big rivers. People began to dig it more than 2,000 years ago, and the work took hundreds of years. In the old days, boats carried rice, silk and salt along the canal to the capital. Today the canal is still full of water, and visitors can take a boat trip to see the old stone bridges. Last spring my class went to the canal museum in Hangzhou and learned how the water gates work.",
+  "passage_cn": "中国的京杭大运河是世界上最长的运河，它从北方的北京一直通到南方的杭州。它大约有一千八百公里长，比很多大河都长。人们在两千多年前就开始挖这条河，前后花了几百年的时间。古时候，船沿着运河把大米、丝绸和盐运到京城。今天运河里仍然满是水，游客可以坐船去看那些古老的石桥。去年春天我们班去了杭州的运河博物馆，学到了船闸是怎样工作的。",
+  "questions": [
+   {
+    "question": "How long is the Grand Canal?",
+    "options": ["About 1,800 kilometres", "About 800 kilometres", "About 18,000 kilometres", "About 180 kilometres"],
+    "answer": 0,
+    "explanation_cn": "第二句直接说 It is about 1,800 kilometres long（大约一千八百公里）。"
+   },
+   {
+    "question": "What did boats carry along the canal in the old days?",
+    "options": ["Rice, silk and salt", "Coal and wood", "Cars and bikes", "Books and chairs"],
+    "answer": 0,
+    "explanation_cn": "第四句写 boats carried rice, silk and salt（大米、丝绸和盐），其他三项文中没提。"
+   },
+   {
+    "question": "Where did the writer's class go last spring?",
+    "options": ["To the canal museum in Hangzhou", "To the Great Wall in Beijing", "To a science museum", "To the seaside"],
+    "answer": 0,
+    "explanation_cn": "最后一句说 my class went to the canal museum in Hangzhou（去了杭州的运河博物馆）。"
+   },
+   {
+    "question": "The word 'dig' in the passage means ___.",
+    "options": ["to make a hole or a way in the ground", "to sail a boat on a river", "to build a high wall", "to clean the water"],
+    "answer": 0,
+    "explanation_cn": "dig 是「挖」，挖运河就是在地下开出一条水道，所以选 A。"
+   }
+  ]
+ },
+ "spell": [
+  {
+   "question": "运河：c____ [填完整单词]",
+   "answer": "canal",
+   "explanation_cn": "canal 读 /kəˈnæl/，重音在第二音节，中间只有 n、a、l 三个字母。"
+  },
+  {
+   "question": "朝代：d______ [填完整单词]",
+   "answer": "dynasty",
+   "explanation_cn": "dynasty 中间的 y 读 /ɪ/，结尾是 sty，读 /ˈdɪnəsti/。"
+  },
+  {
+   "question": "运输：t________ [填完整单词]",
+   "answer": "transport",
+   "explanation_cn": "transport = trans（穿过）+ port（带、运），读 /ˈtrænspɔːt/。"
+  },
+  {
+   "question": "工程师：e______ [填完整单词]",
+   "answer": "engineer",
+   "explanation_cn": "engineer 里 engine（发动机）后面加 eer，重音在最后：/ˌendʒɪˈnɪə/。"
+  }
+ ]
+}

@@ -1,0 +1,136 @@
+{
+ "day_cn": "周日",
+ "day_en": "Sunday",
+ "theme_cn": "高频词汇（城市出行）+ 完形填空（运河研学）+ 键盘拼写",
+ "cloze_name": "完形填空 · 运河边的一天",
+ "spell_name": "今天学的词，敲一遍",
+ "vocab": [
+  {
+   "word": "subway",
+   "phonetic": "/ˈsʌbweɪ/",
+   "meaning": "地铁",
+   "emoji": "🚇",
+   "example_en": "The subway is faster than the bus in the morning.",
+   "example_cn": "早上地铁比公交车快。",
+   "hint_cn": "在地下跑的城市列车",
+   "syllables": ["sub", "way"]
+  },
+  {
+   "word": "route",
+   "phonetic": "/ruːt/",
+   "meaning": "路线",
+   "emoji": "🗺️",
+   "example_en": "Line Two is the best route to the museum.",
+   "example_cn": "二号线是去博物馆最好的路线。",
+   "hint_cn": "从这儿到那儿要走的那条路",
+   "syllables": ["route"]
+  },
+  {
+   "word": "bicycle",
+   "phonetic": "/ˈbaɪsɪkl/",
+   "meaning": "自行车",
+   "emoji": "🚲",
+   "example_en": "I ride my bicycle along the greenway on Sundays.",
+   "example_cn": "每个星期天我沿着绿道骑自行车。",
+   "hint_cn": "用两只脚蹬着走的车",
+   "syllables": ["bi", "cy", "cle"]
+  },
+  {
+   "word": "shade",
+   "phonetic": "/ʃeɪd/",
+   "meaning": "阴凉",
+   "emoji": "🌳",
+   "example_en": "The tall trees give us cool shade in summer.",
+   "example_cn": "高大的树在夏天给我们凉爽的阴凉。",
+   "hint_cn": "树下面晒不到太阳的那块地方",
+   "syllables": ["shade"]
+  },
+  {
+   "word": "fresh",
+   "phonetic": "/freʃ/",
+   "meaning": "新鲜的",
+   "emoji": "🍃",
+   "example_en": "The air near the canal is fresh in the morning.",
+   "example_cn": "早晨运河边的空气很新鲜。",
+   "hint_cn": "刚摘下来、刚做好的，不旧也不坏",
+   "syllables": ["fresh"]
+  }
+ ],
+ "cloze": {
+  "passage": "Last Friday our class went on a trip along the Grand 1___. In the morning we visited an old water gate, and an engineer told us how the gate 2___ the boats go up and down. At noon we sat under the trees and ate the 3___ that our parents had made. In the afternoon we walked along the new green path and planted five small trees with our 4___. Our teacher said that long ago the wind carried 5___ into the river, but now the grass holds the soil. On the way back we took the subway, and the ride was much 6___ than the bus. I hope we can come again next spring.",
+  "sentences_cn": [
+   "上周五我们班沿着京杭大运河去研学。",
+   "上午我们参观了一座古老的船闸，一位工程师给我们讲这道闸门怎样帮船只上上下下。",
+   "中午我们坐在树下，吃了爸爸妈妈准备好的午餐。",
+   "下午我们沿着新修的绿道散步，还亲手种了五棵小树。",
+   "老师说很久以前这里的风把沙子吹进河里，现在草把泥土固定住了。",
+   "回来的路上我们坐了地铁，比公交车快得多。",
+   "我希望明年春天还能再来。"
+  ],
+  "questions": [
+   {
+    "question": "1___",
+    "options": ["canal", "wall", "tower", "tunnel"],
+    "answer": 0,
+    "explanation_cn": "沿着一趟研学之旅，英文里说 the Grand Canal（京杭大运河），所以填 canal。"
+   },
+   {
+    "question": "2___",
+    "options": ["helps", "helped", "helping", "to help"],
+    "answer": 0,
+    "explanation_cn": "讲的是船闸一般的工作原理，用一般现在时第三人称单数 helps。"
+   },
+   {
+    "question": "3___",
+    "options": ["lunch", "homework", "poster", "ticket"],
+    "answer": 0,
+    "explanation_cn": "中午在树下吃的是父母准备的午餐 lunch，其他三项不能吃。"
+   },
+   {
+    "question": "4___",
+    "options": ["hands", "bikes", "books", "phones"],
+    "answer": 0,
+    "explanation_cn": "亲手种树是 plant trees with our hands（用我们的双手），是固定说法。"
+   },
+   {
+    "question": "5___",
+    "options": ["sand", "salt", "paper", "milk"],
+    "answer": 0,
+    "explanation_cn": "风把沙子吹进河里——治沙前风沙大，所以是 sand；后文 grass holds the soil 也印证。"
+   },
+   {
+    "question": "6___",
+    "options": ["faster", "fastest", "fast", "more fast"],
+    "answer": 0,
+    "explanation_cn": "much 后面接比较级，than 也提示比较，所以填 faster。"
+   }
+  ]
+ },
+ "spell": [
+  {
+   "question": "地铁：s_____ [填完整单词]",
+   "answer": "subway",
+   "explanation_cn": "subway = sub（下面）+ way（路）= 地下的路，读 /ˈsʌbweɪ/。"
+  },
+  {
+   "question": "路线：r____ [填完整单词]",
+   "answer": "route",
+   "explanation_cn": "route 读 /ruːt/，中间是 ou，结尾有一个不发音的 e。"
+  },
+  {
+   "question": "自行车：b______ [填完整单词]",
+   "answer": "bicycle",
+   "explanation_cn": "bicycle = bi（两个）+ cycle（轮子），中间是 cy，读 /ˈbaɪsɪkl/。"
+  },
+  {
+   "question": "阴凉：s____ [填完整单词]",
+   "answer": "shade",
+   "explanation_cn": "shade 读 /ʃeɪd/，开头是 sh，结尾的 e 不发音。"
+  },
+  {
+   "question": "新鲜的：f____ [填完整单词]",
+   "answer": "fresh",
+   "explanation_cn": "fresh 读 /freʃ/，结尾是 sh，注意不要写成 frash。"
+  }
+ ]
+}

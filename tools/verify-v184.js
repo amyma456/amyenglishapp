@@ -40,7 +40,7 @@ ok(/_gid\('sentg', mi, si\);\s*\r?\n\s*this\._gateReset\(gid\)/.test(appSrc),
    '④ 阅读逐句跟读屏');
 ok(/_gid\('contg', mi\);\s*\r?\n\s*this\._gateReset\(cgid\)/.test(appSrc),
    '⑤ 单词连读屏');
-ok(/_gid\('wrg', mi, si\);\s*\r?\n\s*\/\/ v186[\s\S]{0,160}if \(!ok\) this\._gateReset\(gid\);/.test(appSrc),
+ok(/_gid\('wrg', mi, si\);\s*\r?\n\s*\/\/\s*v1\d\d[\s\S]{0,160}if \(!ok\) this\._gateReset\(gid\);/.test(appSrc),
    '⑥ 作文跟读列表（已读过的句子不重新上锁）');
 ok(/_gid\('wrep', R\.mi, R\.qi, word\);\s*\r?\n\s*this\._gateReset\(wgid\)/.test(appSrc),
    '⑦ 错词纠错卡');
