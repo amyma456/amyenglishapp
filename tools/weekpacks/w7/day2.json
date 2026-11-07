@@ -1,7 +1,7 @@
 {
  "day_cn": "周三",
  "day_en": "Wednesday",
- "theme_cn": "AI口语 + 高频词汇（皮影戏）+ 阅读理解（沙漠治沙）+ 键盘拼写",
+ "theme_cn": "作文跟读 + AI口语 + Exercise02词汇 + 阅读理解 + 键盘拼写",
  "reading_name": "阅读理解 · 库布其治沙",
  "spell_name": "今天学的词，敲一遍",
  "speaking": [
@@ -108,54 +108,72 @@
  ],
  "vocab": [
   {
-   "word": "shadow",
-   "phonetic": "/ˈʃædəʊ/",
-   "meaning": "影子",
-   "emoji": "🌑",
-   "example_en": "The puppet's shadow moves on the white screen.",
-   "example_cn": "皮影的影子在白幕上移动。",
-   "hint_cn": "灯照过来时，后面黑黑的那一块",
-   "syllables": ["sha", "dow"]
+   "word": "barbecue",
+   "phonetic": "/ˈbɑːbɪkjuː/",
+   "meaning": "烧烤",
+   "emoji": "🍖",
+   "example_en": "A group of us will have a barbecue this weekend.",
+   "example_cn": "我们这群人这周末要去烧烤。",
+   "hint_cn": "户外生火烤肉吃的那种聚会",
+   "syllables": [
+    "bar",
+    "be",
+    "cue"
+   ]
   },
   {
-   "word": "puppet",
-   "phonetic": "/ˈpʌpɪt/",
-   "meaning": "木偶",
-   "emoji": "🎭",
-   "example_en": "The old man made a puppet out of leather.",
-   "example_cn": "老人用皮革做了一只木偶。",
-   "hint_cn": "有人用线或棍子操纵的小人偶",
-   "syllables": ["pup", "pet"]
+   "word": "seaside",
+   "phonetic": "/ˈsiːsaɪd/",
+   "meaning": "海边；海滨",
+   "emoji": "🏖️",
+   "example_en": "I am going to the seaside for a holiday this summer.",
+   "example_cn": "今年夏天我要去海边度假。",
+   "hint_cn": "sea 是大海，大海旁边的度假地",
+   "syllables": [
+    "sea",
+    "side"
+   ]
   },
   {
-   "word": "leather",
-   "phonetic": "/ˈleðə/",
-   "meaning": "皮革",
-   "emoji": "🐄",
-   "example_en": "The puppets are cut from thin leather.",
-   "example_cn": "皮影是用薄皮革剪出来的。",
-   "hint_cn": "用动物皮做成的材料，可以做鞋和皮影",
-   "syllables": ["lea", "ther"]
+   "word": "audience",
+   "phonetic": "/ˈɔːdiəns/",
+   "meaning": "观众",
+   "emoji": "👏",
+   "example_en": "The actors said goodbye to all the audience.",
+   "example_cn": "演员们向所有观众道别。",
+   "hint_cn": "坐在台下看表演的一群人",
+   "syllables": [
+    "au",
+    "di",
+    "ence"
+   ]
   },
   {
-   "word": "screen",
-   "phonetic": "/skriːn/",
-   "meaning": "幕布",
-   "emoji": "🎬",
-   "example_en": "A lamp shines behind the white screen.",
-   "example_cn": "一盏灯在白幕后面照着。",
-   "hint_cn": "演戏时挡在前面的一块大白布",
-   "syllables": ["screen"]
+   "word": "balloon",
+   "phonetic": "/bəˈluːn/",
+   "meaning": "气球",
+   "emoji": "🎈",
+   "example_en": "The little boy bought a red balloon.",
+   "example_cn": "小男孩买了一个红气球。",
+   "hint_cn": "圆圆的、吹足气会飞上天的球",
+   "syllables": [
+    "bal",
+    "loon"
+   ]
   },
   {
-   "word": "perform",
-   "phonetic": "/pəˈfɔːm/",
-   "meaning": "表演",
-   "emoji": "🎪",
-   "example_en": "Two artists will perform a puppet show for us.",
-   "example_cn": "两位艺人要为我们表演一场皮影戏。",
-   "hint_cn": "在观众面前唱歌、跳舞或者演戏",
-   "syllables": ["per", "form"]
+   "word": "basketball",
+   "phonetic": "/ˈbɑːskɪtbɔːl/",
+   "meaning": "篮球",
+   "emoji": "🏀",
+   "example_en": "Yao Ming is an excellent Chinese basketball player.",
+   "example_cn": "姚明是一位出色的中国篮球运动员。",
+   "hint_cn": "basket 是篮子，往篮里投的球",
+   "syllables": [
+    "bas",
+    "ket",
+    "ball"
+   ]
   }
  ],
  "reading": {
@@ -164,50 +182,69 @@
   "questions": [
    {
     "question": "Where is the Kubuqi desert?",
-    "options": ["In Inner Mongolia", "In Guangdong", "On an island", "Near Shanghai"],
+    "options": [
+     "In Inner Mongolia",
+     "In Guangdong",
+     "On an island",
+     "Near Shanghai"
+    ],
     "answer": 0,
     "explanation_cn": "第一句说 Kubuqi is a large desert in Inner Mongolia（在内蒙古），它靠近黄河。"
    },
    {
     "question": "What did the villagers put on the sand?",
-    "options": ["Dry straw in square grids", "Wet paper in big boxes", "Plastic bags and bottles", "Salt water from the sea"],
+    "options": [
+     "Dry straw in square grids",
+     "Wet paper in big boxes",
+     "Plastic bags and bottles",
+     "Salt water from the sea"
+    ],
     "answer": 0,
     "explanation_cn": "第四句说 villagers put dry straw into square grids（把干稻草铺成方格），草就在方格里长出来。"
    },
    {
     "question": "What happens inside the grids after the straw work?",
-    "options": ["Grass grows back", "The sand turns into stone", "The river moves away", "The desert gets bigger"],
+    "options": [
+     "Grass grows back",
+     "The sand turns into stone",
+     "The river moves away",
+     "The desert gets bigger"
+    ],
     "answer": 0,
     "explanation_cn": "第四句后半说 grass came back inside the grids（方格里长回了草）。"
-   },
-   {
-    "question": "Why does the writer say trains no longer stop there?",
-    "options": ["Because the sandstorms have been stopped", "Because the trains are faster now", "Because the station is closed", "Because nobody takes the train"],
-    "answer": 0,
-    "explanation_cn": "最后一句说火车不再因沙尘暴停下，说明前面的固沙让沙尘暴少了，是治沙的效果。"
    }
   ]
  },
  "spell": [
   {
-   "question": "影子：s_____ [填完整单词]",
-   "answer": "shadow",
-   "explanation_cn": "shadow 读 /ˈʃædəʊ/，中间是 dow，不要写成 shaddow。"
+   "question": "烧烤：b_______ [填完整单词]",
+   "answer": "barbecue",
+   "explanation_cn": "barbecue 读 /ˈbɑːbɪkjuː/，重音在最前，口语里常简写成 BBQ。"
   },
   {
-   "question": "皮革：l______ [填完整单词]",
-   "answer": "leather",
-   "explanation_cn": "leather 中间是 ea，结尾是 ther，读 /ˈleðə/。"
+   "question": "观众：a_______ [填完整单词]",
+   "answer": "audience",
+   "explanation_cn": "audience 读 /ˈɔːdiəns/，开头 au 读 /ɔː/，集合名词「观众们」。"
   },
   {
-   "question": "幕布：s______ [填完整单词]",
-   "answer": "screen",
-   "explanation_cn": "screen 里有 ee，读 /skriːn/，开头是 scr 三个辅音。"
-  },
-  {
-   "question": "表演：p______ [填完整单词]",
-   "answer": "perform",
-   "explanation_cn": "perform = per + form，重音在第二音节 /pəˈfɔːm/，名词是 performance。"
+   "question": "气球：b______ [填完整单词]",
+   "answer": "balloon",
+   "explanation_cn": "balloon 有两个 o，结尾双 l：bal + loon。"
   }
- ]
+ ],
+ "writing_drill": {
+  "name_cn": "作文跟读 · 背诵",
+  "title": "第 6 句 · 结尾 + 全文回顾开头",
+  "focus_cn": "See you tomorrow! 读出开心的语气，结尾署名 Tom",
+  "sentences": [
+   {
+    "en": "See you tomorrow! Tom",
+    "cn": "明天见！汤姆"
+   },
+   {
+    "en": "Dear Lucy, I am so happy to go shopping with you tomorrow.",
+    "cn": "亲爱的Lucy，明天能和你一起去购物我太开心了。"
+   }
+  ]
+ }
 }

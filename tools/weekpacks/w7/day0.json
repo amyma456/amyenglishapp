@@ -1,7 +1,7 @@
 {
  "day_cn": "周一",
  "day_en": "Monday",
- "theme_cn": "AI口语 + 高频词汇（京杭大运河）+ 阅读理解 + 键盘拼写",
+ "theme_cn": "作文跟读 + AI口语 + Exercise02词汇 + 阅读理解 + 键盘拼写",
  "reading_name": "阅读理解 · 京杭大运河",
  "spell_name": "今天学的词，敲一遍",
  "speaking": [
@@ -108,54 +108,71 @@
  ],
  "vocab": [
   {
-   "word": "canal",
-   "phonetic": "/kəˈnæl/",
-   "meaning": "运河",
-   "emoji": "🚢",
-   "example_en": "Boats still travel along the Grand Canal today.",
-   "example_cn": "今天船队仍然沿着京杭大运河航行。",
-   "hint_cn": "人工挖出来、能让船走的大水道",
-   "syllables": ["ca", "nal"]
+   "word": "bedroom",
+   "phonetic": "/ˈbedruːm/",
+   "meaning": "卧室",
+   "emoji": "🛏️",
+   "example_en": "There is a big bed in my bedroom.",
+   "example_cn": "我的卧室里有一张大床。",
+   "hint_cn": "bed 是床，睡觉用的那间房",
+   "syllables": [
+    "bed",
+    "room"
+   ]
   },
   {
-   "word": "dynasty",
-   "phonetic": "/ˈdɪnəsti/",
-   "meaning": "朝代",
-   "emoji": "🏯",
-   "example_en": "People began to dig the canal in the Sui Dynasty.",
-   "example_cn": "人们在隋朝开始挖这条运河。",
-   "hint_cn": "古代一个家族连续做皇帝的那几百年",
-   "syllables": ["dy", "nas", "ty"]
+   "word": "bathroom",
+   "phonetic": "/ˈbɑːθruːm/",
+   "meaning": "浴室",
+   "emoji": "🛁",
+   "example_en": "He takes a shower in the bathroom every morning.",
+   "example_cn": "他每天早上在浴室里洗澡。",
+   "hint_cn": "bath 是洗澡，洗澡用的那间房",
+   "syllables": [
+    "bath",
+    "room"
+   ]
   },
   {
-   "word": "transport",
-   "phonetic": "/ˈtrænspɔːt/",
-   "meaning": "运输",
-   "emoji": "🚚",
-   "example_en": "The canal helped transport rice to the north.",
-   "example_cn": "这条运河帮助把大米运到北方。",
-   "hint_cn": "把人和货物从一个地方运到另一个地方",
-   "syllables": ["trans", "port"]
+   "word": "assistant",
+   "phonetic": "/əˈsɪstənt/",
+   "meaning": "助手；店员",
+   "emoji": "🧑‍💼",
+   "example_en": "The shop assistant helped me find the right shoes.",
+   "example_cn": "店员帮我找到了合适的鞋子。",
+   "hint_cn": "assist 是帮忙，店里帮你的那个人",
+   "syllables": [
+    "as",
+    "sis",
+    "tant"
+   ]
   },
   {
-   "word": "length",
-   "phonetic": "/leŋθ/",
-   "meaning": "长度",
-   "emoji": "📏",
-   "example_en": "The length of the canal is about 1,800 kilometres.",
-   "example_cn": "这条运河的长度大约是一千八百公里。",
-   "hint_cn": "从一头到另一头有多长",
-   "syllables": ["length"]
+   "word": "article",
+   "phonetic": "/ˈɑːtɪkl/",
+   "meaning": "文章",
+   "emoji": "📰",
+   "example_en": "I read an article about pandas in the newspaper.",
+   "example_cn": "我在报纸上读了一篇关于熊猫的文章。",
+   "hint_cn": "报纸或杂志上的一篇文字",
+   "syllables": [
+    "ar",
+    "ti",
+    "cle"
+   ]
   },
   {
-   "word": "engineer",
-   "phonetic": "/ˌendʒɪˈnɪə/",
-   "meaning": "工程师",
-   "emoji": "👷",
-   "example_en": "An engineer showed us how the water gate works.",
-   "example_cn": "一位工程师给我们讲了船闸是怎么工作的。",
-   "hint_cn": "设计桥梁、机器和水闸的人",
-   "syllables": ["en", "gi", "neer"]
+   "word": "arrow",
+   "phonetic": "/ˈærəʊ/",
+   "meaning": "箭",
+   "emoji": "🏹",
+   "example_en": "The hunter hit the target with one arrow.",
+   "example_cn": "他拉开弓，一击就命中了靶心。",
+   "hint_cn": "一头尖、能射出去的细棍",
+   "syllables": [
+    "ar",
+    "row"
+   ]
   }
  ],
  "reading": {
@@ -164,50 +181,69 @@
   "questions": [
    {
     "question": "How long is the Grand Canal?",
-    "options": ["About 1,800 kilometres", "About 800 kilometres", "About 18,000 kilometres", "About 180 kilometres"],
+    "options": [
+     "About 1,800 kilometres",
+     "About 800 kilometres",
+     "About 18,000 kilometres",
+     "About 180 kilometres"
+    ],
     "answer": 0,
     "explanation_cn": "第二句直接说 It is about 1,800 kilometres long（大约一千八百公里）。"
    },
    {
     "question": "What did boats carry along the canal in the old days?",
-    "options": ["Rice, silk and salt", "Coal and wood", "Cars and bikes", "Books and chairs"],
+    "options": [
+     "Rice, silk and salt",
+     "Coal and wood",
+     "Cars and bikes",
+     "Books and chairs"
+    ],
     "answer": 0,
     "explanation_cn": "第四句写 boats carried rice, silk and salt（大米、丝绸和盐），其他三项文中没提。"
    },
    {
     "question": "Where did the writer's class go last spring?",
-    "options": ["To the canal museum in Hangzhou", "To the Great Wall in Beijing", "To a science museum", "To the seaside"],
+    "options": [
+     "To the canal museum in Hangzhou",
+     "To the Great Wall in Beijing",
+     "To a science museum",
+     "To the seaside"
+    ],
     "answer": 0,
     "explanation_cn": "最后一句说 my class went to the canal museum in Hangzhou（去了杭州的运河博物馆）。"
-   },
-   {
-    "question": "The word 'dig' in the passage means ___.",
-    "options": ["to make a hole or a way in the ground", "to sail a boat on a river", "to build a high wall", "to clean the water"],
-    "answer": 0,
-    "explanation_cn": "dig 是「挖」，挖运河就是在地下开出一条水道，所以选 A。"
    }
   ]
  },
  "spell": [
   {
-   "question": "运河：c____ [填完整单词]",
-   "answer": "canal",
-   "explanation_cn": "canal 读 /kəˈnæl/，重音在第二音节，中间只有 n、a、l 三个字母。"
+   "question": "卧室：b_______ [填完整单词]",
+   "answer": "bedroom",
+   "explanation_cn": "bedroom = bed（床）+ room（房间），睡觉的房间。"
   },
   {
-   "question": "朝代：d______ [填完整单词]",
-   "answer": "dynasty",
-   "explanation_cn": "dynasty 中间的 y 读 /ɪ/，结尾是 sty，读 /ˈdɪnəsti/。"
+   "question": "文章：a______ [填完整单词]",
+   "answer": "article",
+   "explanation_cn": "article 读 /ˈɑːtɪkl/，重音在最前面，结尾是 cle。"
   },
   {
-   "question": "运输：t________ [填完整单词]",
-   "answer": "transport",
-   "explanation_cn": "transport = trans（穿过）+ port（带、运），读 /ˈtrænspɔːt/。"
-  },
-  {
-   "question": "工程师：e______ [填完整单词]",
-   "answer": "engineer",
-   "explanation_cn": "engineer 里 engine（发动机）后面加 eer，重音在最后：/ˌendʒɪˈnɪə/。"
+   "question": "箭；箭头：a____ [填完整单词]",
+   "answer": "arrow",
+   "explanation_cn": "arrow 读 /ˈærəʊ/，开头 ar-，结尾 -row，和「行/排」的 row 同音。"
   }
- ]
+ ],
+ "writing_drill": {
+  "name_cn": "作文跟读 · 背诵",
+  "title": "第 1~2 句 · 开头与邀约",
+  "focus_cn": "先把 Dear Lucy 称呼和第一句读顺，再接 We can meet at your home.",
+  "sentences": [
+   {
+    "en": "Dear Lucy, I am so happy to go shopping with you tomorrow.",
+    "cn": "亲爱的Lucy，明天能和你一起去购物我太开心了。"
+   },
+   {
+    "en": "We can meet at your home.",
+    "cn": "我们可以在你家碰面。"
+   }
+  ]
+ }
 }

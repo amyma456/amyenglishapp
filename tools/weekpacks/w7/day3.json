@@ -1,7 +1,7 @@
 {
  "day_cn": "周四",
  "day_en": "Thursday",
- "theme_cn": "阅读理解（城市绿道）+ 语法（比较级）+ 听力 + 键盘拼写",
+ "theme_cn": "作文跟读 + 阅读理解 + 合成代词语法 + 听力 + 键盘拼写",
  "reading_name": "阅读理解 · 城市绿道",
  "grammar_name": "形容词比较级",
  "spell_name": "阅读里的重点词，敲一遍",
@@ -11,90 +11,99 @@
   "questions": [
    {
     "question": "What was there before the greenway was built?",
-    "options": ["An old railway line", "A big shopping mall", "A football field", "A swimming pool"],
+    "options": [
+     "An old railway line",
+     "A big shopping mall",
+     "A football field",
+     "A swimming pool"
+    ],
     "answer": 0,
     "explanation_cn": "第一句说 opened a new greenway along an old railway line（沿着旧铁路线修绿道）。"
    },
    {
     "question": "Who can use the greenway?",
-    "options": ["People on foot and people on bikes", "People in cars", "Only children under ten", "Only bus drivers"],
+    "options": [
+     "People on foot and people on bikes",
+     "People in cars",
+     "Only children under ten",
+     "Only bus drivers"
+    ],
     "answer": 0,
     "explanation_cn": "第二、三句说 no cars are allowed，并分成 walking 和 bikes 两条道。"
    },
    {
     "question": "Where do the lamps get their power?",
-    "options": ["From the sun", "From the wind", "From the river", "From the bikes"],
+    "options": [
+     "From the sun",
+     "From the wind",
+     "From the river",
+     "From the bikes"
+    ],
     "answer": 0,
     "explanation_cn": "第四句说 the lamps there get power from the sun（靠太阳发电）。"
-   },
-   {
-    "question": "How can people get to the greenway at the weekend?",
-    "options": ["By a small bus", "By plane", "By boat", "By train"],
-    "answer": 0,
-    "explanation_cn": "最后一句说 a small bus comes to the gate, so people do not need to drive。"
    }
   ]
  },
  "grammar": [
   {
-   "question": "用括号里形容词的正确形式填空：This greenway is ___ (long) than the one near my home.",
+   "question": "用括号里代词的适当形式填空：Are these ___ (they) bags?",
    "type": "fill",
-   "answer": "longer",
-   "explanation_cn": "有 than 就是比较级；long 是短词，直接加 er → longer。"
+   "answer": "their",
+   "explanation_cn": "bags 是名词，前面要用形容词性物主代词 their（他们的）。"
   },
   {
-   "question": "用括号里形容词的正确形式填空：Bikes are ___ (fast) than walking in the park.",
+   "question": "用括号里代词的适当形式填空：Hurry up, they are waiting for ___ (we).",
    "type": "fill",
-   "answer": "faster",
-   "explanation_cn": "than 前面用比较级，fast 加 er → faster。"
+   "answer": "us",
+   "explanation_cn": "介词 for 后面用宾格，we 的宾格是 us：waiting for us 在等我们。"
   },
   {
-   "question": "The new park near the canal is much ___ than the old one.",
-   "type": "choice",
-   "options": ["bigger", "big", "biggest", "more big"],
-   "answer": 0,
-   "explanation_cn": "much 修饰比较级；big 是重读闭音节，要双写 g 再加 er → bigger。"
-  },
-  {
-   "question": "Walking is ___ than driving in the city centre at eight in the morning.",
-   "type": "choice",
-   "options": ["slower", "slow", "slowest", "more slow"],
-   "answer": 0,
-   "explanation_cn": "句中有 than，要用比较级 slower；双音节词 slow 直接加 er。"
-  },
-  {
-   "question": "Which is ___, the greenway or the old road?",
-   "type": "choice",
-   "options": ["longer", "long", "longest", "the longest"],
-   "answer": 0,
-   "explanation_cn": "两者比较用比较级 longer；the longest 是三者以上最高级。"
-  },
-  {
-   "question": "用括号里形容词的正确形式填空：These lamps are ___ (bright) than the old ones.",
+   "question": "用括号里代词的适当形式填空：The little baby ate food by ___ (he).",
    "type": "fill",
-   "answer": "brighter",
-   "explanation_cn": "than 提示比较级，bright 加 er → brighter，注意中间 gh 不发音。"
+   "answer": "himself",
+   "explanation_cn": "by oneself 是固定搭配「独自地」，by himself = 他自己一个人吃。"
+  },
+  {
+   "question": "用括号里代词的适当形式填空：Your classroom is bigger than ___ (our).",
+   "type": "fill",
+   "answer": "ours",
+   "explanation_cn": "比较的是「你们的教室」和「我们的教室」，后面没有名词，用名词性物主代词 ours。"
+  },
+  {
+   "question": "选词填空（anyone / anybody / anything / anywhere / everyone / everything / nothing / someone / somewhere）：There is not ___ in the classroom, because the students are having a PE class.",
+   "type": "fill",
+   "answer": "anyone",
+   "explanation_cn": "这是一个否定句（There is not），否定句和疑问句里用 any- 开头的词：anyone 任何人。"
+  },
+  {
+   "question": "选词填空（anyone / anybody / anything / anywhere / everyone / everything / nothing / someone / somewhere）：I have ___ to do, because my mother has done everything for me.",
+   "type": "fill",
+   "answer": "nothing",
+   "explanation_cn": "妈妈把一切都做完了 → 我没有事情要做，用否定意思的 nothing。"
   }
  ],
  "listening": [
   {
    "question": "Listen to the dialogue. How long is the greenway?",
    "audio_text": "Boy: Mum, how long is this greenway? Mum: It is eleven kilometres long, so we can only walk six today. Boy: OK, let's go to the bridge first.",
-   "options": ["Eleven kilometres", "Six kilometres", "Seventeen kilometres", "One kilometre"],
+   "options": [
+    "Eleven kilometres",
+    "Six kilometres",
+    "Seventeen kilometres",
+    "One kilometre"
+   ],
    "answer": 0,
    "explanation_cn": "妈妈说 It is eleven kilometres long（十一公里）；六公里是今天打算走的距离。"
   },
   {
-   "question": "Listen to the dialogue. What must keep out of the greenway?",
-   "audio_text": "Girl: Dad, can I ride my bike here? Dad: Yes, you can, but cars and motorbikes must keep out. Girl: Great, the bike line looks new.",
-   "options": ["Cars and motorbikes", "Bikes", "People who walk", "Dogs on a lead"],
-   "answer": 0,
-   "explanation_cn": "爸爸说 cars and motorbikes must keep out（汽车和摩托车不许进），自行车可以骑。"
-  },
-  {
    "question": "Which picture matches the sentence you hear?",
    "audio_text": "My father and I are riding our bikes along the greenway after dinner.",
-   "options": ["🚲", "🚗", "🚌", "✈️"],
+   "options": [
+    "🚲",
+    "🚗",
+    "🚌",
+    "✈️"
+   ],
    "picture_options": true,
    "answer": 0,
    "explanation_cn": "句子里说的是 riding our bikes（骑自行车），所以选 🚲。"
@@ -109,24 +118,38 @@
  ],
  "spell": [
   {
-   "question": "绿道：g_______ [填完整单词]",
-   "answer": "greenway",
-   "explanation_cn": "green + way 合成一个词 = 绿道，中间不空格。"
+   "question": "任何地方：a_______ [填完整单词]",
+   "answer": "anywhere",
+   "explanation_cn": "any + where；否定句和疑问句里用 any- 开头的词。"
   },
   {
-   "question": "公里：k________ [填完整单词]",
-   "answer": "kilometre",
-   "explanation_cn": "kilometre = kilo（千）+ metre（米），英式拼写结尾是 re。"
+   "question": "每个人：e________ [填完整单词]",
+   "answer": "everyone",
+   "explanation_cn": "every + one，写成一个词；every body 合成 everybody 也是一词。"
   },
   {
-   "question": "花：f______ [填完整单词]",
-   "answer": "flower",
-   "explanation_cn": "flower 中间是 ow，读 /ˈflaʊə/，别和 floor（地板）混。"
-  },
-  {
-   "question": "铁路：r_______ [填完整单词]",
-   "answer": "railway",
-   "explanation_cn": "railway = rail（铁轨）+ way（路），读 /ˈreɪlweɪ/。"
+   "question": "每件事：e_________ [填完整单词]",
+   "answer": "everything",
+   "explanation_cn": "every + thing；thing 是「事情」，everything = 所有事。"
   }
- ]
+ ],
+ "writing_drill": {
+  "name_cn": "作文跟读 · 背诵",
+  "title": "第 2~4 句 · 中段复习",
+  "focus_cn": "meet at your home 里的 at 不要读漏，o'clock 注意吞音",
+  "sentences": [
+   {
+    "en": "We can meet at your home.",
+    "cn": "我们可以在你家碰面。"
+   },
+   {
+    "en": "Is 10 o'clock OK?",
+    "cn": "10点钟行吗？"
+   },
+   {
+    "en": "Then we can take a taxi.",
+    "cn": "然后我们可以打出租车去。"
+   }
+  ]
+ }
 }

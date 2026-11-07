@@ -1,7 +1,7 @@
 {
  "day_cn": "周六",
  "day_en": "Saturday",
- "theme_cn": "AI口语 + 高频词汇（沙漠治沙）+ 阅读理解（城市地铁）+ 键盘拼写",
+ "theme_cn": "作文跟读 + AI口语 + Exercise02词汇 + 阅读理解 + 键盘拼写",
  "reading_name": "阅读理解 · 上海地铁",
  "spell_name": "今天学的词，敲一遍",
  "speaking": [
@@ -108,54 +108,71 @@
  ],
  "vocab": [
   {
-   "word": "sand",
-   "phonetic": "/sænd/",
-   "meaning": "沙子",
-   "emoji": "🏜️",
-   "example_en": "The wind blew the sand over the farms.",
-   "example_cn": "风把沙子吹到了农田上。",
-   "hint_cn": "沙漠和海边那种细细的黄色小颗粒",
-   "syllables": ["sand"]
+   "word": "around",
+   "phonetic": "/əˈraʊnd/",
+   "meaning": "在…周围；到处",
+   "emoji": "🔄",
+   "example_en": "Beijing Roast Duck is famous around the world.",
+   "example_cn": "北京烤鸭闻名全世界。",
+   "hint_cn": "a + round，绕着圈把东西围起来",
+   "syllables": [
+    "a",
+    "round"
+   ]
   },
   {
-   "word": "straw",
-   "phonetic": "/strɔː/",
-   "meaning": "稻草",
-   "emoji": "🌾",
-   "example_en": "Villagers pressed dry straw into the sand in squares.",
-   "example_cn": "村民们把干稻草一格一格压进沙里。",
-   "hint_cn": "稻子收割后剩下的干秆子",
-   "syllables": ["straw"]
+   "word": "lovely",
+   "phonetic": "/ˈlʌvli/",
+   "meaning": "可爱的；漂亮的",
+   "emoji": "🌸",
+   "example_en": "My mother bought me a lovely hat as my birthday gift.",
+   "example_cn": "妈妈买了一顶漂亮的帽子作为我的生日礼物。",
+   "hint_cn": "love + ly，让人一见就喜欢的",
+   "syllables": [
+    "love",
+    "ly"
+   ]
   },
   {
-   "word": "grid",
-   "phonetic": "/ɡrɪd/",
-   "meaning": "方格",
-   "emoji": "🔲",
-   "example_en": "Grass grows well inside each straw grid.",
-   "example_cn": "草在每个稻草方格里长得很好。",
-   "hint_cn": "用线条画出来的一格一格的小方块",
-   "syllables": ["grid"]
+   "word": "become",
+   "phonetic": "/bɪˈkʌm/",
+   "meaning": "变成；成为",
+   "emoji": "🦋",
+   "example_en": "The music teacher wants his students to become musicians.",
+   "example_cn": "音乐老师希望他的学生们成为音乐家。",
+   "hint_cn": "be + come，慢慢会长成那个样子",
+   "syllables": [
+    "be",
+    "come"
+   ]
   },
   {
-   "word": "survive",
-   "phonetic": "/səˈvaɪv/",
-   "meaning": "存活",
-   "emoji": "🌱",
-   "example_en": "Young trees can survive in the desert with little water.",
-   "example_cn": "小树在沙漠里靠很少的水也能存活。",
-   "hint_cn": "在很难的环境里还能活着",
-   "syllables": ["sur", "vive"]
+   "word": "appointment",
+   "phonetic": "/əˈpɔɪntmənt/",
+   "meaning": "约定；预约",
+   "emoji": "📅",
+   "example_en": "I made an appointment with the doctor at three.",
+   "example_cn": "我和医生约好了三点见面。",
+   "hint_cn": "和别人说好几点碰面的那个约",
+   "syllables": [
+    "ap",
+    "point",
+    "ment"
+   ]
   },
   {
-   "word": "grass",
-   "phonetic": "/ɡrɑːs/",
-   "meaning": "小草",
-   "emoji": "🌿",
-   "example_en": "Small grass is growing again in the desert.",
-   "example_cn": "沙漠里的小草又长出来了。",
-   "hint_cn": "地上短短绿绿的植物，羊爱吃",
-   "syllables": ["grass"]
+   "word": "area",
+   "phonetic": "/ˈeəriə/",
+   "meaning": "地区；区域",
+   "emoji": "🗺️",
+   "example_en": "Uncle Lee lives in a quiet rural area.",
+   "example_cn": "李叔叔住在一个安静的乡村地区。",
+   "hint_cn": "地图上圈出来的一片地方",
+   "syllables": [
+    "a",
+    "re",
+    "a"
+   ]
   }
  ],
  "reading": {
@@ -164,50 +181,69 @@
   "questions": [
    {
     "question": "How many subway lines run under Shanghai?",
-    "options": ["More than twenty", "About three", "Only one", "Fifty"],
+    "options": [
+     "More than twenty",
+     "About three",
+     "Only one",
+     "Fifty"
+    ],
     "answer": 0,
     "explanation_cn": "第一句说 more than twenty lines run under the city（二十多条线路）。"
    },
    {
     "question": "When did the first subway line open?",
-    "options": ["In 1993", "In 2003", "In 1983", "In 2019"],
+    "options": [
+     "In 1993",
+     "In 2003",
+     "In 1983",
+     "In 2019"
+    ],
     "answer": 0,
     "explanation_cn": "第二句说 The first line opened in 1993（一九九三年开通）。"
    },
    {
     "question": "Where should people wait at the station?",
-    "options": ["Behind the yellow line", "On the train", "In the ticket office", "At the gate"],
+    "options": [
+     "Behind the yellow line",
+     "On the train",
+     "In the ticket office",
+     "At the gate"
+    ],
     "answer": 0,
     "explanation_cn": "第三句说 wait behind the yellow line（在黄线后面等车）。"
-   },
-   {
-    "question": "Why do people never wait long for a train?",
-    "options": ["Trains come every two or three minutes", "The station is very small", "There are no other people", "The trains never stop"],
-    "answer": 0,
-    "explanation_cn": "第四句说 Trains come every two or three minutes（每两三分钟就有一趟）。"
    }
   ]
  },
  "spell": [
   {
-   "question": "沙子：s___ [填完整单词]",
-   "answer": "sand",
-   "explanation_cn": "sand 读 /sænd/，中间的 a 是梅花音，结尾是 nd。"
+   "question": "在周围：a_____ [填完整单词]",
+   "answer": "around",
+   "explanation_cn": "a + round；famous around the world 闻名世界。"
   },
   {
-   "question": "稻草：s____ [填完整单词]",
-   "answer": "straw",
-   "explanation_cn": "straw 开头是 str 三个辅音，结尾是 aw，读 /strɔː/。"
+   "question": "可爱的：l____ [填完整单词]",
+   "answer": "lovely",
+   "explanation_cn": "love 去 e 加 ly；lovely = beautiful 的近义词。"
   },
   {
-   "question": "方格：g___ [填完整单词]",
-   "answer": "grid",
-   "explanation_cn": "grid 读 /ɡrɪd/，中间是短音 /ɪ/，别写成 greed。"
-  },
-  {
-   "question": "存活：s_____ [填完整单词]",
-   "answer": "survive",
-   "explanation_cn": "survive = sur + vive，结尾的 v 要发出声音，读 /səˈvaɪv/。"
+   "question": "变成：b_____ [填完整单词]",
+   "answer": "become",
+   "explanation_cn": "be + come；become a musician 成为音乐家。"
   }
- ]
+ ],
+ "writing_drill": {
+  "name_cn": "作文跟读 · 背诵",
+  "title": "第 1、3 句 · 开头复习",
+  "focus_cn": "全文背一周了，检查 Dear Lucy 开头和 Is 10 o'clock OK? 还记不记得",
+  "sentences": [
+   {
+    "en": "Dear Lucy, I am so happy to go shopping with you tomorrow.",
+    "cn": "亲爱的Lucy，明天能和你一起去购物我太开心了。"
+   },
+   {
+    "en": "Is 10 o'clock OK?",
+    "cn": "10点钟行吗？"
+   }
+  ]
+ }
 }

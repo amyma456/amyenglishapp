@@ -1,7 +1,7 @@
 {
  "day_cn": "周二",
  "day_en": "Tuesday",
- "theme_cn": "阅读理解（皮影戏）+ 语法（一般过去时）+ 听力 + 键盘拼写",
+ "theme_cn": "作文跟读 + 阅读理解 + 代词语法 + 听力 + 键盘拼写",
  "reading_name": "阅读理解 · 皮影戏",
  "grammar_name": "一般过去时（1）",
  "spell_name": "阅读里的重点词，敲一遍",
@@ -11,90 +11,99 @@
   "questions": [
    {
     "question": "What are the puppets made of?",
-    "options": ["Thin leather", "Thin paper", "White cloth", "Bamboo"],
+    "options": [
+     "Thin leather",
+     "Thin paper",
+     "White cloth",
+     "Bamboo"
+    ],
     "answer": 0,
     "explanation_cn": "第二句说 The puppets are made of thin leather（用薄皮革做的），白布只是幕布（screen）。"
    },
    {
     "question": "What makes the shadows dance on the screen?",
-    "options": ["A lamp behind the screen", "The sun in the morning", "A mirror on the wall", "A computer program"],
+    "options": [
+     "A lamp behind the screen",
+     "The sun in the morning",
+     "A mirror on the wall",
+     "A computer program"
+    ],
     "answer": 0,
     "explanation_cn": "第三句说 Behind a white cloth screen, a lamp shines（幕布后面有一盏灯照着），才有影子。"
    },
    {
     "question": "How many puppets can one puppeteer move at the same time?",
-    "options": ["Three or four", "Only one", "Ten or twelve", "Two hundred"],
+    "options": [
+     "Three or four",
+     "Only one",
+     "Ten or twelve",
+     "Two hundred"
+    ],
     "answer": 0,
     "explanation_cn": "第五句写 One person can move three or four puppets（一个人能操纵三四个皮影）。"
-   },
-   {
-    "question": "What happened to this art in 2011?",
-    "options": ["It became a world treasure", "It was first invented", "It stopped for a year", "It moved to another country"],
-    "answer": 0,
-    "explanation_cn": "最后一句说 In 2011 this art became a world treasure（二零一一年成为世界级珍宝）。"
    }
   ]
  },
  "grammar": [
   {
-   "question": "用括号里动词的过去式填空：Last Sunday I ___ (watch) a shadow puppet show with my dad.",
+   "question": "用括号里代词的适当形式填空：This is ___ (I) mother.",
    "type": "fill",
-   "answer": "watched",
-   "explanation_cn": "Last Sunday 是过去的时间，watch 是规则动词，直接加 ed → watched。"
+   "answer": "my",
+   "explanation_cn": "I 是主格「我」，这里要说「我的」妈妈，用形容词性物主代词 my。"
   },
   {
-   "question": "用括号里动词的过去式填空：The puppeteer ___ (sing) three old stories last night.",
+   "question": "用括号里代词的适当形式填空：Look at these flowers. ___ (them) are beautiful.",
    "type": "fill",
-   "answer": "sang",
-   "explanation_cn": "sing 是不规则动词，过去式是 sang（不是 singed），last night 提示用过去式。"
+   "answer": "they",
+   "explanation_cn": "空里缺的是主语，要用主格；them 是宾格，主格是 they，句首在屏幕上会自动大写，答案敲小写 they 就行。"
   },
   {
-   "question": "___ you see the puppet show last night?",
-   "type": "choice",
-   "options": ["Did", "Do", "Are", "Will"],
-   "answer": 0,
-   "explanation_cn": "last night 是过去时间，一般过去时的疑问句用 Did + 主语 + 动词原形。"
-  },
-  {
-   "question": "The children ___ very excited when the show began.",
-   "type": "choice",
-   "options": ["were", "was", "are", "is"],
-   "answer": 0,
-   "explanation_cn": "主语 the children 是复数，事情发生在过去（began），所以用 were。"
-  },
-  {
-   "question": "My mother ___ me a leather puppet two years ago.",
-   "type": "choice",
-   "options": ["bought", "buys", "buy", "is buying"],
-   "answer": 0,
-   "explanation_cn": "two years ago 是过去时间，buy 的过去式是不规则的 bought。"
-  },
-  {
-   "question": "用括号里动词的过去式填空：We ___ (be) late for the show, so we ran all the way.",
+   "question": "用括号里代词的适当形式填空：Please pass ___ (he) a book to read.",
    "type": "fill",
-   "answer": "were",
-   "explanation_cn": "主语 we 是复数，be 动词的过去式用 were；后半句 ran 也是过去式，时态一致。"
+   "answer": "him",
+   "explanation_cn": "动词 pass 后面的人要用宾格，he 的宾格是 him：pass him a book 递给他一本书。"
+  },
+  {
+   "question": "用括号里代词的适当形式填空：This cat is not ___ (me); it is Lucy's.",
+   "type": "fill",
+   "answer": "mine",
+   "explanation_cn": "后面没有名词，要单独用名词性物主代词 mine = my cat。me 是宾格，不能当「我的」用。"
+  },
+  {
+   "question": "用括号里代词的适当形式填空：You cannot leave him alone; he is too young to stay with ___ (he).",
+   "type": "fill",
+   "answer": "himself",
+   "explanation_cn": "他自己陪他自己 → 反身代词 himself。主语是 he，反身代词用 himself。"
+  },
+  {
+   "question": "用括号里代词的适当形式填空：Miss White is my English teacher; I am ___ (she) student.",
+   "type": "fill",
+   "answer": "her",
+   "explanation_cn": "「她的学生」，名词前面用形容词性物主代词 her。"
   }
  ],
  "listening": [
   {
    "question": "Listen to the dialogue. When does the puppet show start?",
    "audio_text": "Girl: Dad, when does the shadow puppet show start? Dad: It starts at half past seven, so we should leave home at six. Girl: Great, I will finish my homework first.",
-   "options": ["At half past seven", "At six o'clock", "At eight o'clock", "At half past six"],
+   "options": [
+    "At half past seven",
+    "At six o'clock",
+    "At eight o'clock",
+    "At half past six"
+   ],
    "answer": 0,
    "explanation_cn": "爸爸说 It starts at half past seven（七点半开始）；六点是出门的时间，别混。"
   },
   {
-   "question": "Listen to the dialogue. What does the boy think of the puppets?",
-   "audio_text": "Boy: Mum, look at these leather puppets. They are so colourful! Mum: Yes, and the man behind the screen can make them walk and jump. Boy: I want to learn how to do that.",
-   "options": ["They are colourful and wonderful", "They are too expensive", "They are made of paper", "They are very easy to make"],
-   "answer": 0,
-   "explanation_cn": "男孩说 They are so colourful（太鲜艳了），还想学，说明他觉得好看又好玩。"
-  },
-  {
    "question": "Which picture matches the sentence you hear?",
    "audio_text": "The old man is pulling a small stick behind the white screen.",
-   "options": ["🎭", "🥁", "🎻", "🪕"],
+   "options": [
+    "🎭",
+    "🥁",
+    "🎻",
+    "🪕"
+   ],
    "picture_options": true,
    "answer": 0,
    "explanation_cn": "句子里说的是 white screen（白幕）和老人在幕后拉小棍，是皮影戏，所以选 🎭。"
@@ -109,24 +118,38 @@
  ],
  "spell": [
   {
-   "question": "皮影（木偶）：p_____ [填完整单词]",
-   "answer": "puppet",
-   "explanation_cn": "puppet 读 /ˈpʌpɪt/，中间是 pp，结尾是 et，不是 puppit。"
+   "question": "购物：s_______ [填完整单词]",
+   "answer": "shopping",
+   "explanation_cn": "shopping 双写 p 再加 ing：shop → shopping，本周作文第一句就是它。"
   },
   {
-   "question": "灯：l___ [填完整单词]",
-   "answer": "lamp",
-   "explanation_cn": "lamp 读 /læmp/，结尾的 p 要轻声送气，别写成 lam。"
+   "question": "出租车：t___ [填完整单词]",
+   "answer": "taxi",
+   "explanation_cn": "taxi 读 /ˈtæksi/，三个音都很短，take a taxi 打车。"
   },
   {
-   "question": "故事：s____ [填完整单词]",
-   "answer": "story",
-   "explanation_cn": "story 读 /ˈstɔːri/，结尾 y 发 /i/，复数是 stories。"
-  },
-  {
-   "question": "演皮影的人：p________ [填完整单词]",
-   "answer": "puppeteer",
-   "explanation_cn": "puppet + eer = puppeteer，重音在最后：/ˌpʌpɪˈtɪə/。"
+   "question": "他自己的：h_______ [填完整单词]",
+   "answer": "himself",
+   "explanation_cn": "him + self，反身代词；她自己用 herself，我自己用 myself。"
   }
- ]
+ ],
+ "writing_drill": {
+  "name_cn": "作文跟读 · 背诵",
+  "title": "第 3~5 句 · 时间与交通",
+  "focus_cn": "Is 10 o'clock OK? 注意语调上扬；take a taxi 是打车",
+  "sentences": [
+   {
+    "en": "Is 10 o'clock OK?",
+    "cn": "10点钟行吗？"
+   },
+   {
+    "en": "Then we can take a taxi.",
+    "cn": "然后我们可以打出租车去。"
+   },
+   {
+    "en": "I want to buy new football boots and some pairs of socks.",
+    "cn": "我想买新足球鞋和几双袜子。"
+   }
+  ]
+ }
 }
