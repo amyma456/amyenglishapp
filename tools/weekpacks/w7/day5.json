@@ -238,11 +238,15 @@
   "sentences": [
    {
     "en": "Dear Lucy, I am so happy to go shopping with you tomorrow.",
-    "cn": "亲爱的Lucy，明天能和你一起去购物我太开心了。"
+    "cn": "亲爱的Lucy，明天能和你一起去购物我太开心了。",
+    "blank": "shopping",
+    "blank_cn": "购物"
    },
    {
     "en": "Is 10 o'clock OK?",
-    "cn": "10点钟行吗？"
+    "cn": "10点钟行吗？",
+    "blank": "is",
+    "blank_cn": "问句开头的「是」（敲小写就行）"
    }
   ]
  }

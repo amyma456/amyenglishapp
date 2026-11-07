@@ -10796,6 +10796,11 @@ const App = {
     html += '<div class="wr-progress" id="wr-progress-' + mi + '"></div>';
     sents.forEach((s, si) => {
       const ok = !!st.passed[si];
+      // v188：作文跟读每句先挖空再跟读。blank_list[si] 是要填的词，
+      // 填对前这一句只显示 "____"，麦克风按钮也被拦住（_readWritingSentence 里拦）。
+      const blank = (isDrill && m.blank_list) ? String(m.blank_list[si] || '').trim() : '';
+      const blankCn = (m.blank_cn_list && m.blank_cn_list[si]) || '';
+      const blanked = blank ? this._wrBlankDone(m, mi, si) : true;
       // v109 同阅读逐句：句子分成"可点的词"和"独立的听示范按钮"两块 ——
       // 以前整句就是听入口，孩子点单词只会听整句，查不到意思。
       const gid = this._gid('wrg', mi, si);
@@ -10805,10 +10810,23 @@ const App = {
       html += '<div class="wr-item' + (ok ? ' done' : '') + '" id="wr-item-' + mi + '-' + si + '">';
       html += '<div class="wr-sent">'
            + '<span class="wr-no">' + (si + 1) + '</span>'
-           + '<span class="wr-words">' + this._wordSpans(s) + '</span>'
-           + '<span class="wr-flag">' + (ok ? '✅' : '') + '</span>'
+           + '<span class="wr-words">'
+           + (blank && !blanked
+              ? this._escHtml(String(s).replace(new RegExp('\\b' + blank.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'i'), '____'))
+              : this._wordSpans(s))
+           + '</span>'
+           + '<span class="wr-flag">' + (ok ? '✅' : (blank && !blanked ? '✏️' : '')) + '</span>'
            + this._gateListenHtml(gid, s, '🔊 听这句')
            + '</div>';
+      if (blank && !blanked) {
+        html += '<div class="wr-blank-row">'
+             + '<input id="wr-blank-in-' + mi + '-' + si + '" class="wr-blank-in" autocomplete="off"'
+             + ' placeholder="填空提示：' + this._escHtml(blankCn || '听 🔊 按发音填') + '"'
+             + ' onkeydown="if(event.key===\'Enter\'){App._wrBlankCheck(' + mi + ',' + si + ');}">'
+             + '<button type="button" class="wr-blank-btn" onclick="App._wrBlankCheck(' + mi + ',' + si + ')">✅ 填好了</button>'
+             + '</div>'
+             + '<div id="wr-blank-msg-' + mi + '-' + si + '" class="fs-12 text-sub">先把空里的词填对，才能跟读这一句。</div>';
+      }
       html += '<button class="word-read-btn hold-target gate-locked" data-gate="' + gid + '"'
            + ' id="wr-btn-' + mi + '-' + si + '"'
            + ' onpointerdown="App._readWritingSentence(event,' + mi + ',' + si + ')"'
@@ -10822,6 +10840,52 @@ const App = {
     // 渲染完把进度条和门禁状态按已有记录补一次
     setTimeout(() => this._refreshWritingRead(mi, m), 0);
     return html;
+  },
+
+  // ===== v188：作文跟读的挖空关 =====
+  // 家长 2026-11-07：「每天都得有专门的句子的练习，可以挖空啊，可以练跟读啊」。
+  // 每句先看中文提示（或点 🔊 听发音）把空里的词敲对，这一句的麦克风才放行。
+  // 填对记进本机（和跟读进度同一个 store），刷新/重进不用重填。
+  _wrBlankCheck(mi, si) {
+    const day = HOMEWORK_DATA[this.state.currentDay];
+    const m = day && day.modules && day.modules[mi];
+    const ans = m && m.blank_list && String(m.blank_list[si] || '').trim();
+    if (!ans) return;
+    const inp = document.getElementById('wr-blank-in-' + mi + '-' + si);
+    const msg = document.getElementById('wr-blank-msg-' + mi + '-' + si);
+    const norm = (x) => String(x || '').trim().toLowerCase().replace(/[^a-z']/g, '');
+    const val = norm(inp && inp.value);
+    const want = norm(ans);
+    if (val === want) {
+      const st = this._writingReadState(mi);
+      if (!st.blanked) st.blanked = {};
+      st.blanked[si] = true;
+      this._saveWritingRead();
+      // 原地把这句刷成完整句：可点词 + 正常跟读按钮
+      const s = this._writingSentences(m)[si] || '';
+      const words = document.querySelector('#wr-item-' + mi + '-' + si + ' .wr-words');
+      if (words) words.innerHTML = this._wordSpans(s);
+      const row = document.querySelector('#wr-item-' + mi + '-' + si + ' .wr-blank-row');
+      if (row) row.remove();
+      if (msg) msg.innerHTML = '✅ 填对了：<b>' + this._escHtml(ans) + '</b>，现在点麦克风跟读这句。';
+      const item = document.getElementById('wr-item-' + mi + '-' + si);
+      if (item && item.scrollIntoView) {
+        try { item.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
+      }
+    } else if (msg) {
+      const cn = (m.blank_cn_list && m.blank_cn_list[si]) || '';
+      msg.textContent = '不对哦，再想想' + (cn ? '（提示：' + cn + '）' : '') + '。拿不准就点上面的 🔊 听发音。';
+      if (inp) { inp.focus(); inp.select && inp.select(); }
+    }
+  },
+  // 这句的挖空填了没有（没有挖空 = 视为已填；这句跟读已过关的也视为已填 ——
+  // 升级前读过的孩子不必回头补填）。
+  _wrBlankDone(m, mi, si) {
+    const blank = (m.type === 'writing_drill' && m.blank_list) ? String(m.blank_list[si] || '').trim() : '';
+    if (!blank) return true;
+    const st = this._writingReadState(mi);
+    if (st.passed && st.passed[si]) return true;
+    return !!(st.blanked && st.blanked[si]);
   },
 
   // ===== v177：系统带读一遍 =====
@@ -10881,6 +10945,20 @@ const App = {
 
   _readWritingSentence(ev, mi, si) {
     const self = this;
+    const day0 = HOMEWORK_DATA[this.state.currentDay];
+    const m0 = day0 && day0.modules && day0.modules[mi];
+    // v188：先挖空后跟读 —— 空没填对，麦克风不放行。
+    if (m0 && !this._wrBlankDone(m0, mi, si)) {
+      const msg = document.getElementById('wr-blank-msg-' + mi + '-' + si);
+      if (msg) {
+        msg.textContent = '先把空里的词填对（看中文提示，或点 🔊 听发音），再跟读这句。';
+        msg.classList.add('wr-blank-warn');
+        setTimeout(function () { msg.classList.remove('wr-blank-warn'); }, 1200);
+      }
+      const inp = document.getElementById('wr-blank-in-' + mi + '-' + si);
+      if (inp) { inp.focus(); }
+      return;
+    }
     const gid = this._gid('wrg', mi, si);
     if (!this._gateOpen(gid)) { this._gateNudge(gid); return; }   // 先听再读
     Api.warmup();                              // 手指按下就把连接热好
@@ -11044,8 +11122,14 @@ const App = {
       html += '<div class="fs-12 text-sub" style="margin-bottom:6px">' + this._escHtml(m.focus_cn) + '</div>';
     }
     sents.forEach((s, i) => {
-      html += '<div style="margin:6px 0;line-height:1.6;font-size:15px">' + (i + 1) + '. ' + this._escHtml(s)
-           + (cn[i] ? '<div class="fs-12 text-sub">' + this._escHtml(cn[i]) + '</div>' : '') + '</div>';
+      const bl = (m.blank_list && String(m.blank_list[i] || '').trim()) || '';
+      const bc = (m.blank_cn_list && m.blank_cn_list[i]) || '';
+      html += '<div style="margin:6px 0;line-height:1.6;font-size:15px">' + (i + 1) + '. '
+           + (bl ? this._escHtml(String(s).replace(new RegExp('\\b' + bl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'i'), '____（' + bl + '）'))
+                 : this._escHtml(s))
+           + (cn[i] ? '<div class="fs-12 text-sub">' + this._escHtml(cn[i]) + '</div>' : '')
+           + (bl ? '<div class="fs-12 text-sub">挖空：' + this._escHtml(bl) + (bc ? '（' + this._escHtml(bc) + '）' : '') + '</div>' : '')
+           + '</div>';
     });
     html += '<div class="fs-12 text-sub" style="margin-top:6px">跟读要求：先听「系统带读」，再逐句跟读，每句 '
          + (m.pass_score || 60) + ' 分过关。</div>';

@@ -140,15 +140,21 @@
   "sentences": [
    {
     "en": "We can meet at your home.",
-    "cn": "我们可以在你家碰面。"
+    "cn": "我们可以在你家碰面。",
+    "blank": "at",
+    "blank_cn": "小地点前用的介词「在」"
    },
    {
     "en": "Is 10 o'clock OK?",
-    "cn": "10点钟行吗？"
+    "cn": "10点钟行吗？",
+    "blank": "is",
+    "blank_cn": "问句开头的「是」（敲小写就行）"
    },
    {
     "en": "Then we can take a taxi.",
-    "cn": "然后我们可以打出租车去。"
+    "cn": "然后我们可以打出租车去。",
+    "blank": "taxi",
+    "blank_cn": "出租车"
    }
   ]
  }

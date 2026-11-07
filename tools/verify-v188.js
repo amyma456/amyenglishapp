@@ -1,4 +1,4 @@
-// verify-v187 —— 家长 2026-11-07 指定内容进 W7（v187 重写）：
+// verify-v188 —— 家长 2026-11-07 指定内容进 W7（v188 重写）：
 // 图1/2 代词 17 题、图3 Dear Lucy 每日跟读+周五背默、图4 Exercise02 词汇/KET。
 // 通用骨架（30 动作/拼写 3~6/听力题型）由 weekpack-apply 与 verify-weeks 把关，这里钉本周专属约束。
 const fs = require('fs');
@@ -101,10 +101,10 @@ if (w7) {
 }
 
 // 7) 版本钉子 187
-ok((html.match(/\?v=187/g) || []).length === 6, 'index.html 六处 ?v=187');
-ok(html.includes('app-version" content="187"'), 'index.html app-version=187');
-ok(/var CACHE_NAME = 'amy-english-v187';/.test(sw), 'sw.js CACHE_NAME v187');
-ok(/var V = 187;/.test(sw), 'sw.js V = 187');
+ok((html.match(/\?v=188/g) || []).length === 6, 'index.html 六处 ?v=188');
+ok(html.includes('app-version" content="188"'), 'index.html app-version=187');
+ok(/var CACHE_NAME = 'amy-english-v188';/.test(sw), 'sw.js CACHE_NAME v188');
+ok(/var V = 188;/.test(sw), 'sw.js V = 188');
 
-console.log(fail ? '✗ ' + fail + ' 项失败 / ' + (pass + fail) : '✅ verify-v187 全部 ' + pass + ' 项通过');
+console.log(fail ? '✗ ' + fail + ' 项失败 / ' + (pass + fail) : '✅ verify-v188 全部 ' + pass + ' 项通过');
 process.exit(fail ? 1 : 0);

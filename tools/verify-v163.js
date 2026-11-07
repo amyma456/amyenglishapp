@@ -126,7 +126,7 @@ section('3. 跟读按钮改成一键录音（v163 ③）');
   targets.forEach(([fn, prefix, label]) => {
     const i = appSrc.indexOf(fn + '(ev');
     ok(i > 0, fn + ' 存在');
-    const body = appSrc.slice(i, i + 6000);
+    const body = appSrc.slice(i, i + 8000);
     ok(body.indexOf(prefix) >= 0, fn + ' 用的是 ' + prefix + ' 这组 key');
     ok(body.indexOf('_holdToggleNext = true') >= 0, fn + ' 开录前置一键标记');
     ok(appSrc.slice(i - 400, i).indexOf('onpointerup') < 0, fn + ' 按钮上不再挂 onpointerup（不靠松手结束）');
@@ -207,10 +207,10 @@ section('4. 短语识别精细化（v163 ④）');
 // ---------------- 5. 版本号 ----------------
 section('5. 版本号 = 163');
 {
-  ok(/app-version" content="187"/.test(htmlSrc), 'index.html app-version = 163');
-  const refs = (htmlSrc.match(/\.js\?v=187/g) || []).length;
+  ok(/app-version" content="188"/.test(htmlSrc), 'index.html app-version = 163');
+  const refs = (htmlSrc.match(/\.js\?v=188/g) || []).length;
   ok(refs >= 6, '6 个 script 引用都升到 v163', refs);
-  ok(/amy-english-v187/.test(swSrc) && /var V = 187;/.test(swSrc), 'sw.js 缓存名与 V = 163');
+  ok(/amy-english-v188/.test(swSrc) && /var V = 188;/.test(swSrc), 'sw.js 缓存名与 V = 163');
 }
 
 console.log('\n结果: ' + pass + ' 通过, ' + fail + ' 失败');

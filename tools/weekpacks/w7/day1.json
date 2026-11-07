@@ -140,15 +140,21 @@
   "sentences": [
    {
     "en": "Is 10 o'clock OK?",
-    "cn": "10点钟行吗？"
+    "cn": "10点钟行吗？",
+    "blank": "is",
+    "blank_cn": "问句开头的「是」（敲小写就行）"
    },
    {
     "en": "Then we can take a taxi.",
-    "cn": "然后我们可以打出租车去。"
+    "cn": "然后我们可以打出租车去。",
+    "blank": "taxi",
+    "blank_cn": "出租车"
    },
    {
     "en": "I want to buy new football boots and some pairs of socks.",
-    "cn": "我想买新足球鞋和几双袜子。"
+    "cn": "我想买新足球鞋和几双袜子。",
+    "blank": "boots",
+    "blank_cn": "球场上穿的靴子"
    }
   ]
  }

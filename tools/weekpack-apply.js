@@ -156,6 +156,8 @@ function buildWeek(pack, meta) {
       if (key === 'writing_drill') {
         // 作文跟读：只带句子，不带空、不带题 —— 前端用「朗读全文」那一套屏
         // （先听示范 → 跟读 → 打分 ≥60 过关），只是句子少几句、每天轮换。
+        // v188（家长 2026-11-07）：每句加挖空 —— 先看着中文提示把空里的词敲
+        // 对，再跟读打分。blank/blank_cn 缺省就是纯跟读（老周包不受影响）。
         const list = (src.sentences || []).filter((s) => s && s.en);
         if (!list.length) return;
         base.id = prefix + '-wd';
@@ -164,6 +166,8 @@ function buildWeek(pack, meta) {
         base.focus_cn = src.focus_cn || '';
         base.full_text = list.map((s) => String(s.en).trim()).join(' ');
         base.cn_list = list.map((s) => String(s.cn || '').trim());
+        base.blank_list = list.map((s) => String(s.blank || '').trim());
+        base.blank_cn_list = list.map((s) => String(s.blank_cn || '').trim());
         base.full_text_cn = base.cn_list.join('');
         base.pass_score = src.pass_score || 60;
         modules.push(base);

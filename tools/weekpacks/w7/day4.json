@@ -163,7 +163,7 @@
    "足球",
    "袜子"
   ],
-  "template": "Dear Lucy, I am so happy to go {{1}} with you tomorrow. We can meet at your {{2}}. Is 10 o'clock OK? Then we can take a {{3}}. I want to buy new {{4}} boots and some pairs of {{5}}. See you tomorrow!",
+  "template": "Dear Lucy, I am so happy to go {{1}} with you tomorrow. We can meet at your {{2}}. Is 10 o'clock OK? Then we can take a {{3}}. I want to buy new {{4}} boots and some pairs of {{5}}. See you tomorrow! Tom",
   "full_text_cn": "亲爱的Lucy，明天能和你一起去购物我太开心了。我们可以在你家碰面。10点钟行吗？然后我们可以打出租车去。我想买新足球鞋和几双袜子。明天见！",
   "explanation_cn": "英文书信三要素：称呼 Dear Lucy 开头、正文说清「和谁、几点、干什么」、结尾 See you tomorrow! 加署名 Tom。go shopping 去购物；meet at your home 在你家碰面（小地点用 at）；take a taxi 打车；a pair of socks 一双袜子，两双就是 two pairs of socks。",
   "explanation_en": "A short note needs a greeting (Dear Lucy), the plan (when, where, what), and a closing (See you tomorrow!) with the name Tom."
@@ -192,11 +192,15 @@
   "sentences": [
    {
     "en": "I want to buy new football boots and some pairs of socks.",
-    "cn": "我想买新足球鞋和几双袜子。"
+    "cn": "我想买新足球鞋和几双袜子。",
+    "blank": "boots",
+    "blank_cn": "球场上穿的靴子"
    },
    {
     "en": "See you tomorrow! Tom",
-    "cn": "明天见！汤姆"
+    "cn": "明天见！汤姆",
+    "blank": "tomorrow",
+    "blank_cn": "明天"
    }
   ]
  }

@@ -238,11 +238,15 @@
   "sentences": [
    {
     "en": "Dear Lucy, I am so happy to go shopping with you tomorrow.",
-    "cn": "亲爱的Lucy，明天能和你一起去购物我太开心了。"
+    "cn": "亲爱的Lucy，明天能和你一起去购物我太开心了。",
+    "blank": "shopping",
+    "blank_cn": "购物"
    },
    {
     "en": "We can meet at your home.",
-    "cn": "我们可以在你家碰面。"
+    "cn": "我们可以在你家碰面。",
+    "blank": "at",
+    "blank_cn": "小地点前用的介词「在」"
    }
   ]
  }

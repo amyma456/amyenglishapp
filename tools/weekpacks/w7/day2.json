@@ -239,11 +239,15 @@
   "sentences": [
    {
     "en": "See you tomorrow! Tom",
-    "cn": "明天见！汤姆"
+    "cn": "明天见！汤姆",
+    "blank": "tomorrow",
+    "blank_cn": "明天"
    },
    {
     "en": "Dear Lucy, I am so happy to go shopping with you tomorrow.",
-    "cn": "亲爱的Lucy，明天能和你一起去购物我太开心了。"
+    "cn": "亲爱的Lucy，明天能和你一起去购物我太开心了。",
+    "blank": "shopping",
+    "blank_cn": "购物"
    }
   ]
  }
