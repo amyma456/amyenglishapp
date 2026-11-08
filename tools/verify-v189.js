@@ -1,6 +1,7 @@
-// verify-v188 —— 家长 2026-11-07 指定内容进 W7（v188 重写）：
-// 图1/2 代词 17 题、图3 Dear Lucy 每日跟读+周五背默、图4 Exercise02 词汇/KET。
-// 通用骨架（30 动作/拼写 3~6/听力题型）由 weekpack-apply 与 verify-weeks 把关，这里钉本周专属约束。
+// verify-v189 —— 两部分：
+//   A. 家长 2026-11-07 指定内容进 W7（v188 立的，原样保留）
+//   B. 家长 2026-11-08：打卡表每天显示实际打卡人数，且永远是后台当下那一份
+// 通用骨架（30 动作/拼写 3~6/听力题型）由 weekpack-apply 与 verify-weeks 把关。
 const fs = require('fs');
 const path = require('path');
 let pass = 0, fail = 0;
@@ -100,11 +101,70 @@ if (w7) {
   }
 }
 
-// 7) 版本钉子 187
-ok((html.match(/\?v=188/g) || []).length === 6, 'index.html 六处 ?v=188');
-ok(html.includes('app-version" content="188"'), 'index.html app-version=187');
-ok(/var CACHE_NAME = 'amy-english-v188';/.test(sw), 'sw.js CACHE_NAME v188');
-ok(/var V = 188;/.test(sw), 'sw.js V = 188');
+// 7) 版本钉子 189
+ok((html.match(/\?v=189/g) || []).length === 6, 'index.html 六处 ?v=189');
+ok(html.includes('app-version" content="189"'), 'index.html app-version=189');
+ok(/var CACHE_NAME = 'amy-english-v189';/.test(sw), 'sw.js CACHE_NAME v189');
+ok(/var V = 189;/.test(sw), 'sw.js V = 189');
 
-console.log(fail ? '✗ ' + fail + ' 项失败 / ' + (pass + fail) : '✅ verify-v188 全部 ' + pass + ' 项通过');
+// =========================================================================
+// 8) v189：打卡表"每天几个人打卡" + 永远显示后台当下那份
+//
+// 家长 2026-11-08：「Gary 那一行周一到周日全是叉……无论他打没打卡都要显示
+// 每天的实时数据，什么时候登录都和当下的数据对上。比如周一有 5 个学生打卡，
+// 那就显示 5 个，和他打卡没打卡没关系、和他什么时候登录也没关系。」
+//
+// 查后台（D1 checkins，week_idx=5）的事实：Gary（张梓杨，名单编号
+// s1792850539588）本周一条记录都没有 —— 他只有上周六一条做到一半的记录。
+// 所以那一行全叉本身是真数据；真正的毛病是**表格只画一次就不管了**，加上
+// 后台行的编号认领不上名单，于是"明明传了也看不到"。
+// 这六条钉住修复：
+// =========================================================================
+const app = fs.readFileSync(path.join(ROOT, 'public/app.js'), 'utf8');
+
+// ① 表格要有「当天打卡 n/总人数」这一行，且分母来自本班名单
+ok(/renderCheckin\(\)/.test(app) && /_ckCountRow\(roster/.test(app),
+  '老师端打卡监控带「当天打卡」人数行');
+ok(/_ckCountRow\(classStudents/.test(app),
+  '学生端完成率对比带同一行（谁登录看到的都一样）');
+ok(/_ckDayCounts\(roster, di\)/.test(app) && /done\+\+/.test(app),
+  '人数按"已打卡"逐天统计');
+ok(/class="ck-count-row"/.test(app),
+  '这一行有独立样式类（表格最后一行高亮）');
+
+// ② 还没到的日子不再画 ✗
+ok(/_ckDayPhase\(di/.test(app) && /future/.test(app),
+  '还没到的日子单独判定（周一登录时周二~周日不该是叉）');
+ok(/\.checkin-dot\.future/.test(html) && /checkin-dot future/.test(app),
+  '灰点样式：还没到的那一天');
+
+// ③ 拉到"新的一版"就一定要重画，不再只看本机记录有没有变
+ok(/_ckPullSeq/.test(app) && /_ckPaintedSeq/.test(app),
+  '用拉取序号判断"屏幕上是第几版"（第一次拉一定补画）');
+ok(!/if \(!changed\) return;/.test(app),
+  '不再"数据没变就不重画"（第一屏的 ✗ 会一直留在屏幕上）');
+
+// ④ 后台行的编号认不上名单时，按手机号 > 姓名（大小写不敏感）> 半截姓名认领
+ok(/_rosterIdFor\(sid, name, klass, phone\)/.test(app),
+  '_rosterIdFor 增加手机号参数');
+ok(/digits\(s\.phone\) === ph \|\| digits\(s\.parentPhone\) === ph/.test(app),
+  '先按手机号认领（换设备换编号也能对上）');
+ok(/toLowerCase\(\)\.replace\(\/\\s\+\/g, ''\)/.test(app),
+  '姓名比较大小写/空格不敏感（黄耀-york = 黄耀-York）');
+ok(/partial-name/.test(app),
+  '半截姓名（Gary ↔ 张梓杨-Gary）只在唯一命中时认领');
+
+// ⑤ 同一个孩子多个编号的行落到同一个 key，保留"更完整"的那份
+ok(/_ckRecBetter/.test(app) && /this\.state\.cloudCheckins\[k\] = rec;/.test(app),
+  '同一 (孩子, 周, 天) 只留一份，不能让半截记录盖掉整天的 ✓');
+ok(/r\.week_idx/.test(app),
+  'key 用后台这一行自己的周号，不用"本机当前切到的那一周"');
+
+// ⑥ 停在页面上要自动刷新：60 秒一次 + 回到前台一次
+ok(/_ckTimer = setInterval/.test(app) && /60000/.test(app),
+  '停留在打卡表上每 60 秒自动同步一次');
+ok(/refreshLive/.test(app) && /实时数据/.test(app),
+  '页面上有「实时数据 · 上次同步 HH:MM」和手动刷新按钮');
+
+console.log(fail ? '✗ ' + fail + ' 项失败 / ' + (pass + fail) : '✅ verify-v189 全部 ' + pass + ' 项通过');
 process.exit(fail ? 1 : 0);

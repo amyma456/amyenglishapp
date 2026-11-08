@@ -493,30 +493,74 @@ const App = {
   //
   // 规则：名单里有这个编号 → 原样；没有 → 按「姓名 + 班级」认领到名单里的那个
   // 学生；认不出来（没名字 / 命中不唯一）→ 原样返回（**宁可不显示，也不张冠李戴**）。
-  _rosterIdFor(sid, name, klass) {
+  // v189（家长 2026-11-08「Gary 的格子全是叉」）：认领规则补三条硬伤。
+  //   ① 先按**手机号**认：孩子换设备/换浏览器就换一个 s<时间戳> 编号，手机号
+  //      却从来没变过，这是唯一稳定的身份（后台行里带着 student_phone）。
+  //   ② 姓名比较改成大小写、空格不敏感：后台真实存在 `黄耀-york` 和名单里的
+  //      `黄耀-York` 两行，逐字比较认不出来，那条行就永远显示不出来。
+  //   ③ 姓名允许"半截"匹配（`Gary` ↔ `张梓杨-Gary`），但只在**唯一命中**时
+  //      才认 —— 名单里几十个小舟-Zoe，模糊匹配绝不硬凑。
+  _rosterIdFor(sid, name, klass, phone) {
     const list = this.state.students || [];
-    if (!sid || list.some(s => s.id === sid)) return sid;
-    const nm = String(name || '').trim();
+    if (!sid) return sid;
+    if (list.some(s => s.id === sid)) return sid;
+    const digits = v => String(v || '').replace(/[^0-9]/g, '');
+    const norm = v => String(v || '').toLowerCase().replace(/\s+/g, '');
+    const alias = (rec, via) => {
+      console.warn('checkin id ' + sid + ' not in roster; aliased to '
+        + rec.id + ' (' + rec.name + ') via ' + via);
+      return rec.id;
+    };
+    // ① 手机号
+    const ph = digits(phone);
+    if (ph.length >= 6) {
+      const byPhone = list.filter(s => digits(s.phone) === ph || digits(s.parentPhone) === ph);
+      if (byPhone.length === 1) return alias(byPhone[0], 'phone');
+    }
+    const nm = norm(name);
     if (!nm) return sid;
-    const hit = list.filter(s => String(s.name || '').trim() === nm
-      && (!klass || s.class === klass));
-    if (hit.length !== 1) return sid;
-    console.warn('checkin id ' + sid + ' not in roster; aliased to ' + hit[0].id + ' (' + nm + ')');
-    return hit[0].id;
+    // ② 姓名（大小写/空格不敏感）—— 但**同名不同班绝不串**：
+    // 后台行带着班级，班级对不上就不认，宁可这条不显示（老规矩）。
+    let hit = list.filter(s => norm(s.name) === nm && (!klass || s.class === klass));
+    if (hit.length === 1) return alias(hit[0], 'name');
+    // ③ 半截姓名（Gary / 张梓杨），只在唯一命中时才算
+    if (!hit.length) {
+      const parts = n => {
+        const out = [];
+        [norm(n)].concat(String(n || '').split(/[-–—_/\s]+/).map(norm)).forEach(x => {
+          if (x && x.length >= 2 && out.indexOf(x) < 0) out.push(x);
+        });
+        return out;
+      };
+      const mine = parts(name);
+      const cand = list.filter(s => parts(s.name).some(a => mine.indexOf(a) >= 0)
+        && (!klass || s.class === klass));
+      if (cand.length === 1) return alias(cand[0], 'partial-name');
+    }
+    return sid;
   },
 
   _mergeCloudCheckins(rows) {
     if (!Array.isArray(rows)) return 0;
-    const tag = this._weekTag();
-    // v161：云端记录**单独留一份纯的**（state.cloudCheckins）。班级视图
-    // （打卡监控/成绩分析/完成率对比）只读这一份 —— 见 _clsCk 注释。
-    // 本机那份照旧按"更完整者胜"合并，学生自己的进度不受影响。
     if (!this.state.cloudCheckins) this.state.cloudCheckins = {};
     let n = 0;
     rows.forEach(r => {
       if (!r || !r.student_id || r.day_idx === undefined || r.day_idx === null) return;
-      const sid = this._rosterIdFor(r.student_id, r.student_name, r.student_class);
-      const k = sid + tag + '_d' + r.day_idx;
+      const sid = this._rosterIdFor(r.student_id, r.student_name, r.student_class, r.student_phone);
+      // v189：认领不上的行（后台的编号和名单对不上）单独记一笔 —— 这种行
+      // 就是"孩子明明打卡了，老师那边还是叉"的真凶。上面那句提示会点名。
+      if (!(this.state.students || []).some(s => s.id === sid)) {
+        if (!this._ckOrphan) this._ckOrphan = {};
+        this._ckOrphan[sid] = { name: r.student_name || sid, klass: r.student_class || '' };
+      } else if (this._ckOrphan && this._ckOrphan[sid]) {
+        delete this._ckOrphan[sid];
+      }
+      // v189：key 用**这一行自己的周号**（后台返回 week_idx），不再用"本机当前
+      // 被切到的那一周"。老师翻到下周的题库预览时 HOMEWORK_WEEK_IDX 会变，
+      // 那会儿拉回来的行会被盖成本周的钥匙，数据就串位了。
+      const w = (typeof r.week_idx === 'number' && isFinite(r.week_idx))
+        ? r.week_idx : this._weekIdx();
+      const k = sid + (w > 0 ? '_w' + w : '') + '_d' + r.day_idx;
       const rec = {
         id: 'cloud_' + k,
         studentId: sid,
@@ -531,18 +575,33 @@ const App = {
         at: r.updated_at || '',
         fromCloud: true,
       };
-      // 云端纯档：后台回来的原样放进去（后台 UPSERT 只增不减，直接覆盖即可）
-      this.state.cloudCheckins[k] = rec;
-      const mine = this.state.checkins[k];
-      const done = !!r.done;
-      const better = !mine
-        || (done && !mine.done)
-        || ((r.answered || 0) > (mine.answered || 0));
-      if (!better) return;
-      this.state.checkins[k] = rec;
-      n++;
+      // v189：同一个孩子可能在后台留下好几个编号的行（每台设备各自造过一个
+      // s<时间戳>），认领之后全落到同一个 key 上。以前是无条件覆盖 —— 后到的
+      // 那条半截记录（只答了 1 题）会把整天的 ✓ 盖成 ◐，看起来像"又没打卡"。
+      // 现在取"更完整"的那份：已打卡 > 答得多 > 更新得晚。
+      let changed = false;
+      if (this._ckRecBetter(rec, this.state.cloudCheckins[k])) {
+        this.state.cloudCheckins[k] = rec;
+        changed = true;
+      }
+      // 本机那份照旧按"更完整者胜"合并，学生自己的进度不受影响。
+      if (this._ckRecBetter(rec, this.state.checkins[k])) {
+        this.state.checkins[k] = rec;
+        changed = true;
+      }
+      if (changed) n++;
     });
     return n;
+  },
+
+  // a 比 b 更完整吗？（b 不存在 → true）
+  //   已打卡 > 只答了一部分；都答完时答得多的那份可信；再平就看谁更新。
+  _ckRecBetter(a, b) {
+    if (!a) return false;
+    if (!b) return true;
+    if (!!a.done !== !!b.done) return !!a.done;
+    if ((a.answered || 0) !== (b.answered || 0)) return (a.answered || 0) > (b.answered || 0);
+    return String(a.at || '') > String(b.at || '');
   },
 
   // 历史补录（v120 建；v121 扩到"本机所有周"+ 切回前台也补）。
@@ -681,19 +740,29 @@ const App = {
   // 一条都没变就别白刷一遍，否则屏幕上会闪一下 —— 那比慢更让人难受。
   async _pullCloudCheckins(scope) {
     const who = this._myWho();
+    let n = 0, ok = false;
     if (this.isTeacher()) {
-      let n = 0;
-      const classes = (this.state.classes || []).filter(Boolean);
-      for (let i = 0; i < classes.length; i++) {
-        const rows = await Api.fetchCheckins({ klass: classes[i] });
-        n += this._mergeCloudCheckins(rows);
+      const list = (this.state.classes || []).filter(Boolean);
+      if (!list.length && this.state.className) list.push(this.state.className);
+      for (let i = 0; i < list.length; i++) {
+        const rows = await Api.fetchCheckins({ klass: list[i] });
+        // null = 这次没读到（后台/网络问题），不能当"没打卡"用
+        if (Array.isArray(rows)) { ok = true; n += this._mergeCloudCheckins(rows); }
       }
-      return n;
+    } else {
+      const rows = scope === 'class'
+        ? await Api.fetchCheckins({ klass: who.klass || this.state.className })
+        : await Api.fetchCheckins({ studentId: this._myStudentId() });
+      if (Array.isArray(rows)) { ok = true; n += this._mergeCloudCheckins(rows); }
     }
-    const rows = scope === 'class'
-      ? await Api.fetchCheckins({ klass: who.klass || this.state.className })
-      : await Api.fetchCheckins({ studentId: this._myStudentId() });
-    return this._mergeCloudCheckins(rows);
+    // v189：记下"这份数据是什么时候从后台拿到的"。页面顶上那句
+    // 「上次同步 HH:MM」就是它 —— 家长要的"什么时候登录都和当下的数据对上"，
+    // 先得让人看得见这份数据是几点的。
+    // seq 只在**内容真的变了**时才 +1（不是每拉一次就 +1）：它表示"屏幕上是
+    // 第几版数据"，拉到的最新一版和屏幕上的不是同一版，就必须重画。
+    if (ok) this._ckPullAt = Date.now();
+    if (n > 0) this._ckPullSeq = (this._ckPullSeq || 0) + 1;
+    return n;
   },
 
   _getPos(dayIdx) {
@@ -1604,7 +1673,12 @@ const App = {
     if (['checkin', 'daily', 'scores', 'compare', 'myprogress'].indexOf(this.state.currentTab) >= 0) {
       const wantTab = this.state.currentTab;
       this._pullCloudCheckins(wantTab === 'myprogress' ? 'me' : 'class').then(changed => {
-        if (changed && this.state.currentTab === wantTab) this.renderContent();
+        if (this.state.currentTab !== wantTab) return;
+        // v189：第一次拉一定要补画一次 —— 第一屏是在云端数据还没到手时画的，
+        // 那时候每个格子都只能是 ✗。以前这里要求"本机记录有变化"才重画，
+        // 于是本机早就存着同样一份记录的设备永远停在那一屏死叉上。
+        if (!changed && this._ckPaintedSeq === this._ckPullSeq) return;
+        this.renderContent();
       }).catch(() => {});
     }
   },
@@ -2550,6 +2624,117 @@ const App = {
     // 合并规则挡住：本机有一条旧残留，后台的真实记录反而进不来。
     const cloud = this.state.cloudCheckins || {};
     return cloud[sid + this._weekTag() + '_d' + di] || null;
+  },
+
+  // ===== v189：打卡表的"实时"三件套 =====================================
+  //
+  // 家长 2026-11-08：「Gary 那一行周一到周日全是叉，其他小孩的数据没同步
+  // 过来……无论他打没打卡都要显示每天的实时数据，什么时候登录都要和当下的
+  // 数据对上。比如周一有 5 个学生打卡，那就显示 5 个。」
+  //
+  // 三个毛病一起修：
+  //   ① 表格里只有 ✓/✗ 两态，看不出"当天到底几个人打了卡"——补一行
+  //      「当天打卡 n/总人数」，每个孩子、每台设备看到的数字都一样；
+  //   ② ✗ 分不清"没打"和"这几天还没到"——周一登录时，周二到周日的 ✗ 是假的；
+  //   ③ 只画一次就不管了——现在进页面拉、停在页面上每 60 秒再拉一次、
+  //      回到前台也拉，拉到新数据立刻重画（见 _pullCloudCheckins/startAutoSync）。
+
+  // 这一列是过去、今天、还是还没到？（本周以外一律按"没到"处理）
+  _ckDayPhase(di, weekOffset) {
+    const off = weekOffset || 0;
+    if (off > 0) return 'future';
+    if (off < 0) return 'past';
+    const t = this.getTodayWeekdayIdx();
+    if (di === t) return 'today';
+    return di < t ? 'past' : 'future';
+  },
+
+  // 一个格子的内容。done=✓、答了一部分=◐（带已答/总题数）、
+  // 没记录且这一天已经过了=✗、还没到=·（灰点，不算欠作业）。
+  _ckCell(ck, di, weekOffset) {
+    if (ck) {
+      if (ck.done) {
+        return '<span class="checkin-dot done" title="已完成'
+          + (ck.time ? ' · ' + this._escHtml(ck.time) : '')
+          + (ck.correctRate ? ' · 正确率 ' + ck.correctRate + '%' : '') + '">✓</span>';
+      }
+      const prog = (ck.answered || 0) + '/' + (ck.total || 0);
+      return '<span class="checkin-dot partial" title="已答 ' + prog + ' 题">◐</span>';
+    }
+    if (this._ckDayPhase(di, weekOffset) === 'future') {
+      return '<span class="checkin-dot future" title="还没到这一天">·</span>';
+    }
+    return '<span class="checkin-dot undone" title="后台没有这一天的记录">✗</span>';
+  },
+
+  // 每一天：几个人打了卡（done）、几个人正在做（partial）、一共几个人。
+  _ckDayCounts(roster, di) {
+    let done = 0, part = 0, rated = 0, rateSum = 0;
+    (roster || []).forEach(s => {
+      const ck = this._clsCk(s.id, di);
+      if (!ck) return;
+      if (ck.done) done++;
+      else part++;
+      if (ck.correctRate) { rateSum += ck.correctRate; rated++; }
+    });
+    return {
+      done: done, part: part, total: (roster || []).length,
+      rate: rated ? Math.round(rateSum / rated) : 0,
+    };
+  },
+
+  // 表格最后一行：当天打卡 n/总人数。这一行就是家长要的那个"5"。
+  // tail = 末尾那几列（老师端是「总完成 / 平均正确率」，学生端是「完成率」）。
+  _ckCountRow(roster, tail) {
+    let html = '<tr class="ck-count-row"><td>当天打卡</td>';
+    HOMEWORK_DATA.forEach((d, di) => {
+      const c = this._ckDayCounts(roster, di);
+      const future = this._ckDayPhase(di) === 'future';
+      const empty = !c.done && !c.part;
+      html += '<td title="' + d.day_cn + '：已打卡 ' + c.done + ' 人'
+        + (c.part ? '，进行中 ' + c.part + ' 人' : '') + '">'
+        + (future && empty
+            ? '<span class="ck-num zero">·</span>'
+            : '<b class="ck-num">' + c.done + '</b><span class="ck-of">/' + c.total + '</span>'
+              + (c.part ? '<i class="ck-part">+' + c.part + '◐</i>' : ''))
+        + '</td>';
+    });
+    (tail || ['']).forEach(cell => { html += '<td>' + cell + '</td>'; });
+    return html + '</tr>';
+  },
+
+  // 顶上的"数据是几点的"条 + 手动刷新。老师端和学生端都用同一条。
+  _ckLiveStrip() {
+    const at = this._ckPullAt || 0;
+    let when = '';
+    if (at) {
+      const d = new Date(at);
+      when = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    }
+    let html = '<div class="card mb-16 ck-live">';
+    html += '<div class="sync-head"><span class="sync-title">📡 实时数据 · 来自后台</span>';
+    html += '<button class="btn btn-outline btn-sm" onclick="App.refreshLive(this)">🔄 刷新</button></div>';
+    html += '<div class="sync-line">' + (when
+      ? '这份表是 <b>' + when + '</b> 从后台拉下来的'
+      : '正在从后台拉取…')
+      + '；停在页面上每 60 秒自动再拉一次，换一台手机登录看到的也是同一份。</div>';
+    html += '</div>';
+    return html;
+  },
+
+  // 手动刷新：拉完就重画，不靠"数据有没有变"来决定画不画。
+  async refreshLive(btn) {
+    const label = btn ? btn.textContent : '';
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ 同步中…'; }
+    try {
+      const scope = this.state.currentTab === 'myprogress' ? 'me' : 'class';
+      await this._pullCloudCheckins(scope);
+      this.renderContent();
+      this.showToast('✅ 已同步到最新数据');
+    } catch (e) {
+      if (btn) { btn.disabled = false; btn.textContent = label; }
+      this.showToast('⚠️ 同步失败，请检查网络后重试');
+    }
   },
 
   // v134：把「当前生效的一周」对齐到该对齐的那一周。
@@ -3676,10 +3861,35 @@ const App = {
           // Clips whose transcription failed on a bad connection get another
           // go here — the audio is already safe in IndexedDB.
           Api.retryPendingTranscripts().catch(function(){});
+          // v189：回到前台正好停在打卡表上，就把后台再拉一次 ——
+          // 孩子刚在这台手机上做完，切回来能立刻看到自己那一格变 ✓。
+          if (['checkin', 'compare', 'daily', 'scores', 'myprogress'].indexOf(self.state.currentTab) >= 0) {
+            self._pullCloudCheckins(self.state.currentTab === 'myprogress' ? 'me' : 'class')
+              .then(function(changed) {
+                if (changed > 0 || self._ckPaintedSeq !== self._ckPullSeq) self.renderContent();
+              })
+              .catch(function(){});
+          }
         }
       };
       document.addEventListener('visibilitychange', this._visibilityHandler);
     }
+    // v189（家长 2026-11-08）：「什么时候登录都和当下的数据对上」。
+    // 停在打卡表上不动的时候，每 60 秒把后台再拉一次；拉回来的是新的一版就
+    // 重画。别的屏幕不拉 —— 白耗流量，还会把正在做的题打断。
+    if (this._ckTimer) clearInterval(this._ckTimer);
+    var liveSelf = this;
+    this._ckTimer = setInterval(function() {
+      if (document.visibilityState !== 'visible') return;
+      var t = liveSelf.state.currentTab;
+      if (['checkin', 'compare', 'daily', 'scores', 'myprogress'].indexOf(t) < 0) return;
+      liveSelf._pullCloudCheckins(t === 'myprogress' ? 'me' : 'class')
+        .then(function(changed) {
+          if (liveSelf.state.currentTab !== t) return;
+          if (changed > 0 || liveSelf._ckPaintedSeq !== liveSelf._ckPullSeq) liveSelf.renderContent();
+        })
+        .catch(function(){});
+    }, 60000);
   },
 
   // ===== Settings =====
@@ -3921,7 +4131,10 @@ const App = {
       this._pullCloudCheckins(scope).then((changed) => {
         if (this._tabSeq !== token) return;        // 已经切走了
         if (this.state.currentTab !== tab) return;
-        if (!changed) return;                      // 数据没变，别白刷一遍造成闪烁
+        // v189：切进来看的这一眼必须是后台最新那份。以前"数据没变就不重画"
+        // 的优化把第一次也挡掉了 —— 第一屏画的时候云端数据还没到，全是 ✗；
+        // 等拉回来了，"本机记录没变化" → 不重画 → 死叉留在屏幕上。
+        if (!changed && this._ckPaintedSeq === this._ckPullSeq) return;
         this.renderContent();
       }).catch(e => { console.warn('pull checkins failed:', e); });
     }
@@ -3983,6 +4196,11 @@ const App = {
       // v138：预览和学生对同一套门禁 —— 少这一下，老师那边就是"没做题
       // 也能点下一题"。_savePos 不调：老师的位置不进学生账里。
       this._applyStepLock();
+    }
+    // v189：记下这一屏画的是"第几次从后台拉回来的数据"。拉到更新的版本时，
+    // 上面那几个 .then 里一比对就知道该不该重画（见 _pullCloudCheckins）。
+    if (['checkin', 'compare', 'daily', 'scores', 'myprogress'].indexOf(tab) >= 0) {
+      this._ckPaintedSeq = this._ckPullSeq || 0;
     }
   },
 
@@ -4493,6 +4711,22 @@ const App = {
     } else {
       html += '<div class="sync-line sync-ok">全班 ' + students.length + ' 位本周都已有记录 ✅</div>';
     }
+    // v189：后台有行、名单里认不出来的情况单独说一句。家长 2026-11-08 问的
+    // "别的孩子有数据，他这一行全是叉"就是这个 —— 孩子换过设备，后台留下了
+    // 另一个编号，姓名又对不上名单，那条记录谁都不显示。
+    const orphAll = this._ckOrphan || {};
+    const clsList = (this.state.classes || []).filter(Boolean);
+    const orph = Object.keys(orphAll).filter(k => {
+      const o = orphAll[k];
+      return o && o.klass && (!clsList.length || clsList.indexOf(o.klass) >= 0);
+    });
+    if (orph.length) {
+      html += '<div class="sync-line sync-warn">还有 <b>' + orph.length
+            + '</b> 条后台记录对不上名单：'
+            + orph.slice(0, 8).map(k => this._escHtml(orphAll[k].name)).join('、')
+            + '<br><span class="sync-tip">这些是换过手机/换过浏览器留下的旧编号。'
+            + '让孩子再打开一次 App 就会自动归位（姓名+手机号已能自动认领）。</span></div>';
+    }
     html += '</div>';
     return html;
   },
@@ -4526,6 +4760,7 @@ const App = {
   renderCheckin() {
     let html = '<h2 style="color:var(--primary-dark);margin-bottom:12px">📊 打卡监控</h2>';
     html += this._checkinSyncStrip();
+    html += this._ckLiveStrip();
     // v150：只显示**本班在册**的学生（老师 2026-10-23：「除了少儿英语A班的
     // 几个学生以外，那些测试的多余的学生名字，小舟、Zoe 这些全部不要再出现
     // 在这里了。只出现现有分配班级的学生」）。以前这里遍历全部 students，
@@ -4542,38 +4777,64 @@ const App = {
         else totalUndone++;
       });
     });
+    // v189：今天的打卡人数单独摆出来 —— 家长要的"周一有 5 个人打卡就显示 5"，
+    // 最常用的就是今天这一格。
+    const today = this._ckDayCounts(roster, this.getTodayWeekdayIdx());
     html += '<div class="stat-box"><div class="num" style="color:var(--success)">' + totalDone + '</div><div class="label">已打卡</div></div>';
     html += '<div class="stat-box"><div class="num" style="color:var(--danger)">' + totalUndone + '</div><div class="label">未打卡</div></div>';
     html += '<div class="stat-box"><div class="num">' + Math.round(totalDone/(totalDone+totalUndone)*100) + '%</div><div class="label">完成率</div></div>';
+    html += '<div class="stat-box"><div class="num" style="color:var(--primary-dark)">' + today.done + '<span style="font-size:12px;color:var(--text-sub)">/' + today.total + '</span></div><div class="label">今天打卡</div></div>';
     html += '</div>';
 
     // Table
     html += '<div class="card"><div class="checkin-table"><table class="data-table"><thead><tr><th>学生</th>';
-    HOMEWORK_DATA.forEach((d, di) => html += '<th>' + d.day_cn + '<br><span style="font-weight:400;font-size:10px;color:var(--text-sub,#888)">' + this.getDayDateLabel(di, 0) + '</span></th>');
+    HOMEWORK_DATA.forEach((d, di) => {
+      const ph = this._ckDayPhase(di);
+      html += '<th' + (ph === 'today' ? ' class="ck-th-today"' : '') + '>' + d.day_cn
+        + (ph === 'today' ? '·今天' : '')
+        + '<br><span style="font-weight:400;font-size:10px;color:var(--text-sub,#888)">' + this.getDayDateLabel(di, 0) + '</span></th>';
+    });
     html += '<th>总完成</th><th>平均正确率</th></tr></thead><tbody>';
     roster.forEach(s => {
-      html += '<tr><td>' + s.name + '</td>';
-      let doneCount = 0, totalCorrect = 0, correctCount = 0;
+      let doneCount = 0, totalCorrect = 0, correctCount = 0, any = false;
+      // v189：先算一遍再拼格子 —— 名字后面要标"本周还没上传过"，
+      // 那正是家长看 Gary 那行一片叉时最需要的一句话。
       HOMEWORK_DATA.forEach((d, di) => {
-        // v161：只认后台确认过的记录（见 _clsCk 注释）
         const ck = this._clsCk(s.id, di);
-        // A record exists from the first answer on. Show the dot either way —
-        // 'started but unfinished' is what the teacher most wants to see —
-        // but only count a finished day toward doneCount.
-        if (ck) {
-          if (ck.done) doneCount++;
-          if (ck.correctRate) { totalCorrect += ck.correctRate; correctCount++; }
-          const cls = ck.completed === 'partial' ? 'partial' : 'done';
-          html += '<td><span class="checkin-dot ' + cls + '" title="' + ck.time + ' 正确率' + ck.correctRate + '%">✓</span></td>';
-        } else {
-          html += '<td><span class="checkin-dot undone">✗</span></td>';
-        }
+        if (!ck) return;
+        any = true;
+        if (ck.done) doneCount++;
+        if (ck.correctRate) { totalCorrect += ck.correctRate; correctCount++; }
+      });
+      html += '<tr><td>' + this._escHtml(s.name)
+        + (any ? '' : ' <span class="ck-none-tag">本周未上传</span>') + '</td>';
+      HOMEWORK_DATA.forEach((d, di) => {
+        html += '<td>' + this._ckCell(this._clsCk(s.id, di), di) + '</td>';
       });
       html += '<td>' + doneCount + '/' + HOMEWORK_DATA.length + '</td>';
       html += '<td>' + (correctCount > 0 ? Math.round(totalCorrect/correctCount) + '%' : '-') + '</td>';
       html += '</tr>';
     });
-    html += '</tbody></table></div></div>';
+    html += '</tbody><tfoot>' + this._ckCountRow(roster, [
+      (() => {
+        let wk = 0;
+        roster.forEach(s => HOMEWORK_DATA.forEach((d, di) => {
+          const ck = this._clsCk(s.id, di);
+          if (ck && ck.done) wk++;
+        }));
+        return '<b class="ck-num">' + wk + '</b><span class="ck-of">人次</span>';
+      })(),
+      (() => {
+        let sum = 0, cnt = 0;
+        roster.forEach(s => HOMEWORK_DATA.forEach((d, di) => {
+          const ck = this._clsCk(s.id, di);
+          if (ck && ck.correctRate) { sum += ck.correctRate; cnt++; }
+        }));
+        return cnt ? Math.round(sum / cnt) + '%' : '-';
+      })(),
+    ]) + '</tfoot></table></div></div>';
+    html += '<p class="text-sub fs-12 mt-8">✓ 已完成　◐ 做了一部分　✗ 没有记录　· 还没到这一天。'
+      + '最下面一行是每天实际打卡的人数（分母是本班在册人数），和谁登录、这个人自己打没打卡无关。</p>';
     return html;
   },
 
@@ -14686,14 +14947,16 @@ const App = {
     if (!myStudent) {
       myStudent = { id: this._myStudentId(), name: myName, phone: this.state.phone, parentPhone: this.state.phone, class: myClass };
     }
-    let html = '<h2 style="color:var(--primary-dark);margin-bottom:12px">📊 ' + myName + ' 的打卡情况</h2>';
+    let html = '<h2 style="color:var(--primary-dark);margin-bottom:12px">📊 ' + this._escHtml(myName) + ' 的打卡情况</h2>';
     html += '<div class="card mb-16" style="background:var(--primary-light);border:none">';
-    html += '<div class="flex-between"><span>👤 ' + myName + '</span><span class="badge badge-primary">' + myClass + '</span></div>';
+    html += '<div class="flex-between"><span>👤 ' + this._escHtml(myName) + '</span><span class="badge badge-primary">' + this._escHtml(myClass) + '</span></div>';
     html += '</div>';
+    html += this._ckLiveStrip();
 
     // Summary stats
-    let doneCount = 0, totalCorrect = 0, correctCount = 0;
+    let doneCount = 0, totalCorrect = 0, correctCount = 0, dueDays = 0;
     HOMEWORK_DATA.forEach((d, di) => {
+      if (this._ckDayPhase(di) !== 'future') dueDays++;   // v189：还没到的天不算欠
       const k = myStudent.id + this._weekTag() + '_d' + di;
       const ck = this.state.checkins[k];
       if (ck && ck.done) {
@@ -14703,7 +14966,7 @@ const App = {
     });
     html += '<div class="stat-row mb-16">';
     html += '<div class="stat-box"><div class="num" style="color:var(--success)">' + doneCount + '</div><div class="label">已完成天数</div></div>';
-    html += '<div class="stat-box"><div class="num" style="color:var(--danger)">' + (HOMEWORK_DATA.length - doneCount) + '</div><div class="label">未完成天数</div></div>';
+    html += '<div class="stat-box"><div class="num" style="color:var(--danger)">' + Math.max(0, dueDays - doneCount) + '</div><div class="label">待完成天数</div></div>';
     html += '<div class="stat-box"><div class="num">' + (correctCount > 0 ? Math.round(totalCorrect/correctCount) : 0) + '%</div><div class="label">平均正确率</div></div>';
     html += '</div>';
 
@@ -14719,6 +14982,10 @@ const App = {
         html += '<td>' + (ck.time||'-') + '</td>';
         html += '<td><span class="badge ' + (ck.correctRate>=85?'badge-success':ck.correctRate>=60?'badge-warning':'badge-danger') + '">' + (ck.correctRate||0) + '%</span></td>';
         html += '<td>' + (ck.wrongCount||0) + '</td>';
+      } else if (this._ckDayPhase(di) === 'future') {
+        // v189：还没到的那一天不写"未打卡" —— 它本来就不该有记录
+        html += '<td><span class="badge">还没到</span></td>';
+        html += '<td>-</td><td>-</td><td>-</td>';
       } else {
         html += '<td><span class="badge badge-danger">未打卡</span></td>';
         html += '<td>-</td><td>-</td><td>-</td>';
@@ -14734,23 +15001,33 @@ const App = {
     const myClass = this.state.className;
     let html = '<h2 style="color:var(--primary-dark);margin-bottom:12px">🏆 全班完成率对比</h2>';
     html += '<div class="card mb-16" style="background:var(--primary-light);border:none">';
-    html += '<div class="flex-between"><span>🏫 ' + myClass + '</span><span class="badge badge-primary">' + this.state.students.filter(s => s.class === myClass).length + '人</span></div>';
+    html += '<div class="flex-between"><span>🏫 ' + this._escHtml(myClass) + '</span><span class="badge badge-primary">' + this.state.students.filter(s => s.class === myClass).length + '人</span></div>';
     html += '</div>';
+    // v189：家长 2026-11-08「什么时候登录都要和当下的数据对上」——
+    // 这一页原来只在切进来时拉一次，拉到没"变化"就干脆不重画，屏幕上留的
+    // 是上一屏的快照。现在顶上写明"几点拉的"，还给了手动刷新按钮。
+    html += this._ckLiveStrip();
 
     // Build rankings
     const classStudents = this.state.students.filter(s => s.class === myClass);
     const rankings = classStudents.map(s => {
-      let doneCount = 0, totalCorrect = 0, correctCount = 0, firstTime = '';
+      let doneCount = 0, totalCorrect = 0, correctCount = 0, firstTime = '', any = false;
       HOMEWORK_DATA.forEach((d, di) => {
         // v161：只认后台确认过的记录 —— 班级排名必须人手一份相同（_clsCk）
         const ck = this._clsCk(s.id, di);
-        if (ck && ck.done) {
+        if (!ck) return;
+        any = true;
+        if (ck.done) {
           doneCount++;
           if (ck.correctRate) { totalCorrect += ck.correctRate; correctCount++; }
           if (di === 0 && ck.time) firstTime = ck.time;
         }
       });
-      return { name: s.name, doneCount, avgCorrect: correctCount > 0 ? Math.round(totalCorrect/correctCount) : 0, firstTime, isMe: s.name === this.state.userName };
+      return {
+        sid: s.id, name: s.name, doneCount, any, firstTime,
+        avgCorrect: correctCount > 0 ? Math.round(totalCorrect/correctCount) : 0,
+        isMe: s.name === this.state.userName,
+      };
     });
     rankings.sort((a, b) => b.doneCount - a.doneCount || b.avgCorrect - a.avgCorrect);
 
@@ -14760,7 +15037,7 @@ const App = {
     rankings.forEach((r, i) => {
       const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i+1);
       const highlight = r.isMe ? ' style="background:var(--primary-light)"' : '';
-      html += '<tr' + highlight + '><td>' + medal + '</td><td>' + r.name + (r.isMe ? ' <span class="badge badge-primary">我</span>' : '') + '</td>';
+      html += '<tr' + highlight + '><td>' + medal + '</td><td>' + this._escHtml(r.name) + (r.isMe ? ' <span class="badge badge-primary">我</span>' : '') + '</td>';
       html += '<td>' + r.doneCount + '/' + HOMEWORK_DATA.length + '</td>';
       html += '<td><span class="badge ' + (r.avgCorrect>=85?'badge-success':r.avgCorrect>=70?'badge-primary':'badge-warning') + '">' + r.avgCorrect + '%</span></td>';
       html += '</tr>';
@@ -14770,27 +15047,40 @@ const App = {
     // Daily check-in status for all
     html += '<h3 class="mt-16" style="color:var(--primary-dark)">📅 每日打卡状态</h3>';
     html += '<div class="card"><div class="checkin-table"><table class="data-table"><thead><tr><th>姓名</th>';
-    HOMEWORK_DATA.forEach((d, di) => html += '<th>' + d.day_cn + '<br><span style="font-weight:400;font-size:10px;color:var(--text-sub,#888)">' + this.getDayDateLabel(di, 0) + '</span></th>');
+    HOMEWORK_DATA.forEach((d, di) => {
+      const ph = this._ckDayPhase(di);
+      html += '<th' + (ph === 'today' ? ' class="ck-th-today"' : '') + '>' + d.day_cn
+        + (ph === 'today' ? '·今天' : '')
+        + '<br><span style="font-weight:400;font-size:10px;color:var(--text-sub,#888)">' + this.getDayDateLabel(di, 0) + '</span></th>';
+    });
     html += '<th>完成率</th></tr></thead><tbody>';
     rankings.forEach(r => {
-      const student = classStudents.find(s => s.name === r.name);
       const highlight = r.isMe ? ' style="background:var(--primary-light)"' : '';
-      html += '<tr' + highlight + '><td>' + r.name + (r.isMe ? ' ⭐' : '') + '</td>';
+      html += '<tr' + highlight + '><td>' + this._escHtml(r.name) + (r.isMe ? ' ⭐' : '')
+        + (r.any ? '' : ' <span class="ck-none-tag">本周未上传</span>') + '</td>';
       let doneCount = 0;
       HOMEWORK_DATA.forEach((d, di) => {
         // v161：只认后台确认过的记录（见 _clsCk 注释）
-        const ck = this._clsCk(student.id, di);
-        if (ck) {
-          if (ck.done) doneCount++;
-          html += '<td><span class="checkin-dot ' + (ck.completed==='partial'?'partial':'done') + '" title="' + ck.time + '">✓</span></td>';
-        } else {
-          html += '<td><span class="checkin-dot undone">✗</span></td>';
-        }
+        const ck = this._clsCk(r.sid, di);
+        if (ck && ck.done) doneCount++;
+        html += '<td>' + this._ckCell(ck, di) + '</td>';
       });
       html += '<td>' + Math.round(doneCount/HOMEWORK_DATA.length*100) + '%</td>';
       html += '</tr>';
     });
-    html += '</tbody></table></div></div>';
+    html += '</tbody><tfoot>' + this._ckCountRow(classStudents, [
+      (() => {
+        let d = 0;
+        classStudents.forEach(s => HOMEWORK_DATA.forEach((x, di) => {
+          const ck = this._clsCk(s.id, di);
+          if (ck && ck.done) d++;
+        }));
+        const all = classStudents.length * HOMEWORK_DATA.length;
+        return all ? Math.round(d / all * 100) + '%' : '—';
+      })(),
+    ]) + '</tfoot></table></div></div>';
+    html += '<p class="text-sub fs-12 mt-8">✓ 已完成　◐ 做了一部分　✗ 没有记录　· 还没到这一天。'
+      + '最下面一行是每天实际打卡的人数（分母是全班人数），和谁登录、自己打没打卡无关。</p>';
     return html;
   },
 

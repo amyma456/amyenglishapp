@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="188">
+<meta name="app-version" content="189">
 <link rel="manifest" href="manifest.json">
 <!-- v135：登录第一步就是调 api.amyeng.top 验手机号。提前把 DNS + TLS
      握手做掉，接口首调能省几百毫秒 —— 手机弱网下这几百毫秒很显眼。 -->
@@ -755,7 +755,7 @@ body.wf-typing .writing-banner{display:none}
   border:1px solid var(--orange);background:var(--orange-wash);color:var(--orange-press);
   border-radius:var(--radius-pill);font-size:14px;font-weight:600}
 .wr-lead.playing{background:var(--orange);color:#fff}
-/* v188 作文跟读挖空：先填空再跟读 */
+/* v189 作文跟读挖空：先填空再跟读 */
 .wr-blank-row{display:flex;gap:8px;margin-top:8px;align-items:center}
 .wr-blank-in{flex:1;max-width:220px;padding:9px 12px;border:1.5px dashed var(--orange);
   border-radius:var(--radius-sm);font-size:15px;background:var(--bg);color:var(--ink)}
@@ -932,6 +932,23 @@ button.gate-locked::before{content:'🔒 '}
 .checkin-dot.done{background:var(--success);color:#fff}
 .checkin-dot.undone{background:var(--danger-light);color:var(--danger)}
 .checkin-dot.partial{background:var(--warning-light);color:var(--warning)}
+/* v189：还没到的那一天 —— 灰点。以前这里也画 ✗，周一登录时周二到周日
+   全是叉，家长看到的是"全班都欠了五天作业"，其实那几天还没开始。 */
+.checkin-dot.future{background:var(--bg);color:var(--text-sub);border:1px dashed #E0CDBD}
+/* 当天打卡人数那一行（表格最后一行） */
+.ck-count-row td{background:var(--primary-light);font-size:11px;padding:6px 8px;
+  border-top:2px solid var(--primary);color:var(--primary-dark)}
+.ck-count-row td:first-child{font-weight:700;white-space:nowrap}
+.ck-num{font-size:14px;font-weight:800;color:var(--primary-dark)}
+.ck-num.zero{color:var(--text-sub);font-weight:400}
+.ck-of{font-size:10px;color:var(--text-sub);margin-left:1px}
+.ck-part{font-size:9.5px;color:var(--warning);font-style:normal;margin-left:2px}
+.ck-th-today{background:var(--warning-light)!important;color:#B26A00!important}
+/* 本周一次都没上传过的孩子 —— 名字后面标一句，免得家长把"没记录"
+   当成"系统没显示"。 */
+.ck-none-tag{font-size:9.5px;color:#B26A00;background:var(--warning-light);
+  border-radius:6px;padding:0 4px;white-space:nowrap}
+.ck-live .sync-line{color:var(--text-sub)}
 
 /* Error book */
 .error-item{background:var(--card);border-radius:var(--radius);padding:12px;box-shadow:var(--shadow);margin-bottom:10px;border-left:4px solid var(--danger)}
@@ -1495,9 +1512,9 @@ body.perf-on .content-area{padding-bottom:54vh}
 </div>
 
 <script>window.__appReady = false;</script>
-<script defer src="cloud.js?v=188"></script>
-<script defer src="data.js?v=188"></script>
-<script defer src="data-shuffle.js?v=188"></script>
+<script defer src="cloud.js?v=189"></script>
+<script defer src="data.js?v=189"></script>
+<script defer src="data-shuffle.js?v=189"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
 <!--
   ?v= 必须跟着版本号走（v124 修正）。
@@ -1507,9 +1524,9 @@ body.perf-on .content-area{padding-bottom:54vh}
   这个坑很隐蔽：代码明明改了、也部署上去了，手机上跑的还是几个月前的逻辑。
   以后每次发版，这里跟着 app-version 一起改。
 -->
-<script defer src="recorder.js?v=188"></script>
-<script defer src="api.js?v=188"></script>
-<script defer src="app.js?v=188"></script>
+<script defer src="recorder.js?v=189"></script>
+<script defer src="api.js?v=189"></script>
+<script defer src="app.js?v=189"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {

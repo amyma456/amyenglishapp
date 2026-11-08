@@ -286,8 +286,12 @@ ok(/const needsCheckins = \['myprogress', 'compare', 'daily', 'checkin', 'scores
 // 否则就会退化成"永远只显示本机那份"（就是 v120 之前那个"全是未打卡"的老毛病）。
 ok(/_pullCloudCheckins\(scope\)/.test(appSrc),
   '★ 进 tab 仍然会拉后台（只是不再挡在渲染前面）');
-ok(/if \(!changed\) return;[\s\S]{0,80}this\.renderContent\(\);/.test(appSrc),
-  '★ 云端数据变了必须补渲染一次 —— 否则又变成只看本机那份');
+// v189：这条从"变了才补渲染"改成"不是最新一版就补渲染"。
+// 原来的写法在真机上有个坑：第一屏是在云端数据还没到的时候画的（全是 ✗），
+// 等拉回来了，本机早就存着同样一份记录 → changed=0 → 不重画 → 那一屏死叉
+// 就一直留在屏幕上（家长 2026-11-08 报的 Gary 全叉就是这个观感）。
+ok(/if \(!changed && this\._ckPaintedSeq === this\._ckPullSeq\) return;[\s\S]{0,60}this\.renderContent\(\);/.test(appSrc),
+  '★ 云端数据变了（或屏幕还不是最新一版）必须补渲染一次');
 ok(/if \(this\.state\.currentTab !== tab\) return;/.test(appSrc),
   '★ 拉取途中切走了就不补渲染（别让旧数据刷掉新页面）');
 // 只针对 switchTab 那一段查"有没有把网络挡在渲染前面"。

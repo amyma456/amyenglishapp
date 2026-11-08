@@ -93,7 +93,7 @@ console.log('== 1. 刷新后回到原来那一屏 ==');
   ok(!/currentTab = this\.isTeacher\(\) \? 'weekly'/.test(appSrc), '写死回首页的旧代码已移除');
   const swBody = appSrc.slice(appSrc.indexOf('  async switchTab(tab) {'), appSrc.indexOf('  async switchTab(tab) {') + 2600);
   ok(/_saveTab\(tab\)/.test(swBody), '每次切页都记下当前 tab');
-  ok(/restore[\s\S]{0,80}_pullCloudCheckins|_pullCloudCheckins[\s\S]{0,200}renderContent/.test(showAppBody),
+  ok(/restore[\s\S]{0,80}_pullCloudCheckins|_pullCloudCheckins[\s\S]{0,600}renderContent/.test(showAppBody),
      '恢复到数据页后会补拉云端再重画（刷新后看到的是新数据）');
 
   // -------------------------------------------------------------------------
