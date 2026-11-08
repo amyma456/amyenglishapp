@@ -1,4 +1,4 @@
-// verify-v189 —— 两部分：
+// verify-v190 —— 两部分（v189 立的，v190 只补一条空班级兜底）：
 //   A. 家长 2026-11-07 指定内容进 W7（v188 立的，原样保留）
 //   B. 家长 2026-11-08：打卡表每天显示实际打卡人数，且永远是后台当下那一份
 // 通用骨架（30 动作/拼写 3~6/听力题型）由 weekpack-apply 与 verify-weeks 把关。
@@ -101,14 +101,14 @@ if (w7) {
   }
 }
 
-// 7) 版本钉子 189
-ok((html.match(/\?v=189/g) || []).length === 6, 'index.html 六处 ?v=189');
-ok(html.includes('app-version" content="189"'), 'index.html app-version=189');
-ok(/var CACHE_NAME = 'amy-english-v189';/.test(sw), 'sw.js CACHE_NAME v189');
-ok(/var V = 189;/.test(sw), 'sw.js V = 189');
+// 7) 版本钉子 190
+ok((html.match(/\?v=190/g) || []).length === 6, 'index.html 六处 ?v=190');
+ok(html.includes('app-version" content="190"'), 'index.html app-version=189');
+ok(/var CACHE_NAME = 'amy-english-v190';/.test(sw), 'sw.js CACHE_NAME v190');
+ok(/var V = 190;/.test(sw), 'sw.js V = 189');
 
 // =========================================================================
-// 8) v189：打卡表"每天几个人打卡" + 永远显示后台当下那份
+// 8) v190：打卡表"每天几个人打卡" + 永远显示后台当下那份
 //
 // 家长 2026-11-08：「Gary 那一行周一到周日全是叉……无论他打没打卡都要显示
 // 每天的实时数据，什么时候登录都和当下的数据对上。比如周一有 5 个学生打卡，
@@ -166,5 +166,11 @@ ok(/_ckTimer = setInterval/.test(app) && /60000/.test(app),
 ok(/refreshLive/.test(app) && /实时数据/.test(app),
   '页面上有「实时数据 · 上次同步 HH:MM」和手动刷新按钮');
 
-console.log(fail ? '✗ ' + fail + ' 项失败 / ' + (pass + fail) : '✅ verify-v189 全部 ' + pass + ' 项通过');
+// ⑦ 班级还没分配时不能拿空串去查后台（只会 400，一台手机上全班空白）
+ok(/const klass = who\.klass \|\| this\.state\.className \|\| '';/.test(app),
+  '孩子端先算出一个非空班级名');
+ok(/scope === 'class' && klass/.test(app),
+  '班级为空时退回"只拉自己那一份"，不发空 class 请求');
+
+console.log(fail ? '✗ ' + fail + ' 项失败 / ' + (pass + fail) : '✅ verify-v190 全部 ' + pass + ' 项通过');
 process.exit(fail ? 1 : 0);

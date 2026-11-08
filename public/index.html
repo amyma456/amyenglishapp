@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="189">
+<meta name="app-version" content="190">
 <link rel="manifest" href="manifest.json">
 <!-- v135：登录第一步就是调 api.amyeng.top 验手机号。提前把 DNS + TLS
      握手做掉，接口首调能省几百毫秒 —— 手机弱网下这几百毫秒很显眼。 -->
@@ -755,7 +755,7 @@ body.wf-typing .writing-banner{display:none}
   border:1px solid var(--orange);background:var(--orange-wash);color:var(--orange-press);
   border-radius:var(--radius-pill);font-size:14px;font-weight:600}
 .wr-lead.playing{background:var(--orange);color:#fff}
-/* v189 作文跟读挖空：先填空再跟读 */
+/* v190 作文跟读挖空：先填空再跟读 */
 .wr-blank-row{display:flex;gap:8px;margin-top:8px;align-items:center}
 .wr-blank-in{flex:1;max-width:220px;padding:9px 12px;border:1.5px dashed var(--orange);
   border-radius:var(--radius-sm);font-size:15px;background:var(--bg);color:var(--ink)}
@@ -932,7 +932,7 @@ button.gate-locked::before{content:'🔒 '}
 .checkin-dot.done{background:var(--success);color:#fff}
 .checkin-dot.undone{background:var(--danger-light);color:var(--danger)}
 .checkin-dot.partial{background:var(--warning-light);color:var(--warning)}
-/* v189：还没到的那一天 —— 灰点。以前这里也画 ✗，周一登录时周二到周日
+/* v190：还没到的那一天 —— 灰点。以前这里也画 ✗，周一登录时周二到周日
    全是叉，家长看到的是"全班都欠了五天作业"，其实那几天还没开始。 */
 .checkin-dot.future{background:var(--bg);color:var(--text-sub);border:1px dashed #E0CDBD}
 /* 当天打卡人数那一行（表格最后一行） */
@@ -1512,9 +1512,9 @@ body.perf-on .content-area{padding-bottom:54vh}
 </div>
 
 <script>window.__appReady = false;</script>
-<script defer src="cloud.js?v=189"></script>
-<script defer src="data.js?v=189"></script>
-<script defer src="data-shuffle.js?v=189"></script>
+<script defer src="cloud.js?v=190"></script>
+<script defer src="data.js?v=190"></script>
+<script defer src="data-shuffle.js?v=190"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
 <!--
   ?v= 必须跟着版本号走（v124 修正）。
@@ -1524,9 +1524,9 @@ body.perf-on .content-area{padding-bottom:54vh}
   这个坑很隐蔽：代码明明改了、也部署上去了，手机上跑的还是几个月前的逻辑。
   以后每次发版，这里跟着 app-version 一起改。
 -->
-<script defer src="recorder.js?v=189"></script>
-<script defer src="api.js?v=189"></script>
-<script defer src="app.js?v=189"></script>
+<script defer src="recorder.js?v=190"></script>
+<script defer src="api.js?v=190"></script>
+<script defer src="app.js?v=190"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {

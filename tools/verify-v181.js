@@ -202,10 +202,10 @@ console.log('\n--- F. 功能级：真调 _fillReadSentence 扫全库 ---');
   }
 
   console.log('\n--- G. 版本钉 v181 ---');
-  ok(/content="189"/.test(idxSrc), 'index.html meta content="189"');
-  ok((idxSrc.match(/\?v=189/g) || []).length >= 5, 'index.html ?v=189 资源钉 ≥5 处');
-  ok(/var CACHE_NAME = 'amy-english-v189'/.test(swSrc), 'sw.js CACHE_NAME v181');
-  ok(/var V = 189;/.test(swSrc), 'sw.js var V = 181');
+  ok(/content="190"/.test(idxSrc), 'index.html meta content="190"');
+  ok((idxSrc.match(/\?v=190/g) || []).length >= 5, 'index.html ?v=190 资源钉 ≥5 处');
+  ok(/var CACHE_NAME = 'amy-english-v190'/.test(swSrc), 'sw.js CACHE_NAME v181');
+  ok(/var V = 190;/.test(swSrc), 'sw.js var V = 181');
 
   console.log('\n' + (fail ? '✗ ' : '✓ ') + 'v181 校验：' + pass + ' 通过 / ' + fail + ' 失败');
   process.exit(fail ? 1 : 0);

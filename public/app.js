@@ -750,10 +750,17 @@ const App = {
         if (Array.isArray(rows)) { ok = true; n += this._mergeCloudCheckins(rows); }
       }
     } else {
-      const rows = scope === 'class'
-        ? await Api.fetchCheckins({ klass: who.klass || this.state.className })
-        : await Api.fetchCheckins({ studentId: this._myStudentId() });
-      if (Array.isArray(rows)) { ok = true; n += this._mergeCloudCheckins(rows); }
+      // v190：班级名还没同步下来时（孩子刚注册、老师还没分配），klass 是空串。
+      // 拿空串去查后台只会拿到 400，一个孩子都不显示 —— 那台手机上看到的就是
+      // "全班都没打卡"。空班级时退回"只拉自己那一份"，至少自己的记录是准的。
+      const klass = who.klass || this.state.className || '';
+      if (scope === 'class' && klass) {
+        const rows = await Api.fetchCheckins({ klass: klass });
+        if (Array.isArray(rows)) { ok = true; n += this._mergeCloudCheckins(rows); }
+      } else {
+        const own = await Api.fetchCheckins({ studentId: this._myStudentId() });
+        if (Array.isArray(own)) { ok = true; n += this._mergeCloudCheckins(own); }
+      }
     }
     // v189：记下"这份数据是什么时候从后台拿到的"。页面顶上那句
     // 「上次同步 HH:MM」就是它 —— 家长要的"什么时候登录都和当下的数据对上"，

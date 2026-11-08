@@ -81,9 +81,9 @@ ok(!tea.includes(' paired blind'), '老师端：预览不翻面（英文照旧�
 ok(!tea.includes('kw-hit-cn'), '老师端：没有中文主显示');
 
 console.log('\n--- 5. 版本钉 ---');
-ok(idxSrc.includes('app-version" content="189"'), 'index.html meta 版本 = 178');
-ok((idxSrc.match(/\?v=189/g) || []).length >= 5, 'index.html 静态资源 ?v=189（' + (idxSrc.match(/\?v=189/g) || []).length + ' 处）');
-ok(/var CACHE_NAME = 'amy-english-v189'/.test(fs.readFileSync(path.join(ROOT, 'public', 'sw.js'), 'utf8')), 'sw.js 缓存名 = v178');
+ok(idxSrc.includes('app-version" content="190"'), 'index.html meta 版本 = 178');
+ok((idxSrc.match(/\?v=190/g) || []).length >= 5, 'index.html 静态资源 ?v=190（' + (idxSrc.match(/\?v=190/g) || []).length + ' 处）');
+ok(/var CACHE_NAME = 'amy-english-v190'/.test(fs.readFileSync(path.join(ROOT, 'public', 'sw.js'), 'utf8')), 'sw.js 缓存名 = v178');
 ok(!/amy-english-v17[0-7]/.test(idxSrc + fs.readFileSync(path.join(ROOT, 'public', 'sw.js'), 'utf8')), '不再残留 177 及以前的钉子');
 
 console.log('\n========== ' + pass + ' 通过 / ' + fail + ' 失败 ==========');
