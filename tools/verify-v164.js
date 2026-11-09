@@ -32,7 +32,7 @@ const unitsOf = (m) => {
 };
 
 section('1. 第 6 周在题库里');
-ok(W.length === 7, '题库 7 周（W7 于 v190 上线）', W.length);
+ok(W.length === 7, '题库 7 周（W7 于 v191 上线）', W.length);
 const W6 = W[5];
 ok(!!W6 && W6.length === 7, 'W6 有 7 天', W6 && W6.length);
 ok(/const HOMEWORK_WEEKS = \[[^\]]*WEEK6[^\]]*\];/.test(dataSrc), 'HOMEWORK_WEEKS 已包含 WEEK6');
@@ -115,11 +115,11 @@ section('4. 周包自动出题工具链');
 
 section('5. 版本号 v164 全线一致');
 {
-  const refs = (htmlSrc.match(/\?v=190/g) || []).length;
+  const refs = (htmlSrc.match(/\?v=191/g) || []).length;
   ok(refs === 6, 'index.html 6 个脚本引用都是 v164', refs);
-  ok(/app-version"\s+content="190"/.test(htmlSrc), 'app-version = 164');
-  ok(/amy-english-v190/.test(swSrc), 'sw.js CACHE_NAME 升到 v164');
-  ok(/var V = 190;/.test(swSrc), 'sw.js var V = 164');
+  ok(/app-version"\s+content="191"/.test(htmlSrc), 'app-version = 164');
+  ok(/amy-english-v191/.test(swSrc), 'sw.js CACHE_NAME 升到 v164');
+  ok(/var V = 191;/.test(swSrc), 'sw.js var V = 164');
   ok(htmlSrc.indexOf('v=163') < 0, 'index.html 没有残留 v163');
 }
 

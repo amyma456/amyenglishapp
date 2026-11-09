@@ -98,11 +98,11 @@ ok(/_stallBump\(wkey\) >= self\.STALL_PASS_TRIES[\s\S]{0,400}_markWritingSentenc
 ok(appSrc.includes('网络一直没核对上，这一句先通过'), '放行时明确告诉孩子/家长发生了什么');
 
 console.log('\n--- F. 版本钉 ---');
-ok(/<meta name="app-version" content="190">/.test(idxSrc), 'index.html app-version = 179');
-ok((idxSrc.match(/\?v=190/g) || []).length === 6, 'index.html 六处 ?v=190');
-ok(!/\.js\?v=(?!190)\d{2,3}/.test(idxSrc), '没有残留旧 ?v=（脚本引用只有 188）');
-ok(/var CACHE_NAME = 'amy-english-v190'/.test(swSrc), 'sw.js CACHE_NAME = v179');
-ok(/var V = 190;/.test(swSrc), 'sw.js V = 179');
+ok(/<meta name="app-version" content="191">/.test(idxSrc), 'index.html app-version = 179');
+ok((idxSrc.match(/\?v=191/g) || []).length === 6, 'index.html 六处 ?v=191');
+ok(!/\.js\?v=(?!191)\d{2,3}/.test(idxSrc), '没有残留旧 ?v=（脚本引用只有 188）');
+ok(/var CACHE_NAME = 'amy-english-v191'/.test(swSrc), 'sw.js CACHE_NAME = v179');
+ok(/var V = 191;/.test(swSrc), 'sw.js V = 179');
 
 console.log('\n--- G. 真跑一遍：识别一直不回来，9 秒必须结算 ---');
 (async function () {

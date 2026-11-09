@@ -56,10 +56,10 @@ section('1b. 阅读与完形的新结构');
     if (m.type === 'reading') readings.push({ w: wi, m });
     if (m.type === 'cloze') clozes.push({ w: wi, m });
   })));
-  ok(readings.length === 27, '阅读模块 27 篇（W1-W4 每周 4 篇 + W5 承接；v176 起线下语法题入周，W6 置换为 2 篇；v190 起 W7 每周 5 篇）', readings.length);
+  ok(readings.length === 27, '阅读模块 27 篇（W1-W4 每周 4 篇 + W5 承接；v176 起线下语法题入周，W6 置换为 2 篇；v191 起 W7 每周 5 篇）', readings.length);
   ok(readings.every(x => sentsEN(x.m.passage).length === 6), '每篇阅读课文 6 句');
-  // v190（家长 2026-11-07）：作文跟读每天占 2~3 个动作，30 道上限下阅读题让位为 3 道
-  ok(readings.every(x => x.m.questions.length >= 3), '每篇阅读 ≥3 道题（v190 起）');
+  // v191（家长 2026-11-07）：作文跟读每天占 2~3 个动作，30 道上限下阅读题让位为 3 道
+  ok(readings.every(x => x.m.questions.length >= 3), '每篇阅读 ≥3 道题（v191 起）');
   ok(readings.every(x => sentsEN(x.m.passage).length === sentsCN(x.m.passage_cn).length),
      '每篇阅读中英句数逐句对齐');
   ok(clozes.length === 11, '完形模块 11 篇（W1-W4 每周 2 篇 + W5/W6/W7 周日承接；周四完形被 v162 家长要求挪掉换成 30 道图题）', clozes.length);
@@ -129,10 +129,10 @@ section('2. app.js 按真实动作计数（行为级，W1 周一）');
 
 section('3. 版本号 = 155');
 {
-  ok(/app-version" content="190"/.test(htmlSrc), 'index.html app-version = 155');
-  ok((htmlSrc.match(/\?v=190/g) || []).length === 6, 'index.html 6 处 ?v=190', (htmlSrc.match(/\?v=190/g) || []).length);
-  ok(/amy-english-v190/.test(swSrc), 'sw.js 缓存名 v155');
-  ok(/var V = 190;/.test(swSrc), 'sw.js var V = 155');
+  ok(/app-version" content="191"/.test(htmlSrc), 'index.html app-version = 155');
+  ok((htmlSrc.match(/\?v=191/g) || []).length === 6, 'index.html 6 处 ?v=191', (htmlSrc.match(/\?v=191/g) || []).length);
+  ok(/amy-english-v191/.test(swSrc), 'sw.js 缓存名 v155');
+  ok(/var V = 191;/.test(swSrc), 'sw.js var V = 155');
 }
 
 console.log('\n———————————————');

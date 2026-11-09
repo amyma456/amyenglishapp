@@ -13613,7 +13613,23 @@ const App = {
     const a = this.alignSpeech(R.word || '', text || '');
     const aligned = !!(a && a.items && a.items.some(function(x) { return x.target && x.status === 'ok'; }));
     const ok = !!voiceOk || aligned || this._heardAny(R.word, text) || this._soundAlike(R.word || '', text);
+    // v191：这个词连续 3 次连声音都核对不上 → 当作读对放行（v179 规则）。
+    // 一个孤立的词识别本来就最不稳，识别链路又不通的机器上不兜底就是死循环。
+    const wStall = 'wrep-' + R.mi + '-' + R.qi + '-' + (R.word || '');
+    if (!ok && this._stallBump(wStall) >= this.STALL_PASS_TRIES) {
+      this._stallClear(wStall);
+      const panel2 = document.getElementById('rd-sent-' + R.mi + '-' + R.qi);
+      if (panel2) {
+        const sp2 = panel2.querySelector('.rd-bad.rd-cur');
+        if (sp2) { sp2.classList.remove('rd-bad', 'rd-cur'); sp2.classList.add('rd-ok'); }
+      }
+      if (hint) hint.innerHTML = '<span style="color:var(--success)">✅ 网络一直没核对上，「' + (R.word || '') + '」先算读对（录音已经交给老师听）</span>';
+      const self2 = this;
+      setTimeout(function() { self2._wordRepairNext(); }, 900);
+      return;
+    }
     if (ok) {
+      this._stallClear(wStall);
       // 在原单词的位置上：红波浪线当场变绿打勾。
       const panel = document.getElementById('rd-sent-' + R.mi + '-' + R.qi);
       if (panel) {
@@ -13959,7 +13975,26 @@ const App = {
     //   没通过 → 和选择题同一套：有错词就逐词原处重读，没有就整句重来。
     if (this._fillReadPending && this._fillReadPending[mi + '-' + qi]) {
       if (!spoken) {
+        // v191：连续 3 次连声音都核对不上 → 放行（同 v179 口语那条路的规则）。
+        // 华为 nova 13 Pro 实测：识别不通的机器上孩子会永远停在
+        // 「这次没核对上」循环里，题做不完 —— 宁可老师多听一遍录音。
+        const hrStall = 'hr-' + dayIdx + '-' + mi + '-' + qi;
+        if (!voiceOk && this._stallBump(hrStall) >= this.STALL_PASS_TRIES) {
+          this._stallClear(hrStall);
+          this._fillReadPending[mi + '-' + qi] = false;
+          this._clearReadMarks(mi, qi);
+          this._playCorrectSound();
+          this._setHoldReadUI(mi, qi, 'passed', null, true);
+          const fAnsEl0 = document.getElementById('ans-' + mi + '-' + qi);
+          if (fAnsEl0) fAnsEl0.innerHTML = '✅ 网络一直没核对上，这句先通过（录音已经交给老师听）';
+          if (this._stepBelongsTo(mi, qi)) {
+            const fNext0 = document.getElementById('stage-next-btn');
+            if (fNext0) { fNext0.disabled = false; fNext0.classList.add('nudge'); }
+          }
+          return;
+        }
         if (voiceOk) {
+          this._stallClear(hrStall);
           this._fillReadPending[mi + '-' + qi] = false;
           this._clearReadMarks(mi, qi);
           this._playCorrectSound();
@@ -13976,6 +14011,8 @@ const App = {
         this._setHoldReadUI(mi, qi, 'noaudio', null, false);
         return;
       }
+      // v191：识别出字了 = 链路是通的，清掉"连续核对不上"的计数。
+      this._stallClear('hr-' + dayIdx + '-' + mi + '-' + qi);
       const fV = verdict || this._readVerdict(sentence, spoken);
       this._markReadProgress(mi, qi, sentence, spoken, false, fV.align);
       this.readLedgerSave(mi, qi, dayIdx, {
@@ -14021,12 +14058,15 @@ const App = {
     const { oi, isCorrect } = lastPick;
     const hint = document.getElementById('rd-live-' + mi + '-' + qi);
     if (hint) hint.textContent = '';
+    // v191：识别出字了就说明链路是通的，清掉连续失败的计数。
+    const hrStall2 = 'hr-' + dayIdx + '-' + mi + '-' + qi;
 
     if (!spoken) {
       // v139：识别端一个字都没回来，但录音里确实有人声 —— 这一遍算读过了。
       // 以前这里让孩子"再读一次"，他读得再清楚也一样卡住，是家长报的
       // 「重复四五遍」最直接的来源。现在按通过走，录音留着给老师听。
       if (voiceOk) {
+        this._stallClear(hrStall2);
         this._clearReadMarks(mi, qi);
         this._recordAnswer(dayIdx, mi, qi, oi, isCorrect);
         const opts = document.querySelectorAll('#q-' + mi + '-' + qi + ' .q-option');
@@ -14045,11 +14085,34 @@ const App = {
         }
         return;
       }
+      // v191：连续 3 次核对不上 → 按上面 voiceOk 的同一套放行（v179 规则，
+      // 填空/选择题的跟读此前漏了这道保险，华为 nova 13 Pro 上死循环）。
+      if (this._stallBump(hrStall2) >= this.STALL_PASS_TRIES) {
+        this._stallClear(hrStall2);
+        this._clearReadMarks(mi, qi);
+        this._recordAnswer(dayIdx, mi, qi, oi, isCorrect);
+        const opts2 = document.querySelectorAll('#q-' + mi + '-' + qi + ' .q-option');
+        opts2.forEach((el, i) => {
+          el.classList.remove('wrong', 'selected');
+          if (i === q.answer) el.classList.add('correct');
+          el.style.pointerEvents = 'none';
+        });
+        const ansEl2 = document.getElementById('ans-' + mi + '-' + qi);
+        if (ansEl2) { ansEl2.style.display = 'block'; ansEl2.innerHTML = '✅ 网络一直没核对上，这句先通过（录音已经交给老师听）'; }
+        this._playCorrectSound();
+        this._setHoldReadUI(mi, qi, 'passed', null, true);
+        if (this._stepBelongsTo(mi, qi)) {
+          const next2 = document.getElementById('stage-next-btn');
+          if (next2) { next2.disabled = false; next2.classList.add('nudge'); }
+        }
+        return;
+      }
       // 真的没录到声音 —— 只提示这一件事，不说"没听清"。
       this._clearReadMarks(mi, qi);
       this._setHoldReadUI(mi, qi, 'noaudio', null, false);
       return;
     }
+    this._stallClear(hrStall2);
 
     // 逐词上色：读对的绿勾、读错/漏读的红色波浪线，光标全部撤掉。
     // 判定和上色同源（v98）：红词直接取对齐结果，不再依赖显示格子的个数。
