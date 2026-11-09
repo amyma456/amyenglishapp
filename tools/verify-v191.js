@@ -183,7 +183,7 @@ ok(/_stallClear\('hr-' \+ dayIdx \+ '-' \+ mi \+ '-' \+ qi\)/.test(app),
   '识别出字了要清掉连续失败计数，放行只留给真的不通的机器');
 
 // ⑨ v191：旧华为浏览器滚动修复
-ok(/\.stage\{height:calc\(100vh - var\(--nav-h\) - var\(--banner-h,0px\)\);\n\s*height:calc\(100dvh/.test(html),
+ok(/\.stage\{height:calc\(100vh - var\(--nav-h\) - var\(--banner-h,0px\)\);[\s\S]{0,8}height:calc\(100dvh/.test(html),
   '.stage 先 100vh 兜底再 100dvh（dvh 不被认识时整条 height 作废 → 整页锁死）');
 ok(/body\.preview-mode \.stage\{height:calc\(100vh[\s\S]{0,80}100dvh/.test(html),
   '老师预览舞台同样双写兜底');
