@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * v191 校验：线上朗读主通道正式换成 Azure 神经语音（静态音频全量重做）。
+ * v192 校验：线上朗读主通道正式换成 Azure 神经语音（静态音频全量重做）。
  *
  * 家长 2026-11-05 试听 A/B 后定调：「Azure 更好一些，全部都换。」
  *
@@ -67,7 +67,7 @@ console.log('== 6) 静态清单与文件 ==');
 const manifestPath = path.join(ROOT, 'public/tts-manifest.json');
 const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
 const keys = Object.keys(manifest).filter((k) => k !== '__static_probe__');
-ok(keys.length > 2700, '清单条目 ' + keys.length + ' 条（含探针 1 条；v191 起旧题库残留已清）');
+ok(keys.length > 2700, '清单条目 ' + keys.length + ' 条（含探针 1 条；v192 起旧题库残留已清）');
 const missing = keys.filter((k) => !fs.existsSync(path.join(ROOT, 'public/tts', manifest[k])));
 ok(missing.length === 0, '清单里引用的文件全都在盘上' + (missing.length ? '（缺 ' + missing.length + '）' : ''));
 const workerManifest = fs.readFileSync(path.join(ROOT, 'worker/src/tts-manifest.js'), 'utf8');
@@ -86,11 +86,11 @@ if (state) {
 console.log('== 8) 版本钉子 ==');
 const html = fs.readFileSync(path.join(ROOT, 'public/index.html'), 'utf8');
 const sw = fs.readFileSync(path.join(ROOT, 'public/sw.js'), 'utf8');
-ok((html.match(/\?v=191/g) || []).length === 6, 'index.html 六处 ?v=191');
+ok((html.match(/\?v=192/g) || []).length === 6, 'index.html 六处 ?v=192');
 ok(!/\?v=18[0-5]/.test(html), 'index.html 没有残留旧版本 ?v=');
-ok(/name="app-version" content="191"/.test(html), 'index.html meta app-version = 186');
-ok(/var CACHE_NAME = 'amy-english-v191';/.test(sw), 'sw.js CACHE_NAME = v191（旧缓存整体作废）');
-ok(/var V = 191;/.test(sw), 'sw.js V = 189');
+ok(/name="app-version" content="192"/.test(html), 'index.html meta app-version = 186');
+ok(/var CACHE_NAME = 'amy-english-v192';/.test(sw), 'sw.js CACHE_NAME = v192（旧缓存整体作废）');
+ok(/var V = 192;/.test(sw), 'sw.js V = 189');
 
 console.log('== 9) 读音网址带版本参数（防浏览器一年 immutable 缓存放旧音）==');
 const appSrc = fs.readFileSync(path.join(ROOT, 'public/app.js'), 'utf8');

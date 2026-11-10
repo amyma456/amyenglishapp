@@ -13041,12 +13041,16 @@ const App = {
   // v143：一句话里哪些位置开始有固定搭配。
   // 传进来的是"纯单词"数组（不含标点），返回 { 起始下标: {len, en, zh, surface} }。
   // 贪心最长匹配，所以 look forward to 不会被拆成 look 和 forward。
-  _phraseMask(words) {
+  // v192：rich=true 时启用"规则搭配"（WordHelp.phraseAtRich），阅读材料、
+  // 作文、选项这些"看和查"的地方能标出更多短语；跟读判分句仍用默认
+  // 的手写表，免得把逐词打勾的词盒切得太碎。
+  _phraseMask(words, rich) {
     const mask = {};
     if (typeof WordHelp === 'undefined' || !words || !words.length) return mask;
+    const pick = rich ? 'phraseAtRich' : 'phraseAt';
     let i = 0;
     while (i < words.length) {
-      const p = WordHelp.phraseAt(words, i);
+      const p = WordHelp[pick](words, i);
       if (p) { mask[i] = p; i += p.len; } else { i++; }
     }
     return mask;
@@ -15208,7 +15212,9 @@ const App = {
       info.push(mm ? mm[2] : null);
       if (mm) words.push(mm[2]);
     });
-    const mask = this._phraseMask(words);
+    // v192：阅读材料/作文/选项启用规则搭配，家长要的「一句画出五六个、
+    // 三四个短语」就是这一步。手写表优先，规则只补漏。
+    const mask = this._phraseMask(words, true);
     let out = '', wi = 0;
     // v172：这一屏出现的短语全部记下来，渲染完统一预取音频。
     // 单词不用管（点下去已经是本机语音秒读），短语才是"点了要等网络"的那一类。
@@ -15424,7 +15430,9 @@ const App = {
     for (let back = 5; back >= 0; back--) {
       const start = idx - back;
       if (start < 0) continue;
-      const p = WordHelp.phraseAt(toks.map(t => t.w), start);
+      const p = WordHelp.phraseAtRich
+        ? WordHelp.phraseAtRich(toks.map(t => t.w), start)
+        : WordHelp.phraseAt(toks.map(t => t.w), start);
       if (!p) continue;
       if (idx >= start && idx < start + p.len) {
         const from = toks[start].a, to = toks[start + p.len - 1].b;
@@ -15473,7 +15481,20 @@ const App = {
     this._lookupWord = word.toLowerCase();
     el.querySelector('#ws-word').textContent = word;
     el.querySelector('#ws-phon').textContent = '';
-    el.querySelector('#ws-zh').innerHTML = '<span class="ws-loading">正在查…</span>';
+    // v192（家长 2026-11-11）：「解释还是正在查询，还需要从云端调数据」。
+    // 本地静态词典 + 短语表都是同步的，先把中文摆上再去 await —— 屏幕
+    // 上连一帧「正在查…」都不该出现。只有真·课外新词才保留网络兜底。
+    const quickPh = (typeof WordHelp !== 'undefined' && WordHelp.phraseInfo)
+      ? WordHelp.phraseInfo(word) : null;
+    const quick = quickPh ? null : (Api.dictLocal ? Api.dictLocal(word) : null);
+    if (quickPh && quickPh.zh) {
+      el.querySelector('#ws-zh').textContent = quickPh.zh;
+    } else if (quick && quick.zh) {
+      el.querySelector('#ws-zh').textContent = quick.zh;
+      if (quick.phon) el.querySelector('#ws-phon').textContent = '/' + quick.phon + '/';
+    } else {
+      el.querySelector('#ws-zh').innerHTML = '<span class="ws-loading">正在查…</span>';
+    }
     const noteEl = el.querySelector('#ws-note');
     const formsEl = el.querySelector('#ws-forms');
     if (noteEl) { noteEl.className = 'ws-note'; noteEl.innerHTML = ''; }

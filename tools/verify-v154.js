@@ -166,9 +166,9 @@ console.log('\n== 4. 单词跟读放宽（说了就过）==');
 
 console.log('\n== 5. 版本号 = 154 ==');
 {
-  ok(/app-version" content="191"/.test(htmlSrc), 'index.html meta = 154');
-  ok((htmlSrc.match(/\?v=191/g) || []).length >= 5, '脚本引用 ?v=191（' + (htmlSrc.match(/\?v=191/g) || []).length + ' 处）');
-  ok(/amy-english-v191/.test(swSrc) && /var V = 191;/.test(swSrc), 'sw.js 缓存名与 V = 154');
+  ok(/app-version" content="192"/.test(htmlSrc), 'index.html meta = 154');
+  ok((htmlSrc.match(/\?v=192/g) || []).length >= 5, '脚本引用 ?v=192（' + (htmlSrc.match(/\?v=192/g) || []).length + ' 处）');
+  ok(/amy-english-v192/.test(swSrc) && /var V = 192;/.test(swSrc), 'sw.js 缓存名与 V = 154');
 }
 
 console.log('');

@@ -1,4 +1,4 @@
-// verify-v191 —— 两部分（v189 立的，v191 只补一条空班级兜底）：
+// verify-v192 —— 两部分（v189 立的，v192 只补一条空班级兜底）：
 //   A. 家长 2026-11-07 指定内容进 W7（v188 立的，原样保留）
 //   B. 家长 2026-11-08：打卡表每天显示实际打卡人数，且永远是后台当下那一份
 // 通用骨架（30 动作/拼写 3~6/听力题型）由 weekpack-apply 与 verify-weeks 把关。
@@ -102,13 +102,13 @@ if (w7) {
 }
 
 // 7) 版本钉子 190
-ok((html.match(/\?v=191/g) || []).length === 6, 'index.html 六处 ?v=191');
-ok(html.includes('app-version" content="191"'), 'index.html app-version=189');
-ok(/var CACHE_NAME = 'amy-english-v191';/.test(sw), 'sw.js CACHE_NAME v191');
-ok(/var V = 191;/.test(sw), 'sw.js V = 189');
+ok((html.match(/\?v=192/g) || []).length === 6, 'index.html 六处 ?v=192');
+ok(html.includes('app-version" content="192"'), 'index.html app-version=189');
+ok(/var CACHE_NAME = 'amy-english-v192';/.test(sw), 'sw.js CACHE_NAME v192');
+ok(/var V = 192;/.test(sw), 'sw.js V = 189');
 
 // =========================================================================
-// 8) v191：打卡表"每天几个人打卡" + 永远显示后台当下那份
+// 8) v192：打卡表"每天几个人打卡" + 永远显示后台当下那份
 //
 // 家长 2026-11-08：「Gary 那一行周一到周日全是叉……无论他打没打卡都要显示
 // 每天的实时数据，什么时候登录都和当下的数据对上。比如周一有 5 个学生打卡，
@@ -172,7 +172,7 @@ ok(/const klass = who\.klass \|\| this\.state\.className \|\| '';/.test(app),
 ok(/scope === 'class' && klass/.test(app),
   '班级为空时退回"只拉自己那一份"，不发空 class 请求');
 
-// ⑧ v191：跟读评分死循环兜底（家长 2026-11-09，华为 nova 13 Pro）
+// ⑧ v192：跟读评分死循环兜底（家长 2026-11-09，华为 nova 13 Pro）
 // 填空跟读和选择题跟读的 noaudio 分支都要有"连续 3 次放行"
 const noaudioStall = (app.match(/_stallBump\(hrStall2?\)/g) || []).length;
 ok(noaudioStall >= 2,
@@ -182,7 +182,7 @@ ok(/wrep-' \+ R\.mi \+ '-' \+ R\.qi \+ '-'/.test(app),
 ok(/_stallClear\('hr-' \+ dayIdx \+ '-' \+ mi \+ '-' \+ qi\)/.test(app),
   '识别出字了要清掉连续失败计数，放行只留给真的不通的机器');
 
-// ⑨ v191：旧华为浏览器滚动修复
+// ⑨ v192：旧华为浏览器滚动修复
 ok(/\.stage\{height:calc\(100vh - var\(--nav-h\) - var\(--banner-h,0px\)\);[\s\S]{0,8}height:calc\(100dvh/.test(html),
   '.stage 先 100vh 兜底再 100dvh（dvh 不被认识时整条 height 作废 → 整页锁死）');
 ok(/body\.preview-mode \.stage\{height:calc\(100vh[\s\S]{0,80}100dvh/.test(html),
@@ -191,5 +191,24 @@ ok(/body\.stage-mode\{overflow:hidden;overscroll-behavior:none\}/.test(html)
   && !/body\.stage-mode,html:has\(body\.stage-mode\)\{overflow/.test(html),
   'body.stage-mode 和 html:has(...) 拆成两条规则（:has 不被支持时整条规则会被丢掉）');
 
-console.log(fail ? '✗ ' + fail + ' 项失败 / ' + (pass + fail) : '✅ verify-v191 全部 ' + pass + ' 项通过');
+// ⑩ v192：短语加量 + 点词本地化（家长 2026-11-11）
+const api2 = fs.readFileSync(path.join(ROOT, 'public/api.js'), 'utf8');
+const app2 = fs.readFileSync(path.join(ROOT, 'public/app.js'), 'utf8');
+ok(/const LOCAL_DICT = \{/.test(api2) && /题库全量单词的本地释义/.test(api2),
+  'api.js 内置题库全量本地词典（点词不再联网）');
+ok(/if \(typeof LOCAL_DICT !== 'undefined' && LOCAL_DICT\)/.test(api2),
+  '_localDictBuild 合并静态词典，词汇卡释义仍优先');
+ok(/dictLocal\(word\)/.test(api2), '提供同步查词入口 dictLocal');
+ok(/const quick = quickPh \? null : \(Api\.dictLocal/.test(app2),
+  '点词弹层在 await 前同步摆中文，不再出现「正在查…」');
+ok(/phraseAtRich/.test(api2) && /collocAt\(tokens, i\)/.test(api2),
+  '规则化搭配识别（手写表之外的常见组合）');
+ok(/\['be close to', '靠近/.test(api2) && /\['large desert', '大沙漠'\]/.test(api2),
+  '★ 家长点名的 is close to / large desert 都进了短语表');
+ok(/const pick = rich \? 'phraseAtRich' : 'phraseAt';/.test(app2)
+  && /_phraseMask\(words, true\)/.test(app2),
+  '阅读材料启用规则搭配，跟读判分句仍只用手写表');
+ok(/\.lk-phrase\{border-bottom:2px solid/.test(html), '短语横线加粗成实线');
+
+console.log(fail ? '✗ ' + fail + ' 项失败 / ' + (pass + fail) : '✅ verify-v192 全部 ' + pass + ' 项通过');
 process.exit(fail ? 1 : 0);

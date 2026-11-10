@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="191">
+<meta name="app-version" content="192">
 <link rel="manifest" href="manifest.json">
 <!-- v135：登录第一步就是调 api.amyeng.top 验手机号。提前把 DNS + TLS
      握手做掉，接口首调能省几百毫秒 —— 手机弱网下这几百毫秒很显眼。 -->
@@ -102,7 +102,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Micr
     var(--canvas);
   min-height:100vh}
 /* 不滚动的页面（登录页、一屏一题）把圆放在视口正中 */
-/* v191：拆开写，:has() 不被支持时不至于整条丢掉 */
+/* v192：拆开写，:has() 不被支持时不至于整条丢掉 */
 body.stage-mode{
   background:
     radial-gradient(circle 620px at 50% 50%, rgba(240,112,0,.12), rgba(240,112,0,0) 70%) no-repeat fixed,
@@ -420,7 +420,7 @@ input,textarea,select{font-family:inherit;font-size:14px;outline:none}
 .align-key span{font-size:11px}
 
 /* ===== 一屏一题：页面不滚动，只有阅读材料在自己的框内滚 ===== */
-/* v191：两条规则拆开写。旧版华为/荣耀浏览器的内核不认识 :has()，而 CSS
+/* v192：两条规则拆开写。旧版华为/荣耀浏览器的内核不认识 :has()，而 CSS
    规则里只要有一个选择器不认识，**整条规则**都会被丢掉 —— 合在一起写的
    后果是连 body.stage-mode 那半也一起失效，下面 .stage 的高度再算错，
    整页就是"划不动"。拆开后每条各管各的，旧内核也能拿到该有的那半。 */
@@ -430,7 +430,7 @@ html:has(body.stage-mode){overflow:hidden;overscroll-behavior:none}
 body.stage-mode .content-area{padding-block:0}
 /* --banner-h 由 JS 在安装横幅显示时设为其高度，否则为 0，
    保证「上一题/下一题」永远不被横幅盖住。 */
-/* v191：先写 100vh 再写 100dvh。不认识 dvh 的内核用第一行（视口高），
+/* v192：先写 100vh 再写 100dvh。不认识 dvh 的内核用第一行（视口高），
    认识的用第二行（更准）。只写 dvh 时整条 height 作废 → 舞台没有固定
    高度 → 内容比屏幕长又不能滚 → 家长报的"下拉键几乎拉不下去"。 */
 .stage{height:calc(100vh - var(--nav-h) - var(--banner-h,0px));
@@ -444,7 +444,7 @@ body.stage-mode .content-area{padding-block:0}
    所以这里不覆盖舞台，而是给它让出一行的高度（--pv-h），让顶栏和舞台
    在同一条垂直流里各占各的。舞台内部的样式一个字节都没动。 */
 body.preview-mode{--pv-h:64px}
-/* v191：同 .stage —— 先 100vh 兜底，再 100dvh 精算 */
+/* v192：同 .stage —— 先 100vh 兜底，再 100dvh 精算 */
 body.preview-mode .stage{height:calc(100vh - var(--nav-h) - var(--pv-h) - var(--banner-h,0px));
   height:calc(100dvh - var(--nav-h) - var(--pv-h) - var(--banner-h,0px))}
 
@@ -771,7 +771,7 @@ body.wf-typing .writing-banner{display:none}
   border:1px solid var(--orange);background:var(--orange-wash);color:var(--orange-press);
   border-radius:var(--radius-pill);font-size:14px;font-weight:600}
 .wr-lead.playing{background:var(--orange);color:#fff}
-/* v191 作文跟读挖空：先填空再跟读 */
+/* v192 作文跟读挖空：先填空再跟读 */
 .wr-blank-row{display:flex;gap:8px;margin-top:8px;align-items:center}
 .wr-blank-in{flex:1;max-width:220px;padding:9px 12px;border:1.5px dashed var(--orange);
   border-radius:var(--radius-sm);font-size:15px;background:var(--bg);color:var(--ink)}
@@ -936,9 +936,11 @@ button.gate-locked::before{content:'🔒 '}
 .ws-forms .ws-form-tag{display:inline-block;background:var(--bg);border-radius:6px;padding:1px 6px;
   margin:2px 6px 2px 0;color:var(--text)}
 .ws-forms .ws-form-tag em{font-style:normal;color:var(--primary);font-weight:600}
-/* 短语：两个词被连成一个盒子，虚线从中间连过去 —— 孩子一眼看出这是一个整体 */
-.lk-phrase{border-bottom:1.5px dotted var(--primary)!important;background:var(--orange-wash);
-  border-radius:6px;padding:0 4px!important}
+/* 短语：两个（或几个）词被连成一个盒子，横线从中间连过去 —— 孩子一眼
+   看出这是一个整体。v192：改粗实线 + 浅底色，跟单词的细虚线彻底分开，
+   家长反馈「好多常见短语没画出来」时也更容易一眼检查有没有标到。 */
+.lk-phrase{border-bottom:2px solid var(--primary)!important;background:var(--orange-wash);
+  border-radius:6px;padding:0 4px!important;box-shadow:inset 0 -3px 0 rgba(47,125,246,.10)}
 .lk-phrase::after{content:'短语';font-size:9px;color:var(--primary);vertical-align:super;
   margin-left:2px;opacity:.85}
 
@@ -948,7 +950,7 @@ button.gate-locked::before{content:'🔒 '}
 .checkin-dot.done{background:var(--success);color:#fff}
 .checkin-dot.undone{background:var(--danger-light);color:var(--danger)}
 .checkin-dot.partial{background:var(--warning-light);color:var(--warning)}
-/* v191：还没到的那一天 —— 灰点。以前这里也画 ✗，周一登录时周二到周日
+/* v192：还没到的那一天 —— 灰点。以前这里也画 ✗，周一登录时周二到周日
    全是叉，家长看到的是"全班都欠了五天作业"，其实那几天还没开始。 */
 .checkin-dot.future{background:var(--bg);color:var(--text-sub);border:1px dashed #E0CDBD}
 /* 当天打卡人数那一行（表格最后一行） */
@@ -1528,9 +1530,9 @@ body.perf-on .content-area{padding-bottom:54vh}
 </div>
 
 <script>window.__appReady = false;</script>
-<script defer src="cloud.js?v=191"></script>
-<script defer src="data.js?v=191"></script>
-<script defer src="data-shuffle.js?v=191"></script>
+<script defer src="cloud.js?v=192"></script>
+<script defer src="data.js?v=192"></script>
+<script defer src="data-shuffle.js?v=192"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
 <!--
   ?v= 必须跟着版本号走（v124 修正）。
@@ -1540,9 +1542,9 @@ body.perf-on .content-area{padding-bottom:54vh}
   这个坑很隐蔽：代码明明改了、也部署上去了，手机上跑的还是几个月前的逻辑。
   以后每次发版，这里跟着 app-version 一起改。
 -->
-<script defer src="recorder.js?v=191"></script>
-<script defer src="api.js?v=191"></script>
-<script defer src="app.js?v=191"></script>
+<script defer src="recorder.js?v=192"></script>
+<script defer src="api.js?v=192"></script>
+<script defer src="app.js?v=192"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {
