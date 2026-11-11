@@ -430,6 +430,295 @@
     started: false
   };
 
+  // ====================================================================
+  // v195 · 星际基地（家长：「多设置一些像基地这样有趣的话」）
+  // --------------------------------------------------------------------
+  // 基地不是换个标题就完事：积分攒到一定程度，基地真的会「升级」，
+  // 每轮出发 / 返航 / 连击 / 里程碑都有专属播报，孩子是在经营一个地方，
+  // 而不是在刷一张分数表。文案集中放在这里，以后想加梗只改数组。
+  // ====================================================================
+  var BASES = [
+    { min: 0,    name: '临时营地',   icon: '⛺', line: '帐篷刚搭好，先攒第一批能量吧！' },
+    { min: 150,  name: '补给小站',   icon: '🔋', line: '补给灯亮了，基地开始运转。' },
+    { min: 400,  name: '能量基地',   icon: '🛰️', line: '天线展开，全班都能收到你的信号！' },
+    { min: 900,  name: '星际空间港', icon: '🌌', line: '飞船进出港，指挥官请就位。' },
+    { min: 1800, name: '银河总部',   icon: '🏰', line: '总部落成，这里是全班的能量中心！' },
+    { min: 3200, name: '星河灯塔',   icon: '✨', line: '灯塔点亮，后来的小宇航员都看着你呢。' }
+  ];
+  var START_CALLS = [
+    '🚀 舱门打开，出发收集能量！',
+    '🛰️ 基地呼叫：这一轮把单词都带回来。',
+    '🌠 推进器预热完毕，单词星球见！',
+    '🔭 雷达扫描中，今天错过的词优先回收。',
+    '⚡ 能量舱空着呢，快去装满它！',
+    '👨‍🚀 指挥官请系好安全带，出发！',
+    '🪐 目标锁定，碰到星星题记得抓牢。',
+    '📡 基地已连线，这一轮全班都看得见。'
+  ];
+  var CHEERS = [
+    '🎉 能量包已入舱，基地亮了一格！',
+    '🌟 收获满满，补给站给你记了一笔。',
+    '🛰️ 信号清晰，这一轮收得漂亮！',
+    '⚡ 电池充满一格，继续冲呀！',
+    '🏅 基地播报：这位指挥官手感很稳。',
+    '🚀 返航成功，下一轮可以再快一点。',
+    '💫 星星都被你收进能量舱啦。',
+    '🔋 今日配额又少一格，分数可一点没少。'
+  ];
+  var COMBO_CALLS = [
+    { at: 3,  text: '🔥 连击 ×3 · 基地天线亮了！' },
+    { at: 5,  text: '⚡ 连击 ×5 · 能量舱开始超载！' },
+    { at: 8,  text: '🌠 连击 ×8 · 指挥部全体起立！' },
+    { at: 12, text: '👑 连击 ×12 · 银河总部发来贺电！' },
+    { at: 16, text: '🪐 连击 ×16 · 这已经不是运气了！' }
+  ];
+  var BASE_LINES = [
+    '基地守则第一条：点错不扣分，别怕，继续点。',
+    '今天错过的单词，基地会优先派给你练。',
+    '少错一道题，明天就多 12 秒配额。',
+    '每一轮都单独结算，分数一直攒着不清零。',
+    '全班共用一个后台，你看到的排名和同学一模一样。',
+    '金色星星题是基地空投，接住就多 30 分。',
+    '连击越高，补给站给的奖励越多。',
+    '音效觉得吵？大厅最下面一按就关。'
+  ];
+  var MILESTONES = [
+    { at: 100,  text: '🎖️ 累计破 100 分，基地给你发了第一枚勋章！' },
+    { at: 400,  text: '🛰️ 累计破 400 分，能量基地正式启用！' },
+    { at: 900,  text: '🌌 累计破 900 分，星际空间港开放！' },
+    { at: 1800, text: '🏰 累计破 1800 分，银河总部落成！' },
+    { at: 3200, text: '✨ 累计破 3200 分，星河灯塔为你点亮！' }
+  ];
+
+  function baseOf(total) {
+    var b = BASES[0], next = null, i;
+    for (i = 0; i < BASES.length; i++) {
+      if (total >= BASES[i].min) b = BASES[i];
+      else { next = BASES[i]; break; }
+    }
+    return { name: b.name, icon: b.icon, line: b.line,
+             next: next ? next.min - total : 0, nextName: next ? next.name : '' };
+  }
+  function callOf(arr) { return pick(arr) || ''; }
+  function comboCall(n) {
+    var out = '', i;
+    for (i = 0; i < COMBO_CALLS.length; i++) if (n >= COMBO_CALLS[i].at) out = COMBO_CALLS[i].text;
+    return out;
+  }
+  function milestoneOf(total) {
+    var out = '', i;
+    for (i = 0; i < MILESTONES.length; i++) if (total >= MILESTONES[i].at) out = MILESTONES[i].text;
+    return out;
+  }
+  function hhmm(ts) {
+    var d = new Date(ts);
+    return pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+  }
+
+  // ====================================================================
+  // v195 · 全班实时积分榜（家长：「每个学生的积分是透明的」「就跟打卡
+  //   同步一样，每台手机看到的都是同一个排名，不是这个手机有那个没有」）
+  // --------------------------------------------------------------------
+  // 唯一真相在后台 D1。本机只放「还没报上去的那一轮」，断网先排队，
+  // 联网/回前台/每 15 秒自动补发 + 重新拉榜。上报的是增量，云端做加法，
+  // 换手机、两台设备同时玩都不会互相覆盖。
+  // ====================================================================
+  var SYNC_KEY = 'amy_wordgame_sync_v1';
+  var Q = [];
+  var BOARD = { rows: [], at: 0, day: '', loading: false };
+  var syncing = false, boardTimer = null;
+
+  function loadQ() {
+    try {
+      var raw = window.localStorage.getItem(SYNC_KEY);
+      var o = raw ? JSON.parse(raw) : null;
+      Q = (o && o.length && o.length === +o.length) ? o : [];
+    } catch (e) { Q = []; }
+  }
+  function saveQ() {
+    try { window.localStorage.setItem(SYNC_KEY, JSON.stringify(Q.slice(-80))); } catch (e) {}
+  }
+  loadQ();
+
+  /** 我是谁。老师试玩不进榜，但照样能看全班榜。 */
+  function myIdentity() {
+    try {
+      var Ap = window.App;
+      if (!Ap || (Ap.isTeacher && Ap.isTeacher())) return null;
+      var st = Ap.state || {};
+      var sid = Ap._myStudentId ? Ap._myStudentId() : (st.phone || '');
+      if (!sid) return null;
+      var who = Ap._myWho ? Ap._myWho() : {};
+      return {
+        student_id: String(sid).slice(0, 80),
+        student_name: String(who.name || st.userName || '').slice(0, 60),
+        student_class: String(who.klass || st.className || '').slice(0, 60)
+      };
+    } catch (e) { return null; }
+  }
+
+  function queueScore(score) {
+    var info = G.info || todayInfo();
+    if (info.teacher) return;              // 老师试玩不占全班名次
+    Q.push({ delta: score, best: S.best, rounds: 1,
+             day: todayStr(), today_delta: score, ts: Date.now() });
+    if (Q.length > 80) Q = Q.slice(-80);
+    saveQ();
+    flushScores();
+  }
+
+  function flushScores() {
+    if (syncing || !Q.length) return;
+    var me = myIdentity();
+    if (!me || !window.Api || !window.Api.reportGameScore) return;
+    syncing = true;
+    var batch = Q.slice(0, 20), i, it;
+    var delta = 0, best = 0, rounds = 0, today = 0, day = '';
+    for (i = 0; i < batch.length; i++) {
+      it = batch[i];
+      delta += Math.max(0, Number(it.delta) || 0);
+      rounds += Math.max(0, Number(it.rounds) || 0);
+      today += Math.max(0, Number(it.today_delta) || 0);
+      best = Math.max(best, Number(it.best) || 0);
+      if (String(it.day || '') > day) day = String(it.day || '').slice(0, 10);
+    }
+    var payload = {
+      student_id: me.student_id, student_name: me.student_name,
+      student_class: me.student_class,
+      delta: delta, best: best, rounds: rounds,
+      today_delta: today, day: day || todayStr()
+    };
+    var done = function (ok) {
+      syncing = false;
+      if (!ok) return;                    // 断网就留着，下次自动补
+      Q = Q.slice(batch.length);
+      saveQ();
+      pullScores();                      // 自己的分刚进后台，立刻刷新榜
+      if (Q.length) setTimeout(flushScores, 400);
+    };
+    try {
+      var p = window.Api.reportGameScore(payload);
+      if (p && p.then) p.then(done, function () { done(false); });
+      else done(!!p);
+    } catch (e) { done(false); }
+  }
+
+  function pullScores() {
+    if (BOARD.loading || !window.Api || !window.Api.fetchGameScores) return;
+    BOARD.loading = true;
+    var done = function (d) {
+      BOARD.loading = false;
+      if (!d) return;                    // 断网保留上一份榜，不闪成空
+      BOARD.rows = d.rows || [];
+      BOARD.day = d.server_day || '';
+      BOARD.at = Date.now();
+      // 正在答题时绝不重画 —— 会把题目和连击打断
+      if (G.phase !== 'playing' && document.getElementById('wg-root')) paint();
+    };
+    try {
+      var p = window.Api.fetchGameScores();
+      if (p && p.then) p.then(done, function () { done(null); });
+      else done(p);
+    } catch (e) { done(null); }
+  }
+
+  function startBoardSync() {
+    if (boardTimer) return;
+    boardTimer = setInterval(function () {
+      if (typeof document.visibilityState !== 'undefined' &&
+          document.visibilityState !== 'visible') return;
+      if (!document.getElementById('wg-root')) return;   // 不在游戏页不耗流量
+      flushScores();
+      pullScores();
+    }, 15000);                            // 比打卡的 60 秒更「实时」
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState !== 'visible') return;
+    if (!document.getElementById('wg-root')) return;
+    flushScores();
+    pullScores();
+  }, false);
+  window.addEventListener('pagehide', function () { flushScores(); }, false);
+
+  function myRank() {
+    var me = myIdentity(), rows = BOARD.rows || [], i;
+    if (!me) return { rank: 0, total: rows.length, row: null };
+    for (i = 0; i < rows.length; i++) {
+      if (rows[i].student_id === me.student_id) {
+        return { rank: i + 1, total: rows.length, row: rows[i] };
+      }
+    }
+    return { rank: 0, total: rows.length, row: null };
+  }
+
+  function boardRow(r, i, isMe) {
+    var medal = i === 0 ? '🥇' : (i === 1 ? '🥈' : (i === 2 ? '🥉' : ('#' + (i + 1))));
+    var lv = levelOf(Number(r.total) || 0);
+    return '<div class="wg-board-row' + (isMe ? ' wg-board-me' : '') + '">' +
+      '<span class="wg-rank">' + medal + '</span>' +
+      '<span class="wg-board-name">' + esc(r.student_name || '小指挥官') +
+        (isMe ? '<em>我</em>' : '') + '</span>' +
+      '<span class="wg-board-lv">' + lv.icon + '</span>' +
+      '<span class="wg-board-score"><b>' + (Number(r.total) || 0) + '</b> 分</span>' +
+      '<span class="wg-board-today">今日 +' + (Number(r.today_score) || 0) + '</span>' +
+    '</div>';
+  }
+
+  /** 基地状态卡：建筑会随累计积分升级 */
+  function baseCardHtml() {
+    var b = baseOf(S.total);
+    var prev = 0, i;
+    for (i = 0; i < BASES.length; i++) if (BASES[i].min <= S.total) prev = BASES[i].min;
+    var nextMin = S.total + (b.next || 1);
+    var pct = b.next > 0
+      ? clamp(Math.round((S.total - prev) / Math.max(1, nextMin - prev) * 100), 3, 100)
+      : 100;
+    var h = '<div class="wg-card wg-base-card">';
+    h += '<div class="wg-card-hd"><span>🛰️ 我的星际基地</span><span class="wg-pill wg-pill-base">' +
+      b.icon + ' ' + esc(b.name) + '</span></div>';
+    h += '<div class="wg-base-ic">' + b.icon + '</div>';
+    h += '<div class="wg-base-line">' + esc(b.line) + '</div>';
+    h += '<div class="wg-track"><div class="wg-track-in" style="width:' + pct + '%"></div></div>';
+    h += '<div class="wg-note">' + (b.next > 0
+      ? '再攒 <b>' + b.next + '</b> 分，基地升级成「' + esc(b.nextName) + '」'
+      : '基地已经升到顶啦，你就是这里的总指挥 👑') + '</div>';
+    var ms = milestoneOf(S.total);
+    if (ms) h += '<div class="wg-base-ms">' + esc(ms) + '</div>';
+    h += '<div class="wg-base-tip">📻 基地播报：' + esc(callOf(BASE_LINES)) + '</div>';
+    h += '</div>';
+    return h;
+  }
+
+  /** 全班实时榜：所有手机读同一个后台，自己的那一行永远高亮 */
+  function boardHtml() {
+    var rows = BOARD.rows || [];
+    var rk = myRank();
+    var me = myIdentity();
+    var meId = me ? me.student_id : '';
+    var h = '<div class="wg-card wg-board">';
+    h += '<div class="wg-card-hd"><span>🏆 基地排行榜 · 全班实时</span><span class="wg-pill">' +
+      (rows.length ? rows.length + ' 位指挥官' : '连线中') + '</span></div>';
+    h += '<div class="wg-board-hint">📡 分数存在后台，每台手机看到的是同一份' +
+      (BOARD.at ? ' · 刚更新 ' + hhmm(BOARD.at) : '') + '</div>';
+    if (!rows.length) {
+      h += '<div class="wg-board-empty">基地正在和后台连线，玩一轮就能看到大家的能量啦。</div>';
+    } else {
+      var i, shown = Math.min(8, rows.length);
+      for (i = 0; i < shown; i++) {
+        h += boardRow(rows[i], i, rows[i].student_id === meId);
+      }
+      if (rk.rank > shown) {
+        h += '<div class="wg-board-gap">···</div>';
+        h += boardRow(rk.row, rk.rank - 1, true);
+      }
+      h += '<div class="wg-board-foot">' + (rk.rank > 0
+        ? '你目前第 <b>' + rk.rank + '</b> 名 / 共 ' + rk.total + ' 人 · 再冲一轮就往上挪'
+        : '你这一轮的分数正在送往基地，马上就上榜 🚀') + '</div>';
+    }
+    h += '</div>';
+    return h;
+  }
+
   function leftMs() {
     return Math.max(0, (G.allowanceMs || 0) - (S.usedMs || 0));
   }
@@ -487,20 +776,27 @@
 
     h += '<div class="wg-hero">';
     h += '<div class="wg-hero-ic">🚀</div>';
-    h += '<div><div class="wg-title">单词星球 · 能量收集站</div>';
-    h += '<div class="wg-sub">答对单词收集能量，连击越高分越多。每轮结算一次，积分一直攒着。</div></div>';
+    h += '<div><div class="wg-title">单词星球 · 星际基地</div>';
+    h += '<div class="wg-sub">' + esc(callOf(START_CALLS)) + '</div></div>';
     h += '</div>';
+    // 一进游戏就能看见自己的名次 —— 家长要的「积分透明」不用往下翻。
+    var rk = myRank();
+    h += '<div class="wg-rank-strip">' + (rk.rank > 0
+      ? '🏆 全班实时第 <b>' + rk.rank + '</b> 名 / 共 ' + rk.total +
+        ' 人 · 累计 <b>' + (Number(rk.row && rk.row.total) || S.total) + '</b> 分'
+      : '🏆 全班实时排名 · 玩一轮就上榜') +
+      '<span>📡 所有手机同步</span></div>';
 
     // 时长规则卡：把「错得少玩得久」摆在明面上
     h += '<div class="wg-card wg-time-card">';
-    h += '<div class="wg-card-hd"><span>⏱️ 今天能玩多久</span><span class="wg-pill">' +
+    h += '<div class="wg-card-hd"><span>⏱️ 基地今日配额</span><span class="wg-pill">' +
       (info.teacher ? '老师试玩' : (info.done ? '今日作业已打卡' : '还没打卡')) + '</span></div>';
     if (info.teacher) {
       h += '<div class="wg-big-time">' + fmt(MAX_SEC * 1000) +
         '</div><div class="wg-note">老师试玩按满额 ' + fmt(MAX_SEC * 1000) + ' 计算。</div>';
     } else if (!info.done) {
       h += '<div class="wg-big-time">' + fmt(TRIAL_SEC * 1000) + '</div>';
-      h += '<div class="wg-note">今日作业还没打卡，先去完成，就能按错题数领取最多 ' +
+      h += '<div class="wg-note">今日作业还没打卡，先去完成，基地就按错题数发放最多 ' +
         fmt(MAX_SEC * 1000) + ' 的正式时长。</div>';
       h += '<button class="wg-btn wg-btn-ghost" data-wg="gotoday">📝 去完成今日作业</button>';
     } else {
@@ -509,16 +805,20 @@
       h += '<div class="wg-big-time">' + fmt(full) + '</div>';
       h += '<div class="wg-track"><div class="wg-track-in" style="width:' + pct + '%"></div></div>';
       h += '<div class="wg-note">' + (info.wrong === 0
-          ? '全部答对，今天可以玩满 ' + fmt(MAX_SEC * 1000) + '！'
-          : '按错题数发放：全对 ' + fmt(MAX_SEC * 1000) + '，每错 1 道少 ' +
+          ? '全部答对，基地今天开满 ' + fmt(MAX_SEC * 1000) + '！'
+          : '基地按错题数发放：全对 ' + fmt(MAX_SEC * 1000) + '，每错 1 道少 ' +
             LOSS_PER_WRONG + ' 秒，最少 ' + fmt(MIN_SEC * 1000) + '。') + '</div>';
       h += '<div class="wg-ladder">' + ladderHtml(info.wrong) + '</div>';
     }
     h += '</div>';
 
+    // v195：基地 + 全班实时榜，紧挨着「今天能玩多久」—— 名次和配额都一眼可见
+    h += boardHtml();
+    h += baseCardHtml();
+
     // 积分总账
     h += '<div class="wg-card">';
-    h += '<div class="wg-card-hd"><span>🏅 我的能量总账</span><span class="wg-pill wg-pill-lv">' +
+    h += '<div class="wg-card-hd"><span>🏅 基地能量总账</span><span class="wg-pill wg-pill-lv">' +
       lv.icon + ' ' + lv.name + '</span></div>';
     h += '<div class="wg-stats">' +
       statBox(S.total, '累计积分', 'var(--primary-dark)') +
@@ -530,20 +830,20 @@
 
     // 玩法
     h += '<div class="wg-card wg-rules">';
-    h += '<div class="wg-card-hd"><span>✨ 怎么拿高分</span></div>';
+    h += '<div class="wg-card-hd"><span>📖 基地作战手册</span></div>';
     h += '<div class="wg-rule"><span>①</span>点对一个 +' + CFG.baseScore +
-      ' 分，点错不扣分，只是连击断掉，还能继续点。</div>';
-    h += '<div class="wg-rule"><span>②</span>连续点对有连击加成，最高每题再加 ' + CFG.comboCap + ' 分。</div>';
-    h += '<div class="wg-rule"><span>③</span>金色星星 ⭐ 额外 +' + CFG.starBonus +
-      ' 分；轮末按答对数和最高连击再发奖励。</div>';
+      ' 分，点错不扣分，只是连击断掉，基地照样欢迎你继续点。</div>';
+    h += '<div class="wg-rule"><span>②</span>连续点对，补给站的连击加成最高每题再加 ' + CFG.comboCap + ' 分。</div>';
+    h += '<div class="wg-rule"><span>③</span>金色星星 ⭐ 是基地空投，额外 +' + CFG.starBonus +
+      ' 分；返航时按答对数和最高连击再发补给。</div>';
     h += '<div class="wg-rule"><span>④</span>一轮 ' + fmt(ROUND_MS) +
-      '，今天错过的单词会优先出现，错得越多练得越准。</div>';
+      '，今天错过的单词会被雷达优先锁定，错得越多练得越准。</div>';
     h += '</div>';
 
     if (S.history.length) {
-      h += '<div class="wg-card"><div class="wg-card-hd"><span>📜 最近几轮</span></div><div class="wg-hist">';
+      h += '<div class="wg-card"><div class="wg-card-hd"><span>📜 基地航行日志</span></div><div class="wg-hist">';
       S.history.slice(0, 5).forEach(function (r) {
-        h += '<div class="wg-hist-row"><span>第 ' + r.n + ' 轮 · 答对 ' + r.c + ' 题 · 连击 ' + r.combo +
+        h += '<div class="wg-hist-row"><span>第 ' + r.n + ' 次出击 · 答对 ' + r.c + ' 题 · 连击 ' + r.combo +
           '</span><b>+' + r.s + '</b></div>';
       });
       h += '</div></div>';
@@ -552,11 +852,11 @@
     h += '<div class="wg-actions">';
     if (left >= 10000) {
       h += '<button class="wg-btn" data-wg="start">' +
-        (G.roundNo > 0 ? '🚀 开始第 ' + (G.roundNo + 1) + ' 轮' : '🚀 开始收集能量') + '</button>';
-      h += '<div class="wg-note wg-center">今天还剩 ' + fmt(left) + ' 可以玩</div>';
+        (G.roundNo > 0 ? '🚀 第 ' + (G.roundNo + 1) + ' 次出击' : '🚀 第一次出击') + '</button>';
+      h += '<div class="wg-note wg-center">基地今日配额还剩 ' + fmt(left) + '，随时可以出击</div>';
     } else {
-      h += '<button class="wg-btn wg-btn-disabled" disabled>今天的能量已收集完</button>';
-      h += '<div class="wg-note wg-center">明天少错几道题，就能玩更久 🌟</div>';
+      h += '<button class="wg-btn wg-btn-disabled" disabled>今日配额已用完，基地收工啦</button>';
+      h += '<div class="wg-note wg-center">明天少错几道题，基地就多开一会儿 🌟</div>';
     }
     h += '<button class="wg-mini" data-wg="mute">' + (S.muted ? '🔇 音效已关' : '🔊 音效开启') + '</button>';
     h += '</div>';
@@ -568,22 +868,23 @@
     var lv = levelOf(S.total);
     var h = '';
     h += '<div class="wg-top">';
-    h += '<div class="wg-top-l"><span class="wg-round">第 ' + G.roundNo + ' 轮</span>' +
+    h += '<div class="wg-top-l"><span class="wg-round">第 ' + G.roundNo + ' 次出击</span>' +
          '<span class="wg-dot">·</span><span>' + lv.icon + ' ' + lv.name + '</span></div>';
     h += '<button class="wg-mini" data-wg="mute">' + (S.muted ? '🔇' : '🔊') + '</button>';
     h += '</div>';
     h += '<div class="wg-hud">';
-    h += '<div class="wg-hud-cell"><span>本轮</span><b id="wg-score">' + G.score + '</b></div>';
+    h += '<div class="wg-hud-cell"><span>本次出击</span><b id="wg-score">' + G.score + '</b></div>';
     h += '<div class="wg-hud-cell"><span>连击</span><b id="wg-combo">×' + G.combo + '</b></div>';
     h += '<div class="wg-hud-cell"><span>累计</span><b id="wg-total">' + S.total + '</b></div>';
     h += '</div>';
-    h += '<div class="wg-clockbar"><div class="wg-clock"><span>本轮剩余</span><b id="wg-clock">' +
-      fmt(G.roundMs) + '</b></div><div class="wg-clock"><span>今天还剩</span><b id="wg-overline">' +
+    h += '<div class="wg-call" id="wg-call">' + esc(comboCall(G.combo) || G.call || '') + '</div>';
+    h += '<div class="wg-clockbar"><div class="wg-clock"><span>出击剩余</span><b id="wg-clock">' +
+      fmt(G.roundMs) + '</b></div><div class="wg-clock"><span>今日配额</span><b id="wg-overline">' +
       fmt(leftMs()) + '</b></div></div>';
     h += '<div class="wg-track wg-track-live"><div class="wg-track-in" id="wg-bar" style="width:100%"></div></div>';
     h += '<div class="wg-qcard' + (q.star ? ' wg-qcard-star' : '') + '">';
-    h += '<div class="wg-qtags">' + (q.star ? '<span class="wg-tag wg-tag-star">⭐ 星星题 · 答对额外 +30</span>' : '') +
-         (q.review ? '<span class="wg-tag wg-tag-review">🔁 今天错过的词</span>' : '') + '</div>';
+    h += '<div class="wg-qtags">' + (q.star ? '<span class="wg-tag wg-tag-star">⭐ 基地空投 · 答对额外 +30</span>' : '') +
+         (q.review ? '<span class="wg-tag wg-tag-review">🔁 雷达锁定 · 今天错过的词</span>' : '') + '</div>';
     h += '<div class="wg-qtitle">' + esc(q.title) + '</div>' +
          '<div class="wg-qsub">' + esc(q.sub) + '</div></div>';
     h += '<div class="wg-opts">';
@@ -594,8 +895,8 @@
     });
     h += '</div>';
     h += '<div class="wg-bottom">' +
-      '<span class="wg-note">点对 +' + CFG.baseScore + ' · 连击加成 · 星星 +' + CFG.starBonus + '</span>' +
-      '<button class="wg-link" data-wg="end">收工结算</button></div>';
+      '<span class="wg-note">📻 点对 +' + CFG.baseScore + ' · 连击加成 · 空投 +' + CFG.starBonus + '</span>' +
+      '<button class="wg-link" data-wg="end">返航结算</button></div>';
     return h;
   }
 
@@ -606,17 +907,22 @@
     var h = '';
     h += '<div class="wg-result">';
     h += '<div class="wg-result-ic">🎉</div>';
-    h += '<div class="wg-result-t">第 ' + G.roundNo + ' 轮完成</div>';
+    h += '<div class="wg-result-t">第 ' + G.roundNo + ' 次出击返航</div>';
+    h += '<div class="wg-cheer">' + esc(G.cheer || callOf(CHEERS)) + '</div>';
     h += '<div class="wg-result-score">+' + l.score + '<span> 分</span></div>';
     h += '<div class="wg-result-detail">答对 ' + l.correct + ' 题 · 最高连击 ×' + l.combo +
       ' · 星星 ' + l.star + ' 颗 · 轮末奖励 +' + l.bonus + '</div>';
     h += '<div class="wg-total-line">累计 <b>' + S.total + '</b> 分 · ' + lv.icon + ' ' + lv.name + '</div>';
+    var rk = myRank();
+    if (rk.rank > 0) {
+      h += '<div class="wg-note">🏆 全班实时第 <b>' + rk.rank + '</b> 名 · 分数已送到后台，同学手机上也能看到</div>';
+    }
     if (lv.next > 0) h += '<div class="wg-note">离下一级还差 ' + lv.next + ' 分</div>';
     h += '</div>';
-    h += '<div class="wg-card"><div class="wg-card-hd"><span>⏱️ 今天的能量</span></div>' +
+    h += '<div class="wg-card"><div class="wg-card-hd"><span>⏱️ 基地今日配额</span></div>' +
       '<div class="wg-track"><div class="wg-track-in" style="width:' +
       clamp(Math.round(left / (G.allowanceMs || 1) * 100), 0, 100) + '%"></div></div>' +
-      '<div class="wg-note">还剩 ' + fmt(left) + '，一轮 30 秒。</div></div>';
+      '<div class="wg-note">配额还剩 ' + fmt(left) + '，一次出击 30 秒。</div></div>';
     h += '<div class="wg-actions">';
     if (left >= 10000) h += '<button class="wg-btn" data-wg="next">🚀 开始第 ' + (G.roundNo + 1) + ' 轮</button>';
     h += '<button class="wg-btn wg-btn-ghost" data-wg="lobby">回到基地</button>';
@@ -631,14 +937,19 @@
     var h = '';
     h += '<div class="wg-result">';
     h += '<div class="wg-result-ic">🏆</div>';
-    h += '<div class="wg-result-t">今天的能量收集完毕</div>';
+    h += '<div class="wg-result-t">今日基地收工</div>';
     h += '<div class="wg-result-score">' + S.todayScore + '<span> 分</span></div>';
-    h += '<div class="wg-result-detail">今天玩了 ' + G.roundNo + ' 轮 · 共 ' + fmt(used * 1000) +
+    h += '<div class="wg-result-detail">今天出击 ' + G.roundNo + ' 次 · 共 ' + fmt(used * 1000) +
       ' · 累计总积分 ' + S.total + ' 分</div>';
     h += '<div class="wg-total-line">' + lv.icon + ' ' + lv.name + '</div>';
+    var rk = myRank();
+    if (rk.rank > 0) {
+      h += '<div class="wg-note">🏆 全班实时第 <b>' + rk.rank + '</b> 名 / 共 ' + rk.total + ' 人</div>';
+    }
+    h += '<div class="wg-note">📻 基地播报：' + esc(callOf(BASE_LINES)) + '</div>';
     h += '</div>';
     h += '<div class="wg-card wg-time-card">';
-    h += '<div class="wg-card-hd"><span>🌟 明天玩更久的办法</span></div>';
+    h += '<div class="wg-card-hd"><span>🌟 明天让基地多开一会儿</span></div>';
     if (info.teacher) {
       h += '<div class="wg-note">老师试玩按满额 3 分钟计算。</div>';
     } else {
@@ -687,9 +998,12 @@
     var a = document.getElementById('wg-score');
     var b = document.getElementById('wg-combo');
     var c = document.getElementById('wg-total');
+    var d = document.getElementById('wg-call');
     if (a) a.innerHTML = G.score;
     if (b) b.innerHTML = '×' + G.combo;
     if (c) c.innerHTML = S.total;
+    // 连击到 3 / 5 / 8 / 12 / 16 时基地会喊一嗓子，断了就回到出发播报
+    if (d) d.innerHTML = esc(comboCall(G.combo) || G.call || '');
   }
 
   function optEl(i) {
@@ -724,6 +1038,7 @@
     G.score = 0; G.combo = 0; G.maxCombo = 0; G.correct = 0; G.starHit = 0;
     G.locked = false; G.started = true;
     G.q = makeQuestion();
+    G.call = callOf(START_CALLS);
     G.phase = 'playing';
     paint();
     clearInterval(G.timer);
@@ -764,7 +1079,7 @@
       G.combo = 0;
       beep('bad');
       if (el) el.className += ' wg-opt-wrong';
-      floatScore(el, '连击断啦', 'bad');
+      floatScore(el, '连击断啦，基地等你再连一次', 'bad');
       updateHud();
     }
   }
@@ -787,6 +1102,10 @@
     if (S.history.length > 8) S.history = S.history.slice(0, 8);
     persist();
     G.last = { score: score, bonus: bonus, correct: G.correct, combo: G.maxCombo, star: G.starHit };
+    G.cheer = callOf(CHEERS);
+    // v195：这一轮的分数立刻送后台，别的手机马上能看到名次变化。
+    // 断网就先排队，回前台 / 每 15 秒 / 下次打开都会自动补发。
+    queueScore(score);
     G.phase = leftMs() >= 10000 ? 'round' : 'finish';
     G.locked = false;
     paint();
@@ -826,7 +1145,11 @@
     /** app.js 把这段塞进 content-area */
     render: function () {
       ensureDay();
-      if (!G.html) G.html = view();
+      // v195：大厅里有实时榜单，每次进页面都要按最新后台数据重画，
+      // 不能拿缓存的旧 HTML（否则这台手机会看到上一版名次）。
+      if (G.phase === 'lobby' || G.phase === 'round' || G.phase === 'finish' || !G.html) {
+        G.html = view();
+      }
       return '<div id="wg-root" class="wg-root">' + G.html + '</div>';
     },
     /** 每次 renderContent 之后调；只在必要时刷新大厅 / 补时钟 */
@@ -834,6 +1157,10 @@
       ensureDay();
       var root = document.getElementById('wg-root');
       if (!root) return;
+      // v195：进游戏页就把没报完的分补上、把后台的榜拉回来，并开定时同步。
+      startBoardSync();
+      flushScores();
+      pullScores();
       if (G.phase === 'lobby') { G.info = todayInfo(); paint(); }
       else if (G.phase === 'playing') paintClock();
       else if (!root.innerHTML) paint();
@@ -845,15 +1172,22 @@
     rule: rule,
     grantSec: grantSec,
     levelOf: levelOf,
+    baseOf: baseOf,
     todayInfo: todayInfo,
     total: function () { return S.total; },
     config: function () { return CFG; },
+    board: function () { return BOARD; },
+    myRank: myRank,
+    pullScores: pullScores,
+    flushScores: flushScores,
     // 校验脚本用的内部把手
     _test: {
       makeQuestion: makeQuestion,
       buildPool: buildPool,
       endRound: endRound,
       startRound: startRound,
+      boardHtml: boardHtml,
+      baseCardHtml: baseCardHtml,
       state: G,
       save: function () { return S; },
       reset: function () { S = defSave(); persist(); }

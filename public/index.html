@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="194">
+<meta name="app-version" content="195">
 <link rel="manifest" href="manifest.json">
 <!-- v135：登录第一步就是调 api.amyeng.top 验手机号。提前把 DNS + TLS
      握手做掉，接口首调能省几百毫秒 —— 手机弱网下这几百毫秒很显眼。 -->
@@ -1468,6 +1468,51 @@ body.perf-on .content-area{padding-bottom:54vh}
   .wg-opt{font-size:15px;min-height:60px}
   .wg-result-score{font-size:40px}
 }
+/* ==========================================================================
+   v195 · 星际基地 + 全班实时积分榜
+   与 v194 同一套浅色变量；不引入新选择器、不单写新视口单位，
+   行内固定宽度代替 gap，老华为浏览器、平板自带浏览器都能顺滑滚动、点得动。
+   ========================================================================== */
+.wg-rank-strip{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;
+  margin:0 0 12px;padding:10px 12px;border-radius:14px;border:1px solid #FFE0B2;
+  background:linear-gradient(90deg,#FFF7ED,#EEF6FF);font-size:13px;color:var(--text);line-height:1.5}
+.wg-rank-strip b{color:var(--primary-dark);font-size:15px}
+.wg-rank-strip span{font-size:11px;color:var(--text-sub);white-space:nowrap}
+.wg-board-hint{font-size:11px;color:var(--text-sub);margin:0 0 8px}
+.wg-board-row{display:flex;align-items:center;padding:8px 6px;border-bottom:1px solid var(--line);
+  font-size:13px;min-height:38px}
+.wg-board-row.wg-board-me{background:#FFF8E6;border-radius:10px;border-bottom-color:transparent;
+  box-shadow:inset 0 0 0 1px #FFD591}
+.wg-rank{width:34px;flex:0 0 34px;font-weight:800;color:var(--primary-dark);text-align:center}
+.wg-board-name{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  color:var(--text);font-weight:600}
+.wg-board-name em{font-style:normal;margin-left:6px;padding:1px 6px;border-radius:8px;
+  background:var(--primary);color:#fff;font-size:10px;font-weight:700}
+.wg-board-lv{width:26px;flex:0 0 26px;text-align:center;font-size:15px}
+.wg-board-score{width:74px;flex:0 0 74px;text-align:right;color:var(--text-sub);font-size:12px}
+.wg-board-score b{font-size:15px;color:var(--primary-dark)}
+.wg-board-today{width:74px;flex:0 0 74px;text-align:right;color:var(--teal);font-size:11px}
+.wg-board-gap{text-align:center;color:var(--text-sub);font-size:12px;padding:4px 0;letter-spacing:2px}
+.wg-board-foot{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);
+  font-size:12px;color:var(--text-sub);text-align:center}
+.wg-board-foot b{color:var(--primary-dark)}
+.wg-board-empty{font-size:12px;color:var(--text-sub);padding:14px 4px;text-align:center}
+.wg-base-card{text-align:center;background:linear-gradient(180deg,#F5FBFF,#FFFFFF)}
+.wg-base-ic{font-size:44px;line-height:1.2;margin:4px 0 6px;animation:wg-bob 3.4s ease-in-out infinite}
+.wg-base-line{font-size:13px;color:var(--text);font-weight:600;margin-bottom:10px}
+.wg-base-card .wg-track{margin:6px 0}
+.wg-base-ms{margin-top:8px;font-size:12px;color:var(--accent-dark);font-weight:700}
+.wg-base-tip{margin-top:8px;font-size:11px;color:var(--text-sub);text-align:left;
+  background:#F7FBFF;border-radius:10px;padding:8px 10px}
+.wg-call{min-height:20px;text-align:center;font-size:12px;color:var(--accent-dark);
+  font-weight:700;margin:6px 0 2px}
+.wg-cheer{font-size:13px;color:var(--primary-dark);font-weight:700;margin:4px 0 2px}
+@media (max-width:400px){
+  .wg-board-score,.wg-board-today{width:62px;flex-basis:62px}
+  .wg-board-lv{width:22px;flex-basis:22px}
+  .wg-rank{width:28px;flex-basis:28px}
+  .wg-rank-strip{font-size:12px}
+}
 </style>
 </head>
 <body>
@@ -1687,9 +1732,9 @@ body.perf-on .content-area{padding-bottom:54vh}
 </div>
 
 <script>window.__appReady = false;</script>
-<script defer src="cloud.js?v=194"></script>
-<script defer src="data.js?v=194"></script>
-<script defer src="data-shuffle.js?v=194"></script>
+<script defer src="cloud.js?v=195"></script>
+<script defer src="data.js?v=195"></script>
+<script defer src="data-shuffle.js?v=195"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
 <!--
   ?v= 必须跟着版本号走（v124 修正）。
@@ -1699,13 +1744,13 @@ body.perf-on .content-area{padding-bottom:54vh}
   这个坑很隐蔽：代码明明改了、也部署上去了，手机上跑的还是几个月前的逻辑。
   以后每次发版，这里跟着 app-version 一起改。
 -->
-<script defer src="recorder.js?v=194"></script>
-<script defer src="api.js?v=194"></script>
+<script defer src="recorder.js?v=195"></script>
+<script defer src="api.js?v=195"></script>
 <!-- v194：小游戏独立成文件，不塞进已经 800KB 的 app.js。必须排在 app.js
      **前面**：app.js 顶层有同步初始化，登录回来若正好停在「单词乐园」，
      渲染时 WordGame 得已经存在。game.js 只在被点击/渲染时才读 window.App。 -->
-<script defer src="game.js?v=194"></script>
-<script defer src="app.js?v=194"></script>
+<script defer src="game.js?v=195"></script>
+<script defer src="app.js?v=195"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {

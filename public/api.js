@@ -2814,6 +2814,44 @@ const Api = {
     } catch (e) { console.warn('clearStudentWrongQuestions failed:', e); return null; }
   },
 
+  // -- v195 · 单词星球全班实时积分榜 ---------------------------------------
+  // 家长：「每个学生的积分是透明的，Yunus 能看见其他几个学生的积分，
+  //   就跟打卡同步一样，每台手机看到的都是同一个实时排名。」
+  // 所以积分的**唯一真相在后台 D1**，本机 localStorage 只当离线待发队列。
+  // 上报的是「这一轮赢了多少」的增量，云端做加法 —— 换手机、清缓存、
+  // 两台设备同时玩，都不会互相覆盖，也不会把分丢掉。
+  async reportGameScore(body) {
+    if (!body || !body.student_id) return false;
+    try {
+      let ver = 0;
+      try {
+        const meta = document.querySelector('meta[name="app-version"]');
+        if (meta) ver = parseInt(meta.getAttribute('content'), 10) || 0;
+      } catch (e) {}
+      const payload = Object.assign({}, body, { client_ver: ver });
+      const res = await fetch(this._classUrl('/api/game-scores/report'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        keepalive: true,
+      });
+      if (!res.ok) return false;
+      const d = await res.json();
+      return !!(d && d.ok);
+    } catch (e) { return false; }
+  },
+
+  // 失败返回 null（不是 []）—— 断网和「后台一个人都没有」必须分得清，
+  // 否则孩子一离线就看到空榜，以为同学们的分数都没了。
+  async fetchGameScores() {
+    try {
+      const res = await fetch(this._classUrl('/api/game-scores'), { cache: 'no-store' });
+      if (!res.ok) return null;
+      const d = await res.json();
+      return (d && Array.isArray(d.rows)) ? d : null;
+    } catch (e) { return null; }
+  },
+
   // -- speech recognition -------------------------------------------------
   // Posts 16kHz mono WAV to our own Worker, which calls Workers AI Whisper.
   // Deliberately NOT the browser's SpeechRecognition: that is Chrome-only and
@@ -2840,7 +2878,9 @@ const Api = {
   // 正常情况完全碰不到这个上限（一趟 0.7~1.5s），它只是兜住"服务端真挂了"。
   // v131：重试收敛成"整次朗读 ≤2 趟"，单趟预算由 _asrBudget 统一下发，
   // 这个常量降级为**兜底上限**（见 ASR_BUDGET_MS）。保持不变以免影响旧行为。
-  TRANSCRIBE_TIMEOUT: 18000,
+  // v195：18s → 6s。单趟超时不该比整次朗读的总预算还长；真正管事的是
+  // 下面的 ASR_BUDGET_MS，这个只是最后一道保险。
+  TRANSCRIBE_TIMEOUT: 6000,
 
   // ===== v131：ASR 性能埋点 =================================================
   //
@@ -2964,7 +3004,9 @@ const Api = {
   // 兜住"上游抖一下"；再等下去就不叫出分了，叫让孩子对着按钮发呆。
   // 超预算不再是"识别失败、重读一遍"—— app 侧会用本地录音判定放行
   // （见 app.js 的 _voiceOk），所以缩短预算不会误伤读对的孩子。
-  ASR_BUDGET_MS: 5000,      // 整次朗读的总时间预算
+  // v195：5s → 4s。家长「核对查分的时间再变得更短一点」。正常一趟 0.7~1.5s，
+  // 4 秒够兜住一次上游抖动；超预算由本地录音判定放行，不会冤枉读对的孩子。
+  ASR_BUDGET_MS: 4000,      // 整次朗读的总时间预算
   ASR_MAX_TRIPS: 2,         // 整次朗读最多打 2 趟 _transcribeOnce
   _asrSpent: 0,             // 本次朗读已经花掉的时间
   _asrTrips: 0,             // 本次朗读已经打过的趟数
@@ -3175,7 +3217,9 @@ const Api = {
   // 下面这层 Promise.race 是兜底：不管里面卡在哪一步，到点就交 null 回去，
   // 上层按"识别端没回话"处理（还有本地录音判"有没有出声"那一条），
   // 孩子一定能往下走。
-  ASR_HARD_CAP_MS: 12000,
+  // v195：12s → 7s。它兜的是「连 res.json() 都不回来」那种 Hang（华为系
+  // 浏览器），7 秒已经是极限；再长就不是出分，是让孩子对着按钮发呆。
+  ASR_HARD_CAP_MS: 7000,
 
   async transcribe(blob, meta, opts) {
     if (!blob) return null;
@@ -3263,7 +3307,20 @@ const Api = {
       const text = (data.text || '').trim();
       this._noteSpent(t0);
       this.perfHop({ ms: this._elapsed(t0), headers, text, empty: !text });
-      return { text, words: data.words || null };
+      // v195：worker 已经把「AI 合分」算好并随这一趟一起回来了 —— 没有
+      // 额外请求、没有额外等待。记一份全局快照，判定层可以据此跳过
+      // 不必要的二次兜底（读得准就不用再打一趟识别）。
+      if (typeof data.aiScore === 'number') {
+        this.lastAiScore = data.aiScore;
+        this.lastAiBy = data.aiBy || 'edge-ai';
+      }
+      return {
+        text,
+        words: data.words || null,
+        aiScore: (typeof data.aiScore === 'number') ? data.aiScore : null,
+        aiBy: data.aiBy || '',
+        aiDetail: data.aiDetail || null,
+      };
     } catch (e) {
       errName = (e && e.name === 'AbortError') ? 'timeout' : String((e && e.message) || e);
       console.warn('transcribe failed:', e && e.name === 'AbortError' ? 'timeout' : e);

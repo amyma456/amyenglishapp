@@ -247,7 +247,8 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
     ok('刚开始时 = 总预算', t0 === api.ASR_BUDGET_MS, '实际 ' + t0);
     api._asrSpent = 5000;
     const t1 = api.asrTripTimeout();
-    ok('花掉 5s 后只剩 7s', t1 === api.ASR_BUDGET_MS - 5000, '实际 ' + t1);
+    // v195：总预算收到 4s，花掉 5s 已经是超预算，必须直接 0（不再发新请求）。
+    ok('花掉 5s（超预算）后不再发新请求', t1 === 0, '实际 ' + t1);
     ok('★ 且不超过 TRANSCRIBE_TIMEOUT 兜底上限',
        t1 <= api.TRANSCRIBE_TIMEOUT, 't1=' + t1 + ' cap=' + api.TRANSCRIBE_TIMEOUT);
   }

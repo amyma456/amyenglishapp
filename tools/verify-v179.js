@@ -16,7 +16,7 @@
  *
  * 断言：
  *  A. 识别链路：总时限 + 单趟定时器覆盖 res.json + finally 才清
- *  B. 三条出分路径（口语 / 跟读 / 单读单词）都有 9 秒看门狗，且只结算一次
+ *  B. 三条出分路径（口语 / 跟读 / 单读单词）都有看门狗，且只结算一次
  *  C. 结算代码抛错时按钮复位可重读（不锁死）
  *  D. 扫全屏的卡死定时器（data-scoring-at + _stallGuardStart）
  *  E. 连续 3 次核对不上放行（录音留档），不让孩子做不完作业
@@ -36,7 +36,7 @@ const idxSrc = fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8');
 const swSrc = fs.readFileSync(path.join(ROOT, 'public', 'sw.js'), 'utf8');
 
 console.log('\n--- A. 识别链路的总时限 ---');
-ok(/ASR_HARD_CAP_MS:\s*12000/.test(apiSrc), 'Api 有硬上限 ASR_HARD_CAP_MS = 12000');
+ok(/ASR_HARD_CAP_MS:\s*7000/.test(apiSrc), 'v195：Api 硬上限收紧到 7000');
 ok(/async transcribe\(blob, meta, opts\)[\s\S]{0,900}Promise\.race\(\[flow, wall\]\)/.test(apiSrc),
   'transcribe 用 Promise.race 兜住整条链路，到点必回 null');
 ok(/async _transcribeFlow\(blob, meta, opts\)/.test(apiSrc), '原流程拆成 _transcribeFlow（保留原逻辑）');
@@ -52,7 +52,7 @@ ok(!/await fetch\(this\.TRANSCRIBE_URL[\s\S]{0,600}clearTimeout\(timer\)\);?\s*h
 ok(/finally \{[\s\S]{0,200}clearTimeout\(timer\)/.test(onceBody), '定时器在 finally 里清（成功/失败都覆盖）');
 ok((onceBody.match(/clearTimeout\(timer\)/g) || []).length === 1, '单趟里只有一处 clearTimeout（不重复、不漏清）');
 
-console.log('\n--- B. 三条出分路径都有 9 秒看门狗 ---');
+console.log('\n--- B. 三条出分路径都有看门狗 ---');
 // 口语
 ok(/Speaking scoring watchdog \(9s\)/.test(appSrc), '口语跟读出分：9 秒看门狗');
 ok(!/Speaking scoring watchdog \(25s\)/.test(appSrc), '口语跟读出分：25 秒看门狗已撤');
@@ -62,11 +62,12 @@ ok(/let watchdog = null;[\s\S]{0,1200}watchdog = setTimeout\(function \(\) \{[\s
 ok(/Hold-read scoring watchdog \(9s\)/.test(appSrc), '阅读逐句跟读出分：9 秒看门狗');
 ok(!/Hold-read scoring watchdog \(25s\)/.test(appSrc), '阅读逐句跟读：25 秒看门狗已撤');
 // 按住跟读（作文朗读 / 单词跟读）
-ok(/Hold scoring watchdog \(9s\) fired — settle without transcript/.test(appSrc),
-  '按住跟读（作文/单词）：9 秒看门狗');
+ok(/Hold scoring watchdog \(5\.5s\) fired — settle without transcript/.test(appSrc),
+  'v195：按住跟读（作文/单词）5.5 秒看门狗');
 ok(/var done = false;[\s\S]{0,600}if \(done\) return;[\s\S]{0,200}clearTimeout\(hardCap\)/.test(appSrc),
   '按住跟读：onDone 只走一次（late 结果不会二刷界面）');
-ok(/slowHint = setTimeout[\s\S]{0,300}网络有点慢，还在核对/.test(appSrc), '按住跟读：4 秒后给一句"还在核对"，不是干等');
+ok(!appSrc.includes('网络有点慢，还在核对') && appSrc.includes('出分中…'),
+  'v195：不再说网络慢/等待秒数，只留极简状态');
 // 单词原处纠错
 ok(/Word repair watchdog \(9s\) fired — settle without transcript/.test(appSrc), '单读单词（错词纠错）：9 秒看门狗');
 ok(/settleRepair\(text\);/.test(appSrc) && /\.catch\(function \(e\) \{\s*console\.warn\('word repair capture failed:'[\s\S]{0,80}settleRepair\(null\)/.test(appSrc),
@@ -95,16 +96,16 @@ ok(/_stallBump\(stallKey\) >= this\.STALL_PASS_TRIES[\s\S]{0,400}_persistSpeakin
   '口语：3 次核对不上 → 通过 + 录音留档（标记 stall）');
 ok(/_stallBump\(wkey\) >= self\.STALL_PASS_TRIES[\s\S]{0,400}_markWritingSentenceDone/.test(appSrc),
   '作文/阅读逐句：3 次核对不上 → 这一句通过');
-ok(appSrc.includes('网络一直没核对上，这一句先通过'), '放行时明确告诉孩子/家长发生了什么');
+ok(appSrc.includes('这句先通过啦'), 'v195：放行时用结果导向的短句告诉孩子发生了什么');
 
 console.log('\n--- F. 版本钉 ---');
-ok(/<meta name="app-version" content="194">/.test(idxSrc), 'index.html app-version = 179');
-ok((idxSrc.match(/\?v=194/g) || []).length === 7, 'index.html 七处 ?v=194');
-ok(!/\.js\?v=(?!194)\d{2,3}/.test(idxSrc), '没有残留旧 ?v=（脚本引用只有 188）');
-ok(/var CACHE_NAME = 'amy-english-v194'/.test(swSrc), 'sw.js CACHE_NAME = v179');
-ok(/var V = 194;/.test(swSrc), 'sw.js V = 179');
+ok(/<meta name="app-version" content="195">/.test(idxSrc), 'index.html app-version = 179');
+ok((idxSrc.match(/\?v=195/g) || []).length === 7, 'index.html 七处 ?v=195');
+ok(!/\.js\?v=(?!195)\d{2,3}/.test(idxSrc), '没有残留旧 ?v=（脚本引用只有 188）');
+ok(/var CACHE_NAME = 'amy-english-v195'/.test(swSrc), 'sw.js CACHE_NAME = v179');
+ok(/var V = 195;/.test(swSrc), 'sw.js V = 179');
 
-console.log('\n--- G. 真跑一遍：识别一直不回来，9 秒必须结算 ---');
+console.log('\n--- G. 真跑一遍：识别一直不回来，看门狗到点必须结算 ---');
 (async function () {
   try {
     const mkEl = (id) => ({
@@ -199,8 +200,8 @@ console.log('\n--- G. 真跑一遍：识别一直不回来，9 秒必须结算 -
     const before = calls;
     fire(9000);                         // 9 秒看门狗到点
     await new Promise(r => setImmediate(r));
-    ok(before === 0, '识别不回来时，9 秒内不会提前结算（不乱给分）');
-    ok(calls === 1, '9 秒到点必须结算一次（按钮不会永远灰着）');
+    ok(before === 0, '识别不回来时，看门狗到点前不会提前结算（不乱给分）');
+    ok(calls === 1, '看门狗到点必须结算一次（按钮不会永远灰着）');
     ok(got && got.hasOut === true && got.text === null, '结算时带着录音、文本为 null（交给"有没有出声"兜底）');
     ok(!/核对中|出分/.test(statusEl.innerHTML || ''), '状态文字被清掉，不是永远停在「核对中」');
 

@@ -1397,7 +1397,7 @@ const App = {
       this.showToast('✅ 申请已提交，等待老师同意');
     } else {
       if (btn) { btn.disabled = false; btn.textContent = '✉️ 申请重新加入'; }
-      this.showToast('⚠️ 提交失败，请检查网络后重试', 'warn');
+      this.showToast('⚠️ 提交失败，再试一次就好', 'warn');
     }
   },
 
@@ -1461,7 +1461,7 @@ const App = {
       card.innerHTML =
         '<div style="font-size:48px;margin-bottom:8px">📡</div>'
         + '<p style="font-size:15px;color:var(--warning);font-weight:600">正在核对你的身份</p>'
-        + '<p class="text-sub fs-12 mt-8">正在重新连接，稍等几秒会自动进入。'
+        + '<p class="text-sub fs-12 mt-8">马上就好，会自动进入。'
         + '会自动重试，也可以点下面的按钮。</p>';
     }
     if (btn) {
@@ -2740,7 +2740,7 @@ const App = {
       this.showToast('✅ 已同步到最新数据');
     } catch (e) {
       if (btn) { btn.disabled = false; btn.textContent = label; }
-      this.showToast('⚠️ 同步失败，请检查网络后重试');
+      this.showToast('⚠️ 同步失败，再试一次就好');
     }
   },
 
@@ -3607,7 +3607,7 @@ const App = {
 
   // Human-readable sync status for teacher pages
   _syncStatusText() {
-    if (this._lastSyncOk === false) return '⚠️ 同步失败（网络问题），点击"立即同步"重试';
+    if (this._lastSyncOk === false) return '⚠️ 还没同步上，点「立即同步」再来一次';
     if (this._lastSyncAt) {
       var d = new Date(this._lastSyncAt);
       var hm = ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
@@ -4763,7 +4763,7 @@ const App = {
     } catch (e) {
       // 拉失败保持原样显示（本机那份不动）—— 断网不该把界面清空。
       if (btn) { btn.disabled = false; btn.textContent = label; }
-      this.showToast('⚠️ 拉取失败，请检查网络后重试');
+      this.showToast('⚠️ 拉取失败，再试一次就好');
     }
   },
 
@@ -5426,7 +5426,7 @@ const App = {
     if (!this.isTeacher()) return;
     if (!confirm('解除对「' + (name || phone) + '」的登录拦截？\n\n解除后 TA 可以直接登录，不需要再申请。')) return;
     const ok = await Api.classUnblock(phone);
-    if (!ok) { this.showToast('⚠️ 解除失败，请检查网络后重试', 'warn'); return; }
+    if (!ok) { this.showToast('⚠️ 解除失败，再试一次就好', 'warn'); return; }
     // 后台放行了，本机也把墓碑清掉，否则下次合并又会把他藏起来。
     await Api.untombstonePhone(phone);
     // 放行了就别再把他留在「已收起」名单里 —— 否则以后他再被删时，会莫名其妙
@@ -5676,7 +5676,7 @@ const App = {
       // 也不能让他以为删掉了、实际上门还开着。
       await this.loadRemovedList();
       this.renderContent();
-      this.showToast('⚠️ 后台拦截没写成功，为安全起见这次没有删除任何学生。请检查网络后重试', 'warn');
+      this.showToast('⚠️ 后台拦截没写成功，为安全起见这次没有删除任何学生。再试一次就好', 'warn');
       return;
     }
 
@@ -5712,7 +5712,7 @@ const App = {
     const n = await this._dropGates([phone]);
     await this.loadRemovedList();
     this.renderContent();
-    if (n === 0) this.showToast('⚠️ 删除失败，请检查网络后重试', 'warn');
+    if (n === 0) this.showToast('⚠️ 删除失败，再试一次就好', 'warn');
     else this.showToast('✅ 已删除「' + (name || phone) + '」，不再被拦了');
   },
 
@@ -5858,7 +5858,7 @@ const App = {
     if (!gated || v === null || !v.ok) {
       await this.loadRemovedList();
       this.renderContent();
-      this.showToast('⚠️ 后台拦截没写成功，为安全起见这次没有删除。请检查网络后重试', 'warn');
+      this.showToast('⚠️ 后台拦截没写成功，为安全起见这次没有删除。再试一次就好', 'warn');
       return;
     }
     // Delete locally. Api.deleteStudent also records the phone as deleted —
@@ -5927,7 +5927,7 @@ const App = {
     if (!gated || v === null || !v.ok) {
       await this.loadRemovedList();
       this.renderContent();
-      this.showToast('⚠️ 后台拦截没写成功，为安全起见这次没有移除。请检查网络后重试', 'warn');
+      this.showToast('⚠️ 后台拦截没写成功，为安全起见这次没有移除。再试一次就好', 'warn');
       return;
     }
     student.class = '';
@@ -6064,7 +6064,7 @@ const App = {
       if (wrote === null || v === null || !v.ok) {
         await this.loadRemovedList();
         this.renderContent();
-        this.showToast('⚠️ 后台拦截没写成功，为安全起见这次没有删除学生。请检查网络后重试', 'warn');
+        this.showToast('⚠️ 后台拦截没写成功，为安全起见这次没有删除学生。再试一次就好', 'warn');
         return;
       }
       // Api.deleteStudent writes a tombstone per phone, so the cloud merge
@@ -6104,7 +6104,7 @@ const App = {
     });
     if (!res.ok) {
       // 墓碑没推上云 —— 必须让老师知道，否则这个班下次还会冒出来
-      this.showToast('⚠️ 班级已在本机删除，但没同步上云（网络问题）。请点「🔄 立即同步」重试', 'warn');
+      this.showToast('⚠️ 班级已在本机删除，但没同步上云。请点「🔄 立即同步」重试', 'warn');
     } else {
       this.state.students = res.students;
       this.state.classes = res.classes;
@@ -6124,7 +6124,7 @@ const App = {
     if (!gated || v === null || !v.ok) {
       await this.loadRemovedList();
       this.renderContent();
-      this.showToast('⚠️ 后台拦截没写成功，为安全起见这次没有移出。请检查网络后重试', 'warn');
+      this.showToast('⚠️ 后台拦截没写成功，为安全起见这次没有移出。再试一次就好', 'warn');
       return;
     }
     student.class = '';
@@ -10452,7 +10452,9 @@ const App = {
   AUTO_STOP_CAP_MS: 8000,        // 自动收的那几屏，最长也就等 8 秒（原来 15 秒）
   // v129：非自动收的屏（按住说中文 / 跟读）的超时上限。孩子读一句话用不了
   // 10 秒；真被浏览器抢走指针时，早一点收尾、早一点能重来。
-  HOLD_MAX_MS: 10000,
+  // v195：10s → 9s。孩子读一句话用不了 9 秒，早点收尾、早点出分。
+  // 仍比「自动收」那几屏的 8 秒长（说整句本来就比读字母久）。
+  HOLD_MAX_MS: 9000,
 
   async _holdEnd(ev) {
     if (ev && ev.preventDefault) ev.preventDefault();
@@ -10481,7 +10483,9 @@ const App = {
       return;
     }
 
-    if (statusEl && needs) statusEl.innerHTML = '<div class="tap-rec"><span class="tap-spin"></span>核对中，最多 10 秒…</div>';
+    // v195（家长 2026-11-12）：「总显示网络有些慢、正在上传、最多等待 10 秒，
+    //   这种话不要说，没有用。」——状态只留两个字，不报秒数、不解释网络。
+    if (statusEl && needs) statusEl.innerHTML = '<div class="tap-rec"><span class="tap-spin"></span>出分中…</div>';
     var out = null;
     try { out = await Recorder.stop(); } catch (e) { console.warn('hold stop failed', e); }
     if (!out || !out.blob) {
@@ -10498,25 +10502,22 @@ const App = {
     // 识别链路上任何一个 await 不回来，孩子就被永久锁在「核对中」——
     // 按钮是灰的，点不动，只能关页面。现在整段最多 9 秒：到点就当"识别端
     // 没回话"结算（上层会用本地录音判断到底有没有出声，出了声照样算过）。
+    // v195：删掉 4 秒后那句解释网络状态的提示。孩子既看不懂也帮不上
+    //   忙，只会觉得又卡了；改为全程一个「出分中…」，到点直接结算。
     var done = false;
-    var slowHint = null, hardCap = null;
+    var hardCap = null;
     var finish = function(payload, txt) {
       if (done) return;
       done = true;
       clearTimeout(hardCap);
-      clearTimeout(slowHint);
       if (statusEl) statusEl.innerHTML = '';
       if (onDone) { try { onDone(payload, txt); } catch (e) { console.warn('hold onDone failed:', e); } }
     };
-    slowHint = setTimeout(function() {
-      if (done || !statusEl) return;
-      statusEl.innerHTML = '<div class="tap-rec"><span class="tap-spin"></span>网络有点慢，还在核对…</div>';
-    }, 4000);
     hardCap = setTimeout(function() {
       if (done) return;
-      console.warn('Hold scoring watchdog (9s) fired — settle without transcript');
+      console.warn('Hold scoring watchdog (5.5s) fired — settle without transcript');
       finish(out, null);
-    }, 9000);
+    }, 5500);
 
     // Send the padded copy — short clips make Whisper hallucinate.
     var forAsr = (out.samples && Recorder.padForAsr(out.samples)) || out.blob;
@@ -10536,6 +10537,9 @@ const App = {
              : { fast: true, lang: 'zh', budgeted: true });
     } catch (e) { console.warn('hold transcribe failed:', e); }
     var text = res && res.text ? res.text : null;
+    // v195：worker 随这一趟一起算好的「AI 合分」（Azure 词级置信度 + 目标句
+    // 词级对齐），挂在录音对象上交给判分层，不多打一趟、不多等一秒。
+    if (res && typeof res.aiScore === 'number') out.aiScore = res.aiScore;
     if (Api.isFillerTranscript(text)) text = null;
     finish(out, text);
   },
@@ -11337,7 +11341,7 @@ const App = {
         self._markWritingSentenceDone(mi, si, m);
         if (slot) {
           slot.insertAdjacentHTML('beforeend',
-            '<div class="fs-12 text-sub">网络一直没核对上，这一句先通过（录音已经交给老师听）。</div>');
+            '<div class="fs-12 text-sub">这句先通过啦，录音已经交给老师听。</div>');
         }
       } else if (slot) {
         if (wrongs.length) self._renderSentenceRepair('wr', mi, si, wrongs);
@@ -13728,7 +13732,7 @@ const App = {
         const sp2 = panel2.querySelector('.rd-bad.rd-cur');
         if (sp2) { sp2.classList.remove('rd-bad', 'rd-cur'); sp2.classList.add('rd-ok'); }
       }
-      if (hint) hint.innerHTML = '<span style="color:var(--success)">✅ 网络一直没核对上，「' + (R.word || '') + '」先算读对（录音已经交给老师听）</span>';
+      if (hint) hint.innerHTML = '<span style="color:var(--success)">✅ 「' + (R.word || '') + '」先算读对，录音已经交给老师听</span>';
       const self2 = this;
       setTimeout(function() { self2._wordRepairNext(); }, 900);
       return;
@@ -13983,7 +13987,7 @@ const App = {
       btn.innerHTML = '🎤 再读一遍';
       btn.disabled = false;
       if (statusEl) statusEl.innerHTML =
-        '<span style="color:var(--danger)">这次没核对上（网络不稳），点一下再读一遍就行</span>';
+        '<span style="color:var(--danger)">再读一遍就好啦</span>';
       return;
     }
     if (status === 'passed') {
@@ -14091,7 +14095,7 @@ const App = {
           this._playCorrectSound();
           this._setHoldReadUI(mi, qi, 'passed', null, true);
           const fAnsEl0 = document.getElementById('ans-' + mi + '-' + qi);
-          if (fAnsEl0) fAnsEl0.innerHTML = '✅ 网络一直没核对上，这句先通过（录音已经交给老师听）';
+          if (fAnsEl0) fAnsEl0.innerHTML = '✅ 这句先通过，录音已经交给老师听';
           if (this._stepBelongsTo(mi, qi)) {
             const fNext0 = document.getElementById('stage-next-btn');
             if (fNext0) { fNext0.disabled = false; fNext0.classList.add('nudge'); }
@@ -14203,7 +14207,7 @@ const App = {
           el.style.pointerEvents = 'none';
         });
         const ansEl2 = document.getElementById('ans-' + mi + '-' + qi);
-        if (ansEl2) { ansEl2.style.display = 'block'; ansEl2.innerHTML = '✅ 网络一直没核对上，这句先通过（录音已经交给老师听）'; }
+        if (ansEl2) { ansEl2.style.display = 'block'; ansEl2.innerHTML = '✅ 这句先通过，录音已经交给老师听'; }
         this._playCorrectSound();
         this._setHoldReadUI(mi, qi, 'passed', null, true);
         if (this._stepBelongsTo(mi, qi)) {

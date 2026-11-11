@@ -73,6 +73,12 @@ export default {
       return cors(await checkinsApi(request, url, env), env);
     }
 
+    // v195：单词星球的全班实时积分榜。和打卡同一个后台、同一份 D1，
+    // 每台手机读到的都是同一张榜，不是各自 localStorage 里的私账。
+    if (url.pathname.startsWith('/api/game-scores')) {
+      return cors(await gameScoresApi(request, url, env), env);
+    }
+
     return cors(json({ error: 'not_found' }, 404), env);
   },
 };
@@ -1050,6 +1056,118 @@ function restoreDigits(text, bias) {
   });
 }
 
+// ---------------------------------------------------------------------------
+// v195 · 微软 Azure 语音 AI + 边缘「AI 合分」
+//
+// 家长问：「微软 Azure 的平台能不能进行 AI 合分，把这块继续搞得好一点？」
+// 能，而且用的是家长已经开好的那个 Speech 资源（同一把 key、同一个
+// eastus 区域），不新增任何付费服务：
+//   ① 识别通道：Azure Speech REST（format=detailed）会返回**每个单词的
+//      置信度**，本地实测 200 可用。它和 Cloudflare 兜底并行跑，谁先出
+//      文本用谁 —— 兜底路径的等待从「CF 单独一趟」变成 min(两趟)。
+//   ② AI 合分：把「孩子该读的目标句」与「识别出来的词」做词级对齐
+//      （LCS 命中率），再和 Azure 给的词级置信度加权，一次合成 0~100 的
+//      准确度分。整个计算在边缘完成，0 毫秒、不多一趟网络、不多等一秒。
+//   ③ 绝不喧宾夺主：Azure 没配 / 超时 / 报错 / 识别为空，全部静默落回
+//      原有阿里云 + Cloudflare 链路，孩子那边的对错判定一点不变。
+//
+// 说明：Azure OpenAI 那种「大模型写评语式打分」要另开部署和密钥，家长
+// 目前没有开，这里不擅自引入新的付费资源；当前 Cloudflare Workers AI 的
+// 翻译批改端点保持原样。
+// ---------------------------------------------------------------------------
+const AZURE_STT_URL = function (region) {
+  return 'https://' + region +
+    '.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1';
+};
+const AZURE_ASR_TIMEOUT_MS = 1900;
+
+async function azureTranscribe(bytes, env, mode, bias) {
+  const key = (env && env.AZURE_TTS_KEY) || '';
+  const region = (env && env.AZURE_TTS_REGION) || '';
+  if (!key || !region) throw new Error('azure_key_missing');
+  const locale = mode === 'zh' ? 'zh-CN' : 'en-US';
+  const url = AZURE_STT_URL(region) + '?language=' + locale + '&format=detailed';
+  const ctrl = new AbortController();
+  const timer = setTimeout(function () { try { ctrl.abort(); } catch (e) {} }, AZURE_ASR_TIMEOUT_MS);
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Ocp-Apim-Subscription-Key': key,
+        'Content-Type': 'audio/wav; codec=audio/pcm; samplerate=16000',
+        'Accept': 'application/json',
+      },
+      body: bytes,
+      signal: ctrl.signal,
+    });
+    if (!res.ok) throw new Error('azure_stt_http_' + res.status);
+    const d = await res.json();
+    if (!d || d.RecognitionStatus !== 'Success') return { text: '', model: 'azure' };
+    const best = (d.NBest && d.NBest[0]) || {};
+    const text = String(best.Display || best.Lexical || d.DisplayText || '').trim();
+    if (!text) return { text: '', model: 'azure' };
+    const words = Array.isArray(best.Words) ? best.Words.map(function (w) {
+      return { Word: String(w.Word || ''), Confidence: Number(w.Confidence) || 0 };
+    }) : [];
+    return {
+      text: mode === 'zh' ? text : restoreDigits(text, bias),
+      words: words,
+      confidence: Number(best.Confidence) || 0,
+      model: 'azure-stt',
+      answered: true,
+    };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** 词级对齐 + 置信度加权 → 0~100 的 AI 合分。纯计算，不碰网络。 */
+function aiCombineScore(target, text, words, confidence) {
+  function norm(s) {
+    return String(s || '').toLowerCase().replace(/[^a-z0-9']/g, ' ')
+      .split(/\s+/).filter(function (x) { return !!x; }).slice(0, 80);
+  }
+  const want = norm(target);
+  const got = norm(words && words.length
+    ? words.map(function (w) { return w.Word; }).join(' ') : text);
+  let conf = 0, n = 0;
+  if (words && words.length) {
+    for (let i = 0; i < words.length; i++) {
+      const c = Number(words[i] && words[i].Confidence);
+      if (c > 0) { conf += c; n++; }
+    }
+  }
+  conf = n ? conf / n : (Number(confidence) || 0.75);
+  if (conf > 1) conf = conf / 100;          // 有些上游给的是 0~100
+  conf = Math.max(0, Math.min(1, conf));
+  // 一个词都没识别出来就是没出声 / 没听清，绝不能靠置信度白送分。
+  if (!got.length) {
+    return { score: 0, hit: 0, total: want.length, confidence: conf, by: 'edge-ai' };
+  }
+
+  // LCS：读对了几个目标词，顺序也要对。口语里多说一两个词不算大错。
+  const rows = want.length + 1, cols = got.length + 1;
+  const dp = [];
+  for (let i = 0; i < rows; i++) dp.push(new Uint16Array(cols));
+  for (let i = 1; i < rows; i++) {
+    for (let j = 1; j < cols; j++) {
+      dp[i][j] = want[i - 1] === got[j - 1]
+        ? dp[i - 1][j - 1] + 1
+        : Math.max(dp[i - 1][j], dp[i][j - 1]);
+    }
+  }
+  const hit = want.length ? dp[want.length][got.length] : (got.length ? 1 : 0);
+  const cover = want.length ? hit / want.length : (got.length ? 1 : 0);
+  const extraPenalty = Math.min(0.15, Math.max(0, got.length - hit) * 0.02);
+  const score = Math.max(0, Math.min(100,
+    Math.round((0.78 * cover + 0.22 * conf - extraPenalty) * 100)));
+  return {
+    score: score, hit: hit, total: want.length,
+    confidence: Math.round(conf * 100) / 100,
+    by: 'edge-ai',
+  };
+}
+
 async function transcribe(request, env) {
   // 耗时埋点（v99）。家长问"为什么这么慢"，吵架没有意义，把时间切开看：
   //   upload = 孩子的音频从手机爬到边缘这段（跨境链路，代码管不了）
@@ -1118,6 +1236,10 @@ async function transcribe(request, env) {
   // 完整句子不存在这个问题，所以默认（整句、单词）仍走更快的阿里云。
   const preferCf = url.searchParams.get('prefer') === 'cf';
   const hasAliyun = !!(env.ALIYUN_KEY || env.DASHSCOPE_API_KEY);
+  // v195：Azure 语音 AI 只在「整句 / 单词」的兜底路径参与。字母跟读
+  // （prefer=cf）靠 Cloudflare 的偏置才认得出孤立字母，别去搅它。
+  const azureReady = !!(env.AZURE_TTS_KEY && env.AZURE_TTS_REGION);
+  let azureWords = null, azureConf = null, azMs = 0;
 
   let model = '';
   let text = '';
@@ -1224,6 +1346,50 @@ async function transcribe(request, env) {
     ]);
   }
 
+  // v195：兜底时 Azure 语音 AI 和 Cloudflare 一起上，谁先给文本用谁。
+  // 以前兜底只有 CF 一条，它慢的时候孩子就一直盯着「核对中」；现在是
+  // min(两趟)。Azure 那条还带词级置信度，AI 合分直接拿去加权。
+  // 任何异常都 swallow 掉，CF 仍稳稳兜住，行为绝不会比原来差。
+  async function runBackup() {
+    const cfP = withTimeout(runCloudflare(), CF_ASR_TIMEOUT_MS);
+    if (!azureReady || preferCf || mode === 'letter' || mode === 'zh' || force === 'ali') {
+      return cfP;
+    }
+    const a0 = Date.now();
+    const azP = azureTranscribe(cfBytes, env, mode, bias)
+      .then(function (r) { return { who: 'az', r: r }; })
+      .catch(function () { return { who: 'az', r: { text: '' } }; });
+    let win;
+    try {
+      win = await Promise.race([
+        azP,
+        cfP.then(function (r) { return { who: 'cf', r: r }; }),
+      ]);
+    } catch (e) {
+      return cfP;
+    }
+    azMs = Date.now() - a0;
+    function useAzure(r) {
+      cfP.catch(function () {});
+      azureWords = r.words || null;
+      azureConf = r.confidence || 0;
+      return { text: r.text, model: r.model, answered: true, raw: null };
+    }
+    if (win.who === 'az' && win.r && win.r.text) return useAzure(win.r);
+    // CF 先回来但是空的：Azure 常常晚半秒就出文本。给它一个很短的窗口，
+    // 这一等换来的是「孩子不必重读一遍」，比省这 600ms 划算得多。
+    if (win.who === 'cf' && (!win.r || !win.r.text)) {
+      const late = await Promise.race([
+        azP,
+        new Promise(function (r) {
+          setTimeout(function () { r({ who: 'az', r: { text: '' } }); }, 600);
+        }),
+      ]);
+      if (late.who === 'az' && late.r && late.r.text) return useAzure(late.r);
+    }
+    return cfP;                    // Azure 空手 / 超时，CF 本来就在路上
+  }
+
   // 两条通道的先后顺序：默认阿里云优先（更快，见函数上方注释），
   // prefer=cf 时反过来（字母这种极短音频只有 Cloudflare 认得出来）。
   if (preferCf) {
@@ -1269,10 +1435,11 @@ async function transcribe(request, env) {
     ]);
     if (hedged !== HEDGE) {
       ali = hedged;                       // 阿里云赶在对冲点之前就回来了
-      // 快是快，但它空手而归（报错 / 识别为空）——照样得请 Cloudflare 兜底。
-      if (!ali.text) cf = await withTimeout(runCloudflare(), CF_ASR_TIMEOUT_MS);
+      // 快是快，但它空手而归（报错 / 识别为空）——照样得请兜底（v195 起
+      // Cloudflare + Azure 语音 AI 并行，谁先答上来用谁）。
+      if (!ali.text) cf = await runBackup();
     } else {
-      const cfP = withTimeout(runCloudflare(), CF_ASR_TIMEOUT_MS);
+      const cfP = runBackup();
       const win = await Promise.race([
         aliP.then(function (r) { return { who: 'ali', r: r }; }),
         cfP.then(function (r) { return { who: 'cf', r: r }; }),
@@ -1302,10 +1469,12 @@ async function transcribe(request, env) {
 
   // 埋点打包成响应头。孩子手机上也能看到这三段各自多少毫秒。
   function timingHeaders() {
-    const channel = model.indexOf('qwen') >= 0 ? 'aliyun' : (model ? 'cf' : 'none');
+    const channel = model.indexOf('qwen') >= 0 ? 'aliyun'
+      : (model.indexOf('azure') >= 0 ? 'azure' : (model ? 'cf' : 'none'));
     return {
       'Server-Timing': 'upload;dur=' + uploadMs + ', ali;dur=' + aliMs +
-        ', cf;dur=' + cfMs + ', hedge;dur=' + hedgeUsed + ', total;dur=' + (Date.now() - t0),
+        ', cf;dur=' + cfMs + ', az;dur=' + azMs + ', hedge;dur=' + hedgeUsed +
+        ', total;dur=' + (Date.now() - t0),
       'X-Asr-Channel': channel,
       // 实际收进来的是什么编码 + 多少字节（v103）。µ-law 生效时字节数应该是
       // 老客户端的一半 —— 排查"压缩到底有没有上"直接看这个，不用猜。
@@ -1321,11 +1490,22 @@ async function transcribe(request, env) {
     return json({ error: 'transcribe_failed', detail: detail || 'no_channel' }, 502, timingHeaders());
   }
 
+  // v195 · AI 合分：识别完就地算，不多一趟网络、不多等一秒。
+  // 只有「跟读有目标句」时才有意义；自由说中文 / 孤立字母不给分。
+  const canGrade = !!(text && bias && mode !== 'zh' && mode !== 'letter');
+  const ai = canGrade
+    ? aiCombineScore(bias, text, azureWords || (raw && raw.words) || null, azureConf)
+    : null;
+
   return json({
     model: model,
     text: text,
     words: (raw && raw.words) || null,
     wordCount: (raw && raw.word_count) || null,
+    // 前端可以直接拿这个分数做「读得准不准」的参考；不改原有对错判定。
+    aiScore: ai ? ai.score : null,
+    aiBy: ai ? (azureWords ? 'azure-ai' : 'edge-ai') : '',
+    aiDetail: ai ? { hit: ai.hit, total: ai.total, confidence: ai.confidence } : null,
   }, 200, timingHeaders());
 }
 
@@ -1721,6 +1901,139 @@ async function checkinsApi(request, url, env) {
         };
       });
       return json({ rows: rows, count: rows.length, week: week });
+    } catch (e) {
+      return json({ error: 'db_error', detail: String(e && e.message || e) }, 500);
+    }
+  }
+
+  return json({ error: 'not_found' }, 404);
+}
+
+// ---------------------------------------------------------------------------
+// /api/game-scores/* — 单词星球全班实时积分榜（v195）。
+//
+//   POST /api/game-scores/report  每轮结算后上报「这一轮赢了多少钱」
+//   GET  /api/game-scores         读全班榜（?class= 可选，不传就是全员）
+//
+// 为什么上报的是「增量」而不是「本机总分」：家长要的是「这个手机上有、
+// 那个手机上没有」彻底消失。孩子可能在平板和手机上都玩过，两台设备各存
+// 各的累计分，谁后上报谁就把对方抹掉。后台只做加法 —— 每台设备报自己
+// 那一轮赢了十分，云端加起来就是真实总分，换设备、清缓存都不会丢。
+//
+// 「今天」以**后台的钟**为准（北京时间），不采信手机报上来的日期判断：
+// 手机时钟错了、时区不同，榜单上的今日分也不能各看各的。
+// ---------------------------------------------------------------------------
+let gameScoresTableReady = false;
+async function ensureGameScoresTable(db) {
+  if (gameScoresTableReady) return;
+  await db.prepare(
+    `CREATE TABLE IF NOT EXISTS game_scores (
+       student_id    TEXT PRIMARY KEY,
+       student_name  TEXT,
+       student_class TEXT,
+       total         INTEGER NOT NULL DEFAULT 0,
+       best          INTEGER NOT NULL DEFAULT 0,
+       rounds        INTEGER NOT NULL DEFAULT 0,
+       today_score   INTEGER NOT NULL DEFAULT 0,
+       day           TEXT,
+       updated_at    TEXT NOT NULL,
+       client_ver    INTEGER
+     )`
+  ).run();
+  gameScoresTableReady = true;
+}
+
+function serverBeijingDay(nowMs) {
+  return new Date(nowMs + 8 * 3600e3).toISOString().slice(0, 10);
+}
+
+async function gameScoresApi(request, url, env) {
+  const db = env.DB;
+  if (!db) return json({ error: 'no_db' }, 500);
+  const path = url.pathname;
+  const nowMs = Date.now();
+  const serverDay = serverBeijingDay(nowMs);
+  const now = new Date(nowMs).toISOString();
+
+  // -- 上报一轮结算 --------------------------------------------------------
+  if (path === '/api/game-scores/report' && request.method === 'POST') {
+    const body = await readJsonBody(request);
+    if (!body) return json({ error: 'bad_json' }, 400);
+    const sid = String(body.student_id || '').trim().slice(0, 80);
+    if (!sid) return json({ error: 'missing_student_id' }, 400);
+    // 一轮最多 3 分钟，正常一轮几百分；给到 100000 只是防脏数据把榜撑爆。
+    const delta = Math.min(100000, Math.max(0, intOr(body.delta, 0)));
+    const best = Math.min(100000, Math.max(0, intOr(body.best, 0)));
+    const rounds = Math.min(100, Math.max(0, intOr(body.rounds, 0)));
+    const todayDelta = Math.min(100000, Math.max(0, intOr(body.today_delta, delta)));
+    const day = /^\d{4}-\d{2}-\d{2}$/.test(String(body.day || ''))
+      ? String(body.day).slice(0, 10) : serverDay;
+    const name = String(body.student_name || '').trim().slice(0, 60) || null;
+    const klass = String(body.student_class || '').trim().slice(0, 60) || null;
+    const ver = intOr(body.client_ver, 0);
+    if (delta === 0 && rounds === 0) return json({ ok: true, count: 0 });
+
+    try {
+      await ensureGameScoresTable(db);
+      await db.prepare(
+        `INSERT INTO game_scores
+           (student_id, student_name, student_class, total, best, rounds,
+            today_score, day, updated_at, client_ver)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)
+         ON CONFLICT(student_id) DO UPDATE SET
+           student_name  = COALESCE(excluded.student_name,  game_scores.student_name),
+           student_class = COALESCE(excluded.student_class, game_scores.student_class),
+           total         = game_scores.total + excluded.total,
+           best          = MAX(game_scores.best, excluded.best),
+           rounds        = game_scores.rounds + excluded.rounds,
+           today_score   = CASE
+             WHEN excluded.day > game_scores.day THEN excluded.today_score
+             WHEN excluded.day = game_scores.day THEN game_scores.today_score + excluded.today_score
+             ELSE game_scores.today_score END,
+           day           = CASE WHEN excluded.day > game_scores.day THEN excluded.day
+                                ELSE game_scores.day END,
+           updated_at    = excluded.updated_at,
+           client_ver    = excluded.client_ver`
+      ).bind(sid, name, klass, delta, best, rounds, todayDelta, day, now, ver).run();
+      return json({ ok: true, count: 1, server_day: serverDay });
+    } catch (e) {
+      return json({ error: 'db_error', detail: String(e && e.message || e) }, 500);
+    }
+  }
+
+  // -- 读全班榜 ------------------------------------------------------------
+  if (path === '/api/game-scores' && request.method === 'GET') {
+    const cls = (url.searchParams.get('class') || '').trim().slice(0, 60);
+    try {
+      await ensureGameScoresTable(db);
+      const r = cls
+        ? await db.prepare(
+            `SELECT student_id, student_name, student_class, total, best, rounds,
+                    today_score, day, updated_at
+             FROM game_scores WHERE student_class = ?1
+             ORDER BY total DESC, updated_at ASC LIMIT 200`
+          ).bind(cls).all()
+        : await db.prepare(
+            `SELECT student_id, student_name, student_class, total, best, rounds,
+                    today_score, day, updated_at
+             FROM game_scores
+             ORDER BY total DESC, updated_at ASC LIMIT 200`
+          ).all();
+      const rows = ((r && r.results) || []).map(function (row) {
+        return {
+          student_id: row.student_id,
+          student_name: row.student_name || '',
+          student_class: row.student_class || '',
+          total: row.total || 0,
+          best: row.best || 0,
+          rounds: row.rounds || 0,
+          // 今日分只认后台这一天。老数据 / 手机时钟错报上来的都不能混进今天。
+          today_score: row.day === serverDay ? (row.today_score || 0) : 0,
+          updated_at: row.updated_at || '',
+        };
+      });
+      return json({ rows: rows, count: rows.length,
+                    server_day: serverDay, server_time: now });
     } catch (e) {
       return json({ error: 'db_error', detail: String(e && e.message || e) }, 500);
     }
