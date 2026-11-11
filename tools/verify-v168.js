@@ -56,11 +56,11 @@ section('2. 字号与高度');
 // ---------------------------------------------------------------------------
 section('3. 版本钉子 = 168');
 {
-  ok(/name="app-version" content="192"/.test(htmlSrc), 'index.html app-version = 168');
-  ok((htmlSrc.match(/\?v=192/g) || []).length === 6, 'index.html 6 处 ?v=192', (htmlSrc.match(/\?v=192/g) || []).length);
+  ok(/name="app-version" content="193"/.test(htmlSrc), 'index.html app-version = 168');
+  ok((htmlSrc.match(/\?v=193/g) || []).length === 6, 'index.html 6 处 ?v=193', (htmlSrc.match(/\?v=193/g) || []).length);
   ok(!/\?v=16[0-7]\b/.test(htmlSrc), 'index.html 没有残留旧 ?v=');
-  ok(/var V = 192;/.test(swSrc), 'sw.js var V = 168');
-  ok(/amy-english-v192/.test(swSrc), 'sw.js CACHE_NAME = amy-english-v192');
+  ok(/var V = 193;/.test(swSrc), 'sw.js var V = 168');
+  ok(/amy-english-v193/.test(swSrc), 'sw.js CACHE_NAME = amy-english-v193');
   ok(!/amy-english-v16[0-7]\b/.test(swSrc), 'sw.js 没有残留旧缓存名');
 }
 

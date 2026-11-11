@@ -1,4 +1,4 @@
-// tools/verify-v192.js —— 短语密度 + 点词本地化
+// tools/verify-v193.js —— 短语密度 + 点词本地化
 // 家长 2026-11-11：① 每个句子尽量标出 3~6 个常见短语 ② 点词解释不许再等网络
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const ROOT = path.join(__dirname, '..');
@@ -57,7 +57,7 @@ const m2 = maskOf('Many people plant trees in the park every spring to make the 
 console.log('  样例2:', m2.map(x => x.en + '=' + x.zh).join(' / '));
 ok(m2.length >= 3, '普通句子也能标出 ≥3 个短语，实得 ' + m2.length);
 
-// ---- ③ 全题库覆盖率（改前后对比锚点：v192 是 23.9% / 平均 0.35）----
+// ---- ③ 全题库覆盖率（改前后对比锚点：v193 是 23.9% / 平均 0.35）----
 const ds = { console, window: {}, document: {}, localStorage: { getItem() { return null; }, setItem() {} } };
 vm.createContext(ds);
 vm.runInContext(data + '\n;this.__W = (typeof HOMEWORK_WEEKS !== "undefined") ? HOMEWORK_WEEKS : null;', ds);
@@ -90,9 +90,9 @@ ok(c && c.zh && /沙漠/.test(c.zh), '规则短语 in the desert 自动拼中文
 ok(/_phraseMask\(words, true\)/.test(app), '阅读材料/作文启用规则搭配');
 ok(/const pick = rich \? 'phraseAtRich' : 'phraseAt';/.test(app), '跟读判分句仍只用手写表（不切碎词盒）');
 ok(/\.lk-phrase\{border-bottom:2px solid/.test(html), '短语横线改成粗实线，跟单词虚线区分');
-ok((html.match(/\?v=192/g) || []).length === 6, 'index.html 六处 ?v=192', (html.match(/\?v=192/g) || []).length);
-ok(html.includes('app-version" content="192"'), 'index.html app-version=192');
-ok(/var CACHE_NAME = 'amy-english-v192';/.test(fs.readFileSync(path.join(ROOT, 'public/sw.js'), 'utf8')), 'sw.js CACHE_NAME v192');
+ok((html.match(/\?v=193/g) || []).length === 6, 'index.html 六处 ?v=193', (html.match(/\?v=193/g) || []).length);
+ok(html.includes('app-version" content="193"'), 'index.html app-version=192');
+ok(/var CACHE_NAME = 'amy-english-v193';/.test(fs.readFileSync(path.join(ROOT, 'public/sw.js'), 'utf8')), 'sw.js CACHE_NAME v193');
 
 console.log(fail ? '✗ ' + fail + ' 项失败 / ' + (pass + fail) : '✅ verify-phrases 全部 ' + pass + ' 项通过');
 process.exit(fail ? 1 : 0);

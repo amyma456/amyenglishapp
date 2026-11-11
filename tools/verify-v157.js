@@ -26,7 +26,7 @@ const splitCN = t => String(t).replace(/\s+/g, '').split(/(?<=[。！？])/).fil
 
 section('1. WEEK5 就位、周号真实');
 {
-  ok(W.length === 7, '题库 7 周（v164 起 W6 上线，v192 起 W7 上线）', W.length);
+  ok(W.length === 7, '题库 7 周（v164 起 W6 上线，v193 起 W7 上线）', W.length);
   ok(ctx.IDX >= 4, '真实周号已到第 5 周或更后', ctx.IDX);
   ok(ctx.CIDX === Math.min(ctx.IDX, W.length - 1), '内容周号 = min(真实周号, 周数-1)', ctx.CIDX);
   ok(ctx.DATA === W[ctx.CIDX], 'HOMEWORK_DATA 指向内容周');
@@ -112,10 +112,10 @@ section('5. 版本号 v157');
 {
   const html = fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8');
   const sw = fs.readFileSync(path.join(ROOT, 'public', 'sw.js'), 'utf8');
-  ok(/app-version" content="192"/.test(html), 'index.html app-version = 157');
-  ok((html.match(/\?v=192/g) || []).length >= 4, 'index.html ?v=192 引用 ≥ 4 处', (html.match(/\?v=192/g) || []).length);
-  ok(/amy-english-v192/.test(sw), 'sw.js CACHE_NAME = amy-english-v192');
-  ok(/var V = 192;/.test(sw), 'sw.js var V = 157');
+  ok(/app-version" content="193"/.test(html), 'index.html app-version = 157');
+  ok((html.match(/\?v=193/g) || []).length >= 4, 'index.html ?v=193 引用 ≥ 4 处', (html.match(/\?v=193/g) || []).length);
+  ok(/amy-english-v193/.test(sw), 'sw.js CACHE_NAME = amy-english-v193');
+  ok(/var V = 193;/.test(sw), 'sw.js var V = 157');
 }
 
 console.log('\n' + (fail === 0 ? '✅ 全部 ' + (pass + fail) + ' 项通过' : '❌ ' + fail + '/' + (pass + fail) + ' 项失败'));

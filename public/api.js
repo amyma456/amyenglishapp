@@ -1286,6 +1286,37 @@ const WordHelp = {
     ['tell stories', '讲故事'], ['ask questions', '提问'],
     ['answer questions', '回答问题'], ['make friends', '交朋友'],
     ['over there', '在那边'], ['right here', '就在这里'],
+    // —— v193 补：AI 口语练习里的问答句框架 + 日常词块 ——
+    // 家长 2026-11-11：「口语练习里一个句子要有两三个短语的提示」。
+    // 口语题多是 What/How 疑问句和 I… 答句，光靠「形容词+名词」规则
+    // 一句只能标 0~1 个，这里把问答框架本身也做成可直接点开的短语。
+    ['what time', '几点'], ['how old', '几岁'],
+    ['what color', '什么颜色'], ['what colour', '什么颜色'],
+    ['what\'s your', '你的…是什么'], ['what is your', '你的…是什么'],
+    ['what\'s the weather like', '天气怎么样'],
+    ['how do you', '你怎么…'], ['what do you', '你…什么'],
+    ['what did you', '你做了什么'], ['what are you', '你要…什么'],
+    ['can you', '你能…吗'], ['could you', '你能…吗'],
+    ['do you usually', '你通常…吗'], ['want to be', '想成为'],
+    ['going to', '打算做…'], ['summer vacation', '暑假'],
+    ['winter vacation', '寒假'], ['this summer', '今年夏天'],
+    ['long hair', '长头发'], ['a pet dog', '一只宠物狗'],
+    ['play games', '玩游戏'], ['playing games', '玩游戏'],
+    ['like swimming', '喜欢游泳'],
+    ['I like', '我喜欢'], ['I have', '我有'], ['I am', '我是'],
+    ['I went', '我去了'], ['I will', '我将要'],
+    ['I usually', '我通常'], ['I don\'t', '我不'],
+    ['it is', '它是'], ['red envelopes', '红包'],
+    ['Spring Festival', '春节'], ['help sick people', '帮助病人'],
+    ['tell me about', '告诉我关于…'], ['your family', '你的家庭'],
+    ['favorite holiday', '最喜欢的节日'], ['do my homework', '做我的作业'],
+    ['a million dollars', '一百万美元'], ['the weather', '天气'],
+    ['sunny and warm', '晴朗又暖和'], ['red envelope', '红包'],
+    ['wash the dishes', '洗碗'],
+    ['be rainy', '下雨'], ['be sunny', '晴朗'], ['be warm', '暖和'],
+    ['be cold', '冷'], ['be cloudy', '阴天'], ['be windy', '刮风'],
+    // 规则会把 close to 拼成「去关闭」（有道把 close 当动词），钉死它。
+    ['close to', '靠近…'],
   ],
 
   _formIdx: null,
@@ -1445,6 +1476,14 @@ const WordHelp = {
     const self = this;
     const POSS = ['my', 'your', 'his', 'her', 'our', 'their'];
 
+    // v193：字面写的条目优先登记，免得被别的词条自动生成的变形盖掉。
+    // 例：go to 的变形会生成 "going to = 去…"，而口语里专门写了
+    // "going to = 打算做…"；后者才是对孩子有用的解释。
+    this.PHRASES.forEach(function (p) {
+      const k = String(p[0]).toLowerCase().replace(/\s+/g, ' ');
+      if (!idx[k]) idx[k] = { en: p[0], zh: p[1], surface: p[0] };
+    });
+
     // 名词复数：先查不规则反表，再按规则加 -s/-es/-ies
     const pluralOf = function (n) {
       const w = String(n || '').toLowerCase();
@@ -1535,7 +1574,15 @@ const WordHelp = {
       if (i + len > tokens.length) continue;
       const joined = tokens.slice(i, i + len).join(' ').toLowerCase();
       const hit = idx[joined];
-      if (hit) return { len: len, en: hit.en, zh: hit.zh, surface: tokens.slice(i, i + len).join(' ') };
+      if (hit) {
+        // v193：代词开头的弱 2 词块（it is / there is / I am）不许把后面
+        // 更完整的固定搭配切碎 —— "it is close to" 必须让 is close to
+        // 整块命中「靠近…」，而不是 it is + close to（会被规则拼成「去关闭」）。
+        if (len === 2 && /^(it|there|this|that|he|she|i|you|we|they)$/
+              .test(String(tokens[i] || '').toLowerCase())
+            && this._handPhraseFrom(tokens, i + 1)) return null;
+        return { len: len, en: hit.en, zh: hit.zh, surface: tokens.slice(i, i + len).join(' ') };
+      }
     }
     // v163：代词插进短语中间（pick it up / take them off / put it on）。
     // 孩子点 "it" 也要能拿到 pick up，别只给一个 it。
@@ -1548,6 +1595,16 @@ const WordHelp = {
       }
     }
     return null;
+  },
+
+  // 从 j 开始有没有 ≥3 词的**手写**固定搭配（给上面的让位判断用）。
+  _handPhraseFrom(tokens, j) {
+    const idx = this._buildPhraseIdx();
+    for (let L = 6; L >= 3; L--) {
+      if (j + L > tokens.length) continue;
+      if (idx[tokens.slice(j, j + L).join(' ').toLowerCase()]) return true;
+    }
+    return false;
   },
 
   // ==========================================================================
@@ -1620,13 +1677,65 @@ const WordHelp = {
     a: '一个', an: '一个',
   },
 
+  // v193：有道词典的头号义项有时不适合给孩子看，或者会拼出错误搭配
+  // （like → 「像」，于是 I like swimming 变成「像游泳」；hair → 「毛发」，
+  // long hair 变成「长的毛发」）。这里给一批高频词钉死短中文，仅用于
+  // 规则拼短语，单词弹层仍显示词典原文。
+  SHORT_ZH: {
+    like: '喜欢', likes: '喜欢', liked: '喜欢', love: '喜爱',
+    favorite: '最喜欢的', favourite: '最喜欢的',
+    hair: '头发', pet: '宠物', playing: '玩', swimming: '游泳',
+    sleeping: '睡觉', eating: '吃', reading: '读', writing: '写',
+    walking: '走路', running: '跑步', cooking: '做饭', drawing: '画画',
+    singing: '唱歌', dancing: '跳舞', shopping: '购物',
+    subject: '科目', weather: '天气', holiday: '假日', vacation: '假期',
+    homework: '作业', breakfast: '早饭', lunch: '午饭', dinner: '晚饭',
+    weekend: '周末', morning: '早上', afternoon: '下午', evening: '晚上',
+    expensive: '贵的', cheap: '便宜的', important: '重要的',
+    delicious: '好吃的', beautiful: '美丽的', clever: '聪明的',
+    kind: '友善的', tall: '高的', sunny: '晴朗的', warm: '暖和的',
+    clean: '干净的', rainy: '下雨的', windy: '刮风的', cloudy: '多云的',
+    eggs: '鸡蛋', books: '本书', classes: '节课', dishes: '碗碟',
+    make: '做', makes: '做', making: '做', cost: '花费', costs: '花费',
+    money: '钱', pollution: '污染', learned: '学会', lot: '许多',
+  },
+  // 「一个书 / 一个狗」这种量词错误，刚学翻译的孩子会照抄。冠词 + 名词
+  // 的规则按名词配量词；没列到的通用「个」。
+  CLASSIFIER: {
+    book: '本', books: '些', dog: '只', cat: '只', pet: '只', bird: '只',
+    fish: '条', student: '名', teacher: '位', doctor: '位', friend: '个',
+    boy: '个', girl: '个', man: '位', woman: '位', child: '个',
+    bus: '辆', car: '辆', bike: '辆', train: '列', photo: '张',
+    picture: '张', tree: '棵', flower: '朵', river: '条', mountain: '座',
+    school: '所', park: '个', room: '间', house: '座', desk: '张',
+    chair: '把', letter: '封', song: '首', game: '个', class: '节',
+  },
+  // 数词 + 名词（five classes → 五节课）：口语句子里很常见。
+  NUM_ZH: {
+    one: '一', two: '两', three: '三', four: '四', five: '五',
+    six: '六', seven: '七', eight: '八', nine: '九', ten: '十',
+    eleven: '十一', twelve: '十二', twenty: '二十', thirty: '三十',
+  },
+  // 时间副词不能当名词：「warm today」不是「暖和的今天」。
+  NOT_NOUN: ('today tomorrow yesterday tonight now then here there '
+    + 'million hundred thousand billion dollars yuan '
+    + "today's tomorrow's").split(/\s+/),
+
+  measure(w) {
+    const k = String(w || '').toLowerCase();
+    return '一' + (this.CLASSIFIER[k] || '个');
+  },
+
   // 从本地词典里取一个词的短中文（已经是清洗过的"大的/沙漠"这种）。
   zhOf(w) {
     const k = String(w || '').toLowerCase().replace(/[^a-z'\-]/g, '');
     if (!k || k.length < 2) return '';
+    if (this.SHORT_ZH[k]) return this.SHORT_ZH[k];
     try {
       if (typeof LOCAL_DICT !== 'undefined' && LOCAL_DICT[k]) {
         const zh = String(LOCAL_DICT[k]).split('|')[0];
+        // 有道残留的学科标签（"[禽]蛋"这种）不能拿去拼短语
+        if (/[\[\]【】;；]/.test(zh)) return '';
         return zh && zh.length <= 10 ? zh : '';
       }
     } catch (e) {}
@@ -1656,6 +1765,7 @@ const WordHelp = {
   isNounish(w) {
     const k = String(w || '').toLowerCase();
     if (this.isStop(k) || this.isAdj(k) || this.isVerb(k)) return false;
+    if (this.NOT_NOUN.indexOf(k) >= 0) return false;
     if (this.PREP_ZH[k] || this.QUANT_ZH[k] || this.isDet(k)) return false;
     const zh = this.zhOf(k);
     if (!zh || zh.length > 6) return false;
@@ -1702,23 +1812,52 @@ const WordHelp = {
       // 三词规则别抢在它前面把「一个大的沙漠」这种啰嗦说法塞给孩子。
       if (!this.phraseAt(T, i + 1)) {
         const az = zh(1), nz = zh(2);
-        const meaning = DET_ZH[w(0)] + (/的$/.test(az) ? az : az + '的') + nz;
+        // v193：your favorite holiday 别拼成「你的最受喜爱的假日」——
+        // 物主词碰到「最…的」形容词时把「的」让给形容词，读着才顺。
+        const possessive = /^(my|your|his|her|our|their)$/.test(w(0));
+        const det = (possessive && /最/.test(az)) ? DET_ZH[w(0)].replace(/的$/, '') : DET_ZH[w(0)];
+        const meaning = det + (/的$/.test(az) ? az : az + '的') + nz;
         if (az && nz && meaning.length <= 14) return mk(3, meaning);
       }
     }
 
-    // ①c 动词 + 物主词 + 名词（doing my homework → 做我的作业）
+    // ①c 动词 + 物主词/冠词 + 名词（doing my homework → 做我的作业）
     const BE = ['is', 'am', 'are', 'was', 'were', 'be', 'been', 'being'];
     if (i + 2 < n && (this.isVerb(w(0)) || BE.indexOf(w(0)) >= 0)
         && DET_ZH[w(1)] && this.isNounish(w(2))) {
       const vz = BE.indexOf(w(0)) >= 0 ? '是' : zh(0);
-      const meaning = vz + DET_ZH[w(1)] + zh(2);
+      // v193：a/an 后面按名词配量词（have a book → 有一本书），别再「一个书」。
+      const det = (w(1) === 'a' || w(1) === 'an') ? this.measure(w(2)) : DET_ZH[w(1)];
+      const meaning = vz + det + zh(2);
       if (vz && zh(2) && meaning.length <= 14) return mk(3, meaning);
+    }
+
+    // ①e 形容词 + and + 形容词（sunny and warm → 晴朗又暖和）
+    if (i + 2 < n && this.isAdj(w(0)) && w(1) === 'and' && this.isAdj(w(2))) {
+      const az = zh(0), cz = zh(2);
+      const meaning = az.replace(/的$/, '') + '又' + cz.replace(/的$/, '');
+      if (az && cz && meaning.length <= 12) return mk(3, meaning);
     }
 
     if (i + 1 >= n) return null;
     const a = w(0), b = w(1);
     const az = zh(0), bz = zh(1);
+
+    // ⓪ v193：like + 动名词/名词 = 「喜欢…」，不是「像…」。
+    // （有道头号义项 like=像，I like swimming 以前拼成「像游泳」。）
+    // 「What's the weather like…」这种 like 前面是 weather/look/be 时不算。
+    if ((a === 'like' || a === 'likes' || a === 'love' || a === 'loves')
+        && !this.isStop(b) && this.NOT_NOUN.indexOf(b) < 0 && bz
+        && !/^(weather|look|looks|sound|sounds|seem|seems|feel|feels|be|is|are|am|was|were|what)$/
+          .test(String(T[i - 1] || '').toLowerCase())) {
+      const meaning = (a === 'love' || a === 'loves' ? '喜爱' : '喜欢') + bz.replace(/的$/, '');
+      if (meaning.length <= 10) return mk(2, meaning);
+    }
+    // ⓪b be + 形容词（is important → 很重要 / is sunny → 很晴朗）
+    if (BE.indexOf(a) >= 0 && this.isAdj(b) && bz) {
+      const meaning = '很' + bz.replace(/的$/, '');
+      if (meaning.length <= 10) return mk(2, meaning);
+    }
 
     // ② 形容词 + 名词（large desert → 大的沙漠）
     if (this.isAdj(a) && this.isNounish(b) && az && bz) {
@@ -1730,8 +1869,14 @@ const WordHelp = {
       const meaning = this.QUANT_ZH[a] + bz;
       if (meaning.length <= 14) return mk(2, meaning);
     }
+    // ③b 数词 + 名词（five classes → 五节课）
+    if (this.NUM_ZH[a] && this.isNounish(b) && bz) {
+      const meaning = this.NUM_ZH[a] + bz;
+      if (meaning.length <= 12) return mk(2, meaning);
+    }
     // ④ 动词 + 宾语（clean houses → 打扫房子）
     if (this.isVerb(a) && this.isNounish(b) && az && bz
+        && !/的$/.test(az)
         && !/^(去|做|是|有|在|能|会|要|把|被|使|让)$/.test(az)) {
       const meaning = az + bz;
       if (meaning.length <= 12) return mk(2, meaning);
@@ -1752,7 +1897,8 @@ const WordHelp = {
     // 排除 the：the + 名词到处都是但几乎不带来新意思，画满横线反而碍眼。
     const detZh = DET_ZH[a];
     if (detZh && this.isNounish(b) && bz) {
-      const meaning = detZh + bz;
+      // v193：a/an 按名词配量词（a book → 一本书 / a dog → 一只狗）
+      const meaning = (a === 'a' || a === 'an' ? this.measure(b) : detZh) + bz;
       if (meaning.length <= 12) return mk(2, meaning);
     }
     // ⑧ very / so / quite + 形容词（very friendly → 非常友好）
@@ -1781,7 +1927,12 @@ const WordHelp = {
   phraseAtRich(tokens, i) {
     const hand = this.phraseAt(tokens, i);
     if (hand) return hand;
-    return this.collocAt(tokens, i);
+    const c = this.collocAt(tokens, i);
+    // v193：提示条要**直接把中文摆给孩子看**，规则拼出来的中文必须干净。
+    // 有道残留标签、半截「…的」、混着英文的，宁可不画这一条横线。
+    if (c && (!c.zh || c.zh.length > 14 || /[\[\]【】A-Za-z]/.test(c.zh)
+              || /的$/.test(c.zh))) return null;
+    return c;
   },
 
   // 整串是不是一个（或含有一个）固定搭配？给点词弹层用。

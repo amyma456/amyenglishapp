@@ -37,8 +37,8 @@ const selSeg = appSrc.slice(appSrc.indexOf('  selectAnswer(mi, qi, oi, dayIdx) {
                             appSrc.indexOf('  selectAnswer(mi, qi, oi, dayIdx) {') + 3000);
 const hrSeg = appSrc.slice(appSrc.indexOf('  _holdReadStart(mi, qi, dayIdx, sentence) {'),
                            appSrc.indexOf('  _holdReadStart(mi, qi, dayIdx, sentence) {') + 1400);
-const spSeg = appSrc.slice(appSrc.indexOf('  _wordSpans(text) {'),
-                           appSrc.indexOf('  _wordSpans(text) {') + 4200);
+const spSeg = appSrc.slice(appSrc.indexOf('  _wordSpans(text, plain) {'),
+                           appSrc.indexOf('  _wordSpans(text, plain) {') + 4200);
 const npSeg = appSrc.slice(appSrc.indexOf('  _notePhrases(list) {'),
                            appSrc.indexOf('  _notePhrases(list) {') + 1600);
 const wsSeg = appSrc.slice(appSrc.indexOf('async _openWordSheet(word) {'),

@@ -6261,13 +6261,22 @@ const App = {
     html += '<div class="auto-read-badge"><svg class="icon icon-sm speaking-anim"><use href="#i-sound"/></svg> 正在朗读…</div>';
     html += '<div class="fs-12 text-sub">第' + (qi+1) + '题 / 共' + m.questions.length + '题</div>';
     html += '<div class="vocab-progress mt-8"><div class="fill" style="width:' + (qi/m.questions.length*100) + '%"></div></div>';
-    html += '<div class="speak-sentence">' + q.sentence + '</div>';
+    // v193：口语练习这一屏以前是**纯文本**，一个短语横线都没有 —— 家长
+    // 2026-11-11：「AI 口语练习里面的短语还是太少了，没有一句里两三个
+    // 短语的提示」。题干、四个选项现在都走 _wordSpans 画短语，句子下面
+    // 再直接把短语和中文列成小卡片，孩子不用点就看得见意思。
+    html += '<div class="speak-sentence">' + this._wordSpans(q.sentence) + '</div>';
+    html += this._spPhraseBar(q.sentence, '📌 本句短语', 4);
     html += '<div class="speak-sentence-cn">' + q.sentence_cn + '</div>';
     html += '<button class="speak-btn play" onclick="App.playSentence(' + mi + ',' + qi + ',\'' + dayIdx + '\')"><svg class="icon icon-sm"><use href="#i-sound"/></svg> 重新听</button>';
     // Options disabled until reading finishes
     html += '<div class="speak-options" id="sp-opts-' + mi + '" style="opacity:0.4;pointer-events:none">';
     shuffled.options.forEach((o, oi) => {
-      html += '<div class="speak-option" onclick="App.selectSpeakAnswer(' + mi + ',' + qi + ',' + oi + ',' + dayIdx + ')">' + String.fromCharCode(65+oi) + '. ' + o + '</div>';
+      html += '<div class="speak-option" onclick="App.selectSpeakAnswer(' + mi + ',' + qi + ',' + oi + ',' + dayIdx + ')">'
+        + String.fromCharCode(65+oi) + '. ' + this._wordSpans(o, true) + '</div>';
+      // 提示条是选项的**兄弟**节点，不能塞进 .speak-option 里 —— 否则
+      // 点短语卡片会被当成"选了这个答案"。
+      html += this._spPhraseBar(o, '短语', 3);
     });
     html += '</div>';
     html += '<div class="listen-wait" id="sp-wait-' + mi + '" style="text-align:center;padding:8px;color:var(--text-sub);font-size:12px">⏳ 请先听完整朗读，再选择答案</div>';
@@ -6505,6 +6514,10 @@ const App = {
     this._gateReset(gid);   // v184：重进这道口语题 = 重新先听（详见 _gateReset 注释）
     readArea.innerHTML = '<div class="speak-record show" style="text-align:center">'
       + '<p class="fs-12 text-sub">请把问句和答句连起来读：</p>'
+      // v193：跟读判分的词盒一个都不动（逐词打勾/打分全靠它的顺序），
+      // 只在上方另加一条短语提示，孩子读之前先看清哪几个词是一块。
+      + this._spPhraseBar(parts ? parts.q : sentence, '📌 问句和答句里的短语', 5,
+          (parts && parts.a) ? parts.a : '')
       + '<div class="rd-sentence" id="rd-sent-' + mi + '-' + qi + '">' + sentHtml + '</div>'
       + '<div class="rd-live-hint" id="rd-live-' + mi + '-' + qi + '"></div>'
       + '<div class="gate-bar">' + this._gateListenHtml(gid, sentence, '🔊 先听一遍示范', 'cf') + '</div>'
@@ -13056,6 +13069,80 @@ const App = {
     return mask;
   },
 
+  // v193：AI 口语练习的「本句短语」提示条取词逻辑。
+  // 正文横线用贪心不重叠分割（_phraseMask）；这里额外从每个词出发再扫一次
+  // （允许重叠），专补短句 —— "I like swimming." 贪心只认出 I like，
+  // 补一次就多出 like swimming，一句能看到两三个短语和中文，点都不用点。
+  _phraseHints(text, limit) {
+    const cap = limit || 4;
+    const out = [], seen = {};
+    if (typeof WordHelp === 'undefined') return out;
+    const toks = (String(text || '').match(/[A-Za-z][A-Za-z'\-]*/g) || [])
+      .map(w => w.toLowerCase());
+    if (!toks.length) return out;
+    const add = p => {
+      if (!p || !p.zh || seen[p.en]) return;
+      seen[p.en] = 1;
+      out.push({ en: p.en, zh: p.zh });
+    };
+    let i = 0;
+    while (i < toks.length) {
+      const p = WordHelp.phraseAtRich(toks, i);
+      if (p) { add(p); i += p.len; } else i++;
+    }
+    for (let k = 0; k < toks.length && out.length < cap; k++) {
+      add(WordHelp.phraseAtRich(toks, k));
+    }
+    // ③ 短句兜底：像 "It is Sunday." 这种一共三个词的句子，物理上凑不出
+    // 两个短语。补一两个句中实词的中文（本地词典，不联网），孩子刚学翻译
+    // 时本来就要一个一个查，这一步正好省掉查的动作。带「词」角标区分。
+    if (out.length < Math.min(cap, 2)) {
+      const used = {};
+      out.forEach(h => String(h.en).split(' ').forEach(w => { used[w] = 1; }));
+      for (let k = 0; k < toks.length && out.length < Math.min(cap, 2); k++) {
+        const w = toks[k];
+        if (used[w] || seen[w] || w.length < 3) continue;
+        if (WordHelp.isStop && WordHelp.isStop(w)) continue;
+        const z = WordHelp.zhOf ? WordHelp.zhOf(w) : '';
+        if (!z || z.length > 8 || /[\[\]【】A-Za-z]/.test(z)) continue;
+        used[w] = 1; seen[w] = 1;
+        out.push({ en: w, zh: z, word: true });
+      }
+    }
+    return out.slice(0, cap);
+  },
+
+  // 短语中文直接摆在句子下面（不是「点了才查」）。点一下仍能听读音。
+  _spPhraseBar(text, label, limit, extraText) {
+    const cap = limit || 4;
+    let hints = this._phraseHints(text, cap);
+    if (extraText) {
+      const seen = {};
+      hints.forEach(h => { seen[h.en] = 1; });
+      this._phraseHints(extraText, cap).forEach(h => {
+        if (!seen[h.en]) { seen[h.en] = 1; hints.push(h); }
+      });
+      hints = hints.slice(0, cap);
+    }
+    if (!hints.length) return '';
+    let html = '<div class="sp-ph-bar"><span class="sp-ph-label">'
+      + (label || '📌 本句短语') + '</span>';
+    hints.forEach(h => {
+      html += '<span class="sp-ph-chip' + (h.word ? ' sp-ph-word' : '')
+        + '" data-en="' + this._escHtml(h.en)
+        + '" onclick="App._spTapPhrase(this)">'
+        + (h.word ? '<em>词</em>' : '')
+        + '<b>' + this._escHtml(h.en)
+        + '</b><i>' + this._escHtml(h.zh) + '</i></span>';
+    });
+    return html + '</div>';
+  },
+
+  _spTapPhrase(el) {
+    const en = el && el.getAttribute ? el.getAttribute('data-en') : '';
+    if (en) this._openWordSheet(en);
+  },
+
   // v156：问句答句的标点必须显示出来（家长 2026-10-27：「把所有的标点给
   // 加上」）。以前这里只输出 .rd-w 词盒，词和词之间的空格、问号、句号、
   // 逗号全被吞掉，孩子看到的是一串没有标点的词。现在把非词片段（空格 +
@@ -15199,7 +15286,11 @@ const App = {
   //
   // 标点必须留在 span 外面：句末的 "park." 如果连着包进去，查词会拿
   // "park." 去查，查不到。
-  _wordSpans(text) {
+  // v193：plain=true 时普通单词**不包 .lk-word**（AI 口语练习的选项要用）。
+  // 选项整块自带 onclick 选答案，若单词被包成词盒，全局点词捕获器会抢走
+  // 这次点击（stopPropagation），孩子就选不动答案了。短语盒子仍保留，
+  // 只是去掉 lk-word，纯做视觉提示。
+  _wordSpans(text, plain) {
     const self = this;
     const raw = String(text == null ? '' : text);
     const toks = raw.split(/(\s+)/);
@@ -15240,7 +15331,8 @@ const App = {
           j++;
         }
         if (got >= p.len) {
-          out += '<span class="lk-word lk-phrase" data-phrase="' + self._escHtml(p.en) + '">'
+          out += '<span class="' + (plain ? 'lk-phrase sp-opt-ph' : 'lk-word lk-phrase')
+               + '" data-phrase="' + self._escHtml(p.en) + '">'
                + self._escHtml(phrase) + '</span>';
           phrases.push(p.en);
           wi += p.len;
@@ -15250,8 +15342,8 @@ const App = {
       }
       const mm = /^([^A-Za-z]*)([A-Za-z][A-Za-z'\-]*)([^A-Za-z]*)$/.exec(tok);
       out += self._escHtml(mm[1])
-           + '<span class="lk-word">' + self._escHtml(mm[2]) + '</span>'
-           + self._escHtml(mm[3]);
+           + (plain ? '' : '<span class="lk-word">') + self._escHtml(mm[2])
+           + (plain ? '' : '</span>') + self._escHtml(mm[3]);
       wi++;
     }
     if (phrases.length) this._notePhrases(phrases);

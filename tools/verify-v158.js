@@ -84,11 +84,11 @@ section('3. previewGo 收口干净（不污染学生状态）');
 
 section('4. 版本号 v158');
 {
-  ok(htmlSrc.includes('app-version" content="192"'), 'index.html app-version=158');
-  ok(/\.js\?v=192/.test(htmlSrc), 'index.html 资源 ?v=192');
-  ok(swSrc.includes('amy-english-v192'), 'sw.js CACHE_NAME=v158');
-  ok(/var V = 192;/.test(swSrc), 'sw.js var V = 158');
-  ok(!/\.js\?v=(?!192)\d{2,3}/.test(htmlSrc) && !/amy-english-v(?!192)\d{3}/.test(swSrc), '无旧版本残留（字符类负向断言，批量升版不会自破）');
+  ok(htmlSrc.includes('app-version" content="193"'), 'index.html app-version=158');
+  ok(/\.js\?v=193/.test(htmlSrc), 'index.html 资源 ?v=193');
+  ok(swSrc.includes('amy-english-v193'), 'sw.js CACHE_NAME=v158');
+  ok(/var V = 193;/.test(swSrc), 'sw.js var V = 158');
+  ok(!/\.js\?v=(?!193)\d{2,3}/.test(htmlSrc) && !/amy-english-v(?!193)\d{3}/.test(swSrc), '无旧版本残留（字符类负向断言，批量升版不会自破）');
 }
 
 console.log('\n结果: ' + pass + ' 通过, ' + fail + ' 失败');
