@@ -97,9 +97,9 @@ ok(/'writing_drill', 'speaking'/.test(fs.readFileSync(path.join(ROOT, 'tools', '
 // —— 版本钉 ——
 const idxHtml = fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8');
 const swSrc = fs.readFileSync(path.join(ROOT, 'public', 'sw.js'), 'utf8');
-ok(/content="193"/.test(idxHtml), 'index.html app-version=177');
-ok((idxHtml.match(/\?v=193/g) || []).length >= 6, '静态资源 ?v=193 ≥ 6 处');
-ok(/var V = 193;/.test(swSrc) && /amy-english-v193/.test(swSrc), 'sw.js 版本与缓存名 = 177');
+ok(/content="194"/.test(idxHtml), 'index.html app-version=177');
+ok((idxHtml.match(/\?v=194/g) || []).length >= 6, '静态资源 ?v=194 ≥ 7 处');
+ok(/var V = 194;/.test(swSrc) && /amy-english-v194/.test(swSrc), 'sw.js 版本与缓存名 = 177');
 
 console.log('\n结果: ' + pass + ' 通过, ' + fail + ' 失败');
 process.exit(fail ? 1 : 0);

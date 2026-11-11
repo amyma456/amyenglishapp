@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="193">
+<meta name="app-version" content="194">
 <link rel="manifest" href="manifest.json">
 <!-- v135：登录第一步就是调 api.amyeng.top 验手机号。提前把 DNS + TLS
      握手做掉，接口首调能省几百毫秒 —— 手机弱网下这几百毫秒很显眼。 -->
@@ -1333,6 +1333,141 @@ div[data-gated] .ac-info{gap:10px}
 #perf-panel .pf-note{color:#8E8E9A;margin-top:6px;white-space:normal}
 /* 面板占了下半屏 —— 给它留出滚动余量，别把「下一题」压在底下点不到 */
 body.perf-on .content-area{padding-bottom:54vh}
+/* ==========================================================================
+   v194 · 单词星球 · 能量收集站（小游戏）
+   浅色主题、大点击区、transform 动画为主；不用 :has() / 100dvh 单写，
+   老华为浏览器与平板自带浏览器都要能顺滑点。
+   ========================================================================== */
+.wg-root{max-width:680px;margin:0 auto;padding:14px 12px 32px;color:var(--text);
+  -webkit-tap-highlight-color:transparent}
+.wg-root *{box-sizing:border-box}
+.wg-hero{display:flex;align-items:center;gap:12px;padding:14px;border-radius:var(--radius);
+  background:linear-gradient(120deg,#FFF0E5 0%,#FFE4ED 55%,#E0F7F4 100%);
+  box-shadow:var(--shadow);margin-bottom:12px}
+.wg-hero-ic{font-size:36px;line-height:1;flex:none;animation:wg-bob 3s ease-in-out infinite}
+.wg-title{font-size:19px;font-weight:800;color:var(--primary-dark);letter-spacing:.5px}
+.wg-sub{font-size:12px;color:var(--text-sub);line-height:1.55;margin-top:4px}
+.wg-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);
+  padding:13px 14px;margin-bottom:12px;border:1px solid #FFF0E5}
+.wg-card-hd{display:flex;align-items:center;justify-content:space-between;gap:8px;
+  font-size:14px;font-weight:800;color:var(--primary-dark);margin-bottom:10px}
+.wg-pill{font-size:11px;font-weight:700;background:var(--primary-light);color:var(--primary-dark);
+  border-radius:999px;padding:3px 9px;white-space:nowrap}
+.wg-pill-lv{background:var(--teal-light);color:#12877C}
+.wg-time-card{background:linear-gradient(160deg,#FFFDF9,#FFF4EA);border-color:#FFE0C2}
+.wg-time-row{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--text-sub);
+  flex-wrap:wrap;margin-bottom:2px}
+.wg-time-row b{color:var(--danger);font-size:15px}
+.wg-big-time{font-size:44px;line-height:1.15;font-weight:900;color:var(--primary-dark);
+  letter-spacing:2px;margin:6px 0 4px;font-variant-numeric:tabular-nums}
+.wg-track{height:11px;border-radius:999px;background:#FFE6D2;overflow:hidden;margin:6px 0 8px}
+.wg-track-in{height:100%;border-radius:999px;background:linear-gradient(90deg,#FF8C42,#FF6B9D);
+  transition:width .25s linear}
+.wg-note{font-size:12px;color:var(--text-sub);line-height:1.6;margin-top:4px}
+.wg-note b{color:var(--primary-dark)}
+.wg-ladder{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.wg-ladder-item{flex:1 1 18%;min-width:62px;text-align:center;background:#fff;
+  border:1px solid #FFE0C2;border-radius:10px;padding:6px 2px}
+.wg-ladder-item span{display:block;font-size:10px;color:var(--text-sub)}
+.wg-ladder-item b{display:block;font-size:14px;color:var(--primary-dark);
+  font-variant-numeric:tabular-nums;margin-top:2px}
+.wg-ladder-cur{border-color:var(--primary);background:#FFF0E5;
+  box-shadow:0 2px 8px rgba(255,140,66,.2)}
+.wg-center{text-align:center}
+.wg-stats{display:flex;gap:8px;justify-content:space-between;flex-wrap:wrap}
+.wg-stat{flex:1 1 22%;min-width:70px;text-align:center;background:var(--primary-light);
+  border-radius:var(--radius-sm);padding:9px 3px}
+.wg-stat-n{font-size:19px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1.2}
+.wg-stat-l{font-size:10px;color:var(--text-sub);margin-top:3px}
+.wg-rules{background:linear-gradient(160deg,#FFFDF9,#F2FCFB)}
+.wg-rule{font-size:12.5px;line-height:1.65;color:var(--text);display:flex;gap:8px;margin:5px 0}
+.wg-rule span{color:var(--primary);font-weight:800;flex:none}
+.wg-hist-row{display:flex;justify-content:space-between;gap:8px;font-size:12px;
+  padding:6px 0;border-bottom:1px dashed #FFE6D2;color:var(--text-sub)}
+.wg-hist-row:last-child{border-bottom:none}
+.wg-hist-row b{color:var(--accent-dark);font-size:14px}
+.wg-actions{text-align:center;padding:6px 0 4px}
+.wg-btn{display:block;width:100%;max-width:420px;margin:8px auto;border:none;cursor:pointer;
+  border-radius:999px;padding:14px 18px;font-size:17px;font-weight:800;color:#fff;
+  background:linear-gradient(100deg,#FF8C42,#FF6B9D);box-shadow:0 5px 14px rgba(255,107,157,.28);
+  transition:transform .12s ease}
+.wg-btn:active{transform:scale(.97)}
+.wg-btn-ghost{background:#fff;color:var(--primary-dark);border:2px solid #FFD7B5;
+  box-shadow:none;font-size:15px;padding:11px 18px}
+.wg-btn-disabled{background:#E9E2DC;color:#9A8C80;box-shadow:none;cursor:default}
+.wg-mini{background:#fff;border:1px solid #FFE0C2;border-radius:999px;color:var(--text-sub);
+  font-size:12px;padding:5px 12px;margin-top:8px;cursor:pointer}
+.wg-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.wg-top-l{font-size:12px;color:var(--text-sub);display:flex;align-items:center;gap:6px}
+.wg-round{background:var(--primary);color:#fff;border-radius:999px;padding:3px 10px;font-weight:800}
+.wg-dot{color:#FFC79A}
+.wg-top .wg-mini{margin-top:0}
+.wg-hud{display:flex;gap:8px;margin-bottom:8px}
+.wg-hud-cell{flex:1;text-align:center;background:#fff;border-radius:var(--radius-sm);
+  box-shadow:var(--shadow);padding:8px 2px}
+.wg-hud-cell span{display:block;font-size:10px;color:var(--text-sub)}
+.wg-hud-cell b{display:block;font-size:22px;font-weight:900;color:var(--primary-dark);
+  line-height:1.25;font-variant-numeric:tabular-nums}
+.wg-clockbar{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:var(--text-sub)}
+.wg-clock{display:flex;align-items:baseline;gap:5px}
+.wg-clock b{font-size:16px;color:var(--accent-dark);font-variant-numeric:tabular-nums}
+.wg-track-live{height:9px;margin:4px 0 12px;background:#FFE6D2}
+.wg-track-live .wg-track-in{transition:none}
+.wg-qcard{background:linear-gradient(150deg,#FFFFFF,#FFF7F0);border:2px solid #FFD7B5;
+  border-radius:18px;padding:15px 14px 13px;text-align:center;box-shadow:var(--shadow);
+  margin-bottom:12px;min-height:96px;animation:wg-pop .22s ease-out}
+.wg-qcard-star{border-color:#F5C542;background:linear-gradient(150deg,#FFFBEA,#FFF3D0);
+  box-shadow:0 4px 18px rgba(245,197,66,.3)}
+.wg-qtags{display:flex;gap:5px;justify-content:center;flex-wrap:wrap;margin-bottom:6px}
+.wg-tag{font-size:10px;font-weight:800;border-radius:999px;padding:2px 8px}
+.wg-tag-star{background:#FFF0BF;color:#9A6B00}
+.wg-tag-review{background:var(--teal-light);color:#12877C}
+.wg-qtitle{font-size:20px;font-weight:800;line-height:1.45;color:var(--text);word-break:break-word}
+.wg-qsub{font-size:12px;color:var(--text-sub);margin-top:6px}
+.wg-opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.wg-opt{position:relative;min-height:66px;padding:10px 8px;border:2px solid #FFD7B5;
+  border-radius:18px;background:#fff;color:var(--text);font-size:16px;font-weight:700;
+  cursor:pointer;box-shadow:var(--shadow);overflow:hidden;touch-action:manipulation;
+  animation:wg-bob 3.4s ease-in-out infinite;transition:transform .12s ease,background .15s ease}
+.wg-opt:nth-child(2){animation-delay:-.8s}
+.wg-opt:nth-child(3){animation-delay:-1.6s}
+.wg-opt:nth-child(4){animation-delay:-2.4s}
+.wg-opt:active{transform:scale(.96)}
+.wg-opt-t{display:block;line-height:1.35;word-break:break-word}
+.wg-opt-correct{background:#F6FFED;border-color:#52C41A;color:#237804;animation:wg-pop .2s ease-out}
+.wg-opt-wrong{background:#FFF1F0;border-color:#FF4D4F;color:#A8071A;animation:wg-shake .3s ease}
+.wg-float{position:absolute;left:50%;top:12px;transform:translateX(-50%);
+  font-size:17px;font-weight:900;color:#52C41A;pointer-events:none;white-space:nowrap;
+  animation:wg-fly .75s ease-out forwards}
+.wg-float-star{color:#D48806;font-size:19px}
+.wg-float-bad{color:#FF4D4F;font-size:13px}
+.wg-bottom{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:12px}
+.wg-link{background:none;border:none;color:var(--primary-dark);font-size:12px;
+  font-weight:700;cursor:pointer;text-decoration:underline;white-space:nowrap}
+.wg-result{text-align:center;background:linear-gradient(160deg,#FFF0E5,#FFE4ED 60%,#E0F7F4);
+  border-radius:var(--radius);padding:20px 14px;box-shadow:var(--shadow);margin-bottom:12px;
+  animation:wg-pop .25s ease-out}
+.wg-result-ic{font-size:44px;line-height:1}
+.wg-result-t{font-size:17px;font-weight:800;color:var(--primary-dark);margin-top:6px}
+.wg-result-score{font-size:48px;font-weight:900;color:var(--accent-dark);line-height:1.2;
+  font-variant-numeric:tabular-nums}
+.wg-result-score span{font-size:16px;color:var(--text-sub)}
+.wg-result-detail{font-size:12px;color:var(--text-sub);line-height:1.7;margin-top:4px}
+.wg-total-line{font-size:14px;font-weight:700;color:var(--text);margin-top:8px}
+.wg-total-line b{font-size:20px;color:var(--primary-dark)}
+@keyframes wg-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes wg-pop{0%{transform:scale(.9);opacity:.4}100%{transform:scale(1);opacity:1}}
+@keyframes wg-shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}
+  75%{transform:translateX(5px)}}
+@keyframes wg-fly{0%{transform:translate(-50%,0);opacity:1}
+  100%{transform:translate(-50%,-42px);opacity:0}}
+@media (max-width:400px){
+  .wg-title{font-size:17px}
+  .wg-big-time{font-size:38px}
+  .wg-qtitle{font-size:18px}
+  .wg-opt{font-size:15px;min-height:60px}
+  .wg-result-score{font-size:40px}
+}
 </style>
 </head>
 <body>
@@ -1542,6 +1677,8 @@ body.perf-on .content-area{padding-bottom:54vh}
 <symbol id="i-sound" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6.5 9H3v6h3.5L11 19V5Z"/><path d="M15.5 9.5a3.5 3.5 0 0 1 0 5M18.5 7a7 7 0 0 1 0 10"/></symbol>
 <symbol id="i-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5c2.4 3.6 5.4 5.4 9 5.4s6.6-1.8 9-5.4"/><path d="M5.2 12.6 3.6 15M9.2 14.4 8.3 17.2M14.8 14.4l.9 2.8M18.8 12.6l1.6 2.4"/></symbol>
 <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5.6c-4.5 0-8.2 2.9-9.4 6.4 1.2 3.5 4.9 6.4 9.4 6.4s8.2-2.9 9.4-6.4C20.2 8.5 16.5 5.6 12 5.6Z"/><circle cx="12" cy="12" r="2.5"/></symbol>
+<!-- v194 单词乐园：手柄 -->
+<symbol id="i-game" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8h10a4 4 0 0 1 3.9 3.1l1 4.3A2.6 2.6 0 0 1 19.4 18.7c-1.1 0-2-.6-2.6-1.5H7.2c-.6.9-1.5 1.5-2.6 1.5a2.6 2.6 0 0 1-2.5-3.3l1-4.3A4 4 0 0 1 7 8Z"/><path d="M7.5 11.5v3M6 13h3"/><circle cx="16" cy="12.5" r=".9"/><circle cx="18" cy="14.5" r=".9"/></symbol>
 </svg>
 
 <!-- Modal -->
@@ -1550,9 +1687,9 @@ body.perf-on .content-area{padding-bottom:54vh}
 </div>
 
 <script>window.__appReady = false;</script>
-<script defer src="cloud.js?v=193"></script>
-<script defer src="data.js?v=193"></script>
-<script defer src="data-shuffle.js?v=193"></script>
+<script defer src="cloud.js?v=194"></script>
+<script defer src="data.js?v=194"></script>
+<script defer src="data-shuffle.js?v=194"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
 <!--
   ?v= 必须跟着版本号走（v124 修正）。
@@ -1562,9 +1699,13 @@ body.perf-on .content-area{padding-bottom:54vh}
   这个坑很隐蔽：代码明明改了、也部署上去了，手机上跑的还是几个月前的逻辑。
   以后每次发版，这里跟着 app-version 一起改。
 -->
-<script defer src="recorder.js?v=193"></script>
-<script defer src="api.js?v=193"></script>
-<script defer src="app.js?v=193"></script>
+<script defer src="recorder.js?v=194"></script>
+<script defer src="api.js?v=194"></script>
+<!-- v194：小游戏独立成文件，不塞进已经 800KB 的 app.js。必须排在 app.js
+     **前面**：app.js 顶层有同步初始化，登录回来若正好停在「单词乐园」，
+     渲染时 WordGame 得已经存在。game.js 只在被点击/渲染时才读 window.App。 -->
+<script defer src="game.js?v=194"></script>
+<script defer src="app.js?v=194"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {

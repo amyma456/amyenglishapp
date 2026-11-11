@@ -90,9 +90,9 @@ ok(c && c.zh && /沙漠/.test(c.zh), '规则短语 in the desert 自动拼中文
 ok(/_phraseMask\(words, true\)/.test(app), '阅读材料/作文启用规则搭配');
 ok(/const pick = rich \? 'phraseAtRich' : 'phraseAt';/.test(app), '跟读判分句仍只用手写表（不切碎词盒）');
 ok(/\.lk-phrase\{border-bottom:2px solid/.test(html), '短语横线改成粗实线，跟单词虚线区分');
-ok((html.match(/\?v=193/g) || []).length === 6, 'index.html 六处 ?v=193', (html.match(/\?v=193/g) || []).length);
-ok(html.includes('app-version" content="193"'), 'index.html app-version=192');
-ok(/var CACHE_NAME = 'amy-english-v193';/.test(fs.readFileSync(path.join(ROOT, 'public/sw.js'), 'utf8')), 'sw.js CACHE_NAME v193');
+ok((html.match(/\?v=194/g) || []).length === 7, 'index.html 七处 ?v=194（v194 新增 game.js）', (html.match(/\?v=194/g) || []).length);
+ok(html.includes('app-version" content="194"'), 'index.html app-version=192');
+ok(/var CACHE_NAME = 'amy-english-v194';/.test(fs.readFileSync(path.join(ROOT, 'public/sw.js'), 'utf8')), 'sw.js CACHE_NAME v193');
 
 console.log(fail ? '✗ ' + fail + ' 项失败 / ' + (pass + fail) : '✅ verify-phrases 全部 ' + pass + ' 项通过');
 process.exit(fail ? 1 : 0);

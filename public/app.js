@@ -4035,11 +4035,15 @@ const App = {
         { id: 'speaking', icon: 'i-mic', name: '口语记录' },
         { id: 'students', icon: 'i-users', name: '学生管理' },
         { id: 'classmgmt', icon: 'i-layers', name: '班级管理' },
+        // v194：老师也能试玩（按满额 3 分钟），方便验收孩子的游戏。
+        { id: 'wordgame', icon: 'i-game', name: '游戏试玩' },
       ];
     } else {
       // Non-teacher: see today's homework, own child progress, class comparison, own error book
       tabs = [
         { id: 'today', icon: 'i-doc', name: '今日作业' },
+        // v194：小游戏放在「今日作业」旁边 —— 做完题一抬手就能看到入口。
+        { id: 'wordgame', icon: 'i-game', name: '单词乐园' },
         { id: 'myprogress', icon: 'i-chart', name: '孩子打卡' },
         { id: 'compare', icon: 'i-trophy', name: '完成率对比' },
         { id: 'myerrors', icon: 'i-close', name: '错题改错' },
@@ -4087,6 +4091,11 @@ const App = {
     // A pending auto-advance must not fire after the child has navigated away,
     // or it silently skips a question when they come back.
     clearTimeout(this._advanceTimer);
+    // v194：离开「单词乐园」立刻把正在进行的这一轮结算入账。否则家长随手
+    // 切到别的页签看一眼，孩子这轮的分数就白打了。
+    if (this.state.currentTab === 'wordgame' && tab !== 'wordgame' && typeof WordGame !== 'undefined') {
+      WordGame.onLeave();
+    }
 
     // v130：点一下必须**立刻**切屏。
     //
@@ -4182,10 +4191,12 @@ const App = {
         case 'speaking': area.innerHTML = this.renderSpeakingRecords(); break;
         case 'students': area.innerHTML = this.renderStudents(); break;
         case 'classmgmt': area.innerHTML = this.renderClassMgmt(); break;
+        case 'wordgame': area.innerHTML = (typeof WordGame !== 'undefined') ? WordGame.render() : ''; break;
       }
     } else {
       switch(tab) {
         case 'today': area.innerHTML = this.renderToday(); break;
+        case 'wordgame': area.innerHTML = (typeof WordGame !== 'undefined') ? WordGame.render() : ''; break;
         case 'myprogress': area.innerHTML = this.renderMyProgress(); break;
         case 'compare': area.innerHTML = this.renderCompare(); break;
         case 'myerrors': area.innerHTML = this.renderMyErrors(); break;
@@ -4209,6 +4220,9 @@ const App = {
     if (['checkin', 'compare', 'daily', 'scores', 'myprogress'].indexOf(tab) >= 0) {
       this._ckPaintedSeq = this._ckPullSeq || 0;
     }
+    // v194：游戏自己管 DOM 和计时，这里补一次挂载 —— 大厅刷新实时错题数，
+    // 正在玩时补时钟。renderContent 被别处重画也不会把游戏打回起点。
+    if (tab === 'wordgame' && typeof WordGame !== 'undefined') WordGame.mount();
   },
 
   // ===== Teacher: Weekly Plan =====
@@ -15113,6 +15127,23 @@ const App = {
     html += '<div class="flex-between"><span>👤 ' + this._escHtml(myName) + '</span><span class="badge badge-primary">' + this._escHtml(myClass) + '</span></div>';
     html += '</div>';
     html += this._ckLiveStrip();
+
+    // v194：小游戏入口。放在打卡页最上面，家长一眼能看到「今天错几道、
+    // 能玩多久」，也把「少错就多玩」的换算天天摆在面前。
+    if (typeof WordGame !== 'undefined') {
+      var gi = WordGame.todayInfo(), gs = WordGame.grantSec(gi), gcfg = WordGame.config();
+      var gmm = Math.floor(gs / 60), gss = gs % 60;
+      var gTime = gmm + ':' + (gss < 10 ? '0' : '') + gss;
+      html += '<div class="card mb-16" style="background:linear-gradient(110deg,#FFF0E5,#E0F7F4);border:none">';
+      html += '<div class="flex-between"><span>🚀 <b>单词星球 · 能量收集站</b></span>' +
+              '<span class="badge badge-primary">今日可玩 ' + gTime + '</span></div>';
+      html += '<div class="fs-12 text-sub mt-8">今日错题 ' + gi.wrong + ' 道 · ' +
+              (gi.done ? '全对玩满 ' + Math.floor(gcfg.maxSec / 60) + ' 分钟，每错 1 道少 ' +
+                gcfg.secPerWrong + ' 秒' : '完成今日作业后按错题数发时长') +
+              ' · 每轮结算、积分累计（已攒 ' + WordGame.total() + ' 分）</div>';
+      html += '<button class="btn btn-primary btn-sm mt-8" onclick="App.switchTab(\'wordgame\')">🚀 去玩一轮</button>';
+      html += '</div>';
+    }
 
     // Summary stats
     let doneCount = 0, totalCorrect = 0, correctCount = 0, dueDays = 0;

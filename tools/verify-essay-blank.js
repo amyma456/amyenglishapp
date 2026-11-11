@@ -72,7 +72,7 @@ const rebuilt = (fri.template || '').replace(/\{\{(\d+)\}\}/g, (_, n) => fri.key
 ok(rebuilt.toLowerCase() === String(fri.full_text).toLowerCase(), '模板+答案重建 = full_text（校验器口径）');
 
 console.log('== 4) 版本与工具链 ==');
-ok(/app-version" content="193"/.test(html), 'index.html 版本 = 189');
+ok(/app-version" content="194"/.test(html), 'index.html 版本 = 189');
 ok(/blank_list = list\.map/.test(apply), 'weekpack-apply 透传 blank_list');
 ok(/blank_cn_list = list\.map/.test(apply), 'weekpack-apply 透传 blank_cn_list');
 

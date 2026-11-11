@@ -86,11 +86,11 @@ if (state) {
 console.log('== 8) 版本钉子 ==');
 const html = fs.readFileSync(path.join(ROOT, 'public/index.html'), 'utf8');
 const sw = fs.readFileSync(path.join(ROOT, 'public/sw.js'), 'utf8');
-ok((html.match(/\?v=193/g) || []).length === 6, 'index.html 六处 ?v=193');
+ok((html.match(/\?v=194/g) || []).length === 7, 'index.html 七处 ?v=194');
 ok(!/\?v=18[0-5]/.test(html), 'index.html 没有残留旧版本 ?v=');
-ok(/name="app-version" content="193"/.test(html), 'index.html meta app-version = 186');
-ok(/var CACHE_NAME = 'amy-english-v193';/.test(sw), 'sw.js CACHE_NAME = v193（旧缓存整体作废）');
-ok(/var V = 193;/.test(sw), 'sw.js V = 189');
+ok(/name="app-version" content="194"/.test(html), 'index.html meta app-version = 186');
+ok(/var CACHE_NAME = 'amy-english-v194';/.test(sw), 'sw.js CACHE_NAME = v193（旧缓存整体作废）');
+ok(/var V = 194;/.test(sw), 'sw.js V = 189');
 
 console.log('== 9) 读音网址带版本参数（防浏览器一年 immutable 缓存放旧音）==');
 const appSrc = fs.readFileSync(path.join(ROOT, 'public/app.js'), 'utf8');
