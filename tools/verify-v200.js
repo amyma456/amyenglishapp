@@ -128,11 +128,11 @@ function setBoard(rows) {
 }
 
 // ------------------------------------------------------------------ 源码约束
-ok('版本钉子统一到 v201', () => {
-  assert(/name="app-version" content="201"/.test(html));
-  assert.strictEqual((html.match(/\?v=201/g) || []).length, 7, '首页 7 处脚本引用');
-  assert(/var CACHE_NAME = 'amy-english-v201';/.test(swSrc) && /var V = 201;/.test(swSrc));
-  assert(/^<meta name="app-version" content="201">/m.test(html));
+ok('版本钉子统一到 v202', () => {
+  assert(/name="app-version" content="202"/.test(html));
+  assert.strictEqual((html.match(/\?v=202/g) || []).length, 7, '首页 7 处脚本引用');
+  assert(/var CACHE_NAME = 'amy-english-v202';/.test(swSrc) && /var V = 202;/.test(swSrc));
+  assert(/^<meta name="app-version" content="202">/m.test(html));
 });
 ok('游戏页 tab 仍在刷新恢复白名单里（v198 的修复没被覆盖）', () => {
   const rt = appSrc.slice(appSrc.indexOf('  _restoreTab() {'), appSrc.indexOf('  showApp() {'));
@@ -237,11 +237,13 @@ ok('CSS 里有 0 分名次与打卡卡的样式（老浏览器可用的普通选
     assert.strictEqual((ckHtml.match(/wg-ck-row/g) || []).length, 9);
     assert(/今日已打卡 <b>2<\/b> \/ 9 人/.test(ckHtml), '打卡人数统计不对');
   });
-  ok('打卡卡读的是后台确认记录：重复账号的另一编号也能认到，状态与错题数一致', () => {
-    assert(/已打卡 · 错 2 道/.test(ckHtml), 'York 的错题数没显示');
-    assert(/已打卡 · 错 1 道/.test(ckHtml), 'jerry 第二个编号的打卡没认到');
+  ok('融合状态栏读的是后台确认记录：重复账号的另一编号也能认到，状态与错题数一致', () => {
+    assert(/错 <b>2<\/b> 道/.test(ckHtml), 'York 的错题数没显示');
+    assert(/错 <b>1<\/b> 道/.test(ckHtml), 'jerry 第二个编号的打卡没认到');
     assert(/答了 8\/30 题/.test(ckHtml), '半截进度没显示');
     assert(/还没打卡/.test(ckHtml));
+    // v202：分数和错题数在同一条状态栏里，不用再翻另一张卡
+    assert(/wg-st-wrong/.test(ckHtml) && /wg-board-score/.test(ckHtml));
   });
   App.isTeacher = () => false;
   App._myStudentId = () => 's1791895377291';

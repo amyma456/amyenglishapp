@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="201">
+<meta name="app-version" content="202">
 <link rel="manifest" href="manifest.json">
 <!-- v135：登录第一步就是调 api.amyeng.top 验手机号。提前把 DNS + TLS
      握手做掉，接口首调能省几百毫秒 —— 手机弱网下这几百毫秒很显眼。 -->
@@ -1582,6 +1582,33 @@ body.perf-on .content-area{padding-bottom:54vh}
 .wg-ck-group-wait{background:#FFF9F0;color:#AD4E00;border-bottom-color:#FFD591}
 .ck-today-tag{display:inline-block;margin-left:4px;padding:1px 5px;border-radius:6px;
   background:#F6FFED;color:#389e0d;font-size:10px;font-weight:600;white-space:nowrap}
+/* ==========================================================================
+   v202 · 分数 / 错题 / 打卡合成一条状态栏，按第 1~9 名一行一人列清楚。
+   只用普通类选择器，老华为浏览器 / 平板自带浏览器不会退化。
+   ========================================================================== */
+.wg-board-row.wg-ck-row{align-items:flex-start;padding:9px 6px;min-height:50px}
+.wg-board-row.wg-ck-row .wg-rank,
+.wg-board-row.wg-ck-row .wg-board-lv,
+.wg-board-row.wg-ck-row .wg-board-score{padding-top:1px}
+.wg-board-main{flex:1 1 auto;min-width:0}
+.wg-board-line{display:flex;align-items:center;gap:6px;min-width:0}
+.wg-board-name{flex:1 1 auto}
+.wg-st-pos{flex:0 0 auto;padding:1px 6px;border-radius:8px;font-size:10px;
+  font-weight:700;color:#AD4E00;background:#FFF7E6;white-space:nowrap}
+.wg-board-row.wg-board-idle .wg-st-pos{background:#F3F3F3;color:var(--text-sub)}
+.wg-status{display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-top:3px;
+  font-size:11px;line-height:1.45;color:var(--text-sub)}
+.wg-status i{font-style:normal;color:var(--line)}
+.wg-st-wrong b{font-size:12px;color:#D4380D}
+.wg-st-done{color:#237804;font-weight:600}
+.wg-st-wait{color:#AD4E00}
+.wg-st-partial{color:#AD6800}
+.wg-st-today{color:var(--teal)}
+.wg-board-scroll{max-height:420px}
+@media (max-width:400px){
+  .wg-status{font-size:10px}
+  .wg-board-row.wg-ck-row .wg-board-lv{display:none}
+}
 </style>
 </head>
 <body>
@@ -1801,9 +1828,9 @@ body.perf-on .content-area{padding-bottom:54vh}
 </div>
 
 <script>window.__appReady = false;</script>
-<script defer src="cloud.js?v=201"></script>
-<script defer src="data.js?v=201"></script>
-<script defer src="data-shuffle.js?v=201"></script>
+<script defer src="cloud.js?v=202"></script>
+<script defer src="data.js?v=202"></script>
+<script defer src="data-shuffle.js?v=202"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
 <!--
   ?v= 必须跟着版本号走（v124 修正）。
@@ -1813,13 +1840,13 @@ body.perf-on .content-area{padding-bottom:54vh}
   这个坑很隐蔽：代码明明改了、也部署上去了，手机上跑的还是几个月前的逻辑。
   以后每次发版，这里跟着 app-version 一起改。
 -->
-<script defer src="recorder.js?v=201"></script>
-<script defer src="api.js?v=201"></script>
+<script defer src="recorder.js?v=202"></script>
+<script defer src="api.js?v=202"></script>
 <!-- v194：小游戏独立成文件，不塞进已经 800KB 的 app.js。必须排在 app.js
      **前面**：app.js 顶层有同步初始化，登录回来若正好停在「单词乐园」，
      渲染时 WordGame 得已经存在。game.js 只在被点击/渲染时才读 window.App。 -->
-<script defer src="game.js?v=201"></script>
-<script defer src="app.js?v=201"></script>
+<script defer src="game.js?v=202"></script>
+<script defer src="app.js?v=202"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {

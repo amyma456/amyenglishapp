@@ -43,10 +43,10 @@ const REAL = [
 ];
 
 // ------------------------------------------------------------------ 源码约束
-ok('版本钉子统一到 v201', () => {
-  assert(/name="app-version" content="201"/.test(html));
-  assert.strictEqual((html.match(/\?v=201/g) || []).length, 7, '首页 7 处脚本引用');
-  assert(/var CACHE_NAME = 'amy-english-v201';/.test(swSrc) && /var V = 201;/.test(swSrc));
+ok('版本钉子统一到 v202', () => {
+  assert(/name="app-version" content="202"/.test(html));
+  assert.strictEqual((html.match(/\?v=202/g) || []).length, 7, '首页 7 处脚本引用');
+  assert(/var CACHE_NAME = 'amy-english-v202';/.test(swSrc) && /var V = 202;/.test(swSrc));
 });
 ok('后端不再把「已下线但带分」的账号整行丢掉', () => {
   const fn = worker.slice(worker.indexOf('async function buildBoardRows'),
@@ -123,12 +123,15 @@ ok('学生管理页直接写明正式账号数 / 等同意数，并给出同意�
   assert(/App\.resolveLoginAttempt/.test(appSrcFull), '没有同意/拒绝按钮');
   assert(/id="pending-card-top"/.test(appSrcFull), '横幅点了滚不到账号总览');
 });
-ok('打卡名单分成「已打卡 / 还没打卡」两组，CSS 也跟着加好了', () => {
-  assert(/var yesRows = \[\], noRows = \[\]/.test(gameSrc));
+ok('打卡与积分已融合成一张按名次排的状态榜，CSS 也跟着加好了', () => {
+  // v202：两张卡并成一张，按姓名把云端分数与后台错题数挂到同一行
+  assert(/function mergedBoardRows/.test(gameSrc) && /function ckBoardMap/.test(gameSrc));
+  assert(/wg-status/.test(gameSrc) && /wg-st-wrong/.test(gameSrc));
   assert(/wg-ck-group/.test(gameSrc) && /✅ 已打卡/.test(gameSrc));
   assert(/wg-ck-group-wait/.test(gameSrc) && /⏳ 还没打卡/.test(gameSrc));
   assert(/\.wg-ck-group\{/.test(html) && /\.wg-ck-group-wait\{/.test(html));
   assert(/\.wg-leader\{/.test(html) && /\.ck-today-tag\{/.test(html));
+  assert(/\.wg-status\{/.test(html) && /\.wg-st-pos\{/.test(html));
 });
 ok('老师端打卡监控表也按今日是否打卡分组排序', () => {
   assert(/const roster = this\._classRoster\(\)\.slice\(\)\.sort\(/.test(appSrcFull));
@@ -329,16 +332,18 @@ App._updatePendingBadge = function () {};
   cloudCk['s1791895377291_d3'] = { done: true, wrongCount: 0, answered: 30, total: 30 };
   cloudCk['s1792850539588_d3'] = { done: false, answered: 6, total: 30 };
   const ck = WordGame._test.checkinCardHtml();
-  ok('打卡卡：已打卡的名字连在一起排最前，没打卡的连在一起排后面', () => {
-    const yesAt = ck.indexOf('✅ 已打卡'), noAt = ck.indexOf('⏳ 还没打卡');
-    assert(yesAt > 0 && noAt > yesAt, '分组顺序反了');
+  ok('融合榜：按第 1~9 名顺序排列，每行同时列出分数、错题数与打卡状态', () => {
     assert(/✅ 已打卡 2 人/.test(ck), '已打卡人数不对');
     assert(/⏳ 还没打卡 7 人/.test(ck), '未打卡人数不对');
-    const seg = ck.slice(yesAt, noAt);
-    assert(/哈俊武-jerry/.test(seg) && /黄耀-York/.test(seg), '两个打卡的名字没挨在一起');
-    assert(!/张梓杨-Gary/.test(seg), '没打卡的人混进了已打卡组');
-    assert(ck.slice(noAt).indexOf('张梓杨-Gary') > 0, '没打卡的人没排到后面组');
     assert(/今日已打卡 <b>2<\/b> \/ 9 人/.test(ck));
+    assert(/按第 1 到第 \d+ 名顺序排列/.test(ck), '没写明按名次顺序排列');
+    const first = ck.indexOf('wg-board-row wg-ck-row');
+    assert(first > 0, '融合状态行没渲染出来');
+    const next = ck.indexOf('wg-board-row wg-ck-row', first + 10);
+    const seg = ck.slice(first, next > 0 ? next : undefined);
+    assert(/wg-st-wrong/.test(seg) && /wg-st-ck/.test(seg) && /wg-board-score/.test(seg),
+      '分数、错题数、打卡状态没放在同一条状态栏里');
+    assert(/第 1 名|还没出击/.test(seg), '第一行没有名次标识');
   });
 
   // ③ 登录拦截与老师通知

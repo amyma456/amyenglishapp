@@ -865,64 +865,106 @@
     }
     return best;
   }
-  /** 今日打卡记录：手机游戏页和老师电脑端打卡监控看的是同一份后台数据。 */
-  function checkinCardHtml() {
-    var Ap = window.App;
-    var at = Ap && Ap._ckPullAt ? hhmm(Ap._ckPullAt) : hhmm(Date.now());
-    var h = '<div class="wg-card wg-ck-card">';
-    h += '<div class="wg-card-hd"><span>📋 今日打卡记录</span>' +
-      '<span class="wg-pill wg-pill-ck">' + at + ' 更新</span></div>';
-    var di = (Ap && Ap.getTodayWeekdayIdx) ? Ap.getTodayWeekdayIdx() : 0;
-    var list = ckRoster(), i, done = 0;
-    if (!list.length) {
-      h += '<div class="wg-board-empty">本班名单还在路上，稍等一下就好。</div>';
-    } else {
-      // v201：家长说「显示有几个同学打卡，但名单是分散的」。按打卡与否分两组，
-      // 打过卡的名字全部挨在一起排最前，没打卡的挨在一起排后面，一眼看清。
-      var yesRows = [], noRows = [];
-      for (i = 0; i < list.length; i++) {
-        var rec = ckRecordOf(list[i].ids, di);
-        var ok = !!(rec && rec.done);
-        var partial = !!(rec && !rec.done && (Number(rec.answered) || 0) > 0);
-        if (ok) done++;
-        var mark = ok ? '✅' : (partial ? '◐' : '✗');
-        var desc = ok ? ('已打卡 · 错 ' + (Number(rec.wrongCount) || 0) + ' 道')
-          : (partial ? ('答了 ' + (Number(rec.answered) || 0) + '/' +
-                        (Number(rec.total) || 0) + ' 题') : '还没打卡');
-        var row = '<div class="wg-ck-row' + (ok ? ' is-done' : '') + '">' +
-          '<span class="wg-ck-mark">' + mark + '</span>' +
-          '<span class="wg-ck-name">' + esc(list[i].name) + '</span>' +
-          '<span class="wg-ck-desc">' + esc(desc) + '</span></div>';
-        if (ok) yesRows.push(row); else noRows.push(row);
-      }
-      h += '<div class="wg-ck-scroll">';
-      if (yesRows.length) h += '<div class="wg-ck-group">✅ 已打卡 ' + yesRows.length +
-        ' 人</div>' + yesRows.join('');
-      if (noRows.length) h += '<div class="wg-ck-group wg-ck-group-wait">⏳ 还没打卡 ' +
-        noRows.length + ' 人</div>' + noRows.join('');
-      h += '</div>';
-      h += '<div class="wg-ck-foot">今日已打卡 <b>' + done + '</b> / ' + list.length + ' 人</div>';
+  /**
+   * v202：老师「答错了几题一个栏、得了多少分一个栏，融合到同一个状态栏，
+   * 按排名第一到第九的顺序来排列」。云端积分榜只有分数，后台打卡才有错题数，
+   * 这里按规范化姓名把两份数据挂到同一行上 —— 老师端「游戏试玩」和学生端
+   * 「单词乐园」用的是同一份数据，看到的是同一张按名次排好的全班状态榜。
+   */
+  function ckBoardMap(di) {
+    var map = Object.create(null), list = ckRoster(), i, it, rec;
+    for (i = 0; i < list.length; i++) {
+      it = list[i];
+      rec = ckRecordOf(it.ids, di);
+      map[boardNameKey(it.name)] = {
+        name: it.name,
+        rec: rec || null,
+        done: !!(rec && rec.done),
+        // 没有打卡记录时留 null，不假装成「错 0 道」
+        wrong: rec ? (Number(rec.wrongCount) || 0) : null,
+        answered: rec ? (Number(rec.answered) || 0) : 0,
+        total: rec ? (Number(rec.total) || 0) : 0
+      };
     }
-    h += '</div>';
-    return h;
+    return map;
+  }
+  /** 融合榜数据 = 云端积分榜 ∪ 本班打卡名册，按第 1~N 名排好。 */
+  function mergedBoardRows(di) {
+    var rows = [], i, k, o, src = BOARD.rows || [];
+    for (i = 0; i < src.length; i++) {
+      o = {};
+      for (k in src[i]) if (Object.prototype.hasOwnProperty.call(src[i], k)) o[k] = src[i][k];
+      rows.push(o);
+    }
+    var map = ckBoardMap(di), seen = Object.create(null), list = ckRoster();
+    for (i = 0; i < rows.length; i++) {
+      rows[i]._ck = map[boardNameKey(rows[i].student_name)] || null;
+      seen[boardNameKey(rows[i].student_name)] = 1;
+    }
+    // 云端还没连上时，本班名册也要一行不少（0 分 / 未打卡），照样按名次列出来。
+    for (i = 0; i < list.length; i++) {
+      var key = boardNameKey(list[i].name);
+      if (!key || seen[key]) continue;
+      seen[key] = 1;
+      rows.push({
+        student_id: list[i].ids[0] || '', student_name: list[i].name,
+        student_class: '', total: 0, best: 0, rounds: 0, today_score: 0,
+        updated_at: '', played: false, _ck: map[key] || null
+      });
+    }
+    // 有分的按分数降序在前，没分的按姓名排后面 —— 列表顺序就是第 1~N 名。
+    rows.sort(function (a, b) {
+      var sa = hasScore(a) ? 1 : 0, sb = hasScore(b) ? 1 : 0;
+      if (sa !== sb) return sb - sa;
+      if (b.total !== a.total) return b.total - a.total;
+      return a.student_name < b.student_name ? -1 : (a.student_name > b.student_name ? 1 : 0);
+    });
+    return rows;
+  }
+  /** 打卡栏已并入全班状态榜；保留这个函数名给旧调用与旧校验。 */
+  function checkinCardHtml() {
+    return boardHtml();
   }
 
+  /**
+   * v202：一个孩子 = 一条状态栏。左边名次、中间姓名+状态条、右边分数，
+   * 分数 / 错题数 / 打卡状态 / 今日加分都在这同一条里，分门别类列清楚，
+   * 不再上下两张卡各说一半。
+   */
   function boardRow(r, i, isMe) {
     // v200：0 分、没玩过的人不再占前三名，也不给奖牌 —— 老师原话
     //「置顶一二三名，分数仍然显示是零分」。名次只发给真正出击过的人。
     var scored = hasScore(r);
     var medal = !scored ? '·' :
       (i === 0 ? '🥇' : (i === 1 ? '🥈' : (i === 2 ? '🥉' : ('#' + (i + 1)))));
+    var ck = r._ck || null, rec = ck && ck.rec;
     var lv = levelOf(Number(r.total) || 0);
-    return '<div class="wg-board-row' + (isMe ? ' wg-board-me' : '') +
-      (scored ? '' : ' wg-board-idle') + '">' +
+    var bits = [];
+    bits.push('<span class="wg-st-wrong">' + (ck && ck.wrong !== null
+      ? '错 <b>' + ck.wrong + '</b> 道' : '错题待同步') + '</span>');
+    if (ck && ck.done) {
+      bits.push('<span class="wg-st-ck wg-st-done">✅ 已打卡</span>');
+    } else if (rec && (Number(rec.answered) || 0) > 0) {
+      bits.push('<span class="wg-st-ck wg-st-partial">◐ 答了 ' +
+        (Number(rec.answered) || 0) + '/' + (Number(rec.total) || 0) + ' 题</span>');
+    } else {
+      bits.push('<span class="wg-st-ck wg-st-wait">⏳ 还没打卡</span>');
+    }
+    if (scored && (Number(r.today_score) || 0) > 0) {
+      bits.push('<span class="wg-st-today">今日 +' + (Number(r.today_score) || 0) + '</span>');
+    }
+    return '<div class="wg-board-row wg-ck-row' + (isMe ? ' wg-board-me' : '') +
+      (scored ? '' : ' wg-board-idle') + (ck && ck.done ? ' is-done' : '') + '">' +
       '<span class="wg-rank' + (scored ? '' : ' wg-rank-none') + '">' + medal + '</span>' +
-      '<span class="wg-board-name">' + esc(r.student_name || '小指挥官') +
-        (isMe ? '<em>我</em>' : '') + '</span>' +
+      '<div class="wg-board-main">' +
+        '<div class="wg-board-line"><span class="wg-board-name">' +
+          esc(r.student_name || '小指挥官') + (isMe ? '<em>我</em>' : '') + '</span>' +
+          '<span class="wg-st-pos">' + (scored ? '第 ' + (i + 1) + ' 名' : '还没出击') +
+          '</span></div>' +
+        '<div class="wg-status">' + bits.join('<i>·</i>') + '</div>' +
+      '</div>' +
       '<span class="wg-board-lv">' + lv.icon + '</span>' +
       '<span class="wg-board-score"><b>' + (Number(r.total) || 0) + '</b> 分</span>' +
-      '<span class="wg-board-today">' +
-        (scored ? '今日 +' + (Number(r.today_score) || 0) : '还没出击') + '</span>' +
     '</div>';
   }
 
@@ -951,26 +993,32 @@
     return h;
   }
 
-  /** 全班榜：名册里每个人一行，玩没玩都在，自己的那一行永远高亮 */
+  /**
+   * v202：全班状态榜 —— 原来的「今日打卡记录」和「基地排行榜」合成这一张。
+   * 按第 1 到第 N 名顺序，一个孩子一条状态栏，分数、错题数、打卡状态
+   * 都在同一行里；玩没玩都出现，自己的那一行永远高亮。
+   */
   function boardHtml() {
-    var rows = BOARD.rows || [];
+    var Ap = window.App;
+    var di = (Ap && Ap.getTodayWeekdayIdx) ? Ap.getTodayWeekdayIdx() : 0;
+    var rows = mergedBoardRows(di);
     var rk = myRank();
-    var h = '<div class="wg-card wg-board">';
-    h += '<div class="wg-card-hd"><span>🏆 基地排行榜 · 全班实时</span><span class="wg-pill">' +
-      (rows.length ? rows.length + ' 位指挥官' : '连线中') + '</span></div>';
-    h += '<div class="wg-board-hint">🕒 ' +
+    var h = '<div class="wg-card wg-board wg-ck-card">';
+    h += '<div class="wg-card-hd"><span>🏆 全班状态榜 · 分数 / 错题 / 打卡</span>' +
+      '<span class="wg-pill">' + (rows.length ? rows.length + ' 位指挥官' : '连线中') +
+      '</span></div>';
+    h += '<div class="wg-board-hint">📋 今日打卡记录 · 🕒 ' +
       (BOARD.at ? '刚更新 ' + hhmm(BOARD.at) : '正在更新') +
-      ' · 全班同学都在榜上</div>';
+      ' · 按第 1 到第 ' + (rows.length || 9) + ' 名顺序排列</div>';
     if (!rows.length) {
       h += '<div class="wg-board-empty">基地正在连线，马上就能看到全班同学啦。</div>';
     } else {
-      var i, me = myIdentity();
-      // v201：老师「现在没有任何排名信息」—— 把第一名单独摆一行，
-      // 不用在一长串 0 分里找。只有真有分的人才拿第一名；全班都没分时
-      // 也把话说清楚，不留下「榜是不是坏了」的疑问。
-      var top = null;
+      var i, me = myIdentity(), done = 0, top = null;
+      // v201：老师「现在没有任何排名信息」—— 第一名单独摆一行；只有真有分的
+      // 人才拿第一名，全班都没分时也把话说清楚，不留下「榜是不是坏了」的疑问。
       for (i = 0; i < rows.length; i++) {
-        if (hasScore(rows[i])) { top = rows[i]; break; }
+        if (rows[i]._ck && rows[i]._ck.done) done++;
+        if (!top && hasScore(rows[i])) top = rows[i];
       }
       if (top) {
         h += '<div class="wg-leader">🥇 第 1 名 <b>' + esc(top.student_name) +
@@ -978,19 +1026,27 @@
       } else {
         h += '<div class="wg-leader wg-leader-empty">🏅 今天还没有人出击，第一名虚位以待</div>';
       }
+      h += '<div class="wg-ck-group">✅ 已打卡 ' + done + ' 人</div>';
+      h += '<div class="wg-ck-group wg-ck-group-wait">⏳ 还没打卡 ' +
+        (rows.length - done) + ' 人</div>';
       // v197：不再只显示前 8 名。0 分、从没玩过的同学也是全班的一员，
       // 必须一行不少地列出来，否则等于「没玩就不出现」。
       h += '<div class="wg-board-scroll">';
+      var meName = me ? boardNameKey(me.student_name) : '';
       for (i = 0; i < rows.length; i++) {
         // v200：自己 0 分时 rank 是 0，但那一行照样要高亮，别让孩子找不到自己。
         var mine = (rk.row === rows[i]) ||
-          (!!me && rows[i].student_id === me.student_id);
+          (!!me && rows[i].student_id === me.student_id) ||
+          (!!meName && boardNameKey(rows[i].student_name) === meName);
         h += boardRow(rows[i], i, !!mine);
       }
       h += '</div>';
+      h += '<div class="wg-ck-foot">今日已打卡 <b>' + done + '</b> / ' +
+        rows.length + ' 人</div>';
       h += '<div class="wg-board-foot">' + (rk.rank > 0
-        ? '你目前第 <b>' + rk.rank + '</b> 名 / 共 ' + rk.total + ' 人 · 再冲一轮就往上挪'
-        : '全班 ' + rk.total + ' 位指挥官都在榜上，玩一轮就有自己的名次 🚀') + '</div>';
+        ? '你目前第 <b>' + rk.rank + '</b> 名 / 共 ' + rows.length +
+          ' 人 · 再冲一轮就往上挪'
+        : '全班 ' + rows.length + ' 位指挥官都在榜上，玩一轮就有自己的名次 🚀') + '</div>';
     }
     h += '</div>';
     return h;
@@ -1088,9 +1144,7 @@
     }
     h += '</div>';
 
-    // v200：打卡记录紧挨着配额卡，手机上一眼就能对上老师电脑端的打卡监控
-    h += checkinCardHtml();
-    // v195：基地 + 全班实时榜，紧挨着「今天能玩多久」—— 名次和配额都一眼可见
+    // v202：分数 / 错题 / 打卡合成一张按名次排的全班状态榜，下面不再叠两张卡
     h += boardHtml();
     h += baseCardHtml();
 
@@ -1586,6 +1640,8 @@
       normalizeBoardRows: normalizeBoardRows,
       boardRow: boardRow,
       checkinCardHtml: checkinCardHtml,
+      mergedBoardRows: mergedBoardRows,
+      ckBoardMap: ckBoardMap,
       ckRoster: ckRoster,
       pullCheckins: pullCheckins,
       state: G,

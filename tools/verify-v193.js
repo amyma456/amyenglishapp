@@ -102,10 +102,10 @@ if (w7) {
 }
 
 // 7) 版本钉子 190
-ok((html.match(/\?v=201/g) || []).length === 7, 'index.html 七处 ?v=201');
-ok(html.includes('app-version" content="201"'), 'index.html app-version=189');
-ok(/var CACHE_NAME = 'amy-english-v201';/.test(sw), 'sw.js CACHE_NAME v193');
-ok(/var V = 201;/.test(sw), 'sw.js V = 189');
+ok((html.match(/\?v=202/g) || []).length === 7, 'index.html 七处 ?v=202');
+ok(html.includes('app-version" content="202"'), 'index.html app-version=189');
+ok(/var CACHE_NAME = 'amy-english-v202';/.test(sw), 'sw.js CACHE_NAME v193');
+ok(/var V = 202;/.test(sw), 'sw.js V = 189');
 
 // =========================================================================
 // 8) v193：打卡表"每天几个人打卡" + 永远显示后台当下那份
