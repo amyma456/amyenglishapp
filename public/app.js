@@ -1573,9 +1573,13 @@ const App = {
     var t = '';
     try { t = String(localStorage.getItem(this._tabMemoryKey()) || ''); } catch (e) {}
     var teacher = this.isTeacher();
+    // v198：'wordgame' 是 v194 才加的页签（老师「游戏试玩」/ 学生「单词乐园」），
+    // 当时漏加进恢复白名单 —— 存进去的 'wordgame' 刷新时被当成"不认识的页"，
+    // 于是老师一刷新就被踢回默认页（周计划里的「作业详情」）。两端都要能还原；
+    // 放在数组开头，末尾 'students','classmgmt','preview' 的旧断言不受影响。
     var allowed = teacher
-      ? ['weekly', 'daily', 'edit', 'checkin', 'scores', 'errors', 'speaking', 'students', 'classmgmt', 'preview']
-      : ['today', 'myprogress', 'compare', 'myerrors'];
+      ? ['wordgame', 'weekly', 'daily', 'edit', 'checkin', 'scores', 'errors', 'speaking', 'students', 'classmgmt', 'preview']
+      : ['wordgame', 'today', 'myprogress', 'compare', 'myerrors'];
     if (allowed.indexOf(t) >= 0) return t;
     return teacher ? 'weekly' : 'today';
   },
@@ -2756,6 +2760,9 @@ const App = {
   _syncWeekData() {
     if (typeof hwSetActiveWeek !== 'function') return;   // 老缓存里没有，不动
     hwSetActiveWeek(this._previewWeekOffset());
+    // v198：换周后 HOMEWORK_DATA 会被重新赋值，game.js 读的是 window 上那份，
+    // 这里同步一下，游戏不会还用上一周的词。
+    if (typeof window !== 'undefined') window.HOMEWORK_DATA = HOMEWORK_DATA;
   },
 
   // 当前应该生效的周偏移。0 = 本周。
@@ -15718,6 +15725,20 @@ const App = {
   },
 
 };
+
+// ===== v198：把顶层 const / let 全局桥到 window ==========================
+// game.js 是独立模块（排在 app.js 之前加载），运行时读的是 window.App /
+// window.Api / window.HOMEWORK_DATA / window.WordHelp。经典脚本里顶层
+// const / let 只进「全局词法环境」，**不会**变成 window 的属性 —— 所以这
+// 四个一直是 undefined：老师试玩被当成"没打卡"只给 30 秒、积分报不上云、
+// 全班榜拉不到、大厅「去完成今日作业」点了没反应。必须在 App.init() 之前
+// 挂好：自动登录时 init 会同步渲染一次，刷新正好停在游戏页就靠这一下。
+if (typeof window !== 'undefined') {
+  window.App = App;
+  try { if (typeof Api !== 'undefined') window.Api = Api; } catch (e) {}
+  try { if (typeof WordHelp !== 'undefined') window.WordHelp = WordHelp; } catch (e) {}
+  try { if (typeof HOMEWORK_DATA !== 'undefined') window.HOMEWORK_DATA = HOMEWORK_DATA; } catch (e) {}
+}
 
 // Init
 App.init();

@@ -86,7 +86,7 @@ section('3. 恢复名单与 showApp 接线');
      '老师恢复名单加了 \'preview\'');
   // 学生名单不含 preview；print 仍不恢复（注释声明）
   const rt = appSrc.slice(appSrc.indexOf('// 登录不会跑到不存在的页'), appSrc.indexOf('showApp() {'));
-  ok(/: \['today', 'myprogress', 'compare', 'myerrors'\]/.test(rt), '学生恢复名单不含 preview');
+  ok(/: \['wordgame', 'today', 'myprogress', 'compare', 'myerrors'\]/.test(rt), '学生恢复名单不含 preview（v198 起多了 wordgame）');
   // showApp 里接回来
   const sa = appSrc.slice(appSrc.indexOf('showApp() {'), appSrc.indexOf('showApp() {') + 3000);
   ok(/currentTab === 'preview' && this\.isTeacher\(\)/.test(sa), 'showApp：仅老师且停在预览时恢复');
@@ -98,10 +98,10 @@ section('3. 恢复名单与 showApp 接线');
 
 section('4. 版本号 v162');
 {
-  ok(htmlSrc.includes('app-version" content="197"'), 'index.html app-version=161');
-  ok(/\.js\?v=197/.test(htmlSrc), 'index.html 资源 ?v=197');
-  ok(swSrc.includes('amy-english-v197') && /var V = 197;/.test(swSrc), 'sw.js 版本 161');
-  ok(!/content="(?!197)\d{3}"/.test(htmlSrc) && !/\.js\?v=(?!197)\d{2,3}/.test(htmlSrc) && !/amy-english-v(?!197)\d{3}/.test(swSrc), '无旧版本残留（字符类负向断言）');
+  ok(htmlSrc.includes('app-version" content="198"'), 'index.html app-version=161');
+  ok(/\.js\?v=198/.test(htmlSrc), 'index.html 资源 ?v=198');
+  ok(swSrc.includes('amy-english-v198') && /var V = 198;/.test(swSrc), 'sw.js 版本 161');
+  ok(!/content="(?!198)\d{3}"/.test(htmlSrc) && !/\.js\?v=(?!198)\d{2,3}/.test(htmlSrc) && !/amy-english-v(?!198)\d{3}/.test(swSrc), '无旧版本残留（字符类负向断言）');
 }
 
 section('5. v162 专项：云端纯档 + 班级视图只认后台');
