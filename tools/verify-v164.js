@@ -115,11 +115,11 @@ section('4. 周包自动出题工具链');
 
 section('5. 版本号 v164 全线一致');
 {
-  const refs = (htmlSrc.match(/\?v=198/g) || []).length;
+  const refs = (htmlSrc.match(/\?v=199/g) || []).length;
   ok(refs === 7, 'index.html 7 个脚本引用都是 v164', refs);
-  ok(/app-version"\s+content="198"/.test(htmlSrc), 'app-version = 164');
-  ok(/amy-english-v198/.test(swSrc), 'sw.js CACHE_NAME 升到 v164');
-  ok(/var V = 198;/.test(swSrc), 'sw.js var V = 164');
+  ok(/app-version"\s+content="199"/.test(htmlSrc), 'app-version = 164');
+  ok(/amy-english-v199/.test(swSrc), 'sw.js CACHE_NAME 升到 v164');
+  ok(/var V = 199;/.test(swSrc), 'sw.js var V = 164');
   ok(htmlSrc.indexOf('v=163') < 0, 'index.html 没有残留 v163');
 }
 

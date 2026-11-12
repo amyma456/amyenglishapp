@@ -15016,6 +15016,14 @@ const App = {
     const kind = this._ERR_KIND[m.type] || { icon: '📝', name: e.module || '练习' };
     const self = this;
     let html = '<div class="error-item err-card">';
+    // v199：家长「答错题的同学的名字出现在题目的第一行，让老师第一眼看出谁
+    // 做错了，而不是最后一行需要去找」。以前名单塞在卡片最末尾，老师讲题得
+    // 一路往下翻；现在做成卡片第一行的醒目姓名条，人数 + 全部姓名一次看全。
+    // 学生端「我的错题本」没有 e.students，这一行自然不出现，不受影响。
+    if (e.students && e.students.length) {
+      html += '<div class="err-who"><span class="n">❌ 做错学生 ' + e.students.length + ' 人</span>'
+        + '<span class="names">' + this._errEsc(e.students.join('、')) + '</span></div>';
+    }
     html += '<div class="err-head"><span class="err-tag">' + this._dayTag(e.day, e.module, e.dayIdx) + '</span>'
       + '<span class="err-kind">' + kind.icon + ' ' + kind.name + '</span></div>';
 
@@ -15057,10 +15065,7 @@ const App = {
     if (tip) html += '<div class="err-tip">💡 <b>讲题提示</b>：' + this._errEsc(tip) + '</div>';
     html += '</div>';
 
-    if (e.students && e.students.length) {
-      html += '<div class="e-students">❌ 做错学生(' + e.students.length + '人)：' + this._errEsc(e.students.join('、')) + '</div>';
-    }
-
+    // v199：名单已经搬到卡片第一行，末尾不再重复一份（免得老师以为有两处）。
     if (e.allowPractice) {
       html += '<button class="btn btn-outline btn-sm mt-8" onclick="App.practiceSimilar(' + idx + ')">🔄 做相似题</button>';
       html += '<div id="similar-' + idx + '"></div>';

@@ -134,11 +134,11 @@ section('4. 周包工具链能生成这几类题');
 
 section('5. 版本号 165 全线一致');
 {
-  ok(/app-version" content="198"/.test(htmlSrc), 'index.html app-version = 165');
-  const refs = (htmlSrc.match(/\?v=198/g) || []).length;
+  ok(/app-version" content="199"/.test(htmlSrc), 'index.html app-version = 165');
+  const refs = (htmlSrc.match(/\?v=199/g) || []).length;
   ok(refs === 7, 'index.html 7 处脚本引用都升到 165', refs);
-  ok(/amy-english-v198/.test(swSrc), 'sw.js CACHE_NAME = amy-english-v198');
-  ok(/var V = 198;/.test(swSrc), 'sw.js var V = 165');
+  ok(/amy-english-v199/.test(swSrc), 'sw.js CACHE_NAME = amy-english-v199');
+  ok(/var V = 199;/.test(swSrc), 'sw.js var V = 165');
   // 用字符类而不是字面量：以后每周升版本时，批量替换不会把这句负向断言也改掉
   ok(!/amy-english-v16[0-4]/.test(swSrc), 'sw.js 里没有残留旧缓存名');
 }

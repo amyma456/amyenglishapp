@@ -42,15 +42,15 @@ console.log('v195 · 基地 / 实时榜 / 快出分 / AI 合分校验');
 async function main() {
 // ---------------------------------------------------------------- 版本钉子
 ok('版本钉子一致（meta / 7 处 ?v= / SW / game.js 预缓存）', () => {
-  assert(/<meta name="app-version" content="198">/.test(html), 'index.html meta 没升');
+  assert(/<meta name="app-version" content="199">/.test(html), 'index.html meta 没升');
   const vs = html.match(/<script defer src="[^"]+\?v=(\d+)"/g) || [];
   assert.strictEqual(vs.length, 7, '脚本引用应是 7 处，实际 ' + vs.length);
-  vs.forEach(s => assert(/\?v=198"/.test(s), '还有旧版本：' + s));
-  assert(/var CACHE_NAME = 'amy-english-v198'/.test(sw), 'SW CACHE_NAME 没升');
-  assert(/var V = 198;/.test(sw), 'SW V 没升');
+  vs.forEach(s => assert(/\?v=199"/.test(s), '还有旧版本：' + s));
+  assert(/var CACHE_NAME = 'amy-english-v199'/.test(sw), 'SW CACHE_NAME 没升');
+  assert(/var V = 199;/.test(sw), 'SW V 没升');
   assert(/\.\/game\.js\?v=' \+ V/.test(sw), 'SW 没预缓存 game.js');
-  const gi = html.indexOf('src="game.js?v=198"');
-  const ai = html.indexOf('src="app.js?v=198"');
+  const gi = html.indexOf('src="game.js?v=199"');
+  const ai = html.indexOf('src="app.js?v=199"');
   assert(gi > 0 && ai > gi, 'game.js 必须排在 app.js 之前');
 });
 
@@ -145,9 +145,9 @@ ok('D1 积分榜：上报做加法、读榜按总分排序、今日分按后台�
 
 ok('api.js 提供上报/读榜，且断网返回 null 而不是空榜', () => {
   assert(/async reportGameScore\(body\)/.test(api), '缺上报方法');
-  // v198：读榜改成 POST 带全班名册，方法签名多了一个 payload。
+  // v199：读榜改成 POST 带全班名册，方法签名多了一个 payload。
   assert(/async fetchGameScores\(payload\)/.test(api), '缺读榜方法');
-  // v198：读榜改 POST + 超时兜底 + 老接口回退，方法体比 v195 长，
+  // v199：读榜改 POST + 超时兜底 + 老接口回退，方法体比 v195 长，
   // 窗口放宽到能同时看到主请求和回退请求。
   assert(/cache: 'no-store'/.test(api.slice(api.indexOf('async fetchGameScores'),
     api.indexOf('async fetchGameScores') + 1400)), '读榜必须绕过缓存');
@@ -300,7 +300,7 @@ await okAsync('云端实时榜：能看到同学分数、自己那一行高亮�
     const out = WG.render();
     assert(out.indexOf('Yunus') > 0, '看不到别的同学的积分');
     assert(out.indexOf('wg-board-me') > 0, '自己那行没高亮');
-    // v198：家长明确要求「所有手机同步」这类内部逻辑不要显示在界面上。
+    // v199：家长明确要求「所有手机同步」这类内部逻辑不要显示在界面上。
     assert(out.indexOf('所有手机同步') < 0, '还在显示内部同步话术');
     assert(out.indexOf('全班实时') > 0, '没写明实时');
     assert(WG._test.boardHtml().indexOf('🥇') > 0, '榜首没奖牌');
@@ -351,7 +351,7 @@ await okAsync('每轮结算立刻上报「增量」，断网排队不丢分，�
 
 ok('同步节奏：进页面 / 每 10 秒 / 回前台 / 离场都自动补', () => {
   assert(/startBoardSync\(\)/.test(game), 'mount 没启动同步');
-  // v198：家长要「实时更新」，15 秒缩到 10 秒。
+  // v199：家长要「实时更新」，15 秒缩到 10 秒。
   assert(/,\s*10000\)/.test(game), '不是 10 秒一同步');
   assert(/visibilitychange/.test(game), '回前台没补同步');
   assert(/pagehide/.test(game), '离场没补发');

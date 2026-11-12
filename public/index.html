@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="198">
+<meta name="app-version" content="199">
 <link rel="manifest" href="manifest.json">
 <!-- v135：登录第一步就是调 api.amyeng.top 验手机号。提前把 DNS + TLS
      握手做掉，接口首调能省几百毫秒 —— 手机弱网下这几百毫秒很显眼。 -->
@@ -997,6 +997,11 @@ button.gate-locked::before{content:'🔒 '}
    家长 2026-11-01：「改错本里缺少上下文联系……只有选项 B、A，没有 B 和 A
    的具体解释。」这一组样式就是为这句话加的：每道题摊开成一页小讲义。 */
 .err-card{padding:14px 14px 12px}
+/* v199 · 谁做错了放在第一眼：名单原来是卡片最后一行，讲题时得往下翻着找。
+   现在姓名条就是整张卡的第一行，人数徽标 + 全部姓名，人多了自动换行。 */
+.err-who{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 10px;padding:8px 10px;border:1px solid #FFD4D0;border-radius:10px;background:#FFF1F0;line-height:1.5;word-break:break-word}
+.err-who .n{flex:none;font-size:11px;font-weight:700;color:#fff;background:#D92D20;border-radius:var(--radius-pill);padding:2px 8px;white-space:nowrap}
+.err-who .names{font-size:15px;font-weight:700;color:#B42318}
 .err-head{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
 .err-tag{font-size:11px;color:var(--ink-3);background:var(--canvas);padding:2px 9px;border-radius:var(--radius-pill);white-space:nowrap}
 .err-kind{font-size:11px;font-weight:700;color:var(--primary-dark)}
@@ -1759,9 +1764,9 @@ body.perf-on .content-area{padding-bottom:54vh}
 </div>
 
 <script>window.__appReady = false;</script>
-<script defer src="cloud.js?v=198"></script>
-<script defer src="data.js?v=198"></script>
-<script defer src="data-shuffle.js?v=198"></script>
+<script defer src="cloud.js?v=199"></script>
+<script defer src="data.js?v=199"></script>
+<script defer src="data-shuffle.js?v=199"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
 <!--
   ?v= 必须跟着版本号走（v124 修正）。
@@ -1771,13 +1776,13 @@ body.perf-on .content-area{padding-bottom:54vh}
   这个坑很隐蔽：代码明明改了、也部署上去了，手机上跑的还是几个月前的逻辑。
   以后每次发版，这里跟着 app-version 一起改。
 -->
-<script defer src="recorder.js?v=198"></script>
-<script defer src="api.js?v=198"></script>
+<script defer src="recorder.js?v=199"></script>
+<script defer src="api.js?v=199"></script>
 <!-- v194：小游戏独立成文件，不塞进已经 800KB 的 app.js。必须排在 app.js
      **前面**：app.js 顶层有同步初始化，登录回来若正好停在「单词乐园」，
      渲染时 WordGame 得已经存在。game.js 只在被点击/渲染时才读 window.App。 -->
-<script defer src="game.js?v=198"></script>
-<script defer src="app.js?v=198"></script>
+<script defer src="game.js?v=199"></script>
+<script defer src="app.js?v=199"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {

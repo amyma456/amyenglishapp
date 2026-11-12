@@ -26,10 +26,10 @@ ok(appSrc.includes('getDayDateLabel(dayIdx, weekOffset) {'), 'getDayDateLabel �
 ok(appSrc.includes('getWeekDates(weekOffset || 0)[dayIdx]'), 'getWeekDates 取日期逻辑未动');
 
 // 3. 版本号 v159
-ok(htmlSrc.includes('app-version" content="198"'), 'index.html app-version=159');
-ok(/\.js\?v=198/.test(htmlSrc), 'index.html 资源 ?v=198');
-ok(swSrc.includes('amy-english-v198') && /var V = 198;/.test(swSrc), 'sw.js 版本 159');
-ok(!/content="(?!198)\d{3}"/.test(htmlSrc) && !/\.js\?v=(?!198)\d{2,3}/.test(htmlSrc) && !/amy-english-v(?!198)\d{3}/.test(swSrc), '无旧版本残留（字符类负向断言）');
+ok(htmlSrc.includes('app-version" content="199"'), 'index.html app-version=159');
+ok(/\.js\?v=199/.test(htmlSrc), 'index.html 资源 ?v=199');
+ok(swSrc.includes('amy-english-v199') && /var V = 199;/.test(swSrc), 'sw.js 版本 159');
+ok(!/content="(?!199)\d{3}"/.test(htmlSrc) && !/\.js\?v=(?!199)\d{2,3}/.test(htmlSrc) && !/amy-english-v(?!199)\d{3}/.test(swSrc), '无旧版本残留（字符类负向断言）');
 
 console.log('\n结果: ' + pass + ' 通过, ' + fail + ' 失败');
 process.exit(fail ? 1 : 0);
