@@ -2841,9 +2841,29 @@ const Api = {
     } catch (e) { return false; }
   },
 
+  // v197：读榜时顺手把本机同步到的**本班名册**交给后台存一份。
+  // 这样从没玩过游戏的孩子也有一行（0 分），而且名册在云端，任何一台
+  // 手机拉到的都是同一份全班名单，不依赖这台设备有没有同步过名单。
   // 失败返回 null（不是 []）—— 断网和「后台一个人都没有」必须分得清，
   // 否则孩子一离线就看到空榜，以为同学们的分数都没了。
-  async fetchGameScores() {
+  async fetchGameScores(payload) {
+    payload = payload || {};
+    try {
+      const res = await fetch(this._classUrl('/api/game-scores/board'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          class: payload.klass || '',
+          roster: payload.students || [],
+          authoritative: !!payload.authoritative,
+        }),
+        cache: 'no-store',
+      });
+      if (res.ok) {
+        const d = await res.json();
+        if (d && Array.isArray(d.rows)) return d;
+      }
+    } catch (e) { /* 落到下面的老接口兜底 */ }
     try {
       const res = await fetch(this._classUrl('/api/game-scores'), { cache: 'no-store' });
       if (!res.ok) return null;

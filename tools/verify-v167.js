@@ -82,11 +82,11 @@ section('4. 版本钉子 = 167');
 {
   const html = read('public/index.html');
   const sw = read('public/sw.js');
-  ok(/name="app-version" content="196"/.test(html), 'index.html app-version = 167');
-  ok((html.match(/\?v=196/g) || []).length === 7, 'index.html 7 处 ?v=196', (html.match(/\?v=196/g) || []).length);
+  ok(/name="app-version" content="197"/.test(html), 'index.html app-version = 167');
+  ok((html.match(/\?v=197/g) || []).length === 7, 'index.html 7 处 ?v=197', (html.match(/\?v=197/g) || []).length);
   ok(!/\?v=16[0-6]\b/.test(html), 'index.html 没有残留旧 ?v=');
-  ok(/var V = 196;/.test(sw), 'sw.js var V = 167');
-  ok(/amy-english-v196/.test(sw), 'sw.js CACHE_NAME = amy-english-v196');
+  ok(/var V = 197;/.test(sw), 'sw.js var V = 167');
+  ok(/amy-english-v197/.test(sw), 'sw.js CACHE_NAME = amy-english-v197');
   ok(!/amy-english-v16[0-6]\b/.test(sw), 'sw.js 没有残留旧缓存名');
 }
 

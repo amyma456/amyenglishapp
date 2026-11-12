@@ -498,7 +498,7 @@
     '今天错过的单词，基地会优先派给你练。',
     '少错一道题，明天就多 12 秒配额。',
     '每一轮都单独结算，分数一直攒着不清零。',
-    '全班共用一个后台，你看到的排名和同学一模一样。',
+    '全班同学都在排行榜上，看看今天谁冲得最靠前。',
     '金色星星题是基地空投，接住就多 30 分。',
     '连击越高，补给站给的奖励越多。',
     '音效觉得吵？大厅最下面一按就关。'
@@ -578,6 +578,50 @@
     } catch (e) { return null; }
   }
 
+  /**
+   * v197：本机同步到的本班名册。交给后台存一份共享名单，榜上就每个人
+   * 都有一行 —— 玩过没玩过都出现，没玩的是 0 分。
+   * 只收「分过班」的学生，跟打卡监控同一口径，测试号不进榜。
+   */
+  function classRoster() {
+    var out = { klass: '', students: [], authoritative: false };
+    try {
+      var Ap = window.App;
+      if (!Ap) return out;
+      var st = Ap.state || {};
+      var all = st.students || [];
+      var me = myIdentity();
+      out.klass = me ? me.student_class : String(st.className || '');
+      out.authoritative = !!(Ap.isTeacher && Ap.isTeacher());
+      var pick = function (useCls) {
+        var a = [], i, s;
+        for (i = 0; i < all.length; i++) {
+          s = all[i];
+          if (!s || !s.id || !s.class) continue;
+          if (useCls && out.klass && s.class !== out.klass) continue;
+          a.push({ id: String(s.id).slice(0, 80),
+                   name: String(s.name || '').slice(0, 60),
+                   class: String(s.class).slice(0, 60) });
+        }
+        return a;
+      };
+      out.students = pick(true);
+      if (!out.students.length && out.klass) out.students = pick(false);
+      // 名册还没同步下来 / 自己用的是临时编号时，别让自己从榜上消失。
+      if (me && me.student_id) {
+        var hasMe = false, j, nm = String(me.student_name || '').toLowerCase();
+        for (j = 0; j < out.students.length; j++) {
+          if (out.students[j].id === me.student_id ||
+              (nm && String(out.students[j].name || '').toLowerCase() === nm)) hasMe = true;
+        }
+        if (!hasMe) out.students.push({ id: me.student_id, name: me.student_name,
+                                        class: me.student_class });
+      }
+      out.students = out.students.slice(0, 300);
+    } catch (e) {}
+    return out;
+  }
+
   function queueScore(score) {
     var info = G.info || todayInfo();
     if (info.teacher) return;              // 老师试玩不占全班名次
@@ -637,7 +681,7 @@
       if (G.phase !== 'playing' && document.getElementById('wg-root')) paint();
     };
     try {
-      var p = window.Api.fetchGameScores();
+      var p = window.Api.fetchGameScores(classRoster());
       if (p && p.then) p.then(done, function () { done(null); });
       else done(p);
     } catch (e) { done(null); }
@@ -651,7 +695,7 @@
       if (!document.getElementById('wg-root')) return;   // 不在游戏页不耗流量
       flushScores();
       pullScores();
-    }, 15000);                            // 比打卡的 60 秒更「实时」
+    }, 10000);                            // v197：10 秒一拉，同学刚玩完马上能看到
   }
   document.addEventListener('visibilitychange', function () {
     if (document.visibilityState !== 'visible') return;
@@ -669,13 +713,28 @@
         return { rank: i + 1, total: rows.length, row: rows[i] };
       }
     }
+    // 换过设备 / 名册里用的是另一个编号时，按姓名认领（只在唯一命中时认，
+    // 免得把同名或半截名的同学张冠李戴）。
+    var norm = function (s) { return String(s || '').toLowerCase().replace(/\s+/g, ''); };
+    var mine = norm(me.student_name), hit = -1, hits = 0;
+    if (mine) {
+      for (i = 0; i < rows.length; i++) {
+        var n = norm(rows[i].student_name);
+        if (n && (n === mine || n.indexOf(mine) >= 0 || mine.indexOf(n) >= 0)) {
+          hits++; hit = i;
+        }
+      }
+      if (hits === 1) return { rank: hit + 1, total: rows.length, row: rows[hit] };
+    }
     return { rank: 0, total: rows.length, row: null };
   }
 
   function boardRow(r, i, isMe) {
     var medal = i === 0 ? '🥇' : (i === 1 ? '🥈' : (i === 2 ? '🥉' : ('#' + (i + 1))));
     var lv = levelOf(Number(r.total) || 0);
-    return '<div class="wg-board-row' + (isMe ? ' wg-board-me' : '') + '">' +
+    var idle = !(Number(r.total) || 0) && !(Number(r.rounds) || 0) && r.played !== true;
+    return '<div class="wg-board-row' + (isMe ? ' wg-board-me' : '') +
+      (idle ? ' wg-board-idle' : '') + '">' +
       '<span class="wg-rank">' + medal + '</span>' +
       '<span class="wg-board-name">' + esc(r.student_name || '小指挥官') +
         (isMe ? '<em>我</em>' : '') + '</span>' +
@@ -710,31 +769,30 @@
     return h;
   }
 
-  /** 全班实时榜：所有手机读同一个后台，自己的那一行永远高亮 */
+  /** 全班榜：名册里每个人一行，玩没玩都在，自己的那一行永远高亮 */
   function boardHtml() {
     var rows = BOARD.rows || [];
     var rk = myRank();
-    var me = myIdentity();
-    var meId = me ? me.student_id : '';
     var h = '<div class="wg-card wg-board">';
     h += '<div class="wg-card-hd"><span>🏆 基地排行榜 · 全班实时</span><span class="wg-pill">' +
       (rows.length ? rows.length + ' 位指挥官' : '连线中') + '</span></div>';
-    h += '<div class="wg-board-hint">📡 分数存在后台，每台手机看到的是同一份' +
-      (BOARD.at ? ' · 刚更新 ' + hhmm(BOARD.at) : '') + '</div>';
+    h += '<div class="wg-board-hint">🕒 ' +
+      (BOARD.at ? '刚更新 ' + hhmm(BOARD.at) : '正在更新') +
+      ' · 全班同学都在榜上</div>';
     if (!rows.length) {
-      h += '<div class="wg-board-empty">基地正在和后台连线，玩一轮就能看到大家的能量啦。</div>';
+      h += '<div class="wg-board-empty">基地正在连线，马上就能看到全班同学啦。</div>';
     } else {
-      var i, shown = Math.min(8, rows.length);
-      for (i = 0; i < shown; i++) {
-        h += boardRow(rows[i], i, rows[i].student_id === meId);
+      var i;
+      // v197：不再只显示前 8 名。0 分、从没玩过的同学也是全班的一员，
+      // 必须一行不少地列出来，否则等于「没玩就不出现」。
+      h += '<div class="wg-board-scroll">';
+      for (i = 0; i < rows.length; i++) {
+        h += boardRow(rows[i], i, rk.rank === i + 1);
       }
-      if (rk.rank > shown) {
-        h += '<div class="wg-board-gap">···</div>';
-        h += boardRow(rk.row, rk.rank - 1, true);
-      }
+      h += '</div>';
       h += '<div class="wg-board-foot">' + (rk.rank > 0
         ? '你目前第 <b>' + rk.rank + '</b> 名 / 共 ' + rk.total + ' 人 · 再冲一轮就往上挪'
-        : '你这一轮的分数正在送往基地，马上就上榜 🚀') + '</div>';
+        : '全班 ' + rk.total + ' 位指挥官都在榜上，玩一轮就有自己的名次 🚀') + '</div>';
     }
     h += '</div>';
     return h;
@@ -805,8 +863,7 @@
     h += '<div class="wg-rank-strip">' + (rk.rank > 0
       ? '🏆 全班实时第 <b>' + rk.rank + '</b> 名 / 共 ' + rk.total +
         ' 人 · 累计 <b>' + (Number(rk.row && rk.row.total) || S.total) + '</b> 分'
-      : '🏆 全班实时排名 · 玩一轮就上榜') +
-      '<span>📡 所有手机同步</span></div>';
+      : '🏆 全班实时排名 · 全班同学都在榜上') + '</div>';
 
     // 时长规则卡：把「错得少玩得久」摆在明面上
     h += '<div class="wg-card wg-time-card">';
@@ -948,7 +1005,7 @@
     h += '<div class="wg-total-line">累计 <b>' + S.total + '</b> 分 · ' + lv.icon + ' ' + lv.name + '</div>';
     var rk = myRank();
     if (rk.rank > 0) {
-      h += '<div class="wg-note">🏆 全班实时第 <b>' + rk.rank + '</b> 名 · 分数已送到后台，同学手机上也能看到</div>';
+      h += '<div class="wg-note">🏆 全班实时第 <b>' + rk.rank + '</b> 名 · 继续连着点对，分数会更高</div>';
     }
     if (lv.next > 0) h += '<div class="wg-note">离下一级还差 ' + lv.next + ' 分</div>';
     h += '</div>';
@@ -1322,6 +1379,8 @@
       playHtml: playHtml,
       boardHtml: boardHtml,
       baseCardHtml: baseCardHtml,
+      classRoster: classRoster,
+      hallHtml: hallHtml,
       state: G,
       save: function () { return S; },
       reset: function () { S = defSave(); persist(); }

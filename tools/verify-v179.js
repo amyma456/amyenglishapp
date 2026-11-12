@@ -99,11 +99,11 @@ ok(/_stallBump\(wkey\) >= self\.STALL_PASS_TRIES[\s\S]{0,400}_markWritingSentenc
 ok(appSrc.includes('这句先通过啦'), 'v195：放行时用结果导向的短句告诉孩子发生了什么');
 
 console.log('\n--- F. 版本钉 ---');
-ok(/<meta name="app-version" content="196">/.test(idxSrc), 'index.html app-version = 179');
-ok((idxSrc.match(/\?v=196/g) || []).length === 7, 'index.html 七处 ?v=196');
-ok(!/\.js\?v=(?!196)\d{2,3}/.test(idxSrc), '没有残留旧 ?v=（脚本引用只有 188）');
-ok(/var CACHE_NAME = 'amy-english-v196'/.test(swSrc), 'sw.js CACHE_NAME = v179');
-ok(/var V = 196;/.test(swSrc), 'sw.js V = 179');
+ok(/<meta name="app-version" content="197">/.test(idxSrc), 'index.html app-version = 179');
+ok((idxSrc.match(/\?v=197/g) || []).length === 7, 'index.html 七处 ?v=197');
+ok(!/\.js\?v=(?!197)\d{2,3}/.test(idxSrc), '没有残留旧 ?v=（脚本引用只有 188）');
+ok(/var CACHE_NAME = 'amy-english-v197'/.test(swSrc), 'sw.js CACHE_NAME = v179');
+ok(/var V = 197;/.test(swSrc), 'sw.js V = 179');
 
 console.log('\n--- G. 真跑一遍：识别一直不回来，看门狗到点必须结算 ---');
 (async function () {

@@ -1940,7 +1940,83 @@ async function ensureGameScoresTable(db) {
        client_ver    INTEGER
      )`
   ).run();
+  // v197：云端班级名册。game_scores 只有「玩过」的孩子才有行，光读它，
+  // 没玩过的同学在榜上就凭空消失了。家长要的是全班每人一行，没玩就是 0 分。
+  // 名册存在后台（不是各自手机），所以每台设备拉到的是同一份名单。
+  await db.prepare(
+    `CREATE TABLE IF NOT EXISTS game_roster (
+       student_id    TEXT PRIMARY KEY,
+       student_name  TEXT,
+       student_class TEXT,
+       active        INTEGER NOT NULL DEFAULT 1,
+       updated_at    TEXT NOT NULL
+     )`
+  ).run();
   gameScoresTableReady = true;
+}
+
+/**
+ * 组一张「全班都在」的榜：名册里每个人必有一行，玩过的挂上积分，
+ * 没玩过的是 0 分；积分表里历史遗留、名册里查无此人的行也不丢。
+ * 按 class 过滤（不传就是全员），最后按总分降序、同分按姓名稳定排序。
+ */
+async function buildBoardRows(db, cls, serverDay) {
+  await ensureGameScoresTable(db);
+  const rosterR = await db.prepare(
+    `SELECT r.student_id, r.student_name, r.student_class,
+            COALESCE(g.total, 0)       AS total,
+            COALESCE(g.best, 0)        AS best,
+            COALESCE(g.rounds, 0)      AS rounds,
+            COALESCE(g.today_score, 0) AS today_score,
+            g.day                      AS day,
+            COALESCE(g.updated_at, '') AS updated_at,
+            r.active                   AS active
+     FROM game_roster r
+     LEFT JOIN game_scores g ON g.student_id = r.student_id
+     ORDER BY total DESC, updated_at ASC`
+  ).all();
+  // 老版本 / 换过编号的设备可能只在积分表里留过名，名册里没有 —— 补进来。
+  const orphanR = await db.prepare(
+    `SELECT g.student_id, g.student_name, g.student_class,
+            g.total, g.best, g.rounds, g.today_score, g.day,
+            COALESCE(g.updated_at, '') AS updated_at
+     FROM game_scores g
+     WHERE NOT EXISTS (SELECT 1 FROM game_roster r WHERE r.student_id = g.student_id)
+     ORDER BY total DESC, updated_at ASC`
+  ).all();
+  const seen = Object.create(null);
+  const rows = [];
+  function push(row, active) {
+    const sid = String(row.student_id || '').slice(0, 80);
+    if (!sid || seen[sid]) return;
+    seen[sid] = 1;
+    // 名册里被标记 removed 的人不再出现；积分表的孤儿行默认保留。
+    if (active === 0) return;
+    const klass = String(row.student_class || '').slice(0, 60);
+    if (cls && klass !== cls) return;
+    rows.push({
+      student_id: sid,
+      student_name: String(row.student_name || '').slice(0, 60),
+      student_class: klass,
+      total: Math.max(0, Number(row.total) || 0),
+      best: Math.max(0, Number(row.best) || 0),
+      rounds: Math.max(0, Number(row.rounds) || 0),
+      today_score: row.day === serverDay ? Math.max(0, Number(row.today_score) || 0) : 0,
+      updated_at: row.updated_at || '',
+      played: (Number(row.rounds) || 0) > 0 || (Number(row.total) || 0) > 0,
+    });
+  }
+  ((rosterR && rosterR.results) || []).forEach(function (r) { push(r, r.active); });
+  ((orphanR && orphanR.results) || []).forEach(function (r) { push(r, 1); });
+  rows.sort(function (a, b) {
+    if (b.total !== a.total) return b.total - a.total;
+    if (!!a.updated_at !== !!b.updated_at) return a.updated_at ? -1 : 1;
+    if (a.updated_at !== b.updated_at) return a.updated_at < b.updated_at ? -1 : 1;
+    // 不用 localeCompare：老 Workers 运行时的 Intl 数据集不一定齐。
+    const an = a.student_name || '', bn = b.student_name || '';
+    return an < bn ? -1 : (an > bn ? 1 : 0);
+  });
+  return rows.slice(0, 300);
 }
 
 function serverBeijingDay(nowMs) {
@@ -2001,37 +2077,83 @@ async function gameScoresApi(request, url, env) {
     }
   }
 
-  // -- 读全班榜 ------------------------------------------------------------
+  // -- v197：带名册读榜（一次往返同时完成「登记全班」+「取完整榜」） ------
+  // 设备把自己同步到的本班名册带上来，后台留一份共享名单。这样哪怕某台手机
+  // 还没同步名册、或者这个孩子从没玩过游戏，榜上也有他的一行（0 分）。
+  // 只有老师端（authoritative）才做整班覆盖，孩子端只补不删，避免某台设备
+  // 名册没同步全就把别的同学从云端名单里抹掉。
+  if (path === '/api/game-scores/board' && request.method === 'POST') {
+    const body = await readJsonBody(request);
+    if (!body) return json({ error: 'bad_json' }, 400);
+    const cls = String(body.class || '').trim().slice(0, 60);
+    const list = Array.isArray(body.roster) ? body.roster.slice(0, 300) : [];
+    try {
+      await ensureGameScoresTable(db);
+      const incoming = [];
+      for (let i = 0; i < list.length; i++) {
+        const s = list[i] || {};
+        const sid = String(s.id || '').trim().slice(0, 80);
+        if (!sid) continue;
+        incoming.push({
+          sid: sid,
+          name: String(s.name || '').trim().slice(0, 60) || null,
+          klass: String(s.class || cls || '').trim().slice(0, 60) || null
+        });
+      }
+      // 10 秒就拉一次榜，绝不能每次都把整份名册重写一遍（D1 写额度会烧光）。
+      // 先读回来比一比，只写「新增 / 改名 / 换班 / 重新激活」的那几行；
+      // 名单没变时这一趟是纯读。
+      if (incoming.length) {
+        const existR = await db.prepare(
+          'SELECT student_id, student_name, student_class, active FROM game_roster'
+        ).all();
+        const have = Object.create(null);
+        ((existR && existR.results) || []).forEach(function (r) { have[r.student_id] = r; });
+        const ids = Object.create(null);
+        incoming.forEach(function (s) { ids[s.sid] = 1; });
+        for (let j = 0; j < incoming.length; j++) {
+          const s = incoming[j], old = have[s.sid];
+          if (old && old.active === 1 &&
+              (old.student_name || '') === (s.name || '') &&
+              (old.student_class || '') === (s.klass || '')) continue;
+          await db.prepare(
+            `INSERT INTO game_roster
+               (student_id, student_name, student_class, active, updated_at)
+             VALUES (?1, ?2, ?3, 1, ?4)
+             ON CONFLICT(student_id) DO UPDATE SET
+               student_name  = COALESCE(excluded.student_name, game_roster.student_name),
+               student_class = COALESCE(excluded.student_class, game_roster.student_class),
+               active        = 1,
+               updated_at    = excluded.updated_at`
+          ).bind(s.sid, s.name, s.klass, now).run();
+        }
+        // 只有老师端才做「整班下线」：孩子端名册可能还没同步全，
+        // 让它去删别人会把同学从云端名单里抹掉。
+        if (body.authoritative && cls) {
+          for (let k = 0; k < ((existR && existR.results) || []).length; k++) {
+            const r = existR.results[k];
+            if (r.active === 1 && (r.student_class || '') === cls && !ids[r.student_id]) {
+              await db.prepare(
+                'UPDATE game_roster SET active = 0, updated_at = ?1 WHERE student_id = ?2'
+              ).bind(now, r.student_id).run();
+            }
+          }
+        }
+      }
+      const rows = await buildBoardRows(db, cls, serverDay);
+      return json({ rows: rows, count: rows.length,
+                    roster_count: list.length,
+                    server_day: serverDay, server_time: now });
+    } catch (e) {
+      return json({ error: 'db_error', detail: String(e && e.message || e) }, 500);
+    }
+  }
+
+  // -- 读全班榜（v195/v196 老客户端也走这里，同样返回「全班都在」的榜） ---
   if (path === '/api/game-scores' && request.method === 'GET') {
     const cls = (url.searchParams.get('class') || '').trim().slice(0, 60);
     try {
-      await ensureGameScoresTable(db);
-      const r = cls
-        ? await db.prepare(
-            `SELECT student_id, student_name, student_class, total, best, rounds,
-                    today_score, day, updated_at
-             FROM game_scores WHERE student_class = ?1
-             ORDER BY total DESC, updated_at ASC LIMIT 200`
-          ).bind(cls).all()
-        : await db.prepare(
-            `SELECT student_id, student_name, student_class, total, best, rounds,
-                    today_score, day, updated_at
-             FROM game_scores
-             ORDER BY total DESC, updated_at ASC LIMIT 200`
-          ).all();
-      const rows = ((r && r.results) || []).map(function (row) {
-        return {
-          student_id: row.student_id,
-          student_name: row.student_name || '',
-          student_class: row.student_class || '',
-          total: row.total || 0,
-          best: row.best || 0,
-          rounds: row.rounds || 0,
-          // 今日分只认后台这一天。老数据 / 手机时钟错报上来的都不能混进今天。
-          today_score: row.day === serverDay ? (row.today_score || 0) : 0,
-          updated_at: row.updated_at || '',
-        };
-      });
+      const rows = await buildBoardRows(db, cls, serverDay);
       return json({ rows: rows, count: rows.length,
                     server_day: serverDay, server_time: now });
     } catch (e) {
