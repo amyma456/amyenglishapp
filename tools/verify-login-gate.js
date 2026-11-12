@@ -50,13 +50,70 @@ const STUDENT = '15109549632';
 // 一旦 worker 里换了写法，这里会立刻报错，而不是悄悄放过。
 // ===========================================================================
 function makeD1() {
-  const T = { removed_students: [], join_requests: [] };
+  const T = { removed_students: [], join_requests: [],
+    approved_phones: [], login_attempts: [] };   // v201
   const db = {
     tables: T,
     prepare(sql) {
       const q = String(sql).replace(/\s+/g, ' ').trim();
       let args = [];
       const run = () => {
+        // ---- v201：白名单 + 名单外登录尝试（classApi 新增的几条 SQL） ----
+        if (/^CREATE TABLE IF NOT EXISTS (approved_phones|login_attempts)/.test(q)) return { changes: 0 };
+        if (/^SELECT COUNT\(\*\) AS n FROM approved_phones$/.test(q)) {
+          return { first: { n: T.approved_phones.length } };
+        }
+        if (/^SELECT phone, name, klass FROM approved_phones$/.test(q)) {
+          return { rows: T.approved_phones.slice() };
+        }
+        if (/^SELECT (phone|phone, name, klass) FROM approved_phones WHERE phone = \?$/.test(q)) {
+          return { first: T.approved_phones.find(r => r.phone === args[0]) || null };
+        }
+        if (/^INSERT OR IGNORE INTO approved_phones/.test(q)) {
+          if (!T.approved_phones.some(r => r.phone === args[0])) {
+            T.approved_phones.push({ phone: args[0], name: args[1] || '', klass: '', updated_at: args[3] });
+          }
+          return { changes: 1 };
+        }
+        if (/^INSERT INTO approved_phones/.test(q)) {
+          const hit = T.approved_phones.find(r => r.phone === args[0]);
+          if (hit) { hit.name = args[1] || hit.name; if (args[2]) hit.klass = args[2]; }
+          else T.approved_phones.push({ phone: args[0], name: args[1] || '', klass: args[2] || '', updated_at: args[3] });
+          return { changes: 1 };
+        }
+        if (/^DELETE FROM approved_phones WHERE phone = \?$/.test(q)) {
+          const before = T.approved_phones.length;
+          T.approved_phones = T.approved_phones.filter(r => r.phone !== args[0]);
+          return { changes: before - T.approved_phones.length };
+        }
+        if (/^SELECT status FROM login_attempts WHERE phone = \?$/.test(q)) {
+          const hit = T.login_attempts.find(r => r.phone === args[0]);
+          return { first: hit ? { status: hit.status } : null };
+        }
+        if (/^SELECT phone, name FROM login_attempts WHERE phone = \?$/.test(q)) {
+          return { first: T.login_attempts.find(r => r.phone === args[0]) || null };
+        }
+        if (/^SELECT phone, name, status, created_at FROM login_attempts WHERE status = 'pending' ORDER BY created_at ASC$/.test(q)) {
+          return { rows: T.login_attempts.filter(r => r.status === 'pending') };
+        }
+        if (/^INSERT INTO login_attempts/.test(q)) {
+          const hit = T.login_attempts.find(r => r.phone === args[0]);
+          if (hit) { hit.name = args[1]; hit.status = 'pending'; hit.created_at = args[2]; }
+          else T.login_attempts.push({ phone: args[0], name: args[1], status: 'pending', created_at: args[2] });
+          return { changes: 1 };
+        }
+        if (/^UPDATE login_attempts SET status = 'approved', resolved_at = \?1 WHERE phone = \?2 AND status = 'pending'$/.test(q)) {
+          let n2 = 0;
+          T.login_attempts.forEach(r => {
+            if (r.phone === args[1] && r.status === 'pending') { r.status = 'approved'; n2++; }
+          });
+          return { changes: n2 };
+        }
+        if (/^UPDATE login_attempts SET status = \?1, resolved_at = \?2 WHERE phone = \?3$/.test(q)) {
+          const hit = T.login_attempts.find(r => r.phone === args[2]);
+          if (hit) { hit.status = args[0]; return { changes: 1 }; }
+          return { changes: 0 };
+        }
         // ---- removed_students ----
         if (/^SELECT phone, name, removed_at FROM removed_students WHERE phone = \?$/.test(q)) {
           return { first: T.removed_students.find(r => r.phone === args[0]) || null };

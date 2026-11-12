@@ -1232,6 +1232,8 @@ const App = {
       this._gateCheck(phone).then(function(status) {
         if (!status) return;               // 查不到：保持现状，不写名单不上云
         if (status.removed) { self.showRemovedPage(status); return; }
+        // v201：名单外的号码就算这台设备以前登录过，也要拦下来并通知老师。
+        if (self._needsApproval(status)) { self._holdForApproval(phone, name, status); return; }
         self._markDeviceKnown(phone, name);   // v144：核对通过 = 这台设备认识这个号
         self._commitStudent(phone, name);  // 确认没被删 → 才写名单 + 上云
       }).catch(function() {});
@@ -1253,6 +1255,14 @@ const App = {
       const lbtn = document.getElementById('login-btn');
       if (lbtn) { lbtn.classList.remove('logging-in'); lbtn.innerHTML = '登录'; }
       this.showRemovedPage(status);
+      return;
+    }
+    // v201：全新号码不在老师批准的名单里 → 留一条待同意记录，停在等待页，
+    // 不进 App。老师端会立刻收到横幅 + 声音提醒（「拦截通知」不能丢）。
+    if (this._needsApproval(status)) {
+      const lbtn = document.getElementById('login-btn');
+      if (lbtn) { lbtn.classList.remove('logging-in'); lbtn.innerHTML = '登录'; }
+      await this._holdForApproval(phone, name, status);
       return;
     }
     this._enterAsStudent(phone, name);
@@ -1331,8 +1341,117 @@ const App = {
   showWaitingPage() {
     document.getElementById('login-page').classList.add('hidden');
     document.getElementById('main-app').classList.add('hidden');
+    const rp = document.getElementById('removed-page');
+    if (rp) rp.classList.add('hidden');
+    if (this._removedTimer) { clearInterval(this._removedTimer); this._removedTimer = null; }
     const wp = document.getElementById('waiting-page');
     if (wp) wp.classList.remove('hidden');
+  },
+
+  // ===== v201：名单外账号的登录拦截 =====
+  // approved 是三态：true=老师批准过、false=明确不在名单、null/undefined=
+  // 老师名册还没同步上来。最后一种一律放行 —— 后台抖一下不能把 9 个正式
+  // 孩子全锁在门外。只有「明确不在名单 / 正在等同意 / 上次被拒」才拦。
+  _needsApproval(status) {
+    if (!status || status.teacher) return false;
+    return status.approved === false || status.pendingApproval === true || status.denied === true;
+  },
+
+  async _holdForApproval(phone, name, status) {
+    // 先把「有人想进来」记到后台，老师那边才会响铃；失败也不放行，
+    // 等待页每 15 秒会再查一次，老师端轮询同样能补上。
+    try { await Api.classLoginAttempt(phone, name); } catch (e) {}
+    this.showWaitingPage();
+    this._renderWaitingCard(status);
+    this.startApprovalPolling();
+  },
+
+  _renderWaitingCard(status) {
+    const box = document.getElementById('waiting-card');
+    if (!box) return;
+    const denied = !!(status && status.denied);
+    box.innerHTML =
+      '<div style="font-size:48px;margin-bottom:8px">' + (denied ? '📩' : '🔔') + '</div>' +
+      '<p style="font-size:15px;color:var(--warning);font-weight:600">' +
+        (denied ? '上次的申请没有通过' : '已经通知老师了') + '</p>' +
+      '<p class="text-sub fs-12 mt-8">' +
+        (denied ? '请联系老师重新开通，或稍后再试' : '这个号码不在班级名单里，老师同意后会自动进入') +
+      '</p>';
+    const sub = document.getElementById('waiting-subtitle');
+    if (sub) sub.textContent = denied ? '暂未通过' : '注册信息已提交';
+  },
+
+  startApprovalPolling() {
+    if (this._approvalTimer) clearInterval(this._approvalTimer);
+    this._approvalTimer = setInterval(async () => {
+      const status = await Api.classStatus(this.state.phone);
+      if (!status) return;                 // 这次没查到，下一轮再来
+      if (status.removed) { this.showRemovedPage(status); return; }
+      if (status.approved === true && !status.pendingApproval) {
+        clearInterval(this._approvalTimer);
+        this._approvalTimer = null;
+        this.showToast('🎉 老师已同意，正在进入…');
+        this.registerStudent(this.state.phone, this.state.userName, true);
+        return;
+      }
+      this._renderWaitingCard(status);
+    }, 15000);
+  },
+
+  // ===== v201：老师端 —— 白名单同步 + 名单外登录通知 =====
+  async _syncApprovedRoster() {
+    if (!this.isTeacher()) return;
+    const list = (this.state.students || [])
+      .filter(s => s && s.phone && s.approved && s.class)
+      .map(s => ({ phone: String(s.phone), name: String(s.name || ''), class: String(s.class) }));
+    if (!list.length) return;             // 空名单一律不上传，免得把白名单清掉
+    const res = await Api.classApprovedRoster(list);
+    if (res && typeof res.count === 'number') this.state.approvedCount = res.count;
+  },
+
+  _alertedAttemptPhones: null,
+  async _pollLoginAttempts() {
+    if (!this.isTeacher()) return;
+    const list = await Api.classLoginAttempts();
+    if (list === null) return;            // 没拉到：保留上一份，不弹假通知
+    this.state.loginAttempts = list;
+    if (!this._alertedAttemptPhones) this._alertedAttemptPhones = new Set();
+    // 不在首次调用时记基线：老师当时不在线，孩子照样登过 —— 这正是
+    // 家长说的「多的孩子登录我没收到拦截通知」。每次老师上线都汇总提醒一次。
+    const fresh = list.filter(a => !this._alertedAttemptPhones.has(a.phone));
+    if (fresh.length) {
+      fresh.forEach(a => this._alertedAttemptPhones.add(a.phone));
+      this._alertOutsideLogins(fresh);
+    }
+    this._updatePendingBadge();
+    if (this.state.currentTab === 'students') this.renderContent();
+  },
+
+  _alertOutsideLogins(fresh) {
+    this._playAlertSound();
+    if (navigator.vibrate) { try { navigator.vibrate([120, 80, 120]); } catch(e) {} }
+    const names = fresh.map(a => a.name || a.phone).join('、');
+    const label = fresh.length === 1
+      ? '名单外的孩子「' + names + '」尝试登录'
+      : fresh.length + ' 个名单外的孩子尝试登录（' + names + '）';
+    this.showAlertBanner('🔔 ' + label + '，已被拦住，等你同意', '立即处理 →', function() {
+      App.gotoPendingStudents();
+    });
+  },
+
+  async resolveLoginAttempt(phone, action) {
+    const res = await Api.classResolveLoginAttempt(phone, action, this.state.className || '');
+    if (!res || !res.ok) { this.showToast('⚠️ 没成功，再点一次就好', 'warn'); return; }
+    this.state.loginAttempts = (this.state.loginAttempts || []).filter(a => a.phone !== phone);
+    if (this._alertedAttemptPhones) this._alertedAttemptPhones.add(phone);
+    if (action === 'approve') {
+      await this._syncApprovedRoster();
+      this.showToast('✅ 已同意，这个孩子可以登录了');
+    } else {
+      this.showToast('🚫 已拒绝，这个号码仍然进不来');
+    }
+    this._updatePendingBadge();
+    this.renderContent();
   },
 
   // ===== Removed-student gate =====
@@ -1520,6 +1639,7 @@ const App = {
     clearTimeout(this._gateRetryTimer);   // v145：停掉核对失败页的自动重试
     this._netBanner(false);
     if (this._removedTimer) { clearInterval(this._removedTimer); this._removedTimer = null; }
+    if (this._approvalTimer) { clearInterval(this._approvalTimer); this._approvalTimer = null; }
     this.state.stepIdx = 0;
     // Clear saved login so auto-login doesn't re-login
     await Api.logout();
@@ -3813,6 +3933,7 @@ const App = {
     var bar = document.getElementById('tab-bar');
     if (!bar || !this.isTeacher()) return;
     var n = this._currentPendingStudents().length;
+    n += (this.state.loginAttempts || []).length;   // v201：名单外等着同意的也要红点
     var btn = null;
     bar.querySelectorAll('button').forEach(function(b) {
       if (b.getAttribute('onclick') === "App.switchTab('students')") btn = b;
@@ -3861,8 +3982,12 @@ const App = {
     // First poll right away (a teacher who just logged in shouldn't wait a
     // whole tick to see a pending re-join application), then on the timer.
     this.syncFromCloud();
+    // v201：老师端白名单 + 名单外登录通知走 worker 接口，不依赖 textdb
+    // 同步是否成功 —— 云端那一路挂了，拦截通知也照样要送到老师手上。
+    if (this.isTeacher()) { this._syncApprovedRoster(); this._pollLoginAttempts(); }
     this._syncInterval = setInterval(() => {
       this.syncFromCloud();
+      if (this.isTeacher()) { this._syncApprovedRoster(); this._pollLoginAttempts(); }
     }, interval);
 
     // Also sync whenever the app comes back to the foreground
@@ -4793,7 +4918,14 @@ const App = {
     // 几个学生以外，那些测试的多余的学生名字，小舟、Zoe 这些全部不要再出现
     // 在这里了。只出现现有分配班级的学生」）。以前这里遍历全部 students，
     // 五六十个测试号（小舟-Zoe 一堆）全铺在表里，真正的班级被淹掉。
-    const roster = this._classRoster();
+    // v201：今天打过卡的同学连在一起排前面，没打卡的连在一起排后面，
+    // 跟游戏页「今日打卡记录」同一口径，老师一眼就能数清谁打了谁没打。
+    const todayIdx = this.getTodayWeekdayIdx();
+    const roster = this._classRoster().slice().sort((a, b) => {
+      const ca = this._clsCk(a.id, todayIdx), cb = this._clsCk(b.id, todayIdx);
+      const da = !!(ca && ca.done), db = !!(cb && cb.done);
+      return da === db ? 0 : (da ? -1 : 1);
+    });
     // Note: no auto-generated demo data - show real data only
     // Summary
     html += '<div class="stat-row mb-16">';
@@ -4834,7 +4966,9 @@ const App = {
         if (ck.done) doneCount++;
         if (ck.correctRate) { totalCorrect += ck.correctRate; correctCount++; }
       });
+      const _todayCk = this._clsCk(s.id, todayIdx);
       html += '<tr><td>' + this._escHtml(s.name)
+        + (_todayCk && _todayCk.done ? ' <span class="ck-today-tag">今日已打卡</span>' : '')
         + (any ? '' : ' <span class="ck-none-tag">本周未上传</span>') + '</td>';
       HOMEWORK_DATA.forEach((d, di) => {
         html += '<td>' + this._ckCell(this._clsCk(s.id, di), di) + '</td>';
@@ -5234,6 +5368,37 @@ const App = {
     let html = '<h2 style="color:var(--primary-dark);margin-bottom:4px">👥 学生管理</h2>';
     html += '<p class="text-sub fs-12 mb-16">点<b>全选</b>→点<b>删除</b>，人就从列表里没了。'
          + '被删的人再登录，必须你点同意才能进来（这条永远不变）。</p>';
+
+    // ===== v201：账号总览 + 名单外登录拦截通知 =====
+    // 家长 2026-11-12：「到底几个孩子有账号？多的孩子登录我没收到拦截通知」。
+    // 这里只报结果：正式账号几个、几个等着同意；不写任何内部同步话术。
+    const nOutside = (this.state.loginAttempts || []).length;
+    const nGatedTop = (this.state.removedPhones || []).length;
+    html += '<div class="card mb-16" id="pending-card-top" style="border-left:4px solid var(--primary)">';
+    html += '<div style="font-weight:700;margin-bottom:6px">📋 账号总览</div>';
+    html += '<div class="fs-12" style="line-height:1.9">'
+         + '✅ 正式账号 <b style="font-size:16px;color:var(--success)">' + approved.length + '</b> 人'
+         + '　·　⏳ 等你同意 <b style="font-size:16px;color:var(--warning)">' + nOutside + '</b> 人'
+         + '　·　🚫 已拦截 <b>' + nGatedTop + '</b> 人</div>';
+    html += '<div class="text-sub fs-12" style="margin-top:4px">'
+         + '不在这 ' + approved.length + ' 个正式账号里的号码，登录时会被拦住并在这里提醒你。</div>';
+    html += '</div>';
+    if (nOutside) {
+      html += '<div class="card mb-16" style="border:2px solid var(--danger)">';
+      html += '<h3 style="color:var(--danger);margin:0 0 6px">🔔 名单外登录（' + nOutside + ' 人）</h3>';
+      html += '<p class="text-sub fs-12 mb-8">这些号码都被挡在外面，没有进到作业页面。你点同意后他们才能用。</p>';
+      (this.state.loginAttempts || []).forEach(a => {
+        const ph = this._escHtml(String(a.phone || ''));
+        html += '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 0;border-top:1px solid var(--line)">'
+          + '<span style="font-weight:600">' + this._escHtml(String(a.name || a.phone || '')) + '</span>'
+          + '<span class="text-sub fs-12">' + ph + '</span>'
+          + '<span style="margin-left:auto"></span>'
+          + '<button class="btn btn-sm" onclick="App.resolveLoginAttempt(\'' + ph + '\',\'approve\')">✅ 同意</button>'
+          + '<button class="btn btn-outline btn-sm" onclick="App.resolveLoginAttempt(\'' + ph + '\',\'deny\')">🚫 拒绝</button>'
+          + '</div>';
+      });
+      html += '</div>';
+    }
 
     // ===== ① 未分配 =====
     html += '<h3 style="color:var(--warning);margin:0 0 8px">⏳ 未分配（' + pending.length + '人）</h3>';

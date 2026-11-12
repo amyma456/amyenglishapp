@@ -112,10 +112,10 @@ section('5. 版本号 v157');
 {
   const html = fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8');
   const sw = fs.readFileSync(path.join(ROOT, 'public', 'sw.js'), 'utf8');
-  ok(/app-version" content="200"/.test(html), 'index.html app-version = 157');
-  ok((html.match(/\?v=200/g) || []).length >= 4, 'index.html ?v=200 引用 ≥ 4 处', (html.match(/\?v=200/g) || []).length);
-  ok(/amy-english-v200/.test(sw), 'sw.js CACHE_NAME = amy-english-v200');
-  ok(/var V = 200;/.test(sw), 'sw.js var V = 157');
+  ok(/app-version" content="201"/.test(html), 'index.html app-version = 157');
+  ok((html.match(/\?v=201/g) || []).length >= 4, 'index.html ?v=201 引用 ≥ 4 处', (html.match(/\?v=201/g) || []).length);
+  ok(/amy-english-v201/.test(sw), 'sw.js CACHE_NAME = amy-english-v201');
+  ok(/var V = 201;/.test(sw), 'sw.js var V = 157');
 }
 
 console.log('\n' + (fail === 0 ? '✅ 全部 ' + (pass + fail) + ' 项通过' : '❌ ' + fail + '/' + (pass + fail) + ' 项失败'));

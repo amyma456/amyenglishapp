@@ -2619,6 +2619,60 @@ const Api = {
     finally { if (timer) clearTimeout(timer); }
   },
 
+  // v201：老师批准的正式账号白名单 + 名单外登录尝试。
+  // 名单没变时后端不写库，所以 15 秒一次同步也不会烧掉 D1 写额度。
+  async classApprovedRoster(roster) {
+    try {
+      const res = await fetch(this._classUrl('/api/class/roster'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ roster: roster || [], teacher: this.session && this.session.phone }),
+      });
+      if (!res.ok) return null;
+      return await res.json();
+    } catch (e) { console.warn('classApprovedRoster failed:', e); return null; }
+  },
+
+  // 学生端：名单外的号码登录时留一条「等老师同意」的记录，老师端才会响。
+  async classLoginAttempt(phone, name) {
+    try {
+      const res = await fetch(this._classUrl('/api/class/login-attempt'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: phone, name: name }),
+      });
+      if (!res.ok) return null;
+      return await res.json();
+    } catch (e) { console.warn('classLoginAttempt failed:', e); return null; }
+  },
+
+  // 老师端：拉还没处理的名单外登录。null = 这次没拉到，保留上一份。
+  async classLoginAttempts() {
+    try {
+      const res = await fetch(this._classUrl('/api/class/login-attempts?teacher=' +
+        encodeURIComponent(this.session && this.session.phone)));
+      if (!res.ok) return null;
+      const data = await res.json();
+      return (data && Array.isArray(data.attempts)) ? data.attempts : [];
+    } catch (e) { console.warn('classLoginAttempts failed:', e); return null; }
+  },
+
+  // 老师端：同意 / 拒绝某个号码。同意后孩子那边会自动进 App。
+  async classResolveLoginAttempt(phone, action, klass) {
+    try {
+      const res = await fetch(this._classUrl('/api/class/login-attempt/resolve'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: phone, action: action, class: klass || '',
+          teacher: this.session && this.session.phone,
+        }),
+      });
+      if (!res.ok) return null;
+      return await res.json();
+    } catch (e) { console.warn('classResolveLoginAttempt failed:', e); return null; }
+  },
+
   // Teacher removed a student — record the gate server-side. Fire-and-forget
   // is NOT ok here: losing this write silently reopens the loophole. Still
   // returns a bool so the caller can warn, not block, on failure.

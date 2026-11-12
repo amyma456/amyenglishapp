@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="200">
+<meta name="app-version" content="201">
 <link rel="manifest" href="manifest.json">
 <!-- v135：登录第一步就是调 api.amyeng.top 验手机号。提前把 DNS + TLS
      握手做掉，接口首调能省几百毫秒 —— 手机弱网下这几百毫秒很显眼。 -->
@@ -1569,6 +1569,19 @@ body.perf-on .content-area{padding-bottom:54vh}
 @media (max-width:400px){
   .wg-ck-desc{width:92px;flex-basis:92px}
 }
+/* ==========================================================================
+   v201 · 第一名单独一行 + 打卡名单分成两组
+   全用普通类选择器，老华为浏览器 / 平板自带浏览器不会退化。
+   ========================================================================== */
+.wg-leader{margin:10px 0 8px;padding:9px 12px;border-radius:10px;
+  background:#FFF7E6;border:1px solid #FFD591;color:#AD4E00;font-size:14px;font-weight:600}
+.wg-leader b{color:#D4380D}
+.wg-leader-empty{background:#F7F7F7;border-color:var(--line);color:var(--text-sub);font-weight:500}
+.wg-ck-group{padding:6px 8px;font-size:12px;font-weight:700;
+  background:#F0FBF4;color:#237804;border-bottom:1px solid #B7EB8F}
+.wg-ck-group-wait{background:#FFF9F0;color:#AD4E00;border-bottom-color:#FFD591}
+.ck-today-tag{display:inline-block;margin-left:4px;padding:1px 5px;border-radius:6px;
+  background:#F6FFED;color:#389e0d;font-size:10px;font-weight:600;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -1694,9 +1707,9 @@ body.perf-on .content-area{padding-bottom:54vh}
 <div id="waiting-page" class="login-page hidden">
   <div class="login-box">
     <div class="login-photo"><img src="photo.jpeg?v=65" alt="Amy老师英语打卡" width="56" height="56"></div>
-    <h2>等待老师审核</h2>
-    <p class="subtitle">你的注册信息已提交</p>
-    <div class="card" style="background:var(--warning-light);text-align:center;padding:20px;margin:16px 0">
+    <h2>等待老师同意</h2>
+    <p class="subtitle" id="waiting-subtitle">注册信息已提交</p>
+    <div class="card" id="waiting-card" style="background:var(--warning-light);text-align:center;padding:20px;margin:16px 0">
       <div style="font-size:48px;margin-bottom:8px">⏳</div>
       <p style="font-size:15px;color:var(--warning);font-weight:600">老师正在审核你的注册</p>
       <p class="text-sub fs-12 mt-8">审核通过后，老师会为你分配班级</p>
@@ -1788,9 +1801,9 @@ body.perf-on .content-area{padding-bottom:54vh}
 </div>
 
 <script>window.__appReady = false;</script>
-<script defer src="cloud.js?v=200"></script>
-<script defer src="data.js?v=200"></script>
-<script defer src="data-shuffle.js?v=200"></script>
+<script defer src="cloud.js?v=201"></script>
+<script defer src="data.js?v=201"></script>
+<script defer src="data-shuffle.js?v=201"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
 <!--
   ?v= 必须跟着版本号走（v124 修正）。
@@ -1800,13 +1813,13 @@ body.perf-on .content-area{padding-bottom:54vh}
   这个坑很隐蔽：代码明明改了、也部署上去了，手机上跑的还是几个月前的逻辑。
   以后每次发版，这里跟着 app-version 一起改。
 -->
-<script defer src="recorder.js?v=200"></script>
-<script defer src="api.js?v=200"></script>
+<script defer src="recorder.js?v=201"></script>
+<script defer src="api.js?v=201"></script>
 <!-- v194：小游戏独立成文件，不塞进已经 800KB 的 app.js。必须排在 app.js
      **前面**：app.js 顶层有同步初始化，登录回来若正好停在「单词乐园」，
      渲染时 WordGame 得已经存在。game.js 只在被点击/渲染时才读 window.App。 -->
-<script defer src="game.js?v=200"></script>
-<script defer src="app.js?v=200"></script>
+<script defer src="game.js?v=201"></script>
+<script defer src="app.js?v=201"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {

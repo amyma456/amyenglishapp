@@ -1521,10 +1521,39 @@ async function transcribe(request, env) {
 //   GET  /api/class/join-requests        teacher: list pending applications
 //   POST /api/class/join-request/resolve teacher: approve / deny
 // ---------------------------------------------------------------------------
+// v201：老师批准的正式账号 + 名单外孩子的登录尝试。
+// 家长 2026-11-12：「只有 9 个孩子有账号，多的孩子登录我没收到拦截通知」。
+// 以前只拦「被老师删过」的号码，全新号码可以直接进 App，老师顶多在
+// 「未分配」里看到一行，不会收到任何提醒。现在名单外登录一律留一条待同意
+// 记录，学生停在「等待老师同意」页，老师端轮询到就弹横幅 + 声音。
+let rosterTablesReady = false;
+async function ensureRosterTables(db) {
+  if (rosterTablesReady) return;
+  await db.prepare(
+    `CREATE TABLE IF NOT EXISTS approved_phones (
+       phone       TEXT PRIMARY KEY,
+       name        TEXT,
+       klass       TEXT,
+       updated_at  TEXT NOT NULL
+     )`
+  ).run();
+  await db.prepare(
+    `CREATE TABLE IF NOT EXISTS login_attempts (
+       phone        TEXT PRIMARY KEY,
+       name         TEXT,
+       status       TEXT NOT NULL DEFAULT 'pending',
+       created_at   TEXT NOT NULL,
+       resolved_at  TEXT
+     )`
+  ).run();
+  rosterTablesReady = true;
+}
+
 async function classApi(request, url, env) {
   const db = env.DB;
   if (!db) return json({ error: 'no_db' }, 500);
   const path = url.pathname;
+  await ensureRosterTables(db);
 
   // -- student: my status --------------------------------------------------
   if (path === '/api/class/status' && request.method === 'GET') {
@@ -1545,11 +1574,121 @@ async function classApi(request, url, env) {
         .bind(phone).first();
       req = row || null;
     }
+    // v201：这个号是不是老师批准过的正式账号？三态很关键 ——
+    // 名单还没同步上来时返回 null（前端一律放行），绝不能因为一次
+    // 后台异常就把 9 个正式孩子全锁在门外。
+    const cntR = await db.prepare('SELECT COUNT(*) AS n FROM approved_phones').first();
+    const rosterReady = (Number(cntR && cntR.n) || 0) > 0;
+    const mine = await db
+      .prepare('SELECT phone, name, klass FROM approved_phones WHERE phone = ?')
+      .bind(phone).first();
+    const attempt = await db
+      .prepare('SELECT status FROM login_attempts WHERE phone = ?')
+      .bind(phone).first();
+    const aStatus = attempt ? String(attempt.status || '') : '';
     return json({
       removed: !!removed,
       removedAt: removed ? removed.removed_at : null,
       request: req,
+      rosterReady: rosterReady,
+      approved: rosterReady ? !!mine : null,
+      pendingApproval: aStatus === 'pending',
+      denied: aStatus === 'denied',
     });
+  }
+
+  // -- teacher: publish the approved roster (只补不删) ---------------------
+  // 老师端每次同步把「已分班 + 已批准」的手机号推上来。名单没变就不写库，
+  // 15 秒一次的轮询不能把 D1 写额度烧光。
+  if (path === '/api/class/roster' && request.method === 'POST') {
+    const body = await readJsonBody(request);
+    if (!body) return json({ error: 'bad_json' }, 400);
+    if (!isTeacher(body)) return json({ error: 'forbidden' }, 403);
+    const list = Array.isArray(body.roster) ? body.roster.slice(0, 300) : [];
+    if (!list.length) return json({ ok: true, count: 0, skipped: 'empty_roster' });
+    const now = new Date().toISOString();
+    const existR = await db.prepare('SELECT phone, name, klass FROM approved_phones').all();
+    const have = Object.create(null);
+    ((existR && existR.results) || []).forEach(function (r) { have[r.phone] = r; });
+    let written = 0;
+    for (let i = 0; i < list.length; i++) {
+      const s = list[i] || {};
+      const phone = String(s.phone || '').trim().slice(0, 30);
+      if (!phone) continue;
+      const name = String(s.name || '').trim().slice(0, 60);
+      const klass = String(s.class || '').trim().slice(0, 60);
+      const old = have[phone];
+      if (old && (old.name || '') === name && (old.klass || '') === klass) continue;
+      await db.prepare(
+        `INSERT INTO approved_phones (phone, name, klass, updated_at) VALUES (?1, ?2, ?3, ?4)
+         ON CONFLICT(phone) DO UPDATE SET
+           name = COALESCE(excluded.name, approved_phones.name),
+           klass = COALESCE(excluded.klass, approved_phones.klass),
+           updated_at = excluded.updated_at`
+      ).bind(phone, name, klass, now).run();
+      written++;
+    }
+    const totalR = await db.prepare('SELECT COUNT(*) AS n FROM approved_phones').first();
+    return json({ ok: true, written: written, count: Number(totalR && totalR.n) || 0 });
+  }
+
+  // -- student: a phone outside the roster tried to log in ------------------
+  if (path === '/api/class/login-attempt' && request.method === 'POST') {
+    const body = await readJsonBody(request);
+    if (!body) return json({ error: 'bad_json' }, 400);
+    const phone = String(body.phone || '').trim().slice(0, 30);
+    const name = String(body.name || '').trim().slice(0, 60);
+    if (!phone) return json({ error: 'missing_phone' }, 400);
+    const mine = await db
+      .prepare('SELECT phone FROM approved_phones WHERE phone = ?').bind(phone).first();
+    if (mine) return json({ ok: true, status: 'approved' });
+    const old = await db
+      .prepare('SELECT status FROM login_attempts WHERE phone = ?').bind(phone).first();
+    if (old && old.status === 'pending') return json({ ok: true, status: 'pending', duplicate: true });
+    await db.prepare(
+      `INSERT INTO login_attempts (phone, name, status, created_at, resolved_at)
+       VALUES (?1, ?2, 'pending', ?3, NULL)
+       ON CONFLICT(phone) DO UPDATE SET
+         name = COALESCE(excluded.name, login_attempts.name),
+         status = 'pending', created_at = excluded.created_at, resolved_at = NULL`
+    ).bind(phone, name, new Date().toISOString()).run();
+    return json({ ok: true, status: 'pending' });
+  }
+
+  // -- teacher: who is waiting for approval ---------------------------------
+  if (path === '/api/class/login-attempts' && request.method === 'GET') {
+    if (!isTeacher({ teacher: url.searchParams.get('teacher') })) {
+      return json({ error: 'forbidden' }, 403);
+    }
+    const rows = await db.prepare(
+      "SELECT phone, name, status, created_at FROM login_attempts WHERE status = 'pending' ORDER BY created_at ASC"
+    ).all();
+    return json({ attempts: (rows && rows.results) || [] });
+  }
+
+  // -- teacher: approve / deny an outside login ------------------------------
+  if (path === '/api/class/login-attempt/resolve' && request.method === 'POST') {
+    const body = await readJsonBody(request);
+    if (!body) return json({ error: 'bad_json' }, 400);
+    if (!isTeacher(body)) return json({ error: 'forbidden' }, 403);
+    const phone = String(body.phone || '').trim().slice(0, 30);
+    const action = String(body.action || '') === 'deny' ? 'deny' : 'approve';
+    if (!phone) return json({ error: 'missing_phone' }, 400);
+    const now = new Date().toISOString();
+    const row = await db.prepare(
+      'SELECT phone, name FROM login_attempts WHERE phone = ?'
+    ).bind(phone).first();
+    if (action === 'approve') {
+      await db.prepare(
+        `INSERT INTO approved_phones (phone, name, klass, updated_at) VALUES (?1, ?2, ?3, ?4)
+         ON CONFLICT(phone) DO UPDATE SET name = COALESCE(excluded.name, approved_phones.name),
+           updated_at = excluded.updated_at`
+      ).bind(phone, row ? row.name : '', String(body.class || '').trim().slice(0, 60), now).run();
+    }
+    await db.prepare(
+      'UPDATE login_attempts SET status = ?1, resolved_at = ?2 WHERE phone = ?3'
+    ).bind(action === 'approve' ? 'approved' : 'denied', now, phone).run();
+    return json({ ok: true, status: action === 'approve' ? 'approved' : 'denied' });
   }
 
   // -- teacher: record a removal -------------------------------------------
@@ -1590,6 +1729,9 @@ async function classApi(request, url, env) {
       await db
         .prepare("UPDATE join_requests SET status = 'denied', resolved_at = ? WHERE phone = ? AND status = 'pending'")
         .bind(now, phone).run();
+      // v201：删掉的人同时从「已批准白名单」里摘掉，否则他重新登录时
+      // status 还会报 approved:true，名单外的拦截就形同虚设。
+      await db.prepare('DELETE FROM approved_phones WHERE phone = ?').bind(phone).run();
       count++;
     }
     // 单个入参时保持老响应形状（ok:true；老师号跳过时带上 skipped）。
@@ -1696,6 +1838,14 @@ async function classApi(request, url, env) {
       await db
         .prepare("UPDATE join_requests SET status = 'approved', resolved_at = ? WHERE phone = ? AND status = 'pending'")
         .bind(now, phone).run();
+      // v201：老师点「解除拦截」= 明确开门，白名单也要同步，别让同一个人
+      // 下一秒又被「名单外」这道新闸挡回去。
+      await db.prepare(
+        'INSERT OR IGNORE INTO approved_phones (phone, name, klass, updated_at) VALUES (?, ?, ?, ?)'
+      ).bind(phone, '', '', now).run();
+      await db.prepare(
+        "UPDATE login_attempts SET status = 'approved', resolved_at = ?1 WHERE phone = ?2 AND status = 'pending'"
+      ).bind(now, phone).run();
     }
     return json({ ok: true, count: list.length });
   }
@@ -1997,10 +2147,15 @@ async function buildBoardRows(db, cls, serverDay) {
     const sid = String(row.student_id || '').slice(0, 80);
     if (!sid || seen[sid]) return;
     seen[sid] = 1;
-    // 名册里被标记 removed 的人不再出现；积分表的孤儿行默认保留。
-    if (active === 0) return;
+    // v201：名册里被标记下线的人不再出现，**但他若还带着分数，绝不能整行
+    // 丢掉**。v197/v200 预热权威名册时把「有分的老编号」标成 active=0，
+    // 这一行直接 return 就让攒下的分数从榜上凭空消失（老师看到 york 从
+    // 第一名 80 分变成全班 0 分、一个名次都没有）。分数优先于下线标记。
+    const hasPoints = (Number(row.total) || 0) > 0 || (Number(row.rounds) || 0) > 0;
+    if (active === 0 && !hasPoints) return;
     const klass = String(row.student_class || '').slice(0, 60);
-    if (cls && klass !== cls) return;
+    // 老上报可能没带班级字段；别因为班级为空就把有分的一行过滤掉。
+    if (cls && klass && klass !== cls) return;
     raw.push({
       student_id: sid,
       student_name: String(row.student_name || '').slice(0, 60),
@@ -2185,8 +2340,21 @@ async function gameScoresApi(request, url, env) {
     const cls = (url.searchParams.get('class') || '').trim().slice(0, 60);
     try {
       const rows = await buildBoardRows(db, cls, serverDay);
+      // v201：只读体检口。榜上分数莫名归零时，用它看 D1 里到底有没有那笔分、
+      // 名册是不是把有分的账号标成下线了。不带 diag 参数时响应形状不变。
+      let diag = null;
+      if (url.searchParams.get('diag') === '1') {
+        const sR = await db.prepare(
+          'SELECT student_id, student_name, student_class, total, rounds, day, updated_at FROM game_scores ORDER BY total DESC LIMIT 100'
+        ).all();
+        const rR = await db.prepare(
+          'SELECT student_id, student_name, student_class, active FROM game_roster ORDER BY active DESC, student_name LIMIT 300'
+        ).all();
+        diag = { scores: (sR && sR.results) || [], roster: (rR && rR.results) || [] };
+      }
       return json({ rows: rows, count: rows.length,
-                    server_day: serverDay, server_time: now });
+                    server_day: serverDay, server_time: now,
+                    ...(diag ? { diag: diag } : {}) });
     } catch (e) {
       return json({ error: 'db_error', detail: String(e && e.message || e) }, 500);
     }

@@ -877,7 +877,9 @@
     if (!list.length) {
       h += '<div class="wg-board-empty">本班名单还在路上，稍等一下就好。</div>';
     } else {
-      h += '<div class="wg-ck-scroll">';
+      // v201：家长说「显示有几个同学打卡，但名单是分散的」。按打卡与否分两组，
+      // 打过卡的名字全部挨在一起排最前，没打卡的挨在一起排后面，一眼看清。
+      var yesRows = [], noRows = [];
       for (i = 0; i < list.length; i++) {
         var rec = ckRecordOf(list[i].ids, di);
         var ok = !!(rec && rec.done);
@@ -887,11 +889,17 @@
         var desc = ok ? ('已打卡 · 错 ' + (Number(rec.wrongCount) || 0) + ' 道')
           : (partial ? ('答了 ' + (Number(rec.answered) || 0) + '/' +
                         (Number(rec.total) || 0) + ' 题') : '还没打卡');
-        h += '<div class="wg-ck-row' + (ok ? ' is-done' : '') + '">' +
+        var row = '<div class="wg-ck-row' + (ok ? ' is-done' : '') + '">' +
           '<span class="wg-ck-mark">' + mark + '</span>' +
           '<span class="wg-ck-name">' + esc(list[i].name) + '</span>' +
           '<span class="wg-ck-desc">' + esc(desc) + '</span></div>';
+        if (ok) yesRows.push(row); else noRows.push(row);
       }
+      h += '<div class="wg-ck-scroll">';
+      if (yesRows.length) h += '<div class="wg-ck-group">✅ 已打卡 ' + yesRows.length +
+        ' 人</div>' + yesRows.join('');
+      if (noRows.length) h += '<div class="wg-ck-group wg-ck-group-wait">⏳ 还没打卡 ' +
+        noRows.length + ' 人</div>' + noRows.join('');
       h += '</div>';
       h += '<div class="wg-ck-foot">今日已打卡 <b>' + done + '</b> / ' + list.length + ' 人</div>';
     }
@@ -957,6 +965,19 @@
       h += '<div class="wg-board-empty">基地正在连线，马上就能看到全班同学啦。</div>';
     } else {
       var i, me = myIdentity();
+      // v201：老师「现在没有任何排名信息」—— 把第一名单独摆一行，
+      // 不用在一长串 0 分里找。只有真有分的人才拿第一名；全班都没分时
+      // 也把话说清楚，不留下「榜是不是坏了」的疑问。
+      var top = null;
+      for (i = 0; i < rows.length; i++) {
+        if (hasScore(rows[i])) { top = rows[i]; break; }
+      }
+      if (top) {
+        h += '<div class="wg-leader">🥇 第 1 名 <b>' + esc(top.student_name) +
+          '</b> · <b>' + (Number(top.total) || 0) + '</b> 分</div>';
+      } else {
+        h += '<div class="wg-leader wg-leader-empty">🏅 今天还没有人出击，第一名虚位以待</div>';
+      }
       // v197：不再只显示前 8 名。0 分、从没玩过的同学也是全班的一员，
       // 必须一行不少地列出来，否则等于「没玩就不出现」。
       h += '<div class="wg-board-scroll">';

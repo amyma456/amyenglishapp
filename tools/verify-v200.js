@@ -128,11 +128,11 @@ function setBoard(rows) {
 }
 
 // ------------------------------------------------------------------ 源码约束
-ok('版本钉子统一到 v200', () => {
-  assert(/name="app-version" content="200"/.test(html));
-  assert.strictEqual((html.match(/\?v=200/g) || []).length, 7, '首页 7 处脚本引用');
-  assert(/var CACHE_NAME = 'amy-english-v200';/.test(swSrc) && /var V = 200;/.test(swSrc));
-  assert(/^<meta name="app-version" content="200">/m.test(html));
+ok('版本钉子统一到 v201', () => {
+  assert(/name="app-version" content="201"/.test(html));
+  assert.strictEqual((html.match(/\?v=201/g) || []).length, 7, '首页 7 处脚本引用');
+  assert(/var CACHE_NAME = 'amy-english-v201';/.test(swSrc) && /var V = 201;/.test(swSrc));
+  assert(/^<meta name="app-version" content="201">/m.test(html));
 });
 ok('游戏页 tab 仍在刷新恢复白名单里（v198 的修复没被覆盖）', () => {
   const rt = appSrc.slice(appSrc.indexOf('  _restoreTab() {'), appSrc.indexOf('  showApp() {'));
