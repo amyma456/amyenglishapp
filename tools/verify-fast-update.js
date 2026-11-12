@@ -49,7 +49,7 @@ ok(/STALE-WHILE-REVALIDATE/.test(swSrc), '新策略注释在位（SWR）');
 section('② 版本化预存');
 ok(/'\.\/app\.js\?v=' \+ V/.test(swSrc) && /'\.\/data\.js\?v=' \+ V/.test(swSrc),
    '★ install 预存带 ?v= 的脚本（发版后首次启动也秒开）');
-ok(/var V = 199;/.test(swSrc), 'V 与本次版本号一致（151）', swSrc.match(/var V = (\d+);/)[1]);
+ok(/var V = 200;/.test(swSrc), 'V 与本次版本号一致（151）', swSrc.match(/var V = (\d+);/)[1]);
 ok(/cache\.match\(event\.request, \{ ignoreSearch: true \}\)/.test(swSrc),
    '裸文件名兜底匹配（新旧版本号交接瞬间不等网络）');
 
@@ -65,8 +65,12 @@ ok(/if \(window\.Recorder && Recorder\.recording && Recorder\.recording\(\)\)/.t
 ok(/setTimeout\(window\.__safeReload, 5000\)/.test(htmlSrc), '录音中推迟 5 秒重试');
 ok(/controllerchange[\s\S]{0,220}__safeReload\(\)/.test(htmlSrc),
    '新 SW 接管时走 __safeReload（不是裸 reload）');
-ok(/if \(live && live !== __myVersion\) window\.__safeReload\(\)/.test(htmlSrc),
-   '版本落后时走 __safeReload（不是裸 reload）');
+// v200：版本落后时先清掉 SWR 旧缓存再刷，否则 reload 完还是旧首页。
+// 刷新仍统一走 __safeReload，不裸调 location.reload。
+ok(/if \(!live \|\| live === __myVersion\) return;/.test(htmlSrc) &&
+   /var go = function \(\) \{ if \(fired\) return; fired = true; window\.__safeReload\(\); \}/.test(htmlSrc) &&
+   /caches\.delete\(n\)/.test(htmlSrc),
+   '版本落后时清缓存并走 __safeReload（不是裸 reload）');
 ok(/__swReloaded/.test(htmlSrc), '防刷新循环的守卫还在');
 
 section('⑤ 版本探针');

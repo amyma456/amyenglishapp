@@ -166,10 +166,10 @@ ok('学生端「我的错题本」没有名单字段时，卡片结构照旧', (
     assert(line.indexOf(NAMES[0]) >= 0 && line.indexOf(NAMES[1]) >= 0, '两个做错的名字都在');
     assert(line.indexOf(NAMES[2]) < 0, '全对的 Matt 不该出现在做错名单里');
   });
-  ok('版本钉子统一到 v199', () => {
-    assert(/name="app-version" content="199"/.test(html));
-    assert.strictEqual((html.match(/\?v=199/g) || []).length, 7, '首页 7 处脚本引用');
-    assert(/var CACHE_NAME = 'amy-english-v199';/.test(sw) && /var V = 199;/.test(sw));
+  ok('版本钉子统一到 v200', () => {
+    assert(/name="app-version" content="200"/.test(html));
+    assert.strictEqual((html.match(/\?v=200/g) || []).length, 7, '首页 7 处脚本引用');
+    assert(/var CACHE_NAME = 'amy-english-v200';/.test(sw) && /var V = 200;/.test(sw));
   });
   console.log('\n全部 ' + pass + ' 项通过 ✅');
   process.exit(0);

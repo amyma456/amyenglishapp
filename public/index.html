@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="199">
+<meta name="app-version" content="200">
 <link rel="manifest" href="manifest.json">
 <!-- v135：登录第一步就是调 api.amyeng.top 验手机号。提前把 DNS + TLS
      握手做掉，接口首调能省几百毫秒 —— 手机弱网下这几百毫秒很显眼。 -->
@@ -1545,6 +1545,30 @@ body.perf-on .content-area{padding-bottom:54vh}
 .wg-board-scroll::-webkit-scrollbar-thumb{background:#E3D9C7;border-radius:6px}
 .wg-board-row.wg-board-idle{opacity:.72}
 .wg-board-row.wg-board-idle .wg-board-score b{color:var(--text-sub)}
+/* ==========================================================================
+   v200 · 0 分不占前三名 + 今日打卡记录卡
+   同一个孩子多个编号只显示一行；没出击过的人名次位置是一个淡色点，
+   不再挂奖牌。打卡卡沿用上面 v194 的浅色变量和普通类选择器，
+   老华为浏览器 / 平板自带浏览器照样能滚动、点得动。
+   ========================================================================== */
+.wg-rank-none{color:var(--text-sub);font-weight:600}
+.wg-pill-ck{background:#E6F7FF;border-color:#91D5FF;color:#096DD9}
+.wg-ck-card .wg-card-hd{margin-bottom:8px}
+.wg-ck-scroll{max-height:250px;overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;border-radius:10px}
+.wg-ck-scroll::-webkit-scrollbar{width:6px}
+.wg-ck-scroll::-webkit-scrollbar-thumb{background:#E3D9C7;border-radius:6px}
+.wg-ck-row{display:flex;align-items:center;padding:7px 6px;border-bottom:1px solid var(--line);
+  font-size:13px;min-height:34px}
+.wg-ck-mark{width:24px;flex:0 0 24px;text-align:center;font-size:14px}
+.wg-ck-name{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  color:var(--text);font-weight:600}
+.wg-ck-desc{width:104px;flex:0 0 104px;text-align:right;font-size:11px;color:var(--text-sub)}
+.wg-ck-foot{margin-top:8px;text-align:center;font-size:12px;color:var(--text-sub)}
+.wg-ck-foot b{color:var(--primary-dark);font-size:15px}
+@media (max-width:400px){
+  .wg-ck-desc{width:92px;flex-basis:92px}
+}
 </style>
 </head>
 <body>
@@ -1764,9 +1788,9 @@ body.perf-on .content-area{padding-bottom:54vh}
 </div>
 
 <script>window.__appReady = false;</script>
-<script defer src="cloud.js?v=199"></script>
-<script defer src="data.js?v=199"></script>
-<script defer src="data-shuffle.js?v=199"></script>
+<script defer src="cloud.js?v=200"></script>
+<script defer src="data.js?v=200"></script>
+<script defer src="data-shuffle.js?v=200"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
 <!--
   ?v= 必须跟着版本号走（v124 修正）。
@@ -1776,13 +1800,13 @@ body.perf-on .content-area{padding-bottom:54vh}
   这个坑很隐蔽：代码明明改了、也部署上去了，手机上跑的还是几个月前的逻辑。
   以后每次发版，这里跟着 app-version 一起改。
 -->
-<script defer src="recorder.js?v=199"></script>
-<script defer src="api.js?v=199"></script>
+<script defer src="recorder.js?v=200"></script>
+<script defer src="api.js?v=200"></script>
 <!-- v194：小游戏独立成文件，不塞进已经 800KB 的 app.js。必须排在 app.js
      **前面**：app.js 顶层有同步初始化，登录回来若正好停在「单词乐园」，
      渲染时 WordGame 得已经存在。game.js 只在被点击/渲染时才读 window.App。 -->
-<script defer src="game.js?v=199"></script>
-<script defer src="app.js?v=199"></script>
+<script defer src="game.js?v=200"></script>
+<script defer src="app.js?v=200"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {
@@ -1835,7 +1859,23 @@ if ('serviceWorker' in navigator) {
       if (!html) return;
       var m = html.match(/<meta\s+name="app-version"\s+content="(\d+)"/);
       var live = m && m[1];
-      if (live && live !== __myVersion) window.__safeReload();
+      if (!live || live === __myVersion) return;
+      // v200：光 reload 不够 —— SWR 缓存里还是旧首页，刷新完依旧是旧代码，
+      // 老师手机上就出现「发版了、页面仍然没更新」。先把缓存清干净再刷，
+      // 同一个新版本只强制刷一次，免得 CDN 还没切过去时来回刷新。
+      var key = 'amy_ver_reload_' + live;
+      try {
+        if (sessionStorage.getItem(key)) return;
+        sessionStorage.setItem(key, '1');
+      } catch (e) {}
+      var fired = false;
+      var go = function () { if (fired) return; fired = true; window.__safeReload(); };
+      if (window.caches && caches.keys) {
+        caches.keys().then(function (names) {
+          return Promise.all(names.map(function (n) { return caches.delete(n); }));
+        }).then(go, go);
+        setTimeout(go, 1500);          // 清缓存卡住也不能不刷新
+      } else go();
     }).catch(function() {});
   }
   document.addEventListener('visibilitychange', function() {

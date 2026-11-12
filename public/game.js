@@ -141,7 +141,7 @@
 
   // ------------------------------------------------- 今天错了多少 / 打卡没
   function todayInfo() {
-    var info = { wrong: 0, done: false, teacher: false, dayIdx: 0 };
+    var info = { wrong: 0, done: false, teacher: false, dayIdx: 0, ckAt: '' };
     try {
       var App = window.App;
       if (!App) return info;
@@ -157,12 +157,19 @@
         if (!Object.prototype.hasOwnProperty.call(answers, k)) continue;
         if (k.indexOf(prefix) === 0 && answers[k] && answers[k].correct === false) info.wrong++;
       }
-      // ② 打卡记录里的错题数（换设备 / 云端补录时也认），取更完整的那份
-      var ck = (st.checkins || {})[sid + tag + '_d' + info.dayIdx];
-      if (ck) {
-        if ((Number(ck.wrongCount) || 0) > info.wrong) info.wrong = Number(ck.wrongCount) || 0;
-        info.done = !!ck.done;
-      }
+      // ② 打卡记录里的错题数。v200：老师电脑端的打卡监控读的是后台确认过的
+      // cloudCheckins（App._clsCk）；游戏页以前只看本机那份，孩子换手机、
+      // 老师代录之后就一直显示「还没打卡」、只给 30 秒试玩，跟电脑端对不上。
+      // 本机 + 云端两份都取，谁更完整听谁的。
+      var takeCk = function (ck) {
+        if (!ck) return;
+        if (ck.done) info.done = true;
+        var w = Number(ck.wrongCount) || 0;
+        if (w > info.wrong) info.wrong = w;
+        if (ck.time || ck.at) info.ckAt = String(ck.time || ck.at || '');
+      };
+      takeCk((st.checkins || {})[sid + tag + '_d' + info.dayIdx]);
+      try { if (App._clsCk) takeCk(App._clsCk(sid, info.dayIdx)); } catch (e) {}
     } catch (e) {}
     // 老师是试玩，不按任何学生的错题扣时长
     if (info.teacher) { info.wrong = 0; info.done = true; }
@@ -547,7 +554,65 @@
   var SYNC_KEY = 'amy_wordgame_sync_v1';
   var Q = [];
   var BOARD = { rows: [], at: 0, day: '', loading: false };
-  var syncing = false, boardTimer = null;
+  var syncing = false, boardTimer = null, ckTimer = null;
+
+  function boardNameKey(name) {
+    return String(name || '').toLowerCase().replace(/[\s\u3000]+/g, '');
+  }
+  function hasScore(r) {
+    return (Number(r && r.total) || 0) > 0 || (Number(r && r.rounds) || 0) > 0;
+  }
+  /**
+   * v200：同一个孩子在报名 / 换手机时可能留下好几个编号，云端给的原始榜里
+   * 就会一行变两行（老师看到 14 人，其实班里只有 9 个孩子）。按姓名合并成
+   * 一人，几个账号攒的分全部加起来，一分不丢。服务端也做同样的合并，这里
+   * 再兜一层：老手机拿到的还是旧接口数据时也不会显示重复。
+   */
+  function normalizeBoardRows(input) {
+    var arr = Array.isArray(input) ? input.slice(0, 300) : [];
+    var raw = [], i, r;
+    for (i = 0; i < arr.length; i++) {
+      r = arr[i] || {};
+      raw.push({
+        student_id: String(r.student_id || ''),
+        student_name: String(r.student_name || ''),
+        student_class: String(r.student_class || ''),
+        total: Math.max(0, Number(r.total) || 0),
+        best: Math.max(0, Number(r.best) || 0),
+        rounds: Math.max(0, Number(r.rounds) || 0),
+        today_score: Math.max(0, Number(r.today_score) || 0),
+        updated_at: String(r.updated_at || ''),
+        played: r.played === true || (Number(r.rounds) || 0) > 0 || (Number(r.total) || 0) > 0
+      });
+    }
+    // 有分的账号排前面，合并后留下的是它，孩子按编号认领自己才不会认错行。
+    raw.sort(function (a, b) {
+      if (b.total !== a.total) return b.total - a.total;
+      return a.student_id < b.student_id ? -1 : (a.student_id > b.student_id ? 1 : 0);
+    });
+    var byName = Object.create(null), out = [];
+    for (i = 0; i < raw.length; i++) {
+      r = raw[i];
+      var key = boardNameKey(r.student_name);
+      if (!key) { out.push(r); continue; }
+      var prev = byName[key];
+      if (!prev) { byName[key] = r; out.push(r); continue; }
+      prev.total += r.total;
+      prev.best = Math.max(prev.best, r.best);
+      prev.rounds += r.rounds;
+      prev.today_score += r.today_score;
+      prev.played = prev.played || r.played;
+      if (r.updated_at > prev.updated_at) prev.updated_at = r.updated_at;
+      if (r.student_name.length > prev.student_name.length) prev.student_name = r.student_name;
+    }
+    out.sort(function (a, b) {
+      if (b.total !== a.total) return b.total - a.total;
+      if (!!a.updated_at !== !!b.updated_at) return a.updated_at ? -1 : 1;
+      if (a.updated_at !== b.updated_at) return a.updated_at < b.updated_at ? -1 : 1;
+      return a.student_name < b.student_name ? -1 : (a.student_name > b.student_name ? 1 : 0);
+    });
+    return out;
+  }
 
   function loadQ() {
     try {
@@ -593,6 +658,20 @@
       var me = myIdentity();
       out.klass = me ? me.student_class : String(st.className || '');
       out.authoritative = !!(Ap.isTeacher && Ap.isTeacher());
+      // v200：老师端 myIdentity() 是 null，st.className 有时也是空的。空班级
+      // 去后台读榜会把所有班的孩子混在一起，跟电脑端看到的不一样。从名册里
+      // 取人数最多的那个班，老师手机上就是自己的班。
+      if (!out.klass) {
+        var cnt = Object.create(null), best = '', bestN = 0, k, ss, c;
+        for (k = 0; k < all.length; k++) {
+          ss = all[k];
+          if (!ss || !ss.class || ss.approved === false) continue;
+          c = String(ss.class);
+          cnt[c] = (cnt[c] || 0) + 1;
+          if (cnt[c] > bestN) { bestN = cnt[c]; best = c; }
+        }
+        out.klass = best;
+      }
       var pick = function (useCls) {
         var a = [], i, s;
         for (i = 0; i < all.length; i++) {
@@ -674,7 +753,7 @@
     var done = function (d) {
       BOARD.loading = false;
       if (!d) return;                    // 断网保留上一份榜，不闪成空
-      BOARD.rows = d.rows || [];
+      BOARD.rows = normalizeBoardRows(d.rows || []);   // v200：同名只留一人
       BOARD.day = d.server_day || '';
       BOARD.at = Date.now();
       // 正在答题时绝不重画 —— 会把题目和连击打断
@@ -685,6 +764,29 @@
       if (p && p.then) p.then(done, function () { done(null); });
       else done(p);
     } catch (e) { done(null); }
+  }
+
+  /** v200：进游戏页 / 每 60 秒拉一次后台打卡，跟打卡监控始终同一份数据。 */
+  function pullCheckins() {
+    var Ap = window.App;
+    if (!Ap || !Ap._pullCloudCheckins) return;
+    try {
+      var p = Ap._pullCloudCheckins('class');
+      if (p && p.then) p.then(function (n) {
+        if (!n || G.phase === 'playing') return;   // 答题中绝不打断
+        G.info = todayInfo();                      // 时长按最新打卡 / 错题数重算
+        if (document.getElementById('wg-root')) paint();
+      }, function () {});
+    } catch (e) {}
+  }
+  function startCheckinSync() {
+    if (ckTimer) return;
+    ckTimer = setInterval(function () {
+      if (typeof document.visibilityState !== 'undefined' &&
+          document.visibilityState !== 'visible') return;
+      if (!document.getElementById('wg-root')) return;
+      pullCheckins();
+    }, 60000);
   }
 
   function startBoardSync() {
@@ -702,6 +804,7 @@
     if (!document.getElementById('wg-root')) return;
     flushScores();
     pullScores();
+    pullCheckins();
   }, false);
   window.addEventListener('pagehide', function () { flushScores(); }, false);
 
@@ -710,7 +813,8 @@
     if (!me) return { rank: 0, total: rows.length, row: null };
     for (i = 0; i < rows.length; i++) {
       if (rows[i].student_id === me.student_id) {
-        return { rank: i + 1, total: rows.length, row: rows[i] };
+        // v200：0 分不该因为"名字排得靠前"就被算成第 1 名。
+        return { rank: hasScore(rows[i]) ? i + 1 : 0, total: rows.length, row: rows[i] };
       }
     }
     // 换过设备 / 名册里用的是另一个编号时，按姓名认领（只在唯一命中时认，
@@ -724,23 +828,93 @@
           hits++; hit = i;
         }
       }
-      if (hits === 1) return { rank: hit + 1, total: rows.length, row: rows[hit] };
+      if (hits === 1) return { rank: hasScore(rows[hit]) ? hit + 1 : 0,
+                              total: rows.length, row: rows[hit] };
     }
     return { rank: 0, total: rows.length, row: null };
   }
 
+  /** v200：本班名单，同名只留一人（跟榜单同一口径），并带上他所有的编号。 */
+  function ckRoster() {
+    var Ap = window.App, out = [], seen = Object.create(null);
+    if (!Ap || !Ap.state) return out;
+    var klass = classRoster().klass, all = Ap.state.students || [], i, s;
+    for (i = 0; i < all.length; i++) {
+      s = all[i];
+      if (!s || !s.id || !s.class || s.approved === false) continue;
+      if (klass && String(s.class) !== klass) continue;
+      var key = boardNameKey(s.name);
+      if (!key) continue;
+      var hit = seen[key];
+      if (hit) { hit.ids.push(String(s.id)); continue; }
+      var row = { name: String(s.name || ''), ids: [String(s.id)] };
+      seen[key] = row; out.push(row);
+    }
+    return out;
+  }
+  /** 多个编号里取最完整的那条后台打卡记录（跟打卡监控的 _clsCk 同源）。 */
+  function ckRecordOf(ids, di) {
+    var Ap = window.App, best = null, i, rec;
+    if (!Ap || !Ap._clsCk) return null;
+    for (i = 0; i < ids.length; i++) {
+      rec = null;
+      try { rec = Ap._clsCk(ids[i], di); } catch (e) {}
+      if (!rec) continue;
+      if (!best || (!!rec.done && !best.done) ||
+          (Number(rec.answered) || 0) > (Number(best.answered) || 0)) best = rec;
+    }
+    return best;
+  }
+  /** 今日打卡记录：手机游戏页和老师电脑端打卡监控看的是同一份后台数据。 */
+  function checkinCardHtml() {
+    var Ap = window.App;
+    var at = Ap && Ap._ckPullAt ? hhmm(Ap._ckPullAt) : hhmm(Date.now());
+    var h = '<div class="wg-card wg-ck-card">';
+    h += '<div class="wg-card-hd"><span>📋 今日打卡记录</span>' +
+      '<span class="wg-pill wg-pill-ck">' + at + ' 更新</span></div>';
+    var di = (Ap && Ap.getTodayWeekdayIdx) ? Ap.getTodayWeekdayIdx() : 0;
+    var list = ckRoster(), i, done = 0;
+    if (!list.length) {
+      h += '<div class="wg-board-empty">本班名单还在路上，稍等一下就好。</div>';
+    } else {
+      h += '<div class="wg-ck-scroll">';
+      for (i = 0; i < list.length; i++) {
+        var rec = ckRecordOf(list[i].ids, di);
+        var ok = !!(rec && rec.done);
+        var partial = !!(rec && !rec.done && (Number(rec.answered) || 0) > 0);
+        if (ok) done++;
+        var mark = ok ? '✅' : (partial ? '◐' : '✗');
+        var desc = ok ? ('已打卡 · 错 ' + (Number(rec.wrongCount) || 0) + ' 道')
+          : (partial ? ('答了 ' + (Number(rec.answered) || 0) + '/' +
+                        (Number(rec.total) || 0) + ' 题') : '还没打卡');
+        h += '<div class="wg-ck-row' + (ok ? ' is-done' : '') + '">' +
+          '<span class="wg-ck-mark">' + mark + '</span>' +
+          '<span class="wg-ck-name">' + esc(list[i].name) + '</span>' +
+          '<span class="wg-ck-desc">' + esc(desc) + '</span></div>';
+      }
+      h += '</div>';
+      h += '<div class="wg-ck-foot">今日已打卡 <b>' + done + '</b> / ' + list.length + ' 人</div>';
+    }
+    h += '</div>';
+    return h;
+  }
+
   function boardRow(r, i, isMe) {
-    var medal = i === 0 ? '🥇' : (i === 1 ? '🥈' : (i === 2 ? '🥉' : ('#' + (i + 1))));
+    // v200：0 分、没玩过的人不再占前三名，也不给奖牌 —— 老师原话
+    //「置顶一二三名，分数仍然显示是零分」。名次只发给真正出击过的人。
+    var scored = hasScore(r);
+    var medal = !scored ? '·' :
+      (i === 0 ? '🥇' : (i === 1 ? '🥈' : (i === 2 ? '🥉' : ('#' + (i + 1)))));
     var lv = levelOf(Number(r.total) || 0);
-    var idle = !(Number(r.total) || 0) && !(Number(r.rounds) || 0) && r.played !== true;
     return '<div class="wg-board-row' + (isMe ? ' wg-board-me' : '') +
-      (idle ? ' wg-board-idle' : '') + '">' +
-      '<span class="wg-rank">' + medal + '</span>' +
+      (scored ? '' : ' wg-board-idle') + '">' +
+      '<span class="wg-rank' + (scored ? '' : ' wg-rank-none') + '">' + medal + '</span>' +
       '<span class="wg-board-name">' + esc(r.student_name || '小指挥官') +
         (isMe ? '<em>我</em>' : '') + '</span>' +
       '<span class="wg-board-lv">' + lv.icon + '</span>' +
       '<span class="wg-board-score"><b>' + (Number(r.total) || 0) + '</b> 分</span>' +
-      '<span class="wg-board-today">今日 +' + (Number(r.today_score) || 0) + '</span>' +
+      '<span class="wg-board-today">' +
+        (scored ? '今日 +' + (Number(r.today_score) || 0) : '还没出击') + '</span>' +
     '</div>';
   }
 
@@ -782,12 +956,15 @@
     if (!rows.length) {
       h += '<div class="wg-board-empty">基地正在连线，马上就能看到全班同学啦。</div>';
     } else {
-      var i;
+      var i, me = myIdentity();
       // v197：不再只显示前 8 名。0 分、从没玩过的同学也是全班的一员，
       // 必须一行不少地列出来，否则等于「没玩就不出现」。
       h += '<div class="wg-board-scroll">';
       for (i = 0; i < rows.length; i++) {
-        h += boardRow(rows[i], i, rk.rank === i + 1);
+        // v200：自己 0 分时 rank 是 0，但那一行照样要高亮，别让孩子找不到自己。
+        var mine = (rk.row === rows[i]) ||
+          (!!me && rows[i].student_id === me.student_id);
+        h += boardRow(rows[i], i, !!mine);
       }
       h += '</div>';
       h += '<div class="wg-board-foot">' + (rk.rank > 0
@@ -890,6 +1067,8 @@
     }
     h += '</div>';
 
+    // v200：打卡记录紧挨着配额卡，手机上一眼就能对上老师电脑端的打卡监控
+    h += checkinCardHtml();
     // v195：基地 + 全班实时榜，紧挨着「今天能玩多久」—— 名次和配额都一眼可见
     h += boardHtml();
     h += baseCardHtml();
@@ -1345,8 +1524,10 @@
       if (!root) return;
       // v195：进游戏页就把没报完的分补上、把后台的榜拉回来，并开定时同步。
       startBoardSync();
+      startCheckinSync();
       flushScores();
       pullScores();
+      pullCheckins();
       if (G.phase === 'lobby') { G.info = todayInfo(); paint(); }
       else if (G.phase === 'playing') paintClock();
       else if (!root.innerHTML) paint();
@@ -1381,6 +1562,11 @@
       baseCardHtml: baseCardHtml,
       classRoster: classRoster,
       hallHtml: hallHtml,
+      normalizeBoardRows: normalizeBoardRows,
+      boardRow: boardRow,
+      checkinCardHtml: checkinCardHtml,
+      ckRoster: ckRoster,
+      pullCheckins: pullCheckins,
       state: G,
       save: function () { return S; },
       reset: function () { S = defSave(); persist(); }

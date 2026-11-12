@@ -19,9 +19,9 @@
 //      会把带 ?v= 的新脚本**预存**进缓存 —— 更新后的第一次启动也是秒开；
 //   3. skipWaiting + clients.claim 保证新 SW 立即接管。
 
-var CACHE_NAME = 'amy-english-v199';
+var CACHE_NAME = 'amy-english-v200';
 // 与 index.html 里 script src 的 ?v= 保持一致（发版时一起改这一个数字）。
-var V = 199;
+var V = 200;
 
 self.addEventListener('install', function(event) {
   event.waitUntil(
@@ -88,6 +88,31 @@ self.addEventListener('fetch', function(event) {
   // 走缓存就没意义了。直连网络，也不写回缓存。
   if (url.search.indexOf('vchk=') !== -1 || event.request.cache === 'no-store') {
     event.respondWith(fetch(event.request));
+    return;
+  }
+
+  // v200：页面导航（下拉刷新 / 从主屏打开）必须拿到线上最新首页。
+  // 以前首页也走 SWR —— 缓存先答旧版 index.html，引用的还是旧 ?v= 脚本，
+  // 于是「发版了、手机页面仍然没更新」，老师一刷新又被旧代码踢回周计划。
+  // 只对 HTML 导航改网络优先，脚本仍然 SWR，开屏速度不受影响。
+  var isNav = event.request.mode === 'navigate' ||
+              event.request.destination === 'document';
+  if (isNav) {
+    event.respondWith(
+      fetch(event.request).then(function (res) {
+        if (res && res.status === 200) {
+          var copy = res.clone();
+          caches.open(CACHE_NAME).then(function (c) {
+            return c.put(event.request, copy);
+          }).catch(function () {});
+        }
+        return res;
+      }).catch(function () {
+        return caches.match(event.request).then(function (c) {
+          return c || caches.match('./index.html');
+        });
+      })
+    );
     return;
   }
 

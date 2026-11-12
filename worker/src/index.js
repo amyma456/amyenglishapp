@@ -1958,8 +1958,15 @@ async function ensureGameScoresTable(db) {
 /**
  * 组一张「全班都在」的榜：名册里每个人必有一行，玩过的挂上积分，
  * 没玩过的是 0 分；积分表里历史遗留、名册里查无此人的行也不丢。
+ * v200：同一个孩子可能在报名 / 换设备时留下好几个编号，姓名一模一样。
+ * 按编号去重会让他出现两次（老师看到 14 人，其实只有 9 个孩子），
+ * 所以同名的几行合并成一人：积分相加、最高单轮取最大、轮数相加。
  * 按 class 过滤（不传就是全员），最后按总分降序、同分按姓名稳定排序。
  */
+function boardNameKey(name) {
+  return String(name || '').toLowerCase().replace(/[\s\u3000]+/g, '');
+}
+
 async function buildBoardRows(db, cls, serverDay) {
   await ensureGameScoresTable(db);
   const rosterR = await db.prepare(
@@ -1985,7 +1992,7 @@ async function buildBoardRows(db, cls, serverDay) {
      ORDER BY total DESC, updated_at ASC`
   ).all();
   const seen = Object.create(null);
-  const rows = [];
+  const raw = [];
   function push(row, active) {
     const sid = String(row.student_id || '').slice(0, 80);
     if (!sid || seen[sid]) return;
@@ -1994,7 +2001,7 @@ async function buildBoardRows(db, cls, serverDay) {
     if (active === 0) return;
     const klass = String(row.student_class || '').slice(0, 60);
     if (cls && klass !== cls) return;
-    rows.push({
+    raw.push({
       student_id: sid,
       student_name: String(row.student_name || '').slice(0, 60),
       student_class: klass,
@@ -2008,6 +2015,30 @@ async function buildBoardRows(db, cls, serverDay) {
   }
   ((rosterR && rosterR.results) || []).forEach(function (r) { push(r, r.active); });
   ((orphanR && orphanR.results) || []).forEach(function (r) { push(r, 1); });
+  // 先按分数降序：同名合并后留下的那个编号，应该是「有分」的账号，
+  // 否则孩子在本机按编号认领自己时会认到那条 0 分的重复行。
+  raw.sort(function (a, b) {
+    if (b.total !== a.total) return b.total - a.total;
+    return a.student_id < b.student_id ? -1 : (a.student_id > b.student_id ? 1 : 0);
+  });
+  const byName = Object.create(null);
+  const rows = [];
+  raw.forEach(function (item) {
+    const key = boardNameKey(item.student_name);
+    if (!key) { rows.push(item); return; }   // 没名字的脏行不做合并
+    const prev = byName[key];
+    if (!prev) { byName[key] = item; rows.push(item); return; }
+    // 多个注册编号 = 同一个孩子，分数不能丢，全部并到这一行。
+    prev.total += item.total;
+    prev.best = Math.max(prev.best, item.best);
+    prev.rounds += item.rounds;
+    prev.today_score += item.today_score;
+    prev.played = prev.played || item.played;
+    if (item.updated_at > prev.updated_at) prev.updated_at = item.updated_at;
+    if (String(item.student_name || '').length > String(prev.student_name || '').length) {
+      prev.student_name = item.student_name;
+    }
+  });
   rows.sort(function (a, b) {
     if (b.total !== a.total) return b.total - a.total;
     if (!!a.updated_at !== !!b.updated_at) return a.updated_at ? -1 : 1;

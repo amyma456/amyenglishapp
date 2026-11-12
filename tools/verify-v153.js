@@ -190,9 +190,9 @@ function part2() {
 
   console.log('\n== 6. 版本号 = 153 ==');
   {
-    ok(/app-version" content="199"/.test(htmlSrc), 'index.html meta = 153');
-    ok((htmlSrc.match(/\?v=199/g) || []).length >= 5, '脚本引用 ?v=199（' + (htmlSrc.match(/\?v=199/g) || []).length + ' 处）');
-    ok(/amy-english-v199/.test(swSrc) && /var V = 199;/.test(swSrc), 'sw.js 缓存名与 V = 153');
+    ok(/app-version" content="200"/.test(htmlSrc), 'index.html meta = 153');
+    ok((htmlSrc.match(/\?v=200/g) || []).length >= 5, '脚本引用 ?v=200（' + (htmlSrc.match(/\?v=200/g) || []).length + ' 处）');
+    ok(/amy-english-v200/.test(swSrc) && /var V = 200;/.test(swSrc), 'sw.js 缓存名与 V = 153');
   }
 
   console.log('');
