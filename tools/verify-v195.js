@@ -147,8 +147,10 @@ ok('api.js 提供上报/读榜，且断网返回 null 而不是空榜', () => {
   assert(/async reportGameScore\(body\)/.test(api), '缺上报方法');
   // v197：读榜改成 POST 带全班名册，方法签名多了一个 payload。
   assert(/async fetchGameScores\(payload\)/.test(api), '缺读榜方法');
+  // v197：读榜改 POST + 超时兜底 + 老接口回退，方法体比 v195 长，
+  // 窗口放宽到能同时看到主请求和回退请求。
   assert(/cache: 'no-store'/.test(api.slice(api.indexOf('async fetchGameScores'),
-    api.indexOf('async fetchGameScores') + 600)), '读榜必须绕过缓存');
+    api.indexOf('async fetchGameScores') + 1400)), '读榜必须绕过缓存');
   assert(/keepalive: true/.test(api.slice(api.indexOf('async reportGameScore'),
     api.indexOf('async reportGameScore') + 900)), '上报要用 keepalive');
 });

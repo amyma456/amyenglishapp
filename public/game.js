@@ -597,7 +597,7 @@
         var a = [], i, s;
         for (i = 0; i < all.length; i++) {
           s = all[i];
-          if (!s || !s.id || !s.class) continue;
+          if (!s || !s.id || !s.class || s.approved === false) continue;
           if (useCls && out.klass && s.class !== out.klass) continue;
           a.push({ id: String(s.id).slice(0, 80),
                    name: String(s.name || '').slice(0, 60),

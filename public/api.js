@@ -2848,28 +2848,39 @@ const Api = {
   // 否则孩子一离线就看到空榜，以为同学们的分数都没了。
   async fetchGameScores(payload) {
     payload = payload || {};
+    // 网络慢的时候，一次挂住的请求不能把 10 秒一次的自动刷新永久堵住。
+    // 单趟 5 秒没回来就放弃，保留上一份榜，下一轮再试。
+    const timed = (p) => Promise.race([
+      p, new Promise(r => setTimeout(() => r(null), 5000))
+    ]);
+    let out = null;
     try {
-      const res = await fetch(this._classUrl('/api/game-scores/board'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          class: payload.klass || '',
-          roster: payload.students || [],
-          authoritative: !!payload.authoritative,
-        }),
-        cache: 'no-store',
-      });
-      if (res.ok) {
+      out = await timed((async () => {
+        const res = await fetch(this._classUrl('/api/game-scores/board'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            class: payload.klass || '',
+            roster: payload.students || [],
+            authoritative: !!payload.authoritative,
+          }),
+          cache: 'no-store',
+        });
+        if (!res.ok) return null;
         const d = await res.json();
-        if (d && Array.isArray(d.rows)) return d;
-      }
-    } catch (e) { /* 落到下面的老接口兜底 */ }
+        return (d && Array.isArray(d.rows)) ? d : null;
+      })());
+    } catch (e) { out = null; }
+    if (out) return out;
     try {
-      const res = await fetch(this._classUrl('/api/game-scores'), { cache: 'no-store' });
-      if (!res.ok) return null;
-      const d = await res.json();
-      return (d && Array.isArray(d.rows)) ? d : null;
-    } catch (e) { return null; }
+      out = await timed((async () => {
+        const res = await fetch(this._classUrl('/api/game-scores'), { cache: 'no-store' });
+        if (!res.ok) return null;
+        const d = await res.json();
+        return (d && Array.isArray(d.rows)) ? d : null;
+      })());
+    } catch (e) { out = null; }
+    return out;
   },
 
   // -- speech recognition -------------------------------------------------
