@@ -41,16 +41,16 @@ console.log('v195 · 基地 / 实时榜 / 快出分 / AI 合分校验');
 
 async function main() {
 // ---------------------------------------------------------------- 版本钉子
-ok('版本钉子全部升到 195（meta / 7 处 ?v= / SW / game.js 预缓存）', () => {
-  assert(/<meta name="app-version" content="195">/.test(html), 'index.html meta 没升');
+ok('版本钉子全部升到 196（meta / 7 处 ?v= / SW / game.js 预缓存）', () => {
+  assert(/<meta name="app-version" content="196">/.test(html), 'index.html meta 没升');
   const vs = html.match(/<script defer src="[^"]+\?v=(\d+)"/g) || [];
   assert.strictEqual(vs.length, 7, '脚本引用应是 7 处，实际 ' + vs.length);
-  vs.forEach(s => assert(/\?v=195"/.test(s), '还有旧版本：' + s));
-  assert(/var CACHE_NAME = 'amy-english-v195'/.test(sw), 'SW CACHE_NAME 没升');
-  assert(/var V = 195;/.test(sw), 'SW V 没升');
+  vs.forEach(s => assert(/\?v=196"/.test(s), '还有旧版本：' + s));
+  assert(/var CACHE_NAME = 'amy-english-v196'/.test(sw), 'SW CACHE_NAME 没升');
+  assert(/var V = 196;/.test(sw), 'SW V 没升');
   assert(/\.\/game\.js\?v=' \+ V/.test(sw), 'SW 没预缓存 game.js');
-  const gi = html.indexOf('src="game.js?v=195"');
-  const ai = html.indexOf('src="app.js?v=195"');
+  const gi = html.indexOf('src="game.js?v=196"');
+  const ai = html.indexOf('src="app.js?v=196"');
   assert(gi > 0 && ai > gi, 'game.js 必须排在 app.js 之前');
 });
 

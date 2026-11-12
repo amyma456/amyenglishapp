@@ -45,7 +45,22 @@
     comboCap: 10,            // 连击加成封顶
     starBonus: 30,           // 星星题答对额外分
     // 错题回炉权重：错得越多，游戏里越优先抽自己错过的词
-    reviewMin: 0.35, reviewPerWrong: 0.05, reviewMax: 0.80
+    reviewMin: 0.35, reviewPerWrong: 0.05, reviewMax: 0.80,
+    // ---- v196 · 防乱点：想好了再点，连续点对才高分 --------------------
+    // 家长 2026-11-12：「玩游戏点单词不能乱点，要想一下才能点，就是连续
+    //   点出正确答案，这种得分上面受影响。」
+    // 以前四个选项点错只变灰、还能接着蒙，最坏 4 次必中；秒点也拿满分。
+    // 现在一题只有一次机会，且出题后先给一段「看题时间」。
+    thinkMs: 700,            // 出题后这段时间内点了不算，先看清单词
+    rushMs: 1300,            // 出题后 1.3 秒内点 = 抢点，低分 + 连击冻结
+    rushScore: 4,            // 抢点答对只拿 4 分（稳稳点对是 10 分起）
+    wrongPauseMs: 900,       // 点错后亮出正确答案、停留一下再换题
+    tapGapMs: 380,           // 两次点击间隔小于此值，后一次直接忽略
+    chainFrom: 3,            // 连续稳稳点对 3 题起，每题再加
+    chainBonus: 5,
+    missPenalty: 0.15,       // 每点错 1 次，轮末补给少发 15%
+    rushPenalty: 0.08,       // 每抢点 1 次，轮末补给少发 8%
+    penaltyCap: 0.60         // 最多扣 60%，不把孩子扣到 0 分劝退
   };
   var STORE_KEY     = 'amy_wordgame_v1';
   var MAX_SEC       = CFG.maxSec;
@@ -420,11 +435,17 @@
     roundEndAt: 0,
     timer: null,
     q: null,
+    qShownAt: 0,         // 这一题出现的时间（思考闸门 / 抢点判定都看它）
+    answered: false,     // 一题只能答一次，点过就不再受理
     score: 0,            // 本轮已得分
     combo: 0,
     maxCombo: 0,
     correct: 0,
     starHit: 0,
+    misses: 0,           // 本轮点错次数
+    rush: 0,             // 本轮「没想好就点」次数
+    lastTapAt: 0,        // 连点保护
+    hint: '', hintUntil: 0,
     locked: false,
     last: null,          // 上一轮结算
     started: false
@@ -831,12 +852,14 @@
     // 玩法
     h += '<div class="wg-card wg-rules">';
     h += '<div class="wg-card-hd"><span>📖 基地作战手册</span></div>';
-    h += '<div class="wg-rule"><span>①</span>点对一个 +' + CFG.baseScore +
-      ' 分，点错不扣分，只是连击断掉，基地照样欢迎你继续点。</div>';
-    h += '<div class="wg-rule"><span>②</span>连续点对，补给站的连击加成最高每题再加 ' + CFG.comboCap + ' 分。</div>';
-    h += '<div class="wg-rule"><span>③</span>金色星星 ⭐ 是基地空投，额外 +' + CFG.starBonus +
-      ' 分；返航时按答对数和最高连击再发补给。</div>';
-    h += '<div class="wg-rule"><span>④</span>一轮 ' + fmt(ROUND_MS) +
+    h += '<div class="wg-rule"><span>①</span>每题先亮「🔭 雷达扫描」，看清单词再点；抢着点只拿 ' +
+      CFG.rushScore + ' 分，连击也不涨。</div>';
+    h += '<div class="wg-rule"><span>②</span>一题只有一次机会：点错就亮出正确答案，这题 0 分、连击清零，不能挨个蒙。</div>';
+    h += '<div class="wg-rule"><span>③</span>稳稳点对 +' + CFG.baseScore + ' 起，连击每题最多再加 ' +
+      CFG.comboCap + ' 分；连对 ' + CFG.chainFrom + ' 题起，每题再 +' + CFG.chainBonus + ' 分。</div>';
+    h += '<div class="wg-rule"><span>④</span>⭐ 基地空投额外 +' + CFG.starBonus +
+      ' 分；返航按答对数和最高连击发补给，但乱点会扣掉一部分。</div>';
+    h += '<div class="wg-rule"><span>⑤</span>一轮 ' + fmt(ROUND_MS) +
       '，今天错过的单词会被雷达优先锁定，错得越多练得越准。</div>';
     h += '</div>';
 
@@ -844,7 +867,7 @@
       h += '<div class="wg-card"><div class="wg-card-hd"><span>📜 基地航行日志</span></div><div class="wg-hist">';
       S.history.slice(0, 5).forEach(function (r) {
         h += '<div class="wg-hist-row"><span>第 ' + r.n + ' 次出击 · 答对 ' + r.c + ' 题 · 连击 ' + r.combo +
-          '</span><b>+' + r.s + '</b></div>';
+          (r.slip ? ' · 乱点 ' + r.slip + ' 次' : ' · 稳稳作答') + '</span><b>+' + r.s + '</b></div>';
       });
       h += '</div></div>';
     }
@@ -887,7 +910,9 @@
          (q.review ? '<span class="wg-tag wg-tag-review">🔁 雷达锁定 · 今天错过的词</span>' : '') + '</div>';
     h += '<div class="wg-qtitle">' + esc(q.title) + '</div>' +
          '<div class="wg-qsub">' + esc(q.sub) + '</div></div>';
-    h += '<div class="wg-opts">';
+    // v196：出题后先亮「雷达扫描」，这段时间点了不算，逼孩子先看一眼单词。
+    h += '<div class="wg-think wg-think-wait" id="wg-think">🔭 先看一眼，想好了再点…</div>';
+    h += '<div class="wg-opts wg-opts-wait" id="wg-opts">';
     q.options.forEach(function (o, i) {
       h += '<button class="wg-opt' + (o.used ? ' wg-opt-wrong' : '') +
         '" data-wg="opt" data-wg-v="' + i + '">' +
@@ -895,7 +920,7 @@
     });
     h += '</div>';
     h += '<div class="wg-bottom">' +
-      '<span class="wg-note">📻 点对 +' + CFG.baseScore + ' · 连击加成 · 空投 +' + CFG.starBonus + '</span>' +
+      '<span class="wg-note">📻 想好再点 +' + CFG.baseScore + ' 起 · 连着点对更高 · 空投 +' + CFG.starBonus + '</span>' +
       '<button class="wg-link" data-wg="end">返航结算</button></div>';
     return h;
   }
@@ -912,6 +937,14 @@
     h += '<div class="wg-result-score">+' + l.score + '<span> 分</span></div>';
     h += '<div class="wg-result-detail">答对 ' + l.correct + ' 题 · 最高连击 ×' + l.combo +
       ' · 星星 ' + l.star + ' 颗 · 轮末奖励 +' + l.bonus + '</div>';
+    // v196：把「乱点让分数变少」直接摆给孩子看，比讲道理管用。
+    if (l.slip > 0) {
+      h += '<div class="wg-note wg-slip">⚡ 本轮有 <b>' + l.slip +
+        '</b> 次没想好就点，轮末补给少发 <b>' + (l.lost || 0) +
+        '</b> 分。稳一点、连着点对，分数会高很多。</div>';
+    } else {
+      h += '<div class="wg-note wg-good">🎯 全程稳稳作答，补给全额发放！</div>';
+    }
     h += '<div class="wg-total-line">累计 <b>' + S.total + '</b> 分 · ' + lv.icon + ' ' + lv.name + '</div>';
     var rk = myRank();
     if (rk.rank > 0) {
@@ -992,6 +1025,39 @@
     if (a) a.innerHTML = fmt(leftRound);
     if (b) b.innerHTML = fmt(Math.max(0, leftMs() - (G.roundMs - leftRound)));
     if (bar) bar.style.width = clamp(leftRound / (G.roundMs || 1) * 100, 0, 100) + '%';
+    paintThink();
+  }
+
+  /** v196 · 思考闸门的可视状态：每 100ms 由 paintClock 驱动，不整页重绘。 */
+  function paintThink() {
+    if (G.phase !== 'playing') return;
+    var el = document.getElementById('wg-think');
+    var box = document.getElementById('wg-opts');
+    if (!el) return;
+    var now = Date.now();
+    var wait = CFG.thinkMs - (now - G.qShownAt);
+    if (G.hint && now < G.hintUntil) {
+      el.className = 'wg-think wg-think-hint';
+      el.innerHTML = esc(G.hint);
+    } else {
+      G.hint = '';
+      if (wait > 0) {
+        el.className = 'wg-think wg-think-wait';
+        el.innerHTML = '🔭 先看一眼，想好了再点…';
+      } else {
+        el.className = 'wg-think wg-think-go';
+        el.innerHTML = '✅ 想好了就点，连着点对分数更高';
+      }
+    }
+    // 闸门期间按钮半透明（仍能点，但点了会收到「先看一眼」的提示）。
+    if (box) box.className = 'wg-opts' + (wait > 0 ? ' wg-opts-wait' : '');
+  }
+
+  /** 一句短播报，1.3 秒后自动回到闸门状态 */
+  function hint(t) {
+    G.hint = t;
+    G.hintUntil = Date.now() + 1300;
+    paintThink();
   }
 
   function updateHud() {
@@ -1026,6 +1092,23 @@
   }
 
   // ------------------------------------------------------------------ 流程
+  /** v196：统一出题，重置这一题的思考闸门与「只能答一次」状态 */
+  function armQuestion() {
+    G.q = makeQuestion();
+    G.qShownAt = Date.now();
+    G.answered = false;
+    G.locked = false;
+    G.hint = '';
+    G.hintUntil = 0;
+  }
+
+  function nextQuestion() {
+    if (G.phase !== 'playing') return;
+    if (Date.now() >= G.roundEndAt) { endRound('time'); return; }
+    armQuestion();
+    paint();
+  }
+
   function startRound() {
     ensureDay();
     if (!G.info) G.info = todayInfo();
@@ -1036,8 +1119,9 @@
     G.roundMs = Math.min(ROUND_MS, leftMs());
     G.roundEndAt = Date.now() + G.roundMs;
     G.score = 0; G.combo = 0; G.maxCombo = 0; G.correct = 0; G.starHit = 0;
+    G.misses = 0; G.rush = 0; G.lastTapAt = 0;
     G.locked = false; G.started = true;
-    G.q = makeQuestion();
+    armQuestion();
     G.call = callOf(START_CALLS);
     G.phase = 'playing';
     paint();
@@ -1050,37 +1134,74 @@
     G.timer = self;
   }
 
+  /**
+   * v196 · 想好了再点（家长 2026-11-12）
+   * 旧逻辑的漏洞：四个选项点错只变灰、还能接着蒙，最坏 4 次必中；秒点也拿
+   * 满分。现在：
+   *   ① 出题后 thinkMs 内点了不算（先看一眼单词）；
+   *   ② 两次点击挨太近，后一次也不算（连点保护）；
+   *   ③ 一题只答一次：点错就亮出正确答案、本题 0 分、连击清零；
+   *   ④ 抢点（rushMs 内）答对只拿 rushScore，且连击冻结，不给链奖励；
+   *   ⑤ 稳稳答对才涨连击、吃连击加成，连到 chainFrom 题起再加链奖励。
+   * 乱点次数还会让轮末补给打折 —— 「得分上面受影响」是看得见的。
+   */
   function pickOption(i) {
-    if (G.phase !== 'playing' || G.locked || !G.q) return;
+    if (G.phase !== 'playing' || G.locked || G.answered || !G.q) return;
+    var now = Date.now();
+    var dt = now - G.qShownAt;
+    if (dt < CFG.thinkMs) { hint('🔭 先看一眼单词，别急着点'); return; }
+    if (now - (G.lastTapAt || 0) < CFG.tapGapMs) { hint('慢一点，想好了再点'); return; }
     var o = G.q.options[i];
-    if (!o || o.used) return;
-    var el = optEl(i);
+    if (!o) return;
+    G.lastTapAt = now;
+    var el = optEl(i), j, right = -1, rightEl;
+    for (j = 0; j < G.q.options.length; j++) if (G.q.options[j].correct) right = j;
+    var rushed = dt < CFG.rushMs;
+    var isStar = !!G.q.star;
+    G.answered = true;
+    G.locked = true;
+
     if (o.correct) {
-      G.locked = true;
-      G.combo += 1;
-      if (G.combo > G.maxCombo) G.maxCombo = G.combo;
       G.correct += 1;
-      var isStar = !!G.q.star;
-      var gain = CFG.baseScore + Math.min(CFG.comboCap, (G.combo - 1) * CFG.comboStep);
-      if (isStar) { gain += CFG.starBonus; G.starHit += 1; beep('star'); }
-      else beep('good');
+      var gain;
+      if (rushed) {
+        // 没想好就蒙对了：只给一点分，连击不涨也不断，星星空投也不发。
+        G.rush += 1;
+        gain = CFG.rushScore;
+        beep('good');
+        hint('⚡ 太快啦！想一下再点能拿更多分');
+      } else {
+        G.combo += 1;
+        if (G.combo > G.maxCombo) G.maxCombo = G.combo;
+        gain = CFG.baseScore + Math.min(CFG.comboCap, (G.combo - 1) * CFG.comboStep) +
+               (G.combo >= CFG.chainFrom ? CFG.chainBonus : 0);
+        if (isStar) { gain += CFG.starBonus; G.starHit += 1; beep('star'); }
+        else beep('good');
+        hint(G.combo >= CFG.chainFrom
+          ? '🔥 连对 ' + G.combo + ' 题，补给加码！'
+          : '✅ 点对啦，连着点对分数更高');
+      }
       G.score += gain;
-      if (el) el.className += ' wg-opt-correct';
-      floatScore(el, '+' + gain + (isStar ? ' ⭐' : ''), isStar ? 'star' : '');
+      if (el) el.className += rushed ? ' wg-opt-correct wg-opt-rush' : ' wg-opt-correct';
+      floatScore(el, '+' + gain + (isStar && !rushed ? ' ⭐' : ''),
+                 isStar && !rushed ? 'star' : '');
       updateHud();
-      setTimeout(function () {
-        if (G.phase !== 'playing') return;
-        G.q = makeQuestion();
-        G.locked = false;
-        paint();
-      }, isStar ? 430 : 330);
+      setTimeout(nextQuestion, isStar && !rushed ? 430 : 330);
     } else {
       o.used = true;
       G.combo = 0;
+      G.misses += 1;
       beep('bad');
       if (el) el.className += ' wg-opt-wrong';
-      floatScore(el, '连击断啦，基地等你再连一次', 'bad');
+      rightEl = optEl(right);
+      if (rightEl && rightEl !== el) rightEl.className += ' wg-opt-answer';
+      floatScore(el, '这题 0 分', 'bad');
+      hint(right >= 0
+        ? '❌ 正确答案：' + G.q.options[right].text + ' · 这题 0 分，下一题想好再点'
+        : '❌ 这题 0 分，下一题想好再点');
       updateHud();
+      // 亮出正确答案停一下，让孩子真的看一眼再进下一题。
+      setTimeout(nextQuestion, CFG.wrongPauseMs);
     }
   }
 
@@ -1092,16 +1213,24 @@
       ? G.roundMs
       : clamp(G.roundMs - Math.max(0, G.roundEndAt - Date.now()), 0, G.roundMs);
     S.usedMs = Math.min(G.allowanceMs, S.usedMs + Math.max(elapsed, 0));
-    var bonus = G.correct * 2 + G.maxCombo * 3 + (G.maxCombo >= 5 ? 20 : 0) + G.starHit * 5;
+    // v196：轮末补给按「没想好就点」的次数打折。点错一次少 15%，抢点一次
+    // 少 8%，最多扣 60% —— 乱点刷分在结算页会直接看到少发了多少分。
+    var rawBonus = G.correct * 2 + G.maxCombo * 3 + (G.maxCombo >= 5 ? 20 : 0) + G.starHit * 5;
+    var slip = G.misses + G.rush;
+    var cut = Math.min(CFG.penaltyCap, G.misses * CFG.missPenalty + G.rush * CFG.rushPenalty);
+    var bonus = Math.max(0, Math.round(rawBonus * (1 - cut)));
+    var lost = Math.max(0, rawBonus - bonus);
     var score = G.score + bonus;
     S.total += score;
     S.todayScore += score;
     S.rounds += 1;
     if (score > S.best) S.best = score;
-    S.history.unshift({ d: todayStr(), n: G.roundNo, s: score, c: G.correct, combo: G.maxCombo });
+    S.history.unshift({ d: todayStr(), n: G.roundNo, s: score, c: G.correct,
+                        combo: G.maxCombo, slip: slip });
     if (S.history.length > 8) S.history = S.history.slice(0, 8);
     persist();
-    G.last = { score: score, bonus: bonus, correct: G.correct, combo: G.maxCombo, star: G.starHit };
+    G.last = { score: score, bonus: bonus, correct: G.correct, combo: G.maxCombo,
+               star: G.starHit, slip: slip, lost: lost, rawBonus: rawBonus };
     G.cheer = callOf(CHEERS);
     // v195：这一轮的分数立刻送后台，别的手机马上能看到名次变化。
     // 断网就先排队，回前台 / 每 15 秒 / 下次打开都会自动补发。
@@ -1186,6 +1315,11 @@
       buildPool: buildPool,
       endRound: endRound,
       startRound: startRound,
+      // v196：校验脚本要能真点一次按钮，而不是只看代码文本
+      pickOption: pickOption,
+      armQuestion: armQuestion,
+      nextQuestion: nextQuestion,
+      playHtml: playHtml,
       boardHtml: boardHtml,
       baseCardHtml: baseCardHtml,
       state: G,

@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="195">
+<meta name="app-version" content="196">
 <link rel="manifest" href="manifest.json">
 <!-- v135：登录第一步就是调 api.amyeng.top 验手机号。提前把 DNS + TLS
      握手做掉，接口首调能省几百毫秒 —— 手机弱网下这几百毫秒很显眼。 -->
@@ -1513,6 +1513,25 @@ body.perf-on .content-area{padding-bottom:54vh}
   .wg-rank{width:28px;flex-basis:28px}
   .wg-rank-strip{font-size:12px}
 }
+/* ==========================================================================
+   v196 · 想好了再点（防乱点）
+   沿用 v194/v195 的浅色变量；只用普通类选择器，不引入新选择器语法、
+   不单写新视口单位，老华为浏览器 / 平板自带浏览器都能正常渲染。
+   ========================================================================== */
+.wg-think{text-align:center;font-size:12px;font-weight:800;line-height:1.5;
+  min-height:26px;padding:5px 10px;margin:0 0 10px;border-radius:10px;
+  border:1px solid #FFE0B2;background:#FFF7ED;color:#9A5B00}
+.wg-think-wait{background:#FFF7ED;border-color:#FFE0B2;color:#9A5B00}
+.wg-think-go{background:#F6FFED;border-color:#B7EB8F;color:#237804}
+.wg-think-hint{background:#FFFBE6;border-color:#FFE58F;color:#AD6800}
+.wg-opts-wait .wg-opt{opacity:.55;border-style:dashed}
+.wg-opt-answer{background:#F6FFED;border-color:#52C41A;color:#237804;
+  animation:wg-pop .2s ease-out}
+.wg-opt-rush{background:#FFFBE6;border-color:#FADB14;color:#AD6800}
+.wg-slip{background:#FFF1F0;border:1px solid #FFCCC7;border-radius:10px;
+  padding:7px 10px;color:#A8071A;margin:6px 0}
+.wg-good{background:#F6FFED;border:1px solid #B7EB8F;border-radius:10px;
+  padding:7px 10px;color:#237804;margin:6px 0}
 </style>
 </head>
 <body>
@@ -1732,9 +1751,9 @@ body.perf-on .content-area{padding-bottom:54vh}
 </div>
 
 <script>window.__appReady = false;</script>
-<script defer src="cloud.js?v=195"></script>
-<script defer src="data.js?v=195"></script>
-<script defer src="data-shuffle.js?v=195"></script>
+<script defer src="cloud.js?v=196"></script>
+<script defer src="data.js?v=196"></script>
+<script defer src="data-shuffle.js?v=196"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
 <!--
   ?v= 必须跟着版本号走（v124 修正）。
@@ -1744,13 +1763,13 @@ body.perf-on .content-area{padding-bottom:54vh}
   这个坑很隐蔽：代码明明改了、也部署上去了，手机上跑的还是几个月前的逻辑。
   以后每次发版，这里跟着 app-version 一起改。
 -->
-<script defer src="recorder.js?v=195"></script>
-<script defer src="api.js?v=195"></script>
+<script defer src="recorder.js?v=196"></script>
+<script defer src="api.js?v=196"></script>
 <!-- v194：小游戏独立成文件，不塞进已经 800KB 的 app.js。必须排在 app.js
      **前面**：app.js 顶层有同步初始化，登录回来若正好停在「单词乐园」，
      渲染时 WordGame 得已经存在。game.js 只在被点击/渲染时才读 window.App。 -->
-<script defer src="game.js?v=195"></script>
-<script defer src="app.js?v=195"></script>
+<script defer src="game.js?v=196"></script>
+<script defer src="app.js?v=196"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {
