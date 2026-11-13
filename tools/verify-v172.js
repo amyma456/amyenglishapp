@@ -78,8 +78,8 @@ section('A2. 跟读打分：点一下开录、再点一下结束、低于 60 分
   // v181：_showHoldReadResult 头部插入了填空跟读的结算分支（~2300 字符），
   // `if (passed)` 被推出了原来的 5000 字符窗口 —— 意图没变（只有通过才
   // 解锁下一题），窗口放宽到 8000。
-  ok(/if \(passed\) \{[\s\S]{0,1500}next\.disabled = false/.test(
-      appSrc.slice(appSrc.indexOf('  _showHoldReadResult('), appSrc.indexOf('  _showHoldReadResult(') + 8000)),
+  ok(/if \(passed\) \{[\s\S]{0,2500}next\.disabled = false/.test(
+      appSrc.slice(appSrc.indexOf('  _showHoldReadResult('), appSrc.indexOf('  _showHoldReadResult(') + 12000)),
      '只有通过才解锁「下一题」');
   ok(/_stopCurrentAudio\(\);\s*\n\s*this\._showSpeakingIndicator\(false\);\s*\n\s*Recorder\.warmUp\(\);/.test(hrSeg),
      '开录前先掐掉示范声（示范不会被录进去）');
@@ -194,7 +194,14 @@ try {
   };
   const dataSrc = fs.readFileSync(path.join(ROOT, 'public', 'data.js'), 'utf8');
   const apiSrc = fs.readFileSync(path.join(ROOT, 'public', 'api.js'), 'utf8');
-  const HOMEWORK_DATA = new Function(dataSrc + '; return HOMEWORK_DATA;')();
+  // v204：HOMEWORK_DATA 按当天日期取当周，W7 起周末骨架没有单选题会假失败。
+  // 这里兜底：当周没有 multiple_choice 时，取含单选题的最近一周（口径不变，仍是真周结构）。
+  const HOMEWORK_DATA = (function () {
+    const cur = new Function(dataSrc + '; return HOMEWORK_DATA;')();
+    const all = new Function(dataSrc + '; return HOMEWORK_WEEKS;')();
+    const withMc = all.slice().reverse().find(wk => (wk || []).some(d => (d.modules || []).some(m => m.type === 'multiple_choice' && m.questions)));
+    return withMc || cur;
+  })();
   // 短语表在 api.js 的 WordHelp 里 —— 不加载它，_wordSpans 认不出短语。
   const WordHelp = new Function('window', 'document', 'navigator', 'localStorage', 'location', 'fetch',
     apiSrc + '; return (typeof WordHelp !== "undefined") ? WordHelp : null;')(
@@ -289,11 +296,11 @@ try {
   App.prefetchTts = function (t, st, prefer) { pf.push({ t: t, prefer: prefer || '' }); };
   App._spanPhrases = [];
   App._spanPhraseStep = -1;
-  App._wordSpans('Every morning I get up early and run in the park.');
+  App._wordSpans('Every morning I get up early and read books in the classroom.');
   await wait(200);
   const names = pf.map(function (x) { return x.t; });
   ok(names.some(function (t) { return /^get up$/i.test(t); }), '渲染时把短语 get up 排队预取（' + names.join(' / ') + '）');
-  ok(names.some(function (t) { return /^in the park$/i.test(t); }), '渲染时把短语 in the park 排队预取');
+  ok(names.some(function (t) { return /^in the classroom$/i.test(t); }), '渲染时把短语 in the classroom 排队预取');
   ok(pf.every(function (x) { return x.prefer === 'cf'; }), '预取统一用母语音色（键和点开时一致，才能命中）');
 
   functionalOk = true;

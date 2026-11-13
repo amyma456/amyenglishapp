@@ -1,0 +1,247 @@
+{
+ "day_cn": "周六",
+ "day_en": "Saturday",
+ "theme_cn": "AI口语 + 高频词汇 + 阅读理解（深海探测） + 键盘拼写",
+ "reading_name": "阅读理解 · 深海探测",
+ "spell_name": "今天学的词，敲一遍",
+ "speaking": [
+  {
+   "sentence": "What sea animals do you like best? Why?",
+   "sentence_cn": "你最喜欢哪种海洋动物？为什么？",
+   "options": [
+    "I like whales best, because they are the biggest animals in the sea.",
+    "Whales live in the ocean.",
+    "The sea is very big and deep.",
+    "I saw fish at the aquarium last year."
+   ],
+   "options_cn": [
+    "我最喜欢鲸鱼，因为它们是海里最大的动物。",
+    "鲸鱼住在大海里。",
+    "大海又大又深。",
+    "去年我在海洋馆看过鱼。"
+   ],
+   "answer": 0,
+   "pronunciation_tips": "whales /weɪlz/ 的 w 不发音，biggest 双写 g，ocean /ˈəʊʃn/ 读两个字",
+   "explanation_cn": "问最喜欢哪种 + 为什么，答句要选一种并给理由。A 点名鲸鱼并说明原因；B 只是介绍；C 说海；D 讲经历，都没有回答「最喜欢什么」。",
+   "answer_cn_hint": "先说 I like … best，再用 because 说一条理由，比如最大、最聪明。"
+  },
+  {
+   "sentence": "Would you like to dive under the sea? Why or why not?",
+   "sentence_cn": "你想潜到海面下去看看吗？为什么？",
+   "options": [
+    "Yes, I would love to see the colourful coral and the little fish.",
+    "Divers need to learn swimming first.",
+    "The sea water is salty.",
+    "My cousin can swim very well."
+   ],
+   "options_cn": [
+    "想，我很想看看五颜六色的珊瑚和小鱼。",
+    "潜水员要先学会游泳。",
+    "海水是咸的。",
+    "我表哥游泳游得很好。"
+   ],
+   "answer": 0,
+   "pronunciation_tips": "dive /daɪv/ 长音，coral /ˈkɒrəl/ 两个字，colourful 重音在最前",
+   "explanation_cn": "问想不想 + 为什么，答句先表态再给理由。A 有 Yes 和想看的东西；B、D 说别人；C 说海水，都没有正面回答。",
+   "answer_cn_hint": "先说 Yes 或 No，再用 because 说想看什么、或者怕什么。"
+  },
+  {
+   "sentence": "What can we do to keep the sea clean?",
+   "sentence_cn": "我们能做些什么让大海保持干净？",
+   "options": [
+    "We can stop throwing plastic bottles into the sea and join beach clean-up days.",
+    "The sea is blue and beautiful.",
+    "Many ships sail on the sea.",
+    "Fish need water to live."
+   ],
+   "options_cn": [
+    "我们可以不往海里扔塑料瓶，还可以参加海滩清洁日活动。",
+    "大海是蓝色的，很美。",
+    "很多船在海面上航行。",
+    "鱼儿靠水才能活。"
+   ],
+   "answer": 0,
+   "pronunciation_tips": "throwing /ˈfrəʊɪŋ/ 的 th 咬舌，clean-up 连读，beach 与 bitch 音要分清",
+   "explanation_cn": "How 问方法，答句要给具体做法。A 给了两条；B 是描写；C 说船；D 说鱼，都没有回答「怎么做」。",
+   "answer_cn_hint": "用 We can + 动词原形说出具体的事，比如不扔垃圾、捡沙滩上的塑料瓶。"
+  },
+  {
+   "sentence": "If you could take a deep-sea ship, what would you want to see?",
+   "sentence_cn": "如果你能坐深海潜水器，你想看什么？",
+   "options": [
+    "I would want to see the strange fish that glow in the dark water.",
+    "Deep-sea ships are very expensive.",
+    "I took a ship to Dalian last summer.",
+    "The sea is home to many animals."
+   ],
+   "options_cn": [
+    "我想看在黑暗的海水里发光的怪鱼。",
+    "深海潜水器非常贵。",
+    "去年夏天我坐船去了大连。",
+    "大海是很多动物的家园。"
+   ],
+   "answer": 0,
+   "pronunciation_tips": "strange /streɪndʒ/ 词尾 /dʒ/，glow 读 /ɡləʊ/，dark 词尾 r 卷舌",
+   "explanation_cn": "假设句用 I would want to… 回答。A 说出想看的东西；B 说价格；C 讲过去的经历；D 介绍大海，都没回答「想看什么」。",
+   "answer_cn_hint": "用 I would want to see… 说出深海里你最想看的东西，比如发光的鱼、珊瑚。"
+  },
+  {
+   "sentence": "Why is the deep sea hard to visit?",
+   "sentence_cn": "为什么深海很难到达？",
+   "options": [
+    "Because the water there presses down with a very heavy weight, and it is completely dark.",
+    "Because ships are too small for children.",
+    "Because the sea is far from my city.",
+    "Because fish swim very fast."
+   ],
+   "options_cn": [
+    "因为那里的海水压下来特别重，而且一片漆黑。",
+    "因为船对小朋友来说太小了。",
+    "因为大海离我的城市很远。",
+    "因为鱼游得很快。"
+   ],
+   "answer": 0,
+   "pronunciation_tips": "presses /ˈpresɪz/ 词尾 /ɪz/，weight 与 wait 同音，completely 重音在第二音节",
+   "explanation_cn": "Why 问原因，答句要用 Because 说清楚。A 说了水压大和黑暗两个原因；B、C、D 都不是深海难到的真正原因。",
+   "answer_cn_hint": "用 Because 说出水压大、没有光这两个困难。"
+  }
+ ],
+ "vocab": [
+  {
+   "word": "ocean",
+   "phonetic": "/ˈəʊʃn/",
+   "meaning": "海洋",
+   "emoji": "🌊",
+   "example_en": "The ocean covers most of the earth.",
+   "example_cn": "海洋覆盖了地球的大部分。",
+   "hint_cn": "比 sea 更大的那片蓝，四大洋的洋",
+   "syllables": [
+    "o",
+    "cean"
+   ]
+  },
+  {
+   "word": "diver",
+   "phonetic": "/ˈdaɪvə/",
+   "meaning": "潜水员",
+   "emoji": "🤿",
+   "example_en": "The diver swims with the fish under the sea.",
+   "example_cn": "潜水员和鱼群一起在海里游泳。",
+   "hint_cn": "dive 加 er，跳水潜水的人",
+   "syllables": [
+    "div",
+    "er"
+   ]
+  },
+  {
+   "word": "coral",
+   "phonetic": "/ˈkɒrəl/",
+   "meaning": "珊瑚",
+   "emoji": "🪸",
+   "example_en": "The coral under the sea looks like a colourful garden.",
+   "example_cn": "海底的珊瑚看起来像一座彩色的花园。",
+   "hint_cn": "海底长着的五颜六色的小树林",
+   "syllables": [
+    "cor",
+    "al"
+   ]
+  },
+  {
+   "word": "creature",
+   "phonetic": "/ˈkriːtʃə/",
+   "meaning": "生物；动物",
+   "emoji": "🦑",
+   "example_en": "Strange creatures live in the deep cold water.",
+   "example_cn": "深海冷水里住着奇怪的生物。",
+   "hint_cn": "深海里游的奇怪活物，比如章鱼和水母",
+   "syllables": [
+    "crea",
+    "ture"
+   ]
+  },
+  {
+   "word": "whale",
+   "phonetic": "/weɪl/",
+   "meaning": "鲸鱼",
+   "emoji": "🐳",
+   "example_en": "The whale is the biggest animal in the world.",
+   "example_cn": "鲸是世界上最大的动物。",
+   "hint_cn": "海里最大的哺乳动物，w 不发音",
+   "syllables": [
+    "whale"
+   ]
+  }
+ ],
+ "reading": {
+  "passage": "China's deep-sea ship Fendouzhe, which means striver, can dive more than ten thousand metres under the sea. In 2020, it carried three scientists down to the deepest place on the earth, the Mariana Trench. Down there, the water presses on the ship with a very heavy weight, like an elephant standing on a small table. The lights of the ship show us strange fish and soft coral that live in the dark cold water. Scientists take photos and bring back small samples to study. One day, maybe you will also take a ship and visit the deep blue sea.",
+  "passage_cn": "中国的深海潜水器「奋斗者号」名字的意思是努力奋斗的人，它能潜到海面下一万多米。2020 年，它载着三位科学家下到地球最深的地方——马里亚纳海沟。在那里，海水用非常大的重量压着潜水器，就像一头大象站在一张小桌上。潜水器的灯光让我们看到，黑暗冰冷的海水里住着奇怪的鱼和柔软的珊瑚。科学家们拍照，还带回小小的样本来研究。说不定有一天，你也能坐上潜水器，去看看深蓝色的大海。",
+  "questions": [
+   {
+    "question": "What does the name Fendouzhe mean?",
+    "options": [
+     "Striver",
+     "Snow dragon",
+     "Big whale",
+     "Deep sea"
+    ],
+    "answer": 0,
+    "explanation_cn": "第一句写 which means striver（意思是努力奋斗的人）。"
+   },
+   {
+    "question": "Where did Fendouzhe dive in 2020?",
+    "options": [
+     "To the Mariana Trench",
+     "To the South Pole",
+     "To a coral garden",
+     "To a big river"
+    ],
+    "answer": 0,
+    "explanation_cn": "第二句说 the deepest place on the earth, the Mariana Trench（地球最深处马里亚纳海沟）。"
+   },
+   {
+    "question": "What do the ship's lights show in the dark water?",
+    "options": [
+     "Strange fish and soft coral",
+     "Big ships and boats",
+     "Sandy beaches",
+     "Green trees"
+    ],
+    "answer": 0,
+    "explanation_cn": "第四句写 strange fish and soft coral（奇怪的鱼和柔软的珊瑚）。"
+   },
+   {
+    "question": "What do scientists bring back to study?",
+    "options": [
+     "Small samples",
+     "Big whales",
+     "Cameras",
+     "Colourful lights"
+    ],
+    "answer": 0,
+    "explanation_cn": "第五句说 bring back small samples to study（带回小样本来研究）。"
+   }
+  ]
+ },
+ "spell": [
+  {
+   "question": "海洋：o____ [填完整单词]",
+   "answer": "ocean",
+   "explanation_cn": "ocean 读 /ˈəʊʃn/；太平洋是 the Pacific Ocean。"
+  },
+  {
+   "question": "潜水员：d___ [填完整单词]",
+   "answer": "diver",
+   "explanation_cn": "dive 潜水 + er 人；diver 就是潜水员。"
+  },
+  {
+   "question": "珊瑚：c____ [填完整单词]",
+   "answer": "coral",
+   "explanation_cn": "coral 读 /ˈkɒrəl/；珊瑚礁是 coral reef。"
+  },
+  {
+   "question": "生物；动物：c_______ [填完整单词]",
+   "answer": "creature",
+   "explanation_cn": "crea + ture；sea creature 海洋生物。"
+  }
+ ]
+}

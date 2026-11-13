@@ -1,0 +1,137 @@
+{
+ "day_cn": "周日",
+ "day_en": "Sunday",
+ "theme_cn": "高频词汇 + 完形填空（科技馆研学日） + 键盘拼写",
+ "cloze_name": "完形填空 · 科技馆研学日",
+ "spell_name": "今天学的词，敲一遍",
+ "vocab": [
+  {
+   "word": "satellite",
+   "phonetic": "/ˈsætəlaɪt/",
+   "meaning": "卫星",
+   "emoji": "🛰️",
+   "example_en": "The satellite sends messages back to the earth.",
+   "example_cn": "卫星把信息发回地球。",
+   "hint_cn": "绕着地球转、帮我们导航的小机器",
+   "syllables": ["sat", "el", "lite"]
+  },
+  {
+   "word": "model",
+   "phonetic": "/ˈmɒdl/",
+   "meaning": "模型",
+   "emoji": "🚀",
+   "example_en": "We watched a model rocket fly up in the museum.",
+   "example_cn": "我们在博物馆看了一枚火箭模型飞起来。",
+   "hint_cn": "照着真东西做的小样品，role model 是榜样",
+   "syllables": ["mod", "el"]
+  },
+  {
+   "word": "battery",
+   "phonetic": "/ˈbætri/",
+   "meaning": "电池",
+   "emoji": "🔋",
+   "example_en": "The toy robot cannot move without a battery.",
+   "example_cn": "玩具机器人没有电池就动不了。",
+   "hint_cn": "给玩具和手机供电的小方块",
+   "syllables": ["bat", "te", "ry"]
+  },
+  {
+   "word": "wheel",
+   "phonetic": "/wiːl/",
+   "meaning": "轮子",
+   "emoji": "🛞",
+   "example_en": "The small robot has four wheels and runs fast.",
+   "example_cn": "小机器人有四个轮子，跑得很快。",
+   "hint_cn": "圆的、会转的，车靠它跑，wh 开头",
+   "syllables": ["wheel"]
+  },
+  {
+   "word": "package",
+   "phonetic": "/ˈpækɪdʒ/",
+   "meaning": "包裹",
+   "emoji": "📦",
+   "example_en": "The robot carried a heavy package to our door.",
+   "example_cn": "机器人把一个重包裹搬到了我家门口。",
+   "hint_cn": "打包好要送出的纸箱子",
+   "syllables": ["pack", "age"]
+  }
+ ],
+ "cloze": {
+  "passage": "Last Saturday our class visited the science museum in our city. At the gate, our teacher gave each of us a small 1___ and asked us to write down new words. First we watched a model rocket fly up, and the guide told us how satellites send 2___ to the earth. Then we saw a small robot with four wheels carry a heavy 3___ to the door. In the deep-sea room, a screen showed us the beautiful coral under the 4___ and a diver swimming beside the fish. My friend Tom said the penguin video was the 5___ part of the day. On the bus, we talked about the trip and promised to come 6___ soon.",
+  "passage_cn": "上个星期六，我们班参观了我们城市的科学博物馆。在门口，老师发给每个人一个小笔记本，让我们记下新单词。我们先看了一枚火箭模型飞起来，讲解员告诉我们卫星是怎样把信息发回地球的。接着我们看见一台有四个轮子的小机器人把一个重重的包裹搬到门口。在深海展区，一块大屏幕给我们看了海底美丽的珊瑚，还有一位潜水员在鱼群旁边游。我的朋友汤姆说，企鹅的视频是这一天最棒的部分。回程的公交车上，我们一路聊着这次参观，还约好很快再来一次。",
+  "sentences_cn": [
+   "上个星期六，我们班参观了我们城市的科学博物馆。",
+   "在门口，老师发给每个人一个小笔记本，让我们记下新单词。",
+   "我们先看了一枚火箭模型飞起来，讲解员告诉我们卫星是怎样把信息发回地球的。",
+   "接着我们看见一台有四个轮子的小机器人把一个重重的包裹搬到门口。",
+   "在深海展区，一块大屏幕给我们看了海底美丽的珊瑚，还有一位潜水员在鱼群旁边游。",
+   "我的朋友汤姆说，企鹅的视频是这一天最棒的部分。",
+   "回程的公交车上，我们一路聊着这次参观，还约好很快再来一次。"
+  ],
+  "questions": [
+   {
+    "question": "1___",
+    "options": ["notebook", "bottle", "ticket", "photo"],
+    "answer": 0,
+    "explanation_cn": "后面说 write down new words（记新单词），所以发给大家的是 notebook 笔记本。"
+   },
+   {
+    "question": "2___",
+    "options": ["messages", "money", "music", "medicine"],
+    "answer": 0,
+    "explanation_cn": "卫星把信息 send messages 发回地球；money 钱、music 音乐、medicine 药都不对。"
+   },
+   {
+    "question": "3___",
+    "options": ["package", "garden", "dinner", "jacket"],
+    "answer": 0,
+    "explanation_cn": "机器人送快递搬的是 package 包裹；其他三项不能被机器人搬到门口。"
+   },
+   {
+    "question": "4___",
+    "options": ["sea", "sky", "tree", "train"],
+    "answer": 0,
+    "explanation_cn": "珊瑚长在海里 under the sea；这是深海展区。"
+   },
+   {
+    "question": "5___",
+    "options": ["best", "better", "good", "well"],
+    "answer": 0,
+    "explanation_cn": "the 后面接最高级：the best part 最棒的部分。"
+   },
+   {
+    "question": "6___",
+    "options": ["again", "often", "early", "alone"],
+    "answer": 0,
+    "explanation_cn": "come again soon 很快再来一次，是道别时的常用说法。"
+   }
+  ]
+ },
+ "spell": [
+  {
+   "question": "卫星：s_________ [填完整单词]",
+   "answer": "satellite",
+   "explanation_cn": "sat + el + lite；北斗就是中国的 satellite navigation system。"
+  },
+  {
+   "question": "模型：m____ [填完整单词]",
+   "answer": "model",
+   "explanation_cn": "model rocket 火箭模型；作文里拼机器人 model。"
+  },
+  {
+   "question": "电池：b______ [填完整单词]",
+   "answer": "battery",
+   "explanation_cn": "周五作文里的词，battery 让机器人动起来。"
+  },
+  {
+   "question": "轮子：w____ [填完整单词]",
+   "answer": "wheel",
+   "explanation_cn": "wheel 读 /wiːl/，wh 开头 w 要发音。"
+  },
+  {
+   "question": "包裹：p______ [填完整单词]",
+   "answer": "package",
+   "explanation_cn": "pack 打包 + age；机器人搬的就是 package。"
+  }
+ ]
+}

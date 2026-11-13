@@ -116,6 +116,8 @@ try {
             IntersectionObserver, setTimeout, clearTimeout, setInterval, clearInterval, console,
             indexedDB, performance, Blob, FormData } = g;
     ${dataSrc}
+    if (typeof HOMEWORK_WEEKS !== 'undefined' && HOMEWORK_WEEKS.length)
+      HOMEWORK_DATA = HOMEWORK_WEEKS[HOMEWORK_WEEKS.length - 1]; // v204：固定测最新一周（当周随日期滚动，周末骨架无题会假失败）
     ${appSrc}
     return { App: App, HOMEWORK_DATA: HOMEWORK_DATA };
   `)(sandbox);

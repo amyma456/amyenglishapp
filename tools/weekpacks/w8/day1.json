@@ -1,0 +1,130 @@
+{
+ "day_cn": "周二",
+ "day_en": "Tuesday",
+ "theme_cn": "阅读理解（垃圾分类） + will/won't 语法 + 听力 + 键盘拼写",
+ "reading_name": "阅读理解 · 垃圾分类",
+ "grammar_name": "语法 · will / won't（一般将来时）",
+ "listening_name": "听力 · 垃圾分类站",
+ "spell_name": "今天学的词，敲一遍",
+ "reading": {
+  "passage": "In big cities like Shanghai, families sort their rubbish into four different bins every day. The blue bin takes paper, plastic bottles and glass, and the green bin takes fruit skins and leaves. The red bin is for things like old batteries, because they are bad for the earth. The grey bin takes other rubbish, such as used tissues and dirty paper cups. At my school, the students take turns to help younger kids sort their rubbish at lunch. Sorting rubbish keeps our city clean and gives old things a new life.",
+  "passage_cn": "在上海这样的大城市，每个家庭每天都要把垃圾分进四种不同的垃圾桶。蓝色垃圾桶收纸张、塑料瓶和玻璃，绿色垃圾桶收果皮和树叶。红色垃圾桶收旧电池这类东西，因为它们对地球有害。灰色垃圾桶收其他垃圾，比如用过的纸巾和脏纸杯。在我的学校，同学们中午轮流帮助低年级的小朋友给垃圾分类。垃圾分类让我们的城市保持干净，也让旧东西有了新的生命。",
+  "questions": [
+   {
+    "question": "How many bins do families sort rubbish into?",
+    "options": ["Four", "Two", "Six", "One"],
+    "answer": 0,
+    "explanation_cn": "第一句说 four different bins（四种不同的垃圾桶）。"
+   },
+   {
+    "question": "What goes into the blue bin?",
+    "options": ["Paper, plastic bottles and glass", "Fruit skins and leaves", "Old batteries", "Used tissues"],
+    "answer": 0,
+    "explanation_cn": "第二句说 blue bin 收 paper、plastic bottles 和 glass；果皮树叶进绿色桶。"
+   },
+   {
+    "question": "Why do old batteries go into the red bin?",
+    "options": ["Because they are bad for the earth", "Because they are very heavy", "Because they are big", "Because they smell bad"],
+    "answer": 0,
+    "explanation_cn": "第三句写 because they are bad for the earth（因为它们对地球有害）。"
+   },
+   {
+    "question": "What do the students take turns to do at lunch?",
+    "options": ["Help younger kids sort their rubbish", "Clean the grey bin", "Take the rubbish home", "Make paper cups"],
+    "answer": 0,
+    "explanation_cn": "第五句说 take turns to help younger kids sort their rubbish（轮流帮低年级小朋友分类）。"
+   }
+  ]
+ },
+ "grammar": [
+  {
+   "question": "选词填空（will / won't）：Tomorrow is my birthday, so Mum ___ make a big cake for me.",
+   "type": "fill",
+   "answer": "will",
+   "explanation_cn": "明天确实会发生的事用 will；肯定句直接敲小写 will。"
+  },
+  {
+   "question": "选词填空（will / won't）：Don't worry about that little dog; it ___ bite you.",
+   "type": "fill",
+   "answer": "won't",
+   "explanation_cn": "不会发生的用 won't = will not；小狗不会咬人。"
+  },
+  {
+   "question": "选词填空（will / won't）：Look at the black clouds! It ___ rain in a minute.",
+   "type": "fill",
+   "answer": "will",
+   "explanation_cn": "看到乌云推断马上要下雨，用 will 表示将要发生。"
+  },
+  {
+   "question": "选词填空（will / won't）：Lily is ill today, so she ___ come to school tomorrow.",
+   "type": "fill",
+   "answer": "won't",
+   "explanation_cn": "生病了所以明天不会来上学，用否定式 won't。"
+  },
+  {
+   "question": "选词填空（will / won't）：There ___ be a football game in our school next Friday.",
+   "type": "fill",
+   "answer": "will",
+   "explanation_cn": "There will be… 是固定句型，表示「下周将会有……」。"
+  },
+  {
+   "question": "选词填空（will / won't）：Practice more and you ___ swim better next month.",
+   "type": "fill",
+   "answer": "will",
+   "explanation_cn": "多练习，下个月你「就会」游得更好，肯定的意思用 will。"
+  }
+ ],
+ "listening": [
+  {
+   "question": "Listen to the dialogue. Where should the boy put the bottles?",
+   "audio_text": "Mum: We have two bottles and some old paper here. Boy: Shall I put them into the blue bin? Mum: Yes, and the fruit skins go into the green one.",
+   "options": ["Into the blue bin", "Into the green bin", "Into the red bin", "Into the grey bin"],
+   "answer": 0,
+   "explanation_cn": "男孩问能不能放进蓝桶，妈妈说 Yes，所以瓶子进 blue bin。"
+  },
+  {
+   "question": "Listen to the dialogue. How can the woman get to the rubbish station?",
+   "audio_text": "Woman: Excuse me, where is the nearest rubbish station? Man: Go along this street and turn left at the fruit shop. Woman: Thank you very much.",
+   "options": ["Turn left at the fruit shop", "Turn right at the school", "Go back home first", "Take a bus there"],
+   "answer": 0,
+   "explanation_cn": "男士说 Go along this street and turn left at the fruit shop（沿这条街走，在水果店左转）。"
+  },
+  {
+   "question": "Which picture matches the sentence you hear?",
+   "audio_text": "The boy is putting a plastic bottle into the blue bin.",
+   "options": ["🗑️", "📰", "🍎", "🚲"],
+   "picture_options": true,
+   "answer": 0,
+   "explanation_cn": "句子里说 putting a plastic bottle into the blue bin（把塑料瓶放进蓝色垃圾桶），所以选垃圾桶 🗑️。"
+  },
+  {
+   "type": "fill",
+   "question": "Listen and fill in the blank: Please sort the rubbish and keep our city ___.",
+   "audio_text": "Please sort the rubbish and keep our city clean.",
+   "answer": "clean",
+   "explanation_cn": "听到 keep our city clean（让我们的城市保持干净），所以填 clean。"
+  }
+ ],
+ "spell": [
+  {
+   "question": "分类；整理：s___ [填完整单词]",
+   "answer": "sort",
+   "explanation_cn": "sort rubbish 给垃圾分类；sort 也指「种类」，a kind of sort。"
+  },
+  {
+   "question": "垃圾桶：b__ [填完整单词]",
+   "answer": "bin",
+   "explanation_cn": "bin 就是垃圾桶，四个字母的单词最好记。"
+  },
+  {
+   "question": "塑料的：p_______ [填完整单词]",
+   "answer": "plastic",
+   "explanation_cn": "plas + tic；plastic bottles 塑料瓶，少用塑料袋就是 plastic bags。"
+  },
+  {
+   "question": "玻璃：g____ [填完整单词]",
+   "answer": "glass",
+   "explanation_cn": "glass 玻璃；一杯玻璃杯装的水是 a glass of water。"
+  }
+ ]
+}

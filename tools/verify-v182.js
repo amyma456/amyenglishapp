@@ -67,9 +67,9 @@ ok(d5ph.length === 4, '周六保留 4 道词组题作复习（周三学、周六
 
 // 4) data.js 已重建、版本钉子 182
 ok(dataSrc.indexOf('选词补全词组（词库：' + BANK + '）') >= 0, 'data.js 已重建（词组题入 WEEK6）');
-ok(/content="203"/.test(idxSrc) && !/content="18[01]"/.test(idxSrc), 'index.html meta 版本钉在 182');
-ok((idxSrc.match(/\?v=203/g) || []).length === 7, 'index.html 7 处 ?v=203');
-ok(/var V = 203;/.test(swSrc) && /amy-english-v203/.test(swSrc), 'sw.js 版本钉在 182');
+ok(/content="204"/.test(idxSrc) && !/content="18[01]"/.test(idxSrc), 'index.html meta 版本钉在 182');
+ok((idxSrc.match(/\?v=204/g) || []).length === 7, 'index.html 7 处 ?v=204');
+ok(/var V = 204;/.test(swSrc) && /amy-english-v204/.test(swSrc), 'sw.js 版本钉在 182');
 
 console.log('\n--- B. 功能级：真调 App 的朗读与补句 ---');
 const document = { getElementById: () => null, createElement: () => ({ style: {}, setAttribute() {}, appendChild() {} }), body: { appendChild() {} }, addEventListener() {}, documentElement: { style: {} }, querySelectorAll: () => [] };

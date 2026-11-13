@@ -1,0 +1,130 @@
+{
+ "day_cn": "周四",
+ "day_en": "Thursday",
+ "theme_cn": "阅读理解（机器人快递） + 比较级语法 + 听力 + 键盘拼写",
+ "reading_name": "阅读理解 · 机器人快递",
+ "grammar_name": "语法 · 比较级",
+ "listening_name": "听力 · 快递到门",
+ "spell_name": "今天学的词，敲一遍",
+ "reading": {
+  "passage": "In some Chinese cities, little robots now help people send packages. The robot looks like a small box with six wheels, and it can carry up to thirty kilograms. Before it starts, you put your package in and tell the robot your home address on the phone. The robot has eyes on top, so it can stop and wait when people or bikes pass by. When it arrives, you type a code on the screen and the door opens by itself. Many people like it because it works day and night and never gets tired.",
+  "passage_cn": "在中国的一些城市，小机器人现在帮人们送快递。这种机器人看起来像一个带六个轮子的小箱子，最多能装三十公斤的东西。出发之前，你把包裹放进去，在手机上告诉机器人你家的地址。机器人的顶上有「眼睛」，所以有人或者自行车经过时，它会停下来等一等。到了之后，你在屏幕上输入取件码，门就会自己打开。很多人喜欢它，因为它白天黑夜都能干活，而且从来不会累。",
+  "questions": [
+   {
+    "question": "What does the delivery robot look like?",
+    "options": ["A small box with six wheels", "A big dog with four legs", "A tall man with a bag", "A bird with two wings"],
+    "answer": 0,
+    "explanation_cn": "第二句说 looks like a small box with six wheels（像带六个轮子的小箱子）。"
+   },
+   {
+    "question": "How much can the robot carry?",
+    "options": ["Up to thirty kilograms", "Up to three kilograms", "Only one book", "One hundred kilograms"],
+    "answer": 0,
+    "explanation_cn": "第二句写 carry up to thirty kilograms（最多装三十公斤）。"
+   },
+   {
+    "question": "What does the robot do when people or bikes pass by?",
+    "options": ["It stops and waits", "It runs faster", "It turns around", "It makes a loud noise"],
+    "answer": 0,
+    "explanation_cn": "第四句说 it can stop and wait when people or bikes pass by（停下来等）。"
+   },
+   {
+    "question": "How do you open the robot's door?",
+    "options": ["Type a code on the screen", "Push it hard", "Ask the robot loudly", "Wait for ten minutes"],
+    "answer": 0,
+    "explanation_cn": "第五句写 type a code on the screen and the door opens（在屏幕上输入取件码，门就开）。"
+   }
+  ]
+ },
+ "grammar": [
+  {
+   "question": "选词填空（bigger / hotter / heavier / faster / funnier / colder）：The elephant is ___ than the horse.",
+   "type": "fill",
+   "answer": "bigger",
+   "explanation_cn": "大象比马大，big 双写 g 加 er。"
+  },
+  {
+   "question": "选词填空（bigger / hotter / heavier / faster / funnier / colder）：Today is ___ than yesterday, so we all wear short sleeves.",
+   "type": "fill",
+   "answer": "hotter",
+   "explanation_cn": "今天比昨天热，hot 双写 t 加 er。"
+  },
+  {
+   "question": "选词填空（bigger / hotter / heavier / faster / funnier / colder）：My schoolbag is ___ than yours; yours is light.",
+   "type": "fill",
+   "answer": "heavier",
+   "explanation_cn": "我的书包比你的重，heavy 去 y 加 ier。"
+  },
+  {
+   "question": "选词填空（bigger / hotter / heavier / faster / funnier / colder）：The delivery robot runs ___ than a walking man.",
+   "type": "fill",
+   "answer": "faster",
+   "explanation_cn": "fast 加 er；机器人跑得比走路的人快。"
+  },
+  {
+   "question": "选词填空（bigger / hotter / heavier / faster / funnier / colder）：This cartoon is ___ than that one, so we all laugh.",
+   "type": "fill",
+   "answer": "funnier",
+   "explanation_cn": "funny 去 y 加 ier；这部动画片更好笑，大家都笑了。"
+  },
+  {
+   "question": "选词填空（bigger / hotter / heavier / faster / funnier / colder）：Winter in Beijing is ___ than in Shanghai.",
+   "type": "fill",
+   "answer": "colder",
+   "explanation_cn": "北京的冬天比上海冷，cold 加 er。"
+  }
+ ],
+ "listening": [
+  {
+   "question": "Listen to the dialogue. What is inside the package?",
+   "audio_text": "Boy: Mum, the robot is at our door with a package. Mum: OK, let me type the code and open it. Boy: Look, my new storybooks are inside!",
+   "options": ["New storybooks", "New shoes", "A birthday cake", "A toy car"],
+   "answer": 0,
+   "explanation_cn": "男孩最后说 my new storybooks are inside（我的新故事书在里面）。"
+  },
+  {
+   "question": "Listen to the dialogue. Where should the man leave the package?",
+   "audio_text": "Man: Hello, where should I leave the package today? Woman: Please put it at the front desk, and my son will take it home. Man: No problem, I will send you a photo later.",
+   "options": ["At the front desk", "Under the bed", "In the classroom", "At the school gate"],
+   "answer": 0,
+   "explanation_cn": "女士说 put it at the front desk（放在前台）。"
+  },
+  {
+   "question": "Which picture matches the sentence you hear?",
+   "audio_text": "A little robot is carrying a big package on the street.",
+   "options": ["🤖", "🚲", "🐕", "🚌"],
+   "picture_options": true,
+   "answer": 0,
+   "explanation_cn": "句子里说 a little robot is carrying a big package（小机器人扛着大包裹），所以选 🤖。"
+  },
+  {
+   "type": "fill",
+   "question": "Listen and fill in the blank: The robot has ___ wheels, so it can turn easily.",
+   "audio_text": "The robot has six wheels, so it can turn easily.",
+   "answer": "six",
+   "explanation_cn": "听到 six wheels（六个轮子），所以填 six。"
+  }
+ ],
+ "spell": [
+  {
+   "question": "机器人：r____ [填完整单词]",
+   "answer": "robot",
+   "explanation_cn": "ro + bot；机器人是今天阅读的主角。"
+  },
+  {
+   "question": "包裹：p_____ [填完整单词]",
+   "answer": "parcel",
+   "explanation_cn": "parcel 和 package 都指包裹，ce 结尾别写成 se。"
+  },
+  {
+   "question": "重的：h____ [填完整单词]",
+   "answer": "heavy",
+   "explanation_cn": "heavy 读 /ˈhevi/；比较级是 heavier。"
+  },
+  {
+   "question": "街道：s_____ [填完整单词]",
+   "answer": "street",
+   "explanation_cn": "street 读 /striːt/，双 ee 长音；马路上走的是 street。"
+  }
+ ]
+}

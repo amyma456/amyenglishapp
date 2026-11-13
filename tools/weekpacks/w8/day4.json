@@ -1,0 +1,153 @@
+{
+ "day_cn": "周五",
+ "day_en": "Friday",
+ "theme_cn": "疑问词语法 + 听力 + KET词汇 + 写作（机器人模型邀请信） + 键盘拼写",
+ "grammar_name": "语法 · 疑问词",
+ "listening_name": "听力 · 电话邀约",
+ "writing_name": "背诵作文 · 邀请朋友来拼机器人",
+ "spell_name": "今天的重点词，敲一遍",
+ "grammar": [
+  {
+   "question": "选词填空（what / where / when / why / how / who / whose）：___ do you go to school every day? By bike.",
+   "type": "fill",
+   "answer": "how",
+   "explanation_cn": "答句 By bike 说的是方式，问方式用 how。"
+  },
+  {
+   "question": "选词填空（what / where / when / why / how / who / whose）：___ is your English teacher? Miss Wang.",
+   "type": "fill",
+   "answer": "who",
+   "explanation_cn": "答句 Miss Wang 是人，问「谁」用 who。"
+  },
+  {
+   "question": "选词填空（what / where / when / why / how / who / whose）：___ do you like penguins? Because they are cute.",
+   "type": "fill",
+   "answer": "why",
+   "explanation_cn": "答句以 Because 开头，说明原因，问原因用 why。"
+  },
+  {
+   "question": "选词填空（what / where / when / why / how / who / whose）：___ schoolbag is this? It is mine.",
+   "type": "fill",
+   "answer": "whose",
+   "explanation_cn": "问「谁的书包」用 whose；who 问人，whose 问「谁的」。"
+  },
+  {
+   "question": "选词填空（what / where / when / why / how / who / whose）：___ does the museum open? At eight in the morning.",
+   "type": "fill",
+   "answer": "when",
+   "explanation_cn": "答句 At eight 是时间，问时间用 when。"
+  },
+  {
+   "question": "选词填空（what / where / when / why / how / who / whose）：___ is the science museum? Near the city park.",
+   "type": "fill",
+   "answer": "where",
+   "explanation_cn": "答句 Near the park 说的是地点，问地点用 where。"
+  },
+  {
+   "question": "选词填空（what / where / when / why / how / who / whose）：___ are you doing now? I am drawing a picture of the sea.",
+   "type": "fill",
+   "answer": "what",
+   "explanation_cn": "答句说正在做的事，问「在做什么」用 what。"
+  }
+ ],
+ "listening": [
+  {
+   "question": "Listen to the dialogue. What will the two friends do this Saturday?",
+   "audio_text": "Boy: Hello, Lily! Shall we build my new robot model this Saturday? Girl: Great idea! Can I bring my small tools? Boy: Of course, and Mum will make a birthday cake for us.",
+   "options": ["Build a robot model", "Go swimming", "Do homework", "Watch a film"],
+   "answer": 0,
+   "explanation_cn": "男孩提议 build my new robot model（拼机器人模型），女孩说 Great idea。"
+  },
+  {
+   "question": "Listen to the dialogue. What time should Lily come on Saturday?",
+   "audio_text": "Girl: Dad, what time shall I go to Tom's home tomorrow? Dad: At nine in the morning, and I will take you there by bike. Girl: OK, I will take my small tools and a ball.",
+   "options": ["At nine in the morning", "At six in the evening", "At twelve at noon", "At eight at night"],
+   "answer": 0,
+   "explanation_cn": "爸爸说 At nine in the morning（早上九点），还要骑车送她去。"
+  },
+  {
+   "question": "Which picture matches the sentence you hear?",
+   "audio_text": "It is my birthday today, and Mum made a big cake for me.",
+   "options": ["🎂", "🎁", "🍉", "🧸"],
+   "picture_options": true,
+   "answer": 0,
+   "explanation_cn": "句子里说 Mum made a big cake（妈妈做了大蛋糕），所以选蛋糕 🎂。"
+  },
+  {
+   "type": "fill",
+   "question": "Listen and fill in the blank: The robot model is my favourite birthday ___.",
+   "audio_text": "The robot model is my favourite birthday present.",
+   "answer": "present",
+   "explanation_cn": "听到 birthday present（生日礼物），所以填 present；这是上周学过的词，复习一遍。"
+  }
+ ],
+ "ket_pet": [
+  {
+   "question": "KET: My uncle works in a big factory ___ makes delivery robots.",
+   "type": "choice",
+   "options": ["which", "who", "what", "where"],
+   "answer": 0,
+   "explanation_cn": "先行词 factory 是物，定语从句用 which；who 只能指人。"
+  },
+  {
+   "question": "KET: I look forward to ___ from you soon.",
+   "type": "choice",
+   "options": ["hearing", "hear", "hears", "listened"],
+   "answer": 0,
+   "explanation_cn": "look forward to 里的 to 是介词，后面接动名词 hearing。"
+  },
+  {
+   "question": "KET: There ___ a robot show in the museum tonight.",
+   "type": "choice",
+   "options": ["will be", "will has", "will have", "is going"],
+   "answer": 0,
+   "explanation_cn": "There will be… 是固定句型；there be 句型不能说 there will have。"
+  },
+  {
+   "question": "KET: The bus is coming. Let's ___ the bus quickly.",
+   "type": "choice",
+   "options": ["get on", "get up", "get off", "put on"],
+   "answer": 0,
+   "explanation_cn": "上车是 get on；get up 起床，get off 下车，put on 穿上。"
+  },
+  {
+   "question": "KET: Could you tell me ___ to the science museum?",
+   "type": "choice",
+   "options": ["the way", "how way", "way", "to way"],
+   "answer": 0,
+   "explanation_cn": "tell sb. the way to… 告诉某人去某地的路；the way 是固定说法。"
+  }
+ ],
+ "writing": {
+  "title": "Dear Amy（四线三格作文 · 全文背默）",
+  "requirement_cn": "先把整封信大声读三遍，再把 5 个空填好，最后背诵全文。这封邀请信就是本周要背熟的作文！",
+  "keywords": ["model", "home", "battery", "box", "nine"],
+  "keywords_cn": ["模型", "家", "电池", "箱子", "九点"],
+  "template": "Dear Amy, Dad bought me a robot {{1}} for my birthday. Can you come to my {{2}} this Saturday? The robot cannot move without a new {{3}}, so we will put it in first. Then we can put all the small parts back into the {{4}} after we finish. Please come at {{5}} o'clock in the morning! Lily",
+  "full_text_cn": "亲爱的Amy，爸爸给我买了一个机器人模型作为生日礼物。这个星期六你能来我家吗？机器人没有新电池就动不了，所以我们要先把它装上。拼完以后，我们可以把小零件全部收回箱子里。请早上九点来！莉莉",
+  "explanation_cn": "英文邀请信三要素：称呼 Dear Amy 开头、正文说清「请谁、什么时候、来做什么」、结尾用 Please come… 加署名。robot model 机器人模型；without a new battery 没有新电池；put … back into the box 把……放回箱子；at nine o'clock 在九点钟（时刻用 at）。",
+  "explanation_en": "An invitation note needs a greeting (Dear Amy), the plan (when, where, what to do), and a closing (Please come at nine!) with the name Lily."
+ },
+ "spell": [
+  {
+   "question": "模型：m____ [填完整单词]",
+   "answer": "model",
+   "explanation_cn": "robot model 机器人模型；model 也指「榜样」，role model 好榜样。"
+  },
+  {
+   "question": "家：h___ [填完整单词]",
+   "answer": "home",
+   "explanation_cn": "come to my home 来我家；home 也可以说 at home 在家。"
+  },
+  {
+   "question": "电池：b______ [填完整单词]",
+   "answer": "battery",
+   "explanation_cn": "bat + tery；机器人没有 battery 就动不了。"
+  },
+  {
+   "question": "箱子；盒子：b__ [填完整单词]",
+   "answer": "box",
+   "explanation_cn": "box 箱子；拼完机器人把零件放回 box 里。"
+  }
+ ]
+}
