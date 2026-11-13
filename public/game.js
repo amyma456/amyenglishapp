@@ -880,8 +880,10 @@
         name: it.name,
         rec: rec || null,
         done: !!(rec && rec.done),
-        // 没有打卡记录时留 null，不假装成「错 0 道」
+        // 没有打卡记录时留 null，不假装成「错 0 道 / 剩 0 道」
         wrong: rec ? (Number(rec.wrongCount) || 0) : null,
+        // v203：剩几道题 = 当天总题数 - 已答题数，跟老师电脑端打卡监控同源
+        left: rec ? Math.max(0, (Number(rec.total) || 0) - (Number(rec.answered) || 0)) : null,
         answered: rec ? (Number(rec.answered) || 0) : 0,
         total: rec ? (Number(rec.total) || 0) : 0
       };
@@ -940,8 +942,14 @@
     var ck = r._ck || null, rec = ck && ck.rec;
     var lv = levelOf(Number(r.total) || 0);
     var bits = [];
+    // v203：一个孩子一条紧凑状态栏，错几道 / 剩几道 / 今日得多少分 / 打卡
+    // 全在这一行，右边是累计总分，第一行是第几名 —— 不用滚榜单就能看完。
     bits.push('<span class="wg-st-wrong">' + (ck && ck.wrong !== null
       ? '错 <b>' + ck.wrong + '</b> 道' : '错题待同步') + '</span>');
+    bits.push('<span class="wg-st-left">' + (ck && ck.left !== null
+      ? '剩 <b>' + ck.left + '</b> 道' : '剩题待同步') + '</span>');
+    bits.push('<span class="wg-st-today">今日 <b>+' +
+      (Number(r.today_score) || 0) + '</b></span>');
     if (ck && ck.done) {
       bits.push('<span class="wg-st-ck wg-st-done">✅ 已打卡</span>');
     } else if (rec && (Number(rec.answered) || 0) > 0) {
@@ -949,9 +957,6 @@
         (Number(rec.answered) || 0) + '/' + (Number(rec.total) || 0) + ' 题</span>');
     } else {
       bits.push('<span class="wg-st-ck wg-st-wait">⏳ 还没打卡</span>');
-    }
-    if (scored && (Number(r.today_score) || 0) > 0) {
-      bits.push('<span class="wg-st-today">今日 +' + (Number(r.today_score) || 0) + '</span>');
     }
     return '<div class="wg-board-row wg-ck-row' + (isMe ? ' wg-board-me' : '') +
       (scored ? '' : ' wg-board-idle') + (ck && ck.done ? ' is-done' : '') + '">' +
@@ -964,7 +969,7 @@
         '<div class="wg-status">' + bits.join('<i>·</i>') + '</div>' +
       '</div>' +
       '<span class="wg-board-lv">' + lv.icon + '</span>' +
-      '<span class="wg-board-score"><b>' + (Number(r.total) || 0) + '</b> 分</span>' +
+      '<span class="wg-board-score">总 <b>' + (Number(r.total) || 0) + '</b> 分</span>' +
     '</div>';
   }
 
@@ -1007,7 +1012,8 @@
     h += '<div class="wg-card-hd"><span>🏆 全班状态榜 · 分数 / 错题 / 打卡</span>' +
       '<span class="wg-pill">' + (rows.length ? rows.length + ' 位指挥官' : '连线中') +
       '</span></div>';
-    h += '<div class="wg-board-hint">📋 今日打卡记录 · 🕒 ' +
+    h += '<div class="wg-board-hint">📋 今日打卡记录 · 错=错题 / 剩=剩余题 / ' +
+      '今日=今日得分 / 总=累计总分 · 🕒 ' +
       (BOARD.at ? '刚更新 ' + hhmm(BOARD.at) : '正在更新') +
       ' · 按第 1 到第 ' + (rows.length || 9) + ' 名顺序排列</div>';
     if (!rows.length) {
@@ -1026,9 +1032,10 @@
       } else {
         h += '<div class="wg-leader wg-leader-empty">🏅 今天还没有人出击，第一名虚位以待</div>';
       }
-      h += '<div class="wg-ck-group">✅ 已打卡 ' + done + ' 人</div>';
-      h += '<div class="wg-ck-group wg-ck-group-wait">⏳ 还没打卡 ' +
-        (rows.length - done) + ' 人</div>';
+      // v203：两条汇总并排一行，给 9 行状态栏腾出首屏空间
+      h += '<div class="wg-ck-groups"><div class="wg-ck-group">✅ 已打卡 ' + done +
+        ' 人</div><div class="wg-ck-group wg-ck-group-wait">⏳ 还没打卡 ' +
+        (rows.length - done) + ' 人</div></div>';
       // v197：不再只显示前 8 名。0 分、从没玩过的同学也是全班的一员，
       // 必须一行不少地列出来，否则等于「没玩就不出现」。
       h += '<div class="wg-board-scroll">';
@@ -1119,6 +1126,10 @@
         ' 人 · 累计 <b>' + (Number(rk.row && rk.row.total) || S.total) + '</b> 分'
       : '🏆 全班实时排名 · 全班同学都在榜上') + '</div>';
 
+    // v203：全班状态榜提到首屏最上面。9 个孩子一行不少全铺开，
+    // 不用在榜单里再拖进度条；老师端 / 学生端、手机 / 电脑看到的是同一张。
+    h += boardHtml();
+
     // 时长规则卡：把「错得少玩得久」摆在明面上
     h += '<div class="wg-card wg-time-card">';
     h += '<div class="wg-card-hd"><span>⏱️ 基地今日配额</span><span class="wg-pill">' +
@@ -1144,8 +1155,8 @@
     }
     h += '</div>';
 
-    // v202：分数 / 错题 / 打卡合成一张按名次排的全班状态榜，下面不再叠两张卡
-    h += boardHtml();
+    // v202：分数 / 错题 / 打卡合成一张按名次排的全班状态榜（已提到首屏最上面），
+    // 下面不再叠两张卡
     h += baseCardHtml();
 
     // 积分总账

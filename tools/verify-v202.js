@@ -128,9 +128,9 @@ ok('CSS 给同一条状态栏加了名次、姓名、错题、打卡的样式', 
   assert(!/:has\(/.test(block) && !/100dvh/.test(block), '融合样式用了老浏览器不支持的语法');
 });
 ok('版本钉子统一到 v202', () => {
-  assert(/name="app-version" content="202"/.test(html));
-  assert.strictEqual((html.match(/\?v=202/g) || []).length, 7, '首页 7 处脚本引用');
-  assert(/var CACHE_NAME = 'amy-english-v202';/.test(swSrc) && /var V = 202;/.test(swSrc));
+  assert(/name="app-version" content="203"/.test(html));
+  assert.strictEqual((html.match(/\?v=203/g) || []).length, 7, '首页 7 处脚本引用');
+  assert(/var CACHE_NAME = 'amy-english-v203';/.test(swSrc) && /var V = 203;/.test(swSrc));
 });
 
 // ------------------------------------------------------------- 真跑融合数据
@@ -211,7 +211,7 @@ ok('打卡人数汇总、第 1 名摘要、按名次排列的说明都在这一�
   assert(/🥇 第 1 名 <b>张子皓-Harvey<\/b> · <b>1899<\/b> 分/.test(board));
   assert(/✅ 已打卡 3 人/.test(board) && /⏳ 还没打卡 6 人/.test(board));
   assert(/今日已打卡 <b>3<\/b> \/ 9 人/.test(board));
-  assert(/wg-board-scroll/.test(board), '长榜没给滚动窗口');
+  assert(/wg-board-scroll/.test(board), '一屏全展开的榜单容器不见了');
 });
 ok('旧打卡卡入口与融合榜返回同一张卡，大厅里不重复出现', () => {
   assert.strictEqual(WordGame._test.checkinCardHtml(), WordGame._test.boardHtml());

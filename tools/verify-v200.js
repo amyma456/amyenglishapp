@@ -129,10 +129,10 @@ function setBoard(rows) {
 
 // ------------------------------------------------------------------ 源码约束
 ok('版本钉子统一到 v202', () => {
-  assert(/name="app-version" content="202"/.test(html));
-  assert.strictEqual((html.match(/\?v=202/g) || []).length, 7, '首页 7 处脚本引用');
-  assert(/var CACHE_NAME = 'amy-english-v202';/.test(swSrc) && /var V = 202;/.test(swSrc));
-  assert(/^<meta name="app-version" content="202">/m.test(html));
+  assert(/name="app-version" content="203"/.test(html));
+  assert.strictEqual((html.match(/\?v=203/g) || []).length, 7, '首页 7 处脚本引用');
+  assert(/var CACHE_NAME = 'amy-english-v203';/.test(swSrc) && /var V = 203;/.test(swSrc));
+  assert(/^<meta name="app-version" content="203">/m.test(html));
 });
 ok('游戏页 tab 仍在刷新恢复白名单里（v198 的修复没被覆盖）', () => {
   const rt = appSrc.slice(appSrc.indexOf('  _restoreTab() {'), appSrc.indexOf('  showApp() {'));
@@ -191,7 +191,7 @@ ok('CSS 里有 0 分名次与打卡卡的样式（老浏览器可用的普通选
     assert(!/🥇|🥈|🥉/.test(board), '0 分还挂着奖牌');
     assert.strictEqual((board.match(/wg-rank-none/g) || []).length, 9);
     assert.strictEqual((board.match(/还没出击/g) || []).length, 9);
-    assert(/wg-board-scroll/.test(board), '没有全量渲染');
+    assert(/wg-board-scroll/.test(board), '没有全量展开的榜单容器');
     assert(/9 位指挥官/.test(board), '人数没显示成 9');
   });
 

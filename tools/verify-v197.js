@@ -126,12 +126,12 @@ function assertNoInternal(out, label) {
 
 // -------------------------------------------------------------- 版本钉子
 ok('版本钉子一致（meta / 7 处 ?v= / SW / game.js 预缓存）', () => {
-  assert(/<meta name="app-version" content="202">/.test(html), 'index.html meta 没升');
+  assert(/<meta name="app-version" content="203">/.test(html), 'index.html meta 没升');
   const vs = html.match(/<script defer src="[^"]+\?v=(\d+)"/g) || [];
   assert.strictEqual(vs.length, 7, '脚本引用应是 7 处，实际 ' + vs.length);
-  vs.forEach(s => assert(/\?v=202"/.test(s), '还有旧版本：' + s));
-  assert(/var CACHE_NAME = 'amy-english-v202'/.test(sw), 'SW CACHE_NAME 没升');
-  assert(/var V = 202;/.test(sw), 'SW V 没升');
+  vs.forEach(s => assert(/\?v=203"/.test(s), '还有旧版本：' + s));
+  assert(/var CACHE_NAME = 'amy-english-v203'/.test(sw), 'SW CACHE_NAME 没升');
+  assert(/var V = 203;/.test(sw), 'SW V 没升');
   assert(/\.\/game\.js\?v=' \+ V/.test(sw), 'SW 没预缓存 game.js');
 });
 
@@ -196,11 +196,16 @@ ok('刷新间隔收紧到 10 秒，且仍在切回前台时补拉', () => {
   assert(/visibilitychange/.test(game), '切回前台没补拉');
 });
 
-ok('v197 样式给长榜加了可滚动窗口，老浏览器选择器没退化', () => {
+ok('v197 样式块仍在（v203 起改成一屏全展开），老浏览器选择器没退化', () => {
   const at = html.indexOf('v197 · 全班每人一行');
   assert(at > 0, 'v197 样式块不见了');
   const block = html.slice(at, html.indexOf('</style>'));
-  assert(/\.wg-board-scroll\{/.test(block), '没有滚动容器');
+  const rules = block.match(/\.wg-board-scroll\{[^}]*\}/g) || [];
+  assert(rules.length > 0, '榜单容器不见了');
+  rules.forEach(function (r) {
+    assert(!/max-height:\s*\d+px/.test(r) && !/overflow-y:\s*auto/.test(r),
+      'v203 之后榜单里还留着要下拉的进度条');
+  });
   assert(/\.wg-board-row\.wg-board-idle\{/.test(block), '0 分行没有视觉区分');
   assert(block.indexOf(':has(') < 0, '新样式用了老浏览器不认的选择器');
   assert(block.indexOf('100dvh') < 0, '新样式单写了 100dvh');
@@ -223,7 +228,7 @@ ok('v197 样式给长榜加了可滚动窗口，老浏览器选择器没退化',
     const out = e.WG._test.boardHtml();
     const rowCount = (out.match(/wg-board-row/g) || []).length;
     assert.strictEqual(rowCount, 15, '榜单被截断了，实际只有 ' + rowCount + ' 行');
-    assert(out.indexOf('wg-board-scroll') > 0, '长榜没有滚动容器');
+    assert(out.indexOf('wg-board-scroll') > 0, '全量展开的榜单容器不见了');
     assert(out.indexOf('Kid4') > 0 && out.indexOf('Kid15') > 0,
       '从没玩过的同学没有出现');
     assert((out.match(/wg-board-idle/g) || []).length >= 12,
