@@ -1,248 +1,248 @@
 {
  "day_cn": "周三",
  "day_en": "Wednesday",
- "theme_cn": "AI口语 + 高频词汇 + 阅读理解（极地科考） + 键盘拼写",
- "reading_name": "阅读理解 · 极地科考",
- "spell_name": "今天学的词，敲一遍",
+ "theme_cn": "运动介词与指路（图5） + 校园地图阅读 + AI口语 + 键盘拼写",
+ "reading_name": "阅读理解 · 校园指路图",
+ "spell_name": "今天学的运动介词，敲一遍",
  "speaking": [
   {
-   "sentence": "Would you like to visit the South Pole? Why or why not?",
-   "sentence_cn": "你想去南极看看吗？为什么？",
+   "sentence": "How can I get to the library from the school gate?",
+   "sentence_cn": "从校门怎么去图书馆？",
    "options": [
-    "Yes, I would love to see the penguins and the ice there.",
-    "The South Pole is at the bottom of the earth.",
-    "I watch animal videos on my phone.",
-    "Penguins can swim very fast."
+    "Go along this road and turn left at the first crossing.",
+    "The library opens at eight.",
+    "I like reading story books.",
+    "The gate is made of iron."
    ],
    "options_cn": [
-    "想，我很想看看那里的企鹅和冰雪。",
-    "南极在地球的最南端。",
-    "我用手机看动物视频。",
-    "企鹅游泳游得很快。"
+    "沿这条路走，在第一个路口左转。",
+    "图书馆八点开门。",
+    "我喜欢读故事书。",
+    "大门是铁做的。"
    ],
    "answer": 0,
-   "pronunciation_tips": "would love to 连读，penguins /ˈpeŋɡwɪnz/ 词尾 s 别丢，ice 读长音 /aɪs/",
-   "explanation_cn": "问想不想去 + 为什么，答句要先表态再给理由。A 有 Yes 和理由；B、D 是常识介绍；C 说的是看视频，都没回答「想不想去」。",
-   "answer_cn_hint": "先说 Yes 或 No，再用 because 说想去或不想去的原因。"
+   "pronunciation_tips": "along /əˈlɒŋ/ 一个词，crossing /ˈkrɒsɪŋ/ 别丢词尾 ing",
+   "explanation_cn": "问路线要给出动作，A 用 Go along… and turn left 指路；B 说时间，C、D 没指路。",
+   "answer_cn_hint": "用 Go along… / turn left / turn right 回答路线。"
   },
   {
-   "sentence": "What animals can live in very cold places?",
-   "sentence_cn": "什么动物能住在特别冷的地方？",
+   "sentence": "Where is the nearest bank?",
+   "sentence_cn": "最近的银行在哪儿？",
    "options": [
-    "Penguins and polar bears can live in very cold places.",
-    "Cats like to sleep in warm rooms.",
-    "Fish live in rivers and seas.",
-    "My dog likes playing with a ball."
+    "It is opposite the school gate, across from the park.",
+    "It opens on Monday.",
+    "It is very big and clean.",
+    "I go there with my mum."
    ],
    "options_cn": [
-    "企鹅和北极熊能住在特别冷的地方。",
-    "猫喜欢睡在暖和的房间里。",
-    "鱼住在河里和海里。",
-    "我的狗喜欢玩球。"
+    "在校门对面，公园那边。",
+    "它星期一开门。",
+    "它又大又干净。",
+    "我和妈妈一起去那儿。"
    ],
    "answer": 0,
-   "pronunciation_tips": "polar bears /ˈpəʊlə beəz/ 连读，cold /kəʊld/ 词尾 d 轻轻带过",
-   "explanation_cn": "What 问「哪种动物」，答句要直接点名动物。A 说出两种耐寒动物；B、C、D 说的是别的动物和习惯，都没有回答「冷地方的动物」。",
-   "answer_cn_hint": "直接说出企鹅、北极熊这样住在冰雪里的动物，再补一句它们不怕冷。"
+   "pronunciation_tips": "opposite /ˈɒpəzɪt/ 重音在最前，across from 连读别吞掉 from",
+   "explanation_cn": "A 用 opposite / across from 说清了位置；其余三项都不是地点。",
+   "answer_cn_hint": "用 It is opposite / across from / next to… 说位置。"
   },
   {
-   "sentence": "What should we wear in freezing weather?",
-   "sentence_cn": "在特别冷的天里我们应该穿什么？",
+   "sentence": "Which way do you run every morning?",
+   "sentence_cn": "你们每天早上往哪边跑？",
    "options": [
-    "We should wear thick coats, warm hats and gloves.",
-    "The weather in winter is cold.",
-    "I like the colour of my new hat.",
-    "Some people go swimming in winter."
+    "We run past the library and then turn right.",
+    "We run at seven o'clock.",
+    "We run very fast.",
+    "We run because it is fun."
    ],
    "options_cn": [
-    "我们应该穿厚外套，戴暖和的帽子和手套。",
-    "冬天的天气很冷。",
-    "我喜欢我新帽子的颜色。",
-    "有些人冬天去游泳。"
+    "我们跑过图书馆，然后右转。",
+    "我们七点跑。",
+    "我们跑得很快。",
+    "我们跑步因为好玩。"
    ],
    "answer": 0,
-   "pronunciation_tips": "freezing /ˈfriːzɪŋ/ 中间是长音 /iː/，gloves /ɡlʌvz/ 词尾 s 出声",
-   "explanation_cn": "should 问建议，答句要给出具体穿戴。A 说了外套、帽子、手套三样；B 说天气；C 说颜色；D 说别人的事，都没有回答「穿什么」。",
-   "answer_cn_hint": "用 We should wear… 说出厚外套、帽子、手套这些保暖的东西。"
+   "pronunciation_tips": "past /pɑːst/ 与 passed 同音，then 的 th 要咬舌",
+   "explanation_cn": "Which way 问方向，A 用 past 加 turn right 给出路线；B 说时间，C、D 没方向。",
+   "answer_cn_hint": "用 We run past… / towards… / along… 说方向。"
   },
   {
-   "sentence": "Why do scientists go to the South Pole?",
-   "sentence_cn": "科学家为什么要去南极？",
+   "sentence": "Where is the boy in the picture going?",
+   "sentence_cn": "图里的男孩要往哪儿去？",
    "options": [
-    "They go there to study the weather, the ice and the animals.",
-    "The South Pole is far away from China.",
-    "Scientists work in labs every day.",
-    "It is fun to play with snow."
+    "He is walking towards the gate.",
+    "He is walking on Sunday.",
+    "He is walking his dog.",
+    "He is walking very slowly."
    ],
    "options_cn": [
-    "他们去那里研究天气、冰和动物。",
-    "南极离中国很远。",
-    "科学家每天在实验室工作。",
-    "玩雪很好玩。"
+    "他正朝大门走过去。",
+    "他星期天走路。",
+    "他在遛狗。",
+    "他走得很慢。"
    ],
    "answer": 0,
-   "pronunciation_tips": "scientists /ˈsaɪəntɪsts/ 词尾 ts 要出声，weather /ˈweðə/ 中间是浊音",
-   "explanation_cn": "Why 问目的，答句要用 to do 或 because 说原因。A 说出研究内容；B 说距离；C 说日常工作；D 说玩雪，都不是「去南极的原因」。",
-   "answer_cn_hint": "用 They go there to… 说出研究的对象，比如天气、冰层和动物。"
+   "pronunciation_tips": "towards /təˈwɔːdz/ 重音在后，gate /ɡeɪt/ 词尾 t 要出声",
+   "explanation_cn": "问的是方向，A 用 towards the gate（朝大门）回答；其余三项没说去哪儿。",
+   "answer_cn_hint": "用 He is walking towards / along / past… 说方向。"
   },
   {
-   "sentence": "How can we help animals in a cold winter?",
-   "sentence_cn": "寒冷的冬天我们能怎样帮助动物？",
+   "sentence": "What is the ladder doing in the picture?",
+   "sentence_cn": "图里的梯子是什么状态？",
    "options": [
-    "We can leave some food and water outside for the birds and cats.",
-    "Animals sleep a lot in winter.",
-    "Winter is my favourite season.",
-    "There are many animals in the zoo."
+    "It is standing against the wall.",
+    "It is standing at noon.",
+    "It is made of wood.",
+    "It belongs to my uncle."
    ],
    "options_cn": [
-    "我们可以在外面给鸟和猫留一些食物和水。",
-    "动物冬天睡得很多。",
-    "冬天是我最喜欢的季节。",
-    "动物园里有很多动物。"
+    "它斜靠在墙上。",
+    "它中午立着。",
+    "它是木头做的。",
+    "它是我叔叔的。"
    ],
    "answer": 0,
-   "pronunciation_tips": "outside /ˌaʊtˈsaɪd/ 重音在后，water /ˈwɔːtə/ 美音里 t 读得像轻快的 d",
-   "explanation_cn": "How 问方法，答句要给具体做法。A 说了留食留水；B、C 说冬天；D 说动物园，都没有回答「怎么帮」。",
-   "answer_cn_hint": "用 We can + 动词原形，说出留食物、留水这样具体的小事。"
+   "pronunciation_tips": "against /əˈɡenst/ 重音在后，wall /wɔːl/ 别读成 well",
+   "explanation_cn": "A 用 against the wall 说清了「靠着墙」这个位置关系；其余三项都没回答位置。",
+   "answer_cn_hint": "用 It is standing against / beside / under… 描述位置。"
   }
  ],
  "vocab": [
   {
-   "word": "penguin",
-   "phonetic": "/ˈpeŋɡwɪn/",
-   "meaning": "企鹅",
-   "emoji": "🐧",
-   "example_en": "The penguin walks like a little gentleman.",
-   "example_cn": "企鹅走起路来像一位小绅士。",
-   "hint_cn": "黑白羽毛、走路摇摇摆摆的南极鸟",
+   "word": "opposite",
+   "phonetic": "/ˈɒpəzɪt/",
+   "meaning": "在对面",
+   "emoji": "🔁",
+   "example_en": "The bank is opposite the school gate.",
+   "example_cn": "银行就在校门斜对面。",
+   "hint_cn": "中间隔着一条路或一块空地，面对面",
    "syllables": [
-    "pen",
-    "guin"
+    "op",
+    "po",
+    "site"
    ]
   },
   {
-   "word": "iceberg",
-   "phonetic": "/ˈaɪsbɜːɡ/",
-   "meaning": "冰山",
-   "emoji": "🧊",
-   "example_en": "The big ship must turn away from the iceberg.",
-   "example_cn": "大船必须转向，避开那座冰山。",
-   "hint_cn": "ice + berg，漂在海里的大冰块",
+   "word": "against",
+   "phonetic": "/əˈɡenst/",
+   "meaning": "靠着",
+   "emoji": "🧱",
+   "example_en": "The ladder is against the wall.",
+   "example_cn": "梯子斜搭在墙上。",
+   "hint_cn": "有接触，把重量压在那样东西上",
    "syllables": [
-    "ice",
-    "berg"
+    "a",
+    "gainst"
    ]
   },
   {
-   "word": "scientist",
-   "phonetic": "/ˈsaɪəntɪst/",
-   "meaning": "科学家",
-   "emoji": "👩‍🔬",
-   "example_en": "The scientist studies the ice at the South Pole.",
-   "example_cn": "这位科学家研究南极的冰。",
-   "hint_cn": "做研究、做实验、找答案的人",
+   "word": "along",
+   "phonetic": "/əˈlɒŋ/",
+   "meaning": "顺着走",
+   "emoji": "🛣️",
+   "example_en": "Walk along this street and turn right.",
+   "example_cn": "顺着这条街往前走，然后右拐。",
+   "hint_cn": "顺着一条长线一直走，中途不拐弯",
    "syllables": [
-    "sci",
-    "en",
-    "tist"
+    "a",
+    "long"
    ]
   },
   {
-   "word": "freezing",
-   "phonetic": "/ˈfriːzɪŋ/",
-   "meaning": "极冷的；结冰的",
-   "emoji": "🥶",
-   "example_en": "The wind at the South Pole is freezing cold.",
-   "example_cn": "南极的风冷得刺骨。",
-   "hint_cn": "freeze 加 ing，冷得水都结冰了",
+   "word": "past",
+   "phonetic": "/pɑːst/",
+   "meaning": "经过",
+   "emoji": "🏃",
+   "example_en": "We run past the library every morning.",
+   "example_cn": "我们每天早上从图书馆门前跑过。",
+   "hint_cn": "从旁边走过去，脚步不停，也不进去",
    "syllables": [
-    "freez",
-    "ing"
+    "past"
    ]
   },
   {
-   "word": "torch",
-   "phonetic": "/tɔːtʃ/",
-   "meaning": "手电筒",
-   "emoji": "🔦",
-   "example_en": "The scientists use a torch in the dark night.",
-   "example_cn": "科学家在漆黑的夜里用手电筒。",
-   "hint_cn": "黑夜照亮的手里的小灯，ch 结尾",
+   "word": "towards",
+   "phonetic": "/təˈwɔːdz/",
+   "meaning": "朝某方向",
+   "emoji": "🧭",
+   "example_en": "The boy is walking towards the gate.",
+   "example_cn": "男孩正朝大门那边走过去。",
+   "hint_cn": "只说方向，还没走到",
    "syllables": [
-    "torch"
+    "to",
+    "wards"
    ]
   }
  ],
  "reading": {
-  "passage": "Every year, Chinese scientists travel to the South Pole on a big icebreaker called Xuelong, which means snow dragon. The ship is one hundred and sixty-seven metres long, and its strong body can break thick ice on the way. The scientists study the weather, the ice and the animals there, because the South Pole tells us a lot about the earth. It is freezing cold, and in winter the sun does not come up for many weeks. The scientists wear thick coats and use torches to see in the dark nights. Penguins often stand near their camp, and they are not afraid of people at all.",
-  "passage_cn": "每年，中国的科学家都会乘坐名字意思是雪做龙的「雪龙号」大破冰船去南极。这条船有一百六十七米长，结实的船身能一路上撞开厚厚的冰。科学家们在那里研究天气、冰和动物，因为南极能告诉我们很多关于地球的事。那里冷得刺骨，冬天太阳好几个星期都不升起。科学家们穿着厚外套，用上手电筒，才能在漆黑的夜里看清东西。企鹅常常站在营地旁边，它们一点儿也不怕人。",
+  "passage": "Our school has a big playground in the middle of the campus. The library stands on the left of the playground, and the science building is on the right. Walk along the green path past the library and you will find the small garden. The garden is not far from the gate, but the dining hall is far from it. Go straight ahead and turn right around the corner to see the art room. A sign above the door tells everyone where to go.",
+  "passage_cn": "我们学校校园中央有一个大操场。图书馆在操场左边，科学楼在右边。沿着绿道往前走，经过图书馆，你就能看到那个小花园。花园离校门不远，食堂却离得很远。一直往前走，在拐角处右转就能看见美术教室。门上方的牌子会告诉大家该往哪儿走。",
   "questions": [
    {
-    "question": "What does the name Xuelong mean?",
+    "question": "Where is the library?",
     "options": [
-     "Snow dragon",
-     "Ice ship",
-     "Cold wind",
-     "White bear"
+     "On the left of the playground",
+     "On the right of the playground",
+     "Behind the dining hall",
+     "Opposite the gate"
     ],
     "answer": 0,
-    "explanation_cn": "第一句写 which means snow dragon（意思是雪做的龙）。"
+    "explanation_cn": "第二句写 on the left of the playground（在操场左边）。"
    },
    {
-    "question": "Why do scientists go to the South Pole?",
+    "question": "What will you find if you walk past the library?",
     "options": [
-     "To study the weather, the ice and the animals",
-     "To visit penguin zoos",
-     "To catch fish for dinner",
-     "To build a big city"
+     "The small garden",
+     "The dining hall",
+     "The art room",
+     "The school gate"
     ],
     "answer": 0,
-    "explanation_cn": "第三句说 study the weather, the ice and the animals（研究天气、冰和动物）。"
+    "explanation_cn": "第三句写 walk along the green path past the library and you will find the small garden。"
    },
    {
-    "question": "What do the scientists use to see in the dark nights?",
+    "question": "How can you see the art room?",
     "options": [
-     "Torches",
-     "Telephones",
-     "Cameras",
-     "Maps"
+     "Go straight ahead and turn right around the corner",
+     "Turn left at the library",
+     "Go across the playground",
+     "Walk towards the gate"
     ],
     "answer": 0,
-    "explanation_cn": "第五句写 use torches to see in the dark nights（用手电筒在黑夜里看东西）。"
+    "explanation_cn": "第五句写 Go straight ahead and turn right around the corner（直走、拐角右转）。"
    },
    {
-    "question": "Which animal often stands near the camp?",
+    "question": "What is above the door of the art room?",
     "options": [
-     "Penguins",
-     "Polar bears",
-     "Horses",
-     "Dogs"
+     "A sign",
+     "A clock",
+     "A map",
+     "A lamp"
     ],
     "answer": 0,
-    "explanation_cn": "最后一句说 Penguins often stand near their camp（企鹅常站在营地旁）。"
+    "explanation_cn": "末句写 A sign above the door（门上方有一块牌子）。"
    }
   ]
  },
  "spell": [
   {
-   "question": "企鹅：p_______ [填完整单词]",
-   "answer": "penguin",
-   "explanation_cn": "pen + guin；企鹅走路摇摇摆摆的，特别好认。"
+   "question": "在对面：o_______ [填完整单词]",
+   "answer": "opposite",
+   "explanation_cn": "opposite the school gate；也可说 across from。"
   },
   {
-   "question": "冰山：i______ [填完整单词]",
-   "answer": "iceberg",
-   "explanation_cn": "ice + berg；海里漂着的大冰块就是冰山。"
+   "question": "靠着：a______ [填完整单词]",
+   "answer": "against",
+   "explanation_cn": "The ladder is against the wall 梯子靠墙。"
   },
   {
-   "question": "科学家：s_________ [填完整单词]",
-   "answer": "scientist",
-   "explanation_cn": "science 去 e 加 tist；注意开头的 sc。"
+   "question": "顺着走：a____ [填完整单词]",
+   "answer": "along",
+   "explanation_cn": "walk along the street 沿着街走。"
   },
   {
-   "question": "手电筒：t____ [填完整单词]",
-   "answer": "torch",
-   "explanation_cn": "torch 读 /tɔːtʃ/，结尾是 tch，火把也是这个词。"
+   "question": "朝某方向：t______ [填完整单词]",
+   "answer": "towards",
+   "explanation_cn": "walk towards the gate 朝大门走。"
   }
  ]
 }

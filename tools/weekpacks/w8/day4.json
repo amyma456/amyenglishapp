@@ -1,153 +1,229 @@
 {
  "day_cn": "周五",
  "day_en": "Friday",
- "theme_cn": "疑问词语法 + 听力 + KET词汇 + 写作（机器人模型邀请信） + 键盘拼写",
- "grammar_name": "语法 · 疑问词",
- "listening_name": "听力 · 电话邀约",
- "writing_name": "背诵作文 · 邀请朋友来拼机器人",
- "spell_name": "今天的重点词，敲一遍",
+ "theme_cn": "一般现在 / 现在进行时 + 时间介词 + KET 词汇（Exercise02）+ 方位介词作文 + 听力",
+ "grammar_name": "语法 · 一般现在时 vs 现在进行时 + in / on / at",
+ "listening_name": "听力 · 此刻正在做什么",
+ "writing_name": "背诵作文 · 写给 Lucy 的房间方位信",
+ "spell_name": "今天的 KET 重点词，敲一遍",
  "grammar": [
   {
-   "question": "选词填空（what / where / when / why / how / who / whose）：___ do you go to school every day? By bike.",
-   "type": "fill",
-   "answer": "how",
-   "explanation_cn": "答句 By bike 说的是方式，问方式用 how。"
+   "question": "Jack ___ football every weekend.",
+   "type": "choice",
+   "options": [
+    "plays",
+    "is playing",
+    "played",
+    "will play"
+   ],
+   "answer": 0,
+   "explanation_cn": "every weekend 是习惯，用一般现在时第三人称单数 plays（图1 Grammar 第 1 题）。"
   },
   {
-   "question": "选词填空（what / where / when / why / how / who / whose）：___ is your English teacher? Miss Wang.",
-   "type": "fill",
-   "answer": "who",
-   "explanation_cn": "答句 Miss Wang 是人，问「谁」用 who。"
+   "question": "My sister ___ a fashion show on TV this evening.",
+   "type": "choice",
+   "options": [
+    "is watching",
+    "watches",
+    "watched",
+    "watch"
+   ],
+   "answer": 0,
+   "explanation_cn": "this evening 指此刻正在进行的安排，用现在进行时 is watching（图1 第 4 题）。"
   },
   {
-   "question": "选词填空（what / where / when / why / how / who / whose）：___ do you like penguins? Because they are cute.",
-   "type": "fill",
-   "answer": "why",
-   "explanation_cn": "答句以 Because 开头，说明原因，问原因用 why。"
+   "question": "We ___ three bedrooms in our house.",
+   "type": "choice",
+   "options": [
+    "have",
+    "are having",
+    "has",
+    "having"
+   ],
+   "answer": 0,
+   "explanation_cn": "have 表示「拥有」是状态动词，不用进行时（图1 第 3 题）。"
   },
   {
-   "question": "选词填空（what / where / when / why / how / who / whose）：___ schoolbag is this? It is mine.",
-   "type": "fill",
-   "answer": "whose",
-   "explanation_cn": "问「谁的书包」用 whose；who 问人，whose 问「谁的」。"
+   "question": "Do you ___ where I can buy some cool trainers?",
+   "type": "choice",
+   "options": [
+    "know",
+    "are knowing",
+    "knows",
+    "knew"
+   ],
+   "answer": 0,
+   "explanation_cn": "know 是状态动词，一般疑问句用 Do you know（图1 第 8 题）。"
   },
   {
-   "question": "选词填空（what / where / when / why / how / who / whose）：___ does the museum open? At eight in the morning.",
+   "question": "选词填空（in / on / at）：Let's have lunch together ___ noon.",
    "type": "fill",
-   "answer": "when",
-   "explanation_cn": "答句 At eight 是时间，问时间用 when。"
+   "answer": "at",
+   "explanation_cn": "at noon 在中午，具体时间点用 at（图2 第 8 题）。"
   },
   {
-   "question": "选词填空（what / where / when / why / how / who / whose）：___ is the science museum? Near the city park.",
+   "question": "选词填空（in / on / at）：The Spring Festival is ___ January 1st in the Chinese lunar calendar.",
    "type": "fill",
-   "answer": "where",
-   "explanation_cn": "答句 Near the park 说的是地点，问地点用 where。"
+   "answer": "on",
+   "explanation_cn": "具体日期 January 1st 前用 on（图3 综合练习二第 1 题）。"
   },
   {
-   "question": "选词填空（what / where / when / why / how / who / whose）：___ are you doing now? I am drawing a picture of the sea.",
+   "question": "选词填空（in / at / on）：Tom told me his parents had arrived ___ Beijing.",
    "type": "fill",
-   "answer": "what",
-   "explanation_cn": "答句说正在做的事，问「在做什么」用 what。"
+   "answer": "in",
+   "explanation_cn": "到达大城市用 arrive in；arrive at 后接机场、车站等小地点（图4 三选一第 2 题）。"
   }
  ],
  "listening": [
   {
-   "question": "Listen to the dialogue. What will the two friends do this Saturday?",
-   "audio_text": "Boy: Hello, Lily! Shall we build my new robot model this Saturday? Girl: Great idea! Can I bring my small tools? Boy: Of course, and Mum will make a birthday cake for us.",
-   "options": ["Build a robot model", "Go swimming", "Do homework", "Watch a film"],
+   "question": "Listen to the dialogue. What is Tom doing at the moment?",
+   "audio_text": "Girl: Tom, what are you doing at the moment? Boy: I am sitting in the living room and playing computer games. Girl: Mum is cooking supper in the kitchen.",
+   "options": [
+    "Playing computer games",
+    "Cooking supper",
+    "Shopping for shoes",
+    "Reading a book"
+   ],
    "answer": 0,
-   "explanation_cn": "男孩提议 build my new robot model（拼机器人模型），女孩说 Great idea。"
+   "explanation_cn": "男孩说 I am … playing computer games（正在玩电脑游戏）；做饭的是妈妈。"
   },
   {
-   "question": "Listen to the dialogue. What time should Lily come on Saturday?",
-   "audio_text": "Girl: Dad, what time shall I go to Tom's home tomorrow? Dad: At nine in the morning, and I will take you there by bike. Girl: OK, I will take my small tools and a ball.",
-   "options": ["At nine in the morning", "At six in the evening", "At twelve at noon", "At eight at night"],
+   "question": "Listen to the dialogue. Who is cooking supper tonight?",
+   "audio_text": "Boy: Dad usually cooks supper, but he is working late today. Woman: Yes, I am cooking our supper tonight. Boy: It smells great!",
+   "options": [
+    "Mum",
+    "Dad",
+    "Grandma",
+    "Tom"
+   ],
    "answer": 0,
-   "explanation_cn": "爸爸说 At nine in the morning（早上九点），还要骑车送她去。"
+   "explanation_cn": "usually cooks 的是爸爸，但今晚 is cooking 的是妈妈，问 tonight 要听后半句。"
   },
   {
    "question": "Which picture matches the sentence you hear?",
-   "audio_text": "It is my birthday today, and Mum made a big cake for me.",
-   "options": ["🎂", "🎁", "🍉", "🧸"],
+   "audio_text": "At the moment the two children are having a snack in the living room.",
+   "options": [
+    "🍪",
+    "📚",
+    "⚽",
+    "🛍️"
+   ],
    "picture_options": true,
    "answer": 0,
-   "explanation_cn": "句子里说 Mum made a big cake（妈妈做了大蛋糕），所以选蛋糕 🎂。"
+   "explanation_cn": "句子里说 having a snack（吃零食），所以选饼干 🍪。"
   },
   {
    "type": "fill",
-   "question": "Listen and fill in the blank: The robot model is my favourite birthday ___.",
-   "audio_text": "The robot model is my favourite birthday present.",
-   "answer": "present",
-   "explanation_cn": "听到 birthday present（生日礼物），所以填 present；这是上周学过的词，复习一遍。"
+   "question": "Listen and fill in the blank: My brother and I are ___ our favourite computer games.",
+   "audio_text": "My brother and I are playing our favourite computer games.",
+   "answer": "playing",
+   "explanation_cn": "听到 are playing our favourite computer games，填 playing。"
   }
  ],
  "ket_pet": [
   {
-   "question": "KET: My uncle works in a big factory ___ makes delivery robots.",
+   "question": "KET: a room for sleeping in → ___",
    "type": "choice",
-   "options": ["which", "who", "what", "where"],
+   "options": [
+    "bedroom",
+    "bathroom",
+    "assistant",
+    "article"
+   ],
    "answer": 0,
-   "explanation_cn": "先行词 factory 是物，定语从句用 which；who 只能指人。"
+   "explanation_cn": "睡觉的房间是 bedroom；bathroom 是洗澡的房间（图4 连线题）。"
   },
   {
-   "question": "KET: I look forward to ___ from you soon.",
+   "question": "KET: I made an ___ with Mark to go fishing on Saturday.",
    "type": "choice",
-   "options": ["hearing", "hear", "hears", "listened"],
+   "options": [
+    "appointment",
+    "answer",
+    "attention",
+    "arrow"
+   ],
    "answer": 0,
-   "explanation_cn": "look forward to 里的 to 是介词，后面接动名词 hearing。"
+   "explanation_cn": "make an appointment with sb. 和某人约好，是固定搭配（图4 三选一第 1 题）。"
   },
   {
-   "question": "KET: There ___ a robot show in the museum tonight.",
+   "question": "KET: Uncle Lee usually spends his summer holiday in the rural ___.",
    "type": "choice",
-   "options": ["will be", "will has", "will have", "is going"],
+   "options": [
+    "area",
+    "part",
+    "side",
+    "article"
+   ],
    "answer": 0,
-   "explanation_cn": "There will be… 是固定句型；there be 句型不能说 there will have。"
+   "explanation_cn": "rural area 乡村地区，是固定说法（图4 三选一第 3 题）。"
   },
   {
-   "question": "KET: The bus is coming. Let's ___ the bus quickly.",
+   "question": "KET 改错：She's liking the clothes she bought. 正确的动词形式是 ___",
    "type": "choice",
-   "options": ["get on", "get up", "get off", "put on"],
+   "options": [
+    "likes",
+    "is liking",
+    "like",
+    "liked"
+   ],
    "answer": 0,
-   "explanation_cn": "上车是 get on；get up 起床，get off 下车，put on 穿上。"
+   "explanation_cn": "like 是状态动词不用进行时；主语第三人称单数用 likes（图1 改错第 1 题）。"
   },
   {
-   "question": "KET: Could you tell me ___ to the science museum?",
+   "question": "KET 隐藏词：Beijing Roast Duck is famous ___ the world.",
    "type": "choice",
-   "options": ["the way", "how way", "way", "to way"],
+   "options": [
+    "around",
+    "between",
+    "under",
+    "against"
+   ],
    "answer": 0,
-   "explanation_cn": "tell sb. the way to… 告诉某人去某地的路；the way 是固定说法。"
+   "explanation_cn": "around the world 全世界，是固定搭配（图4 隐藏词填空第 6 题）。"
   }
  ],
  "writing": {
-  "title": "Dear Amy（四线三格作文 · 全文背默）",
-  "requirement_cn": "先把整封信大声读三遍，再把 5 个空填好，最后背诵全文。这封邀请信就是本周要背熟的作文！",
-  "keywords": ["model", "home", "battery", "box", "nine"],
-  "keywords_cn": ["模型", "家", "电池", "箱子", "九点"],
-  "template": "Dear Amy, Dad bought me a robot {{1}} for my birthday. Can you come to my {{2}} this Saturday? The robot cannot move without a new {{3}}, so we will put it in first. Then we can put all the small parts back into the {{4}} after we finish. Please come at {{5}} o'clock in the morning! Lily",
-  "full_text_cn": "亲爱的Amy，爸爸给我买了一个机器人模型作为生日礼物。这个星期六你能来我家吗？机器人没有新电池就动不了，所以我们要先把它装上。拼完以后，我们可以把小零件全部收回箱子里。请早上九点来！莉莉",
-  "explanation_cn": "英文邀请信三要素：称呼 Dear Amy 开头、正文说清「请谁、什么时候、来做什么」、结尾用 Please come… 加署名。robot model 机器人模型；without a new battery 没有新电池；put … back into the box 把……放回箱子；at nine o'clock 在九点钟（时刻用 at）。",
-  "explanation_en": "An invitation note needs a greeting (Dear Amy), the plan (when, where, what to do), and a closing (Please come at nine!) with the name Lily."
+  "title": "Dear Lucy（方位介词小作文 · 全文背默）",
+  "requirement_cn": "先把整封信读三遍，再把 5 个方位介词填回去，最后背诵全文。五个空全是这一周练的方位介词！",
+  "keywords": [
+   "between",
+   "above",
+   "behind",
+   "under",
+   "beside"
+  ],
+  "keywords_cn": [
+   "在两者之间",
+   "在上方",
+   "在后面",
+   "在下面",
+   "在旁边"
+  ],
+  "template": "Dear Lucy, My bed is {{1}} the window and the desk. A big map hangs {{2}} my bed. The small bookcase stands {{3}} the door. My football is {{4}} the chair. Please come and sit {{5}} me this Sunday! Yours, Amy",
+  "full_text_cn": "亲爱的Lucy，我的床在窗户和书桌之间。一张大地图挂在我的床上方。小书柜立在门后面。我的足球在椅子下面。这个星期天来坐在我旁边吧！你的Amy",
+  "explanation_cn": "书信三件事：称呼 Dear Lucy、正文用方位介词说清每样东西在哪儿、结尾邀请加署名。between A and B 只管两个；above 高于且不接触；behind 在后面；under 在正下方；beside 紧挨着。",
+  "explanation_en": "A short letter needs a greeting (Dear Lucy), clear place words (between, above, behind, under, beside), and a closing with your name."
  },
  "spell": [
   {
-   "question": "模型：m____ [填完整单词]",
-   "answer": "model",
-   "explanation_cn": "robot model 机器人模型；model 也指「榜样」，role model 好榜样。"
+   "question": "卧室：b______ [填完整单词]",
+   "answer": "bedroom",
+   "explanation_cn": "bed + room，睡觉的房间。"
   },
   {
-   "question": "家：h___ [填完整单词]",
-   "answer": "home",
-   "explanation_cn": "come to my home 来我家；home 也可以说 at home 在家。"
+   "question": "约定：a__________ [填完整单词]",
+   "answer": "appointment",
+   "explanation_cn": "make an appointment with sb. 和某人约好。"
   },
   {
-   "question": "电池：b______ [填完整单词]",
-   "answer": "battery",
-   "explanation_cn": "bat + tery；机器人没有 battery 就动不了。"
+   "question": "地区：a___ [填完整单词]",
+   "answer": "area",
+   "explanation_cn": "rural area 乡村地区。"
   },
   {
-   "question": "箱子；盒子：b__ [填完整单词]",
-   "answer": "box",
-   "explanation_cn": "box 箱子；拼完机器人把零件放回 box 里。"
+   "question": "漂亮的：b________ [填完整单词]",
+   "answer": "beautiful",
+   "explanation_cn": "beau + ti + ful；a beautiful hat 一顶漂亮的帽子（图4 隐藏词）。"
   }
  ]
 }

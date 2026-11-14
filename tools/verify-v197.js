@@ -126,12 +126,12 @@ function assertNoInternal(out, label) {
 
 // -------------------------------------------------------------- 版本钉子
 ok('版本钉子一致（meta / 7 处 ?v= / SW / game.js 预缓存）', () => {
-  assert(/<meta name="app-version" content="204">/.test(html), 'index.html meta 没升');
+  assert(/<meta name="app-version" content="205">/.test(html), 'index.html meta 没升');
   const vs = html.match(/<script defer src="[^"]+\?v=(\d+)"/g) || [];
   assert.strictEqual(vs.length, 7, '脚本引用应是 7 处，实际 ' + vs.length);
-  vs.forEach(s => assert(/\?v=204"/.test(s), '还有旧版本：' + s));
-  assert(/var CACHE_NAME = 'amy-english-v204'/.test(sw), 'SW CACHE_NAME 没升');
-  assert(/var V = 204;/.test(sw), 'SW V 没升');
+  vs.forEach(s => assert(/\?v=205"/.test(s), '还有旧版本：' + s));
+  assert(/var CACHE_NAME = 'amy-english-v205'/.test(sw), 'SW CACHE_NAME 没升');
+  assert(/var V = 205;/.test(sw), 'SW V 没升');
   assert(/\.\/game\.js\?v=' \+ V/.test(sw), 'SW 没预缓存 game.js');
 });
 

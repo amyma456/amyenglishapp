@@ -1,245 +1,248 @@
 {
  "day_cn": "周一",
  "day_en": "Monday",
- "theme_cn": "AI口语 + 高频词汇 + 阅读理解（茶马古道） + 键盘拼写",
- "reading_name": "阅读理解 · 茶马古道",
- "spell_name": "今天学的词，敲一遍",
+ "theme_cn": "方位介词 · 教室里的位置 + 高频词汇 + 阅读理解 + 键盘拼写",
+ "reading_name": "阅读理解 · 我们的新教室",
+ "spell_name": "今天学的方位介词，敲一遍",
  "speaking": [
   {
-   "sentence": "How did people travel from one city to another in the past?",
-   "sentence_cn": "过去人们是怎么从一个城市去另一个城市的？",
+   "sentence": "Where is the teacher's desk in your classroom?",
+   "sentence_cn": "你们教室里老师的讲台在哪里？",
    "options": [
-    "In the past, people mostly walked, rode horses or took slow boats.",
-    "Trains are faster than horses.",
-    "I ride my bike to school every day.",
-    "There are many museums in old cities."
+    "It is in front of the blackboard.",
+    "It is under the floor.",
+    "It is behind the whole school.",
+    "It is far from the classroom."
    ],
    "options_cn": [
-    "过去人们大多是走路、骑马或者坐慢船。",
-    "火车比马快。",
-    "我每天骑自行车上学。",
-    "古老的城市里有很多博物馆。"
+    "在黑板前面。",
+    "在地板底下。",
+    "在整个学校后面。",
+    "离教室很远。"
    ],
    "answer": 0,
-   "pronunciation_tips": "past /pɑːst/ 和 passed 同音，mostly 重音在最前面，horses 词尾 /ɪz/ 要出声",
-   "explanation_cn": "问的是「过去怎么出行」，答句要说出过去的方式。A 用 In the past 开头说出三种方式；B 在比较快慢；C 说现在每天；D 介绍城市，都没回答问题。",
-   "answer_cn_hint": "用 In the past, people… 说出过去的交通方式，比如走路、骑马、坐船。"
+   "pronunciation_tips": "in front of 连读成 /ɪnˈfrʌntəv/，blackboard 的 k 轻轻带过",
+   "explanation_cn": "Where 问位置，答句要说清在什么东西前面。A 用 in front of 给出位置；其余三项都不合常理。",
+   "answer_cn_hint": "用 It is in front of / behind / beside… 说出讲台的位置。"
   },
   {
-   "sentence": "If you could ride a horse on an old road, where would you go?",
-   "sentence_cn": "如果你能骑马走一条老路，你会去哪里？",
+   "sentence": "Where do you sit in class?",
+   "sentence_cn": "上课时你坐在哪里？",
    "options": [
-    "I would ride along the old mountain road and look at the forests.",
-    "Horses eat grass and apples.",
-    "I rode a horse at the beach last summer.",
-    "Mountain roads are narrow and dangerous."
+    "I sit between Lily and Tom, near the window.",
+    "I sit at noon every day.",
+    "I sit a new word.",
+    "I sit very quickly."
    ],
    "options_cn": [
-    "我会沿着老的山路骑马，看看两边的森林。",
-    "马吃草和苹果。",
-    "去年夏天我在海边骑过马。",
-    "山路又窄又危险。"
+    "我坐在莉莉和汤姆中间，靠窗。",
+    "我每天中午坐着。",
+    "我坐着一个新单词。",
+    "我坐得很快。"
    ],
    "answer": 0,
-   "pronunciation_tips": "would /wʊd/ 不要读成 will，mountain /ˈmaʊntən/ 中间的 t 轻轻带过",
-   "explanation_cn": "这是假设句，答句要用 I would… 说出地点和想做的事。A 两项都有；B 说马吃什么；C 是过去的经历；D 介绍山路，都没回答「会去哪里」。",
-   "answer_cn_hint": "用 I would go / ride… 说出你想去的地方，再用 and 或 because 补一句原因。"
+   "pronunciation_tips": "between /bɪˈtwiːn/ 重音在后，window /ˈwɪndəʊ/ 重音在前",
+   "explanation_cn": "问的是座位位置，A 用 between 和 near 说清了；B 说时间，C、D 答非所问。",
+   "answer_cn_hint": "用 I sit between A and B / beside… / near… 说座位。"
   },
   {
-   "sentence": "What is a good way to carry heavy things without a car?",
-   "sentence_cn": "没有汽车的时候，运重东西有什么好办法？",
+   "sentence": "How can I get to the library from here?",
+   "sentence_cn": "从这里怎么去图书馆？",
    "options": [
-    "We can carry heavy things with a horse, a cart or a big basket on the back.",
-    "Heavy things are hard to move.",
-    "My schoolbag is heavy today.",
-    "Cars can go very fast on the road."
+    "Go along this hall and turn left at the stairs.",
+    "The library has many books.",
+    "I go there at six o'clock.",
+    "The library is very quiet."
    ],
    "options_cn": [
-    "我们可以用马、手推车或者背上的大筐来运重东西。",
-    "重的东西很难搬动。",
-    "我的书包今天很重。",
-    "汽车在路上能开得很快。"
+    "沿着这条走廊走，在楼梯那儿左转。",
+    "图书馆有很多书。",
+    "我六点去那里。",
+    "图书馆很安静。"
    ],
    "answer": 0,
-   "pronunciation_tips": "cart /kɑːt/ 与 card 区别在词尾 d，basket /ˈbɑːskɪt/ 重音在前",
-   "explanation_cn": "How 问方法，答句要给出具体做法。A 说出三种运货办法；B 只是感叹；C 说书包；D 说汽车，都没有回答「用什么办法」。",
-   "answer_cn_hint": "用 We can + 动词原形，说出马、推车、背筐这些具体的办法。"
+   "pronunciation_tips": "along /əˈlɒŋ/ 别读成 a long，turn left 的 left 词尾 ft 要出声",
+   "explanation_cn": "How can I get to… 问路线，答句要有动词 Go / Turn；只有 A 给了走法。",
+   "answer_cn_hint": "用 Go along… and turn left / right at… 指路。"
   },
   {
-   "sentence": "Which do you like better, travelling by train or walking in the mountains?",
-   "sentence_cn": "你更喜欢哪个：坐火车旅行还是在山里走路？",
+   "sentence": "What is above your bed at home?",
+   "sentence_cn": "你家里的床上方有什么？",
    "options": [
-    "I like walking in the mountains better, because I can hear birds and see small rivers.",
-    "Trains and mountains are both interesting.",
-    "I went to the mountains with my class last autumn.",
-    "Walking for a long time makes people tired."
+    "A big map of the world hangs above my bed.",
+    "A map sleeps under my bed.",
+    "I have breakfast above my bed.",
+    "My bed is above the map."
    ],
    "options_cn": [
-    "我更喜欢在山里走路，因为我能听见鸟叫，还能看见小河。",
-    "火车和山都很有意思。",
-    "去年秋天我和全班一起去了山里。",
-    "走太久会让人很累。"
+    "我的床上方挂着一张世界地图。",
+    "一张地图睡在我床底下。",
+    "我在床上方吃早饭。",
+    "我的床在地图上方。"
    ],
    "answer": 0,
-   "pronunciation_tips": "mountains /ˈmaʊntənz/ 词尾 s 别丢，because 重音在后，rivers /ˈrɪvəz/ 注意 v",
-   "explanation_cn": "二选一的问题要先选一个再给理由。A 选了走路并说了两点原因；B 两边都没选；C 讲经历；D 说缺点，都没有做出选择。",
-   "answer_cn_hint": "先说 I like … better，再用 because 说一条理由。"
+   "pronunciation_tips": "above /əˈbʌv/ 重音在后，world /wɜːld/ 别丢 l",
+   "explanation_cn": "above 表示高于、不接触；A 用 hangs above 正确。D 把两者说反了。",
+   "answer_cn_hint": "用 A … hangs above / over my bed 说床上方挂着什么。"
   },
   {
-   "sentence": "What can old roads and bridges tell us?",
-   "sentence_cn": "老路和老桥能告诉我们什么？",
+   "sentence": "Where can I put my schoolbag?",
+   "sentence_cn": "我可以把书包放在哪儿？",
    "options": [
-    "They can tell us how people lived and travelled long ago.",
-    "Old bridges are made of stone or wood.",
-    "We should not write on old walls.",
-    "My hometown has a new bridge over the river."
+    "You can put it beside the door, next to the small table.",
+    "You can put it on Sunday.",
+    "You can put it between two words.",
+    "You can put it very loudly."
    ],
    "options_cn": [
-    "它们能告诉我们很久以前的人们是怎么生活、怎么出行的。",
-    "老桥是用石头或木头造的。",
-    "我们不应该在老墙上写字。",
-    "我的家乡在河上有一座新桥。"
+    "你可以放在门边，挨着小桌子。",
+    "你可以放在星期天。",
+    "你可以放在两个单词中间。",
+    "你可以很大声地放。"
    ],
    "answer": 0,
-   "pronunciation_tips": "bridges /ˈbrɪdʒɪz/ 词尾 /ɪz/，lived 和 travelled 都是过去式，词尾 d 轻轻带过",
-   "explanation_cn": "What 问内容，答句要说老路老桥能提供的信息。A 说出它们反映古人的生活；B 说材料；C 说保护规则；D 说新桥，都没有回答「告诉我们什么」。",
-   "answer_cn_hint": "用 They can tell us… 说出老路老桥背后的故事，比如古人怎么出行。"
+   "pronunciation_tips": "beside /bɪˈsaɪd/ 与 besides（此外）别混，next to 连读成 /nekstə/",
+   "explanation_cn": "A 用 beside / next to 说清了放书包的地方；其余三项都不是地点。",
+   "answer_cn_hint": "用 put it beside / next to / under… 回答放东西的位置。"
   }
  ],
  "vocab": [
   {
-   "word": "horse",
-   "phonetic": "/hɔːs/",
-   "meaning": "马",
-   "emoji": "🐴",
-   "example_en": "The trader put the tea bags on his horse.",
-   "example_cn": "商人把茶包放到牲口的背上，出发翻过高地。",
-   "hint_cn": "会跑会驮东西的大动物，古时候当车用",
-   "syllables": [
-    "horse"
-   ]
-  },
-  {
-   "word": "mountain",
-   "phonetic": "/ˈmaʊntən/",
-   "meaning": "山；高山",
-   "emoji": "⛰️",
-   "example_en": "The Tea Horse Road goes over tall mountains.",
-   "example_cn": "茶马古道从高高的岭上翻过去。",
-   "hint_cn": "茶马古道要翻的高地，比小丘高得多",
-   "syllables": [
-    "moun",
-    "tain"
-   ]
-  },
-  {
-   "word": "path",
-   "phonetic": "/pɑːθ/",
-   "meaning": "小路；小径",
-   "emoji": "🛤️",
-   "example_en": "The old stone path is narrow but still strong.",
-   "example_cn": "这条老石板小路很窄，但依然结实。",
-   "hint_cn": "人走出来的窄窄的路，th 咬舌",
-   "syllables": [
-    "path"
-   ]
-  },
-  {
-   "word": "bridge",
-   "phonetic": "/brɪdʒ/",
-   "meaning": "桥梁",
+   "word": "over",
+   "phonetic": "/ˈəʊvə(r)/",
+   "meaning": "横跨在上方",
    "emoji": "🌉",
-   "example_en": "We crossed the river on an old stone bridge.",
-   "example_cn": "河上那座古老的桥梁是用石头造的。",
-   "hint_cn": "架在河上让人走过去的东西",
+   "example_en": "A stone bridge goes over the river.",
+   "example_cn": "一座石桥架在河面上。",
+   "hint_cn": "不碰到下面那样东西，从它头顶过去",
    "syllables": [
-    "bridge"
+    "o",
+    "ver"
    ]
   },
   {
-   "word": "basket",
-   "phonetic": "/ˈbɑːskɪt/",
-   "meaning": "篮子；筐",
-   "emoji": "🧺",
-   "example_en": "Grandma carries vegetables in a big basket.",
-   "example_cn": "奶奶用一个大篮子装蔬菜。",
-   "hint_cn": "竹子或藤条编的，能装东西",
+   "word": "under",
+   "phonetic": "/ˈʌndə(r)/",
+   "meaning": "正下方",
+   "emoji": "⬇️",
+   "example_en": "The cat is sleeping under the table.",
+   "example_cn": "小猫正趴在桌子底下睡觉。",
+   "hint_cn": "和 above 相反，被上面那个东西盖着",
    "syllables": [
-    "bas",
-    "ket"
+    "un",
+    "der"
+   ]
+  },
+  {
+   "word": "between",
+   "phonetic": "/bɪˈtwiːn/",
+   "meaning": "两者之间",
+   "emoji": "↔️",
+   "example_en": "I sit between Lily and Tom in class.",
+   "example_cn": "上课时我坐在莉莉和汤姆中间。",
+   "hint_cn": "左右各有一个，一共只有两个",
+   "syllables": [
+    "be",
+    "tween"
+   ]
+  },
+  {
+   "word": "behind",
+   "phonetic": "/bɪˈhaɪnd/",
+   "meaning": "在后面",
+   "emoji": "🔙",
+   "example_en": "The bike is behind the building.",
+   "example_cn": "自行车停在楼房的背面。",
+   "hint_cn": "和 in front of 相反，要绕到另一面才看得见",
+   "syllables": [
+    "be",
+    "hind"
+   ]
+  },
+  {
+   "word": "across",
+   "phonetic": "/əˈkrɒs/",
+   "meaning": "从表面横过",
+   "emoji": "➡️",
+   "example_en": "We walked across the bridge to the shops.",
+   "example_cn": "我们从桥上走过去，到了商店那边。",
+   "hint_cn": "贴着一条线或一个面，从这一边到那一边",
+   "syllables": [
+    "a",
+    "cross"
    ]
   }
  ],
  "reading": {
-  "passage": "The Tea Horse Road was an old trade path between Yunnan and Tibet. Long ago, people loaded tea onto horses and walked over the tall mountains for many months. The road was narrow and dangerous, so the traders walked in groups and camped at night. They carried salt and cloth on the way back, and traded them for more tea. Today people can still see old stone paths and horse bells in the small towns along the road. My grandfather says the road tells us how hard our great-grandparents worked.",
-  "passage_cn": "茶马古道是云南和西藏之间一条古老的商路。很久以前，人们把茶叶装上马背，翻越高高的群山，一走就是好几个月。这条路又窄又危险，所以商队结伴而行，晚上扎营休息。他们在回程时带上盐和布匹，用它们换更多的茶叶。今天，在古道沿线的小镇上，人们还能看到老石板路和马的铃铛。我爷爷说，这条路告诉我们，我们的祖辈当年干活有多辛苦。",
+  "passage": "Welcome to our new classroom. The teacher's desk is in front of the blackboard. My seat is between Lily and Tom, and the reading corner is behind the tall bookcase. A big map hangs above the window, and the waste bin is below it. The door is on the right, so the small table beside the door is for our schoolbags. Everyone can find a place here, and I like sitting near my friends.",
+  "passage_cn": "欢迎来到我们的新教室。老师的讲台在黑板前面。我的座位在莉莉和汤姆中间，阅读角在高书柜的后面。窗户上方挂着一张大地图，垃圾桶在它下面。门在右边，所以门边的小桌子是给大家放书包的。每个人都能在这儿找到位置，我最喜欢坐在朋友旁边。",
   "questions": [
    {
-    "question": "What did people load onto the horses long ago?",
+    "question": "Where is the teacher's desk?",
     "options": [
-     "Tea",
-     "Salt and cloth",
-     "Stones",
-     "Fruit"
+     "In front of the blackboard",
+     "Behind the bookcase",
+     "Above the window",
+     "Beside the door"
     ],
     "answer": 0,
-    "explanation_cn": "第二句说 people loaded tea onto horses（把茶装上马背）；盐和布是回程才带的。"
+    "explanation_cn": "第二句写 in front of the blackboard（在黑板前面）。"
    },
    {
-    "question": "Where was the Tea Horse Road?",
+    "question": "Who sits next to the writer?",
     "options": [
-     "Between Yunnan and Tibet",
-     "Between Beijing and Shanghai",
-     "Between two rivers",
-     "Between two big cities"
+     "Lily and Tom",
+     "The teacher",
+     "Nobody",
+     "Grandma"
     ],
     "answer": 0,
-    "explanation_cn": "第一句写 between Yunnan and Tibet（云南和西藏之间），其他三项文中没提。"
+    "explanation_cn": "第三句写 My seat is between Lily and Tom（座位在两人中间）。"
    },
    {
-    "question": "What did the traders carry on the way back?",
+    "question": "What hangs above the window?",
     "options": [
-     "Salt and cloth",
-     "Tea and sugar",
-     "Books and maps",
-     "Rice and eggs"
+     "A big map",
+     "A clock",
+     "A lamp",
+     "A picture of a cat"
     ],
     "answer": 0,
-    "explanation_cn": "第四句说 carried salt and cloth on the way back（回程带盐和布）。"
+    "explanation_cn": "第四句写 A big map hangs above the window（窗上方挂着大地图）。"
    },
    {
-    "question": "What can people still see along the road today?",
+    "question": "Where do the students put their schoolbags?",
     "options": [
-     "Old stone paths and horse bells",
-     "New hotels and shops",
-     "Big trucks and buses",
-     "Modern trains"
+     "On the small table beside the door",
+     "Under the teacher's desk",
+     "Behind the blackboard",
+     "In the bookcase"
     ],
     "answer": 0,
-    "explanation_cn": "第五句写 old stone paths and horse bells（老石板路和马的铃铛），其他三项文中没提。"
+    "explanation_cn": "第五句说门在右边，门边的小桌子用来放书包，用 beside the door。"
    }
   ]
  },
  "spell": [
   {
-   "question": "马：h___ [填完整单词]",
-   "answer": "horse",
-   "explanation_cn": "horse 读 /hɔːs/，古时候马是最重要的运输帮手。"
+   "question": "横跨在上方：o___ [填完整单词]",
+   "answer": "over",
+   "explanation_cn": "over 是不接触地从上方越过；接触时用 on。"
   },
   {
-   "question": "山；高山：m________ [填完整单词]",
-   "answer": "mountain",
-   "explanation_cn": "moun + tain；茶马古道翻过高高的 mountains。"
+   "question": "正下方：u____ [填完整单词]",
+   "answer": "under",
+   "explanation_cn": "under the tree / under the bed，被上面盖着。"
   },
   {
-   "question": "桥梁：b_____ [填完整单词]",
-   "answer": "bridge",
-   "explanation_cn": "bridge 读 /brɪdʒ/，结尾是 dge。"
+   "question": "两者之间：b______ [填完整单词]",
+   "answer": "between",
+   "explanation_cn": "between A and B；三者以上用 among。"
   },
   {
-   "question": "篮子；筐：b_____ [填完整单词]",
-   "answer": "basket",
-   "explanation_cn": "bas + ket；篮球 basketball 就是 basket + ball。"
+   "question": "从表面横过：a_____ [填完整单词]",
+   "answer": "across",
+   "explanation_cn": "walk across the bridge 走过桥面。"
   }
  ]
 }

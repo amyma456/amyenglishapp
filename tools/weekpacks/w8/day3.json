@@ -1,130 +1,189 @@
 {
  "day_cn": "周四",
  "day_en": "Thursday",
- "theme_cn": "阅读理解（机器人快递） + 比较级语法 + 听力 + 键盘拼写",
- "reading_name": "阅读理解 · 机器人快递",
- "grammar_name": "语法 · 比较级",
- "listening_name": "听力 · 快递到门",
- "spell_name": "今天学的词，敲一遍",
+ "theme_cn": "易混方位介词 + 时间介词 in / on / at + I'm shopping 阅读与听力 + 键盘拼写",
+ "reading_name": "阅读理解 · 一家人去购物",
+ "grammar_name": "语法 · in front of / above / between / under + in / on / at",
+ "listening_name": "听力 · 谁买了什么 · 店在哪里",
+ "spell_name": "今天购物的词，敲一遍",
  "reading": {
-  "passage": "In some Chinese cities, little robots now help people send packages. The robot looks like a small box with six wheels, and it can carry up to thirty kilograms. Before it starts, you put your package in and tell the robot your home address on the phone. The robot has eyes on top, so it can stop and wait when people or bikes pass by. When it arrives, you type a code on the screen and the door opens by itself. Many people like it because it works day and night and never gets tired.",
-  "passage_cn": "在中国的一些城市，小机器人现在帮人们送快递。这种机器人看起来像一个带六个轮子的小箱子，最多能装三十公斤的东西。出发之前，你把包裹放进去，在手机上告诉机器人你家的地址。机器人的顶上有「眼睛」，所以有人或者自行车经过时，它会停下来等一等。到了之后，你在屏幕上输入取件码，门就会自己打开。很多人喜欢它，因为它白天黑夜都能干活，而且从来不会累。",
+  "passage": "Last Saturday Tom went shopping with his family in the big mall. The shoe shop is between the bookshop and the cake shop, and the watch shop is beside the bookshop. His sister bought a dress, and his dad chose a suit for work. Mum picked out a pair of jeans, and his brother wanted a T-shirt and new shoes. Grandma found a small watch under the big clock above the shop door. Tom himself carried a big bag, and they were all tired but happy at noon.",
+  "passage_cn": "上周六汤姆和家人一起去大商场买东西。鞋店在书店和蛋糕店之间，钟表店就在书店旁边。姐姐买了一条连衣裙，爸爸挑了一套上班穿的西装。妈妈选了一条牛仔裤，弟弟想要一件 T 恤和新鞋。奶奶在店门上方那口大钟底下找到一块小手表。汤姆自己提着一只大袋子，中午时分大家都很累，但很开心。",
   "questions": [
    {
-    "question": "What does the delivery robot look like?",
-    "options": ["A small box with six wheels", "A big dog with four legs", "A tall man with a bag", "A bird with two wings"],
+    "question": "What did Tom's sister buy?",
+    "options": [
+     "A dress",
+     "A suit",
+     "Jeans",
+     "A watch"
+    ],
     "answer": 0,
-    "explanation_cn": "第二句说 looks like a small box with six wheels（像带六个轮子的小箱子）。"
+    "explanation_cn": "第二句前半写 His sister bought a dress（姐姐买了连衣裙）。"
    },
    {
-    "question": "How much can the robot carry?",
-    "options": ["Up to thirty kilograms", "Up to three kilograms", "Only one book", "One hundred kilograms"],
+    "question": "Who chose a suit for work?",
+    "options": [
+     "Tom's dad",
+     "Tom's mum",
+     "Grandma",
+     "Tom's brother"
+    ],
     "answer": 0,
-    "explanation_cn": "第二句写 carry up to thirty kilograms（最多装三十公斤）。"
+    "explanation_cn": "第二句后半写 his dad chose a suit for work。"
    },
    {
-    "question": "What does the robot do when people or bikes pass by?",
-    "options": ["It stops and waits", "It runs faster", "It turns around", "It makes a loud noise"],
+    "question": "Where was the watch shop?",
+    "options": [
+     "Beside the bookshop",
+     "Opposite the gate",
+     "Behind the mall",
+     "Above the shoe shop"
+    ],
     "answer": 0,
-    "explanation_cn": "第四句说 it can stop and wait when people or bikes pass by（停下来等）。"
+    "explanation_cn": "第五句写 in the shop beside the bookshop（书店旁边的店）。"
    },
    {
-    "question": "How do you open the robot's door?",
-    "options": ["Type a code on the screen", "Push it hard", "Ask the robot loudly", "Wait for ten minutes"],
+    "question": "What did Tom carry?",
+    "options": [
+     "A big bag",
+     "A new watch",
+     "A pair of shoes",
+     "A T-shirt"
+    ],
     "answer": 0,
-    "explanation_cn": "第五句写 type a code on the screen and the door opens（在屏幕上输入取件码，门就开）。"
+    "explanation_cn": "第六句写 Tom himself carried a big bag（汤姆提着大袋子）。"
    }
   ]
  },
  "grammar": [
   {
-   "question": "选词填空（bigger / hotter / heavier / faster / funnier / colder）：The elephant is ___ than the horse.",
-   "type": "fill",
-   "answer": "bigger",
-   "explanation_cn": "大象比马大，big 双写 g 加 er。"
+   "question": "The teacher is standing ___ the classroom and writing on the blackboard.",
+   "type": "choice",
+   "options": [
+    "in the front of",
+    "in front of",
+    "among",
+    "across"
+   ],
+   "answer": 0,
+   "explanation_cn": "站在教室内部的前面用 in the front of；in front of 指在教室外面、教室前方（图3 第 4 题易混点）。"
   },
   {
-   "question": "选词填空（bigger / hotter / heavier / faster / funnier / colder）：Today is ___ than yesterday, so we all wear short sleeves.",
-   "type": "fill",
-   "answer": "hotter",
-   "explanation_cn": "今天比昨天热，hot 双写 t 加 er。"
+   "question": "Look! The plane is flying ___ the clouds.",
+   "type": "choice",
+   "options": [
+    "above",
+    "under",
+    "between",
+    "against"
+   ],
+   "answer": 0,
+   "explanation_cn": "飞机飞得比云高，且不接触，用 above；under 是正下方。"
   },
   {
-   "question": "选词填空（bigger / hotter / heavier / faster / funnier / colder）：My schoolbag is ___ than yours; yours is light.",
-   "type": "fill",
-   "answer": "heavier",
-   "explanation_cn": "我的书包比你的重，heavy 去 y 加 ier。"
+   "question": "The little girl sat ___ her mother and father at the table.",
+   "type": "choice",
+   "options": [
+    "between",
+    "among",
+    "around",
+    "along"
+   ],
+   "answer": 0,
+   "explanation_cn": "爸爸妈妈共两个人，中间用 between；三者以上才用 among（图3 第 8 题）。"
   },
   {
-   "question": "选词填空（bigger / hotter / heavier / faster / funnier / colder）：The delivery robot runs ___ than a walking man.",
-   "type": "fill",
-   "answer": "faster",
-   "explanation_cn": "fast 加 er；机器人跑得比走路的人快。"
+   "question": "The cat is sleeping ___ the table, so we cannot see it.",
+   "type": "choice",
+   "options": [
+    "under",
+    "below",
+    "over",
+    "above"
+   ],
+   "answer": 0,
+   "explanation_cn": "被桌子盖住、看不见，正下方用 under；below 只说位置更低，不一定被盖住。"
   },
   {
-   "question": "选词填空（bigger / hotter / heavier / faster / funnier / colder）：This cartoon is ___ than that one, so we all laugh.",
+   "question": "选词填空（in / on / at）：I usually play basketball with my friend ___ Sundays.",
    "type": "fill",
-   "answer": "funnier",
-   "explanation_cn": "funny 去 y 加 ier；这部动画片更好笑，大家都笑了。"
+   "answer": "on",
+   "explanation_cn": "星期几、具体某一天前用 on（图2 第 6 题）。"
   },
   {
-   "question": "选词填空（bigger / hotter / heavier / faster / funnier / colder）：Winter in Beijing is ___ than in Shanghai.",
+   "question": "选词填空（in / on / at）：What subjects do you often have ___ the morning?",
    "type": "fill",
-   "answer": "colder",
-   "explanation_cn": "北京的冬天比上海冷，cold 加 er。"
+   "answer": "in",
+   "explanation_cn": "in the morning / in the afternoon / in the evening 用 in（图2 第 7 题）。"
   }
  ],
  "listening": [
   {
-   "question": "Listen to the dialogue. What is inside the package?",
-   "audio_text": "Boy: Mum, the robot is at our door with a package. Mum: OK, let me type the code and open it. Boy: Look, my new storybooks are inside!",
-   "options": ["New storybooks", "New shoes", "A birthday cake", "A toy car"],
+   "question": "Listen to the dialogue. What did grandma buy?",
+   "audio_text": "Boy: Grandma, what did you buy just now? Woman: I bought a small watch in the shop beside the bookshop. Boy: It looks lovely!",
+   "options": [
+    "A watch",
+    "A dress",
+    "A pair of shoes",
+    "A bag"
+   ],
    "answer": 0,
-   "explanation_cn": "男孩最后说 my new storybooks are inside（我的新故事书在里面）。"
+   "explanation_cn": "奶奶说 I bought a small watch（买了一块小手表），还说了店在书店旁边。"
   },
   {
-   "question": "Listen to the dialogue. Where should the man leave the package?",
-   "audio_text": "Man: Hello, where should I leave the package today? Woman: Please put it at the front desk, and my son will take it home. Man: No problem, I will send you a photo later.",
-   "options": ["At the front desk", "Under the bed", "In the classroom", "At the school gate"],
+   "question": "Listen to the dialogue. Where is the shoe shop?",
+   "audio_text": "Girl: Excuse me, where can I buy new shoes? Man: The shoe shop is between the bookshop and the cake shop. Girl: Thanks a lot!",
+   "options": [
+    "Between the bookshop and the cake shop",
+    "Behind the mall",
+    "Above the watch shop",
+    "Opposite the school"
+   ],
    "answer": 0,
-   "explanation_cn": "女士说 put it at the front desk（放在前台）。"
+   "explanation_cn": "男士说 between the bookshop and the cake shop（两家店之间）。"
   },
   {
    "question": "Which picture matches the sentence you hear?",
-   "audio_text": "A little robot is carrying a big package on the street.",
-   "options": ["🤖", "🚲", "🐕", "🚌"],
+   "audio_text": "The boy is putting a pair of jeans into a big bag.",
+   "options": [
+    "👖",
+    "👗",
+    "👔",
+    "⌚"
+   ],
    "picture_options": true,
    "answer": 0,
-   "explanation_cn": "句子里说 a little robot is carrying a big package（小机器人扛着大包裹），所以选 🤖。"
+   "explanation_cn": "句子里说 a pair of jeans（一条牛仔裤），所以选 👖。"
   },
   {
    "type": "fill",
-   "question": "Listen and fill in the blank: The robot has ___ wheels, so it can turn easily.",
-   "audio_text": "The robot has six wheels, so it can turn easily.",
-   "answer": "six",
-   "explanation_cn": "听到 six wheels（六个轮子），所以填 six。"
+   "question": "Listen and fill in the blank: The clock hangs ___ the door of the shop.",
+   "audio_text": "The clock hangs above the door of the shop.",
+   "answer": "above",
+   "explanation_cn": "听到 hangs above the door（挂在门上方），填 above。"
   }
  ],
  "spell": [
   {
-   "question": "机器人：r____ [填完整单词]",
-   "answer": "robot",
-   "explanation_cn": "ro + bot；机器人是今天阅读的主角。"
+   "question": "牛仔裤：j____ [填完整单词]",
+   "answer": "jeans",
+   "explanation_cn": "a pair of jeans 一条牛仔裤，词尾 s 别丢。"
   },
   {
-   "question": "包裹：p_____ [填完整单词]",
-   "answer": "parcel",
-   "explanation_cn": "parcel 和 package 都指包裹，ce 结尾别写成 se。"
+   "question": "衬衫：s____ [填完整单词]",
+   "answer": "shirt",
+   "explanation_cn": "shirt 衬衫；和 skirt（裙子）只差一个字母。"
   },
   {
-   "question": "重的：h____ [填完整单词]",
-   "answer": "heavy",
-   "explanation_cn": "heavy 读 /ˈhevi/；比较级是 heavier。"
+   "question": "鞋子：s____ [填完整单词]",
+   "answer": "shoes",
+   "explanation_cn": "a pair of shoes 一双鞋，shoe 加 s。"
   },
   {
-   "question": "街道：s_____ [填完整单词]",
-   "answer": "street",
-   "explanation_cn": "street 读 /striːt/，双 ee 长音；马路上走的是 street。"
+   "question": "手表：w____ [填完整单词]",
+   "answer": "watch",
+   "explanation_cn": "watch 手表；watch 也可作动词「观看」。"
   }
  ]
 }

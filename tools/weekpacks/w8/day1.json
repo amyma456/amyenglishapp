@@ -1,130 +1,165 @@
 {
  "day_cn": "周二",
  "day_en": "Tuesday",
- "theme_cn": "阅读理解（垃圾分类） + will/won't 语法 + 听力 + 键盘拼写",
- "reading_name": "阅读理解 · 垃圾分类",
- "grammar_name": "语法 · will / won't（一般将来时）",
- "listening_name": "听力 · 垃圾分类站",
- "spell_name": "今天学的词，敲一遍",
+ "theme_cn": "方位介词辨析（图3 考点巩固） + 阅读理解 + 听力 + 键盘拼写",
+ "reading_name": "阅读理解 · 我家的小房子",
+ "grammar_name": "语法 · 方位介词 over / under / through / in / between",
+ "listening_name": "听力 · 商场里找店铺",
+ "spell_name": "今天学的方位介词，敲一遍",
  "reading": {
-  "passage": "In big cities like Shanghai, families sort their rubbish into four different bins every day. The blue bin takes paper, plastic bottles and glass, and the green bin takes fruit skins and leaves. The red bin is for things like old batteries, because they are bad for the earth. The grey bin takes other rubbish, such as used tissues and dirty paper cups. At my school, the students take turns to help younger kids sort their rubbish at lunch. Sorting rubbish keeps our city clean and gives old things a new life.",
-  "passage_cn": "在上海这样的大城市，每个家庭每天都要把垃圾分进四种不同的垃圾桶。蓝色垃圾桶收纸张、塑料瓶和玻璃，绿色垃圾桶收果皮和树叶。红色垃圾桶收旧电池这类东西，因为它们对地球有害。灰色垃圾桶收其他垃圾，比如用过的纸巾和脏纸杯。在我的学校，同学们中午轮流帮助低年级的小朋友给垃圾分类。垃圾分类让我们的城市保持干净，也让旧东西有了新的生命。",
+  "passage": "My family lives in a small house near a park. There are two bedrooms and one bathroom in it. My bedroom is opposite the bathroom, so I can see its door from my bed. A bookshelf stands against the wall, and my football is under the bed. The kitchen is downstairs, just below my room. At the weekend I often read among the cushions on the floor.",
+  "passage_cn": "我家住在公园附近的一所小房子里。房子里有两间卧室和一间浴室。我的卧室在浴室对面，躺在床上就能看见浴室门。书柜靠墙立着，我的足球在床底下。厨房在楼下，就在我房间的下方。周末我常常坐在地上的一堆靠垫中间看书。",
   "questions": [
    {
-    "question": "How many bins do families sort rubbish into?",
-    "options": ["Four", "Two", "Six", "One"],
+    "question": "How many bedrooms are there in the house?",
+    "options": [
+     "Two",
+     "One",
+     "Three",
+     "Four"
+    ],
     "answer": 0,
-    "explanation_cn": "第一句说 four different bins（四种不同的垃圾桶）。"
+    "explanation_cn": "第二句写 two bedrooms and one bathroom（两间卧室、一间浴室）。"
    },
    {
-    "question": "What goes into the blue bin?",
-    "options": ["Paper, plastic bottles and glass", "Fruit skins and leaves", "Old batteries", "Used tissues"],
+    "question": "Where is the writer's bedroom?",
+    "options": [
+     "Opposite the bathroom",
+     "Above the kitchen",
+     "Behind the park",
+     "Next to the living room"
+    ],
     "answer": 0,
-    "explanation_cn": "第二句说 blue bin 收 paper、plastic bottles 和 glass；果皮树叶进绿色桶。"
+    "explanation_cn": "第三句写 opposite the bathroom（在浴室对面）。"
    },
    {
-    "question": "Why do old batteries go into the red bin?",
-    "options": ["Because they are bad for the earth", "Because they are very heavy", "Because they are big", "Because they smell bad"],
+    "question": "Where is the football?",
+    "options": [
+     "Under the bed",
+     "Against the wall",
+     "On the bookshelf",
+     "Below the kitchen"
+    ],
     "answer": 0,
-    "explanation_cn": "第三句写 because they are bad for the earth（因为它们对地球有害）。"
+    "explanation_cn": "第四句后半写 my football is under the bed（足球在床底下）。"
    },
    {
-    "question": "What do the students take turns to do at lunch?",
-    "options": ["Help younger kids sort their rubbish", "Clean the grey bin", "Take the rubbish home", "Make paper cups"],
+    "question": "What does the writer do at the weekend?",
+    "options": [
+     "Read among the cushions on the floor",
+     "Play football in the park",
+     "Cook in the kitchen",
+     "Sleep in the bathroom"
+    ],
     "answer": 0,
-    "explanation_cn": "第五句说 take turns to help younger kids sort their rubbish（轮流帮低年级小朋友分类）。"
+    "explanation_cn": "末句写 read among the cushions on the floor（在一堆靠垫中间读书）。"
    }
   ]
  },
  "grammar": [
   {
-   "question": "选词填空（will / won't）：Tomorrow is my birthday, so Mum ___ make a big cake for me.",
+   "question": "选词填空（over / under / in / on）：This is the only bridge which is ___ the river.",
    "type": "fill",
-   "answer": "will",
-   "explanation_cn": "明天确实会发生的事用 will；肯定句直接敲小写 will。"
+   "answer": "over",
+   "explanation_cn": "桥横跨河面、不接触水面，用 over（图3 考点巩固第 1 题）。"
   },
   {
-   "question": "选词填空（will / won't）：Don't worry about that little dog; it ___ bite you.",
+   "question": "选词填空（over / under / in / on）：Look, the ship is going ___ the bridge.",
    "type": "fill",
-   "answer": "won't",
-   "explanation_cn": "不会发生的用 won't = will not；小狗不会咬人。"
+   "answer": "under",
+   "explanation_cn": "船从桥底下过，正下方用 under（图3 第 2 题）。"
   },
   {
-   "question": "选词填空（will / won't）：Look at the black clouds! It ___ rain in a minute.",
+   "question": "选词填空（across / through / along / past）：The man is running ___ the park.",
    "type": "fill",
-   "answer": "will",
-   "explanation_cn": "看到乌云推断马上要下雨，用 will 表示将要发生。"
+   "answer": "through",
+   "explanation_cn": "从公园内部穿行，四周都有树和路，用 through（图3 第 5 题）。"
   },
   {
-   "question": "选词填空（will / won't）：Lily is ill today, so she ___ come to school tomorrow.",
+   "question": "选词填空（in / on / at / under）：How many apples are there ___ the basket?",
    "type": "fill",
-   "answer": "won't",
-   "explanation_cn": "生病了所以明天不会来上学，用否定式 won't。"
+   "answer": "in",
+   "explanation_cn": "苹果装在篮子里面，用 in（图3 第 6 题）。"
   },
   {
-   "question": "选词填空（will / won't）：There ___ be a football game in our school next Friday.",
+   "question": "选词填空（under / below / over / above）：The boys are reading ___ the tree.",
    "type": "fill",
-   "answer": "will",
-   "explanation_cn": "There will be… 是固定句型，表示「下周将会有……」。"
+   "answer": "under",
+   "explanation_cn": "在树冠正下方乘凉读书，用 under（图3 第 7 题）。"
   },
   {
-   "question": "选词填空（will / won't）：Practice more and you ___ swim better next month.",
+   "question": "选词填空（between / among / across / through）：The girl sat down ___ her mother and father.",
    "type": "fill",
-   "answer": "will",
-   "explanation_cn": "多练习，下个月你「就会」游得更好，肯定的意思用 will。"
+   "answer": "between",
+   "explanation_cn": "爸爸妈妈一共两个人，中间用 between（图3 第 8 题）。"
   }
  ],
  "listening": [
   {
-   "question": "Listen to the dialogue. Where should the boy put the bottles?",
-   "audio_text": "Mum: We have two bottles and some old paper here. Boy: Shall I put them into the blue bin? Mum: Yes, and the fruit skins go into the green one.",
-   "options": ["Into the blue bin", "Into the green bin", "Into the red bin", "Into the grey bin"],
+   "question": "Listen to the dialogue. Where is the shoe shop?",
+   "audio_text": "Boy: Excuse me, where is the shoe shop? Woman: It is between the bookshop and the cake shop. Boy: Thank you very much!",
+   "options": [
+    "Between the bookshop and the cake shop",
+    "Behind the park",
+    "Above the watch shop",
+    "Across the river"
+   ],
    "answer": 0,
-   "explanation_cn": "男孩问能不能放进蓝桶，妈妈说 Yes，所以瓶子进 blue bin。"
+   "explanation_cn": "女士说 between the bookshop and the cake shop（在书店和蛋糕店之间）。"
   },
   {
-   "question": "Listen to the dialogue. How can the woman get to the rubbish station?",
-   "audio_text": "Woman: Excuse me, where is the nearest rubbish station? Man: Go along this street and turn left at the fruit shop. Woman: Thank you very much.",
-   "options": ["Turn left at the fruit shop", "Turn right at the school", "Go back home first", "Take a bus there"],
+   "question": "Listen to the dialogue. Where did Dad put the new watch?",
+   "audio_text": "Girl: Dad, I cannot find my new watch. Dad: I put it in the small box under your bed. Girl: Oh, I see it now!",
+   "options": [
+    "In a box under the bed",
+    "On the table",
+    "Inside the schoolbag",
+    "Behind the door"
+   ],
    "answer": 0,
-   "explanation_cn": "男士说 Go along this street and turn left at the fruit shop（沿这条街走，在水果店左转）。"
+   "explanation_cn": "爸爸说 in the small box under your bed（床底下的小盒子里），两重位置都要听清。"
   },
   {
    "question": "Which picture matches the sentence you hear?",
-   "audio_text": "The boy is putting a plastic bottle into the blue bin.",
-   "options": ["🗑️", "📰", "🍎", "🚲"],
+   "audio_text": "The cat is sleeping under the chair.",
+   "options": [
+    "🪑",
+    "🛏️",
+    "📦",
+    "🌳"
+   ],
    "picture_options": true,
    "answer": 0,
-   "explanation_cn": "句子里说 putting a plastic bottle into the blue bin（把塑料瓶放进蓝色垃圾桶），所以选垃圾桶 🗑️。"
+   "explanation_cn": "句子里说 under the chair（在椅子底下），所以选椅子 🪑。"
   },
   {
    "type": "fill",
-   "question": "Listen and fill in the blank: Please sort the rubbish and keep our city ___.",
-   "audio_text": "Please sort the rubbish and keep our city clean.",
-   "answer": "clean",
-   "explanation_cn": "听到 keep our city clean（让我们的城市保持干净），所以填 clean。"
+   "question": "Listen and fill in the blank: The bookshop is ___ the cake shop and the shoe shop.",
+   "audio_text": "The bookshop is between the cake shop and the shoe shop.",
+   "answer": "between",
+   "explanation_cn": "听到 between the cake shop and the shoe shop，填 between。"
   }
  ],
  "spell": [
   {
-   "question": "分类；整理：s___ [填完整单词]",
-   "answer": "sort",
-   "explanation_cn": "sort rubbish 给垃圾分类；sort 也指「种类」，a kind of sort。"
+   "question": "从内部穿过：t______ [填完整单词]",
+   "answer": "through",
+   "explanation_cn": "through the park / through the tunnel，四周被包着。"
   },
   {
-   "question": "垃圾桶：b__ [填完整单词]",
-   "answer": "bin",
-   "explanation_cn": "bin 就是垃圾桶，四个字母的单词最好记。"
+   "question": "横跨在上方：o___ [填完整单词]",
+   "answer": "over",
+   "explanation_cn": "over the river 桥跨过河面。"
   },
   {
-   "question": "塑料的：p_______ [填完整单词]",
-   "answer": "plastic",
-   "explanation_cn": "plas + tic；plastic bottles 塑料瓶，少用塑料袋就是 plastic bags。"
+   "question": "正下方：u____ [填完整单词]",
+   "answer": "under",
+   "explanation_cn": "under the bed 床底下。"
   },
   {
-   "question": "玻璃：g____ [填完整单词]",
-   "answer": "glass",
-   "explanation_cn": "glass 玻璃；一杯玻璃杯装的水是 a glass of water。"
+   "question": "两者之间：b______ [填完整单词]",
+   "answer": "between",
+   "explanation_cn": "between A and B，只管两个。"
   }
  ]
 }

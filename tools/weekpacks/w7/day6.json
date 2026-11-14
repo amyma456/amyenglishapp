@@ -1,9 +1,9 @@
 {
  "day_cn": "周日",
  "day_en": "Sunday",
- "theme_cn": "作文跟读 + 词汇 + 完形 + 键盘拼写",
- "cloze_name": "完形填空 · 运河边的一天",
- "spell_name": "今天学的词，敲一遍",
+ "theme_cn": "作文跟读 + 词汇 + 方位介词完形（家长 11-14 五张图专项） + 键盘拼写",
+ "cloze_name": "完形填空 · 商场找店铺（方位介词 6 空）",
+ "spell_name": "今天学的方位介词，敲一遍",
  "vocab": [
   {
    "word": "shopping",
@@ -70,100 +70,100 @@
   }
  ],
  "cloze": {
-  "passage": "Last Friday our class went on a trip along the Grand 1___. In the morning we visited an old water gate, and an engineer told us how the gate 2___ the boats go up and down. At noon we sat under the trees and ate the 3___ that our parents had made. In the afternoon we walked along the new green path and planted five small trees with our 4___. Our teacher said that long ago the wind carried 5___ into the river, but now the grass holds the soil. On the way back we took the subway, and the ride was much 6___ than the bus. I hope we can come again next spring.",
+  "passage": "Last Saturday Mum and I went shopping in the new mall 1___ our town. The shoe shop is 2___ the bookshop and the cake shop, so we found it quickly. A big clock hangs 3___ the door of the watch shop. Mum's bike was 4___ the building, not in front of it. We walked 5___ the bridge to reach the smaller shops. At noon we sat 6___ a tall tree and ate our sandwiches. I was tired but happy, and I carried the bags all the way home.",
   "sentences_cn": [
-   "上周五我们班沿着京杭大运河去研学。",
-   "上午我们参观了一座古老的船闸，一位工程师给我们讲这道闸门怎样帮船只上上下下。",
-   "中午我们坐在树下，吃了爸爸妈妈准备好的午餐。",
-   "下午我们沿着新修的绿道散步，还亲手种了五棵小树。",
-   "老师说很久以前这里的风把沙子吹进河里，现在草把泥土固定住了。",
-   "回来的路上我们坐了地铁，比公交车快得多。",
-   "我希望明年春天还能再来。"
+   "上周六我和妈妈去了我们镇附近新开的商场买东西。",
+   "鞋店在书店和蛋糕店之间，所以我们很快就找到了。",
+   "钟表店的门上方挂着一口大钟。",
+   "妈妈的自行车停在楼的后面，而不是楼前面。",
+   "我们走过那座桥，去到小一点的店铺那边。",
+   "中午我们坐在一棵大树底下吃了三明治。",
+   "我虽然累但很开心，一路把袋子提回了家。"
   ],
   "questions": [
    {
     "question": "1___",
     "options": [
-     "canal",
-     "wall",
-     "tower",
-     "tunnel"
+     "near",
+     "under",
+     "between",
+     "among"
     ],
     "answer": 0,
-    "explanation_cn": "沿着一趟研学之旅，英文里说 the Grand Canal（京杭大运河），所以填 canal。"
+    "explanation_cn": "商城在我们镇附近，说位置用 near；under / between / among 都讲不通。"
    },
    {
     "question": "2___",
     "options": [
-     "helps",
-     "helped",
-     "helping",
-     "to help"
+     "between",
+     "among",
+     "across",
+     "through"
     ],
     "answer": 0,
-    "explanation_cn": "讲的是船闸一般的工作原理，用一般现在时第三人称单数 helps。"
+    "explanation_cn": "两家店一左一右，一共两个，中间用 between；三者以上才用 among。"
    },
    {
     "question": "3___",
     "options": [
-     "lunch",
-     "homework",
-     "poster",
-     "ticket"
+     "over",
+     "under",
+     "inside",
+     "off"
     ],
     "answer": 0,
-    "explanation_cn": "中午在树下吃的是父母准备的午餐 lunch，其他三项不能吃。"
+    "explanation_cn": "钟挂在门的上方、不接触门，用 over；under 是正下方。"
    },
    {
     "question": "4___",
     "options": [
-     "hands",
-     "bikes",
-     "books",
-     "phones"
+     "behind",
+     "above",
+     "along",
+     "past"
     ],
     "answer": 0,
-    "explanation_cn": "亲手种树是 plant trees with our hands（用我们的双手），是固定说法。"
+    "explanation_cn": "后半句说 not in front of it（不在前面），对应的是 behind（在后面）。"
    },
    {
     "question": "5___",
     "options": [
-     "sand",
-     "salt",
-     "paper",
-     "milk"
+     "across",
+     "through",
+     "into",
+     "onto"
     ],
     "answer": 0,
-    "explanation_cn": "风把沙子吹进河里——治沙前风沙大，所以是 sand；后文 grass holds the soil 也印证。"
+    "explanation_cn": "从桥的一边走到另一边，贴着桥面横过用 across。"
    },
    {
     "question": "6___",
     "options": [
-     "faster",
-     "fastest",
-     "fast",
-     "more fast"
+     "under",
+     "over",
+     "between",
+     "among"
     ],
     "answer": 0,
-    "explanation_cn": "much 后面接比较级，than 也提示比较，所以填 faster。"
+    "explanation_cn": "坐在树底下乘凉，正下方用 under。"
    }
   ]
  },
  "spell": [
   {
-   "question": "购物：s_______ [填完整单词]",
-   "answer": "shopping",
-   "explanation_cn": "本周作文主题词，背作文时一起默。"
+   "question": "横跨在上方：o___ [填完整单词]",
+   "answer": "over",
+   "explanation_cn": "桥架在河上：The bridge is over the river. 注意和 on（接触）区别。"
   },
   {
-   "question": "袜子：s___ [填完整单词]",
-   "answer": "socks",
-   "explanation_cn": "sock 加 s，一双袜子 a pair of socks。"
+   "question": "正下方：u____ [填完整单词]",
+   "answer": "under",
+   "explanation_cn": "小猫在桌子底下：The cat is under the table."
   },
   {
-   "question": "礼物：p______ [填完整单词]",
-   "answer": "present",
-   "explanation_cn": "present 读 /ˈpreznt/，礼物；注意别和 parent（父母）拼混。"
+   "question": "两者之间：b______ [填完整单词]",
+   "answer": "between",
+   "explanation_cn": "坐在妈妈和爸爸中间：sit between Mum and Dad."
   }
  ],
  "writing_drill": {
