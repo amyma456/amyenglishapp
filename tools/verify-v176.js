@@ -130,11 +130,11 @@ const html = fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8');
 ok(/\.writing-essay\{[^}]*white-space:pre-line/.test(html), '写作正文 white-space:pre-line（信件换行能显示）');
 
 // —— 5) 版本钉 v176 ——
-ok(/content="205"/.test(html), 'index.html app-version=176');
-ok((html.match(/\?v=205/g) || []).length >= 6, '静态资源 ?v=205 ≥ 7 处');
+ok(/content="206"/.test(html), 'index.html app-version=176');
+ok((html.match(/\?v=206/g) || []).length >= 6, '静态资源 ?v=206 ≥ 7 处');
 const sw = fs.readFileSync(path.join(ROOT, 'public', 'sw.js'), 'utf8');
-ok(/var V = 205;/.test(sw) && /amy-english-v205/.test(sw), 'sw.js 版本与缓存名 = 176');
-ok(!/amy-english-v(?!205)d{3}/.test(sw) && !/var V = (?!205)d{2,3};/.test(sw) && !/content="(?!205)d{3}"/.test(html), '旧版本钉已清干净（缓存名 / V / meta 只剩 188）');
+ok(/var V = 206;/.test(sw) && /amy-english-v206/.test(sw), 'sw.js 版本与缓存名 = 176');
+ok(!/amy-english-v(?!206)d{3}/.test(sw) && !/var V = (?!206)d{2,3};/.test(sw) && !/content="(?!206)d{3}"/.test(html), '旧版本钉已清干净（缓存名 / V / meta 只剩 188）');
 
 console.log('\n' + (fail === 0 ? '✅ 全部 ' + pass + ' 项通过' : '❌ ' + fail + ' 项失败 / ' + pass + ' 项通过'));
 process.exit(fail === 0 ? 0 : 1);

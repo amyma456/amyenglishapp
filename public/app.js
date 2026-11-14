@@ -8934,7 +8934,9 @@ const App = {
       const q = m.questions[qi];
       const solved = this._questionSolved(mi, qi, dayIdx);
       html += '<div class="cq-blank" id="cq-b-' + mi + '-' + qi + '">';
-      html += '<div class="cq-blank-num">第 ' + (qi + 1) + ' 空</div>';
+      html += '<div class="cq-blank-num">第 ' + (qi + 1) + ' 空'
+           + (q.qtype_cn ? '<span class="q-qtype">🔎 考点 · ' + this._escHtml(q.qtype_cn) + '</span>' : '')
+           + '</div>';
       html += '<div class="q-options cq-options" id="qo-' + mi + '-' + qi + '"'
            + (solved ? ' style="pointer-events:none"' : '') + '>';
       (q.options || []).forEach(function(o, oi) {
@@ -12725,6 +12727,11 @@ const App = {
     if (qHasAudio) {
       html += '<div class="auto-read-badge" id="arb-' + mi + '-' + qi + '"><svg class="icon icon-sm speaking-anim"><use href="#i-sound"/></svg> 正在朗读…</div>';
       html += '<div class="flex gap-8 mb-8"><button class="btn btn-outline btn-sm" onclick="App.replayQuestion(\'' + qId + '\',' + mi + ',' + qi + ',\'' + dayIdx + '\')"><svg class="icon icon-sm"><use href="#i-sound"/></svg> 重新听</button></div>';
+    }
+    // v206：阅读 / 完形每题先亮出「这题考什么」，孩子复习同一篇短文时
+    // 也能顺手学会一个新的解题角度（推理、词义、语法、固定搭配…）。
+    if (q.qtype_cn) {
+      html += '<div class="q-qtype">🔎 考点 · ' + this._escHtml(q.qtype_cn) + '</div>';
     }
     html += '<div class="q-text">' + this._stemHtml(q.question) + '</div>';
     if (q.options) {

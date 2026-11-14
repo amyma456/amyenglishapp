@@ -1,248 +1,252 @@
 {
- "day_cn": "周三",
- "day_en": "Wednesday",
- "theme_cn": "运动介词与指路（图5） + 校园地图阅读 + AI口语 + 键盘拼写",
- "reading_name": "阅读理解 · 校园指路图",
- "spell_name": "今天学的运动介词，敲一遍",
- "speaking": [
-  {
-   "sentence": "How can I get to the library from the school gate?",
-   "sentence_cn": "从校门怎么去图书馆？",
-   "options": [
-    "Go along this road and turn left at the first crossing.",
-    "The library opens at eight.",
-    "I like reading story books.",
-    "The gate is made of iron."
-   ],
-   "options_cn": [
-    "沿这条路走，在第一个路口左转。",
-    "图书馆八点开门。",
-    "我喜欢读故事书。",
-    "大门是铁做的。"
-   ],
-   "answer": 0,
-   "pronunciation_tips": "along /əˈlɒŋ/ 一个词，crossing /ˈkrɒsɪŋ/ 别丢词尾 ing",
-   "explanation_cn": "问路线要给出动作，A 用 Go along… and turn left 指路；B 说时间，C、D 没指路。",
-   "answer_cn_hint": "用 Go along… / turn left / turn right 回答路线。"
+  "day_cn": "周三",
+  "day_en": "Wednesday",
+  "theme_cn": "运动介词与指路（图5） + 校园地图阅读 + AI口语 + 键盘拼写",
+  "reading_name": "阅读理解 · 校园指路图",
+  "spell_name": "今天学的运动介词，敲一遍",
+  "speaking": [
+    {
+      "sentence": "How can I get to the library from the school gate?",
+      "sentence_cn": "从校门怎么去图书馆？",
+      "options": [
+        "Go along this road and turn left at the first crossing.",
+        "The library opens at eight.",
+        "I like reading story books.",
+        "The gate is made of iron."
+      ],
+      "options_cn": [
+        "沿这条路走，在第一个路口左转。",
+        "图书馆八点开门。",
+        "我喜欢读故事书。",
+        "大门是铁做的。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "along /əˈlɒŋ/ 一个词，crossing /ˈkrɒsɪŋ/ 别丢词尾 ing",
+      "explanation_cn": "问路线要给出动作，A 用 Go along… and turn left 指路；B 说时间，C、D 没指路。",
+      "answer_cn_hint": "用 Go along… / turn left / turn right 回答路线。"
+    },
+    {
+      "sentence": "Where is the nearest bank?",
+      "sentence_cn": "最近的银行在哪儿？",
+      "options": [
+        "It is opposite the school gate, across from the park.",
+        "It opens on Monday.",
+        "It is very big and clean.",
+        "I go there with my mum."
+      ],
+      "options_cn": [
+        "在校门对面，公园那边。",
+        "它星期一开门。",
+        "它又大又干净。",
+        "我和妈妈一起去那儿。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "opposite /ˈɒpəzɪt/ 重音在最前，across from 连读别吞掉 from",
+      "explanation_cn": "A 用 opposite / across from 说清了位置；其余三项都不是地点。",
+      "answer_cn_hint": "用 It is opposite / across from / next to… 说位置。"
+    },
+    {
+      "sentence": "Which way do you run every morning?",
+      "sentence_cn": "你们每天早上往哪边跑？",
+      "options": [
+        "We run past the library and then turn right.",
+        "We run at seven o'clock.",
+        "We run very fast.",
+        "We run because it is fun."
+      ],
+      "options_cn": [
+        "我们跑过图书馆，然后右转。",
+        "我们七点跑。",
+        "我们跑得很快。",
+        "我们跑步因为好玩。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "past /pɑːst/ 与 passed 同音，then 的 th 要咬舌",
+      "explanation_cn": "Which way 问方向，A 用 past 加 turn right 给出路线；B 说时间，C、D 没方向。",
+      "answer_cn_hint": "用 We run past… / towards… / along… 说方向。"
+    },
+    {
+      "sentence": "Where is the boy in the picture going?",
+      "sentence_cn": "图里的男孩要往哪儿去？",
+      "options": [
+        "He is walking towards the gate.",
+        "He is walking on Sunday.",
+        "He is walking his dog.",
+        "He is walking very slowly."
+      ],
+      "options_cn": [
+        "他正朝大门走过去。",
+        "他星期天走路。",
+        "他在遛狗。",
+        "他走得很慢。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "towards /təˈwɔːdz/ 重音在后，gate /ɡeɪt/ 词尾 t 要出声",
+      "explanation_cn": "问的是方向，A 用 towards the gate（朝大门）回答；其余三项没说去哪儿。",
+      "answer_cn_hint": "用 He is walking towards / along / past… 说方向。"
+    },
+    {
+      "sentence": "What is the ladder doing in the picture?",
+      "sentence_cn": "图里的梯子是什么状态？",
+      "options": [
+        "It is standing against the wall.",
+        "It is standing at noon.",
+        "It is made of wood.",
+        "It belongs to my uncle."
+      ],
+      "options_cn": [
+        "它斜靠在墙上。",
+        "它中午立着。",
+        "它是木头做的。",
+        "它是我叔叔的。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "against /əˈɡenst/ 重音在后，wall /wɔːl/ 别读成 well",
+      "explanation_cn": "A 用 against the wall 说清了「靠着墙」这个位置关系；其余三项都没回答位置。",
+      "answer_cn_hint": "用 It is standing against / beside / under… 描述位置。"
+    }
+  ],
+  "vocab": [
+    {
+      "word": "opposite",
+      "phonetic": "/ˈɒpəzɪt/",
+      "meaning": "在对面",
+      "emoji": "🔁",
+      "example_en": "The bank is opposite the school gate.",
+      "example_cn": "银行就在校门斜对面。",
+      "hint_cn": "中间隔着一条路或一块空地，面对面",
+      "syllables": [
+        "op",
+        "po",
+        "site"
+      ]
+    },
+    {
+      "word": "against",
+      "phonetic": "/əˈɡenst/",
+      "meaning": "靠着",
+      "emoji": "🧱",
+      "example_en": "The ladder is against the wall.",
+      "example_cn": "梯子斜搭在墙上。",
+      "hint_cn": "有接触，把重量压在那样东西上",
+      "syllables": [
+        "a",
+        "gainst"
+      ]
+    },
+    {
+      "word": "along",
+      "phonetic": "/əˈlɒŋ/",
+      "meaning": "顺着走",
+      "emoji": "🛣️",
+      "example_en": "Walk along this street and turn right.",
+      "example_cn": "顺着这条街往前走，然后右拐。",
+      "hint_cn": "顺着一条长线一直走，中途不拐弯",
+      "syllables": [
+        "a",
+        "long"
+      ]
+    },
+    {
+      "word": "past",
+      "phonetic": "/pɑːst/",
+      "meaning": "经过",
+      "emoji": "🏃",
+      "example_en": "We run past the library every morning.",
+      "example_cn": "我们每天早上从图书馆门前跑过。",
+      "hint_cn": "从旁边走过去，脚步不停，也不进去",
+      "syllables": [
+        "past"
+      ]
+    },
+    {
+      "word": "towards",
+      "phonetic": "/təˈwɔːdz/",
+      "meaning": "朝某方向",
+      "emoji": "🧭",
+      "example_en": "The boy is walking towards the gate.",
+      "example_cn": "男孩正朝大门那边走过去。",
+      "hint_cn": "只说方向，还没走到",
+      "syllables": [
+        "to",
+        "wards"
+      ]
+    }
+  ],
+  "reading": {
+    "passage": "Our school has a big playground in the middle of the campus. The library stands on the left of the playground, and the science building is on the right. Walk along the green path past the library and you will find the small garden. The garden is not far from the gate, but the dining hall is far from it. Go straight ahead and turn right around the corner to see the art room. A sign above the door tells everyone where to go.",
+    "passage_cn": "我们学校校园中央有一个大操场。图书馆在操场左边，科学楼在右边。沿着绿道往前走，经过图书馆，你就能看到那个小花园。花园离校门不远，食堂却离得很远。一直往前走，在拐角处右转就能看见美术教室。门上方的牌子会告诉大家该往哪儿走。",
+    "questions": [
+      {
+        "question": "Which route leads to the art room?",
+        "qtype_cn": "路线顺序",
+        "options": [
+          "Turn left before the library",
+          "Go straight ahead and turn right around the corner",
+          "Walk past the dining hall",
+          "Follow the green path to the garden"
+        ],
+        "answer": 1,
+        "explanation_cn": "路线顺序：原文 Go straight ahead and turn right around the corner to see the art room，两步顺序是先直走再右转，选 B。A 方向反了，C 原文没提，D 少了一步右转。方法：指路题把 first / then / and 圈出来，按先后核对。"
+      },
+      {
+        "question": "Where is the science building?",
+        "qtype_cn": "位置关系",
+        "options": [
+          "On the left of the playground",
+          "In the middle of the campus",
+          "On the right of the playground",
+          "Far from the gate"
+        ],
+        "answer": 2,
+        "explanation_cn": "位置关系：第二句把操场左右一次说清——library on the left，science building on the right，选 C。A 是图书馆，B 说的是操场本身，D 说的是食堂。方法：左右、上下成对出现时，先画个小箭头图再选。"
+      },
+      {
+        "question": "What can we learn about the dining hall?",
+        "qtype_cn": "推理判断",
+        "options": [
+          "It is close to the gate",
+          "It is next to the art room",
+          "It has a sign above the door",
+          "It is far from the garden"
+        ],
+        "answer": 3,
+        "explanation_cn": "推理判断：原文 The garden is not far from the gate, but the dining hall is far from it —— but 前后对比，it 指 garden，所以食堂离花园远，选 D。A 是花园的特点，B 原文没说，C 是美术教室门上的牌子。方法：but / however 后面常是考点。"
+      },
+      {
+        "question": "Why does the writer write this passage?",
+        "qtype_cn": "写作目的",
+        "options": [
+          "To tell visitors how to find places in the school",
+          "To sell books in the library",
+          "To describe a football match",
+          "To ask for a new dining hall"
+        ],
+        "answer": 0,
+        "explanation_cn": "写作目的：看全文是不是在给人指路。文中全是 on the left / walk along / go straight ahead / turn right 这类方位词，目的是带人找到校园各处，选 A。方法：问自己「作者想让我做什么」，而不只是「我看到了什么」。"
+      }
+    ]
   },
-  {
-   "sentence": "Where is the nearest bank?",
-   "sentence_cn": "最近的银行在哪儿？",
-   "options": [
-    "It is opposite the school gate, across from the park.",
-    "It opens on Monday.",
-    "It is very big and clean.",
-    "I go there with my mum."
-   ],
-   "options_cn": [
-    "在校门对面，公园那边。",
-    "它星期一开门。",
-    "它又大又干净。",
-    "我和妈妈一起去那儿。"
-   ],
-   "answer": 0,
-   "pronunciation_tips": "opposite /ˈɒpəzɪt/ 重音在最前，across from 连读别吞掉 from",
-   "explanation_cn": "A 用 opposite / across from 说清了位置；其余三项都不是地点。",
-   "answer_cn_hint": "用 It is opposite / across from / next to… 说位置。"
-  },
-  {
-   "sentence": "Which way do you run every morning?",
-   "sentence_cn": "你们每天早上往哪边跑？",
-   "options": [
-    "We run past the library and then turn right.",
-    "We run at seven o'clock.",
-    "We run very fast.",
-    "We run because it is fun."
-   ],
-   "options_cn": [
-    "我们跑过图书馆，然后右转。",
-    "我们七点跑。",
-    "我们跑得很快。",
-    "我们跑步因为好玩。"
-   ],
-   "answer": 0,
-   "pronunciation_tips": "past /pɑːst/ 与 passed 同音，then 的 th 要咬舌",
-   "explanation_cn": "Which way 问方向，A 用 past 加 turn right 给出路线；B 说时间，C、D 没方向。",
-   "answer_cn_hint": "用 We run past… / towards… / along… 说方向。"
-  },
-  {
-   "sentence": "Where is the boy in the picture going?",
-   "sentence_cn": "图里的男孩要往哪儿去？",
-   "options": [
-    "He is walking towards the gate.",
-    "He is walking on Sunday.",
-    "He is walking his dog.",
-    "He is walking very slowly."
-   ],
-   "options_cn": [
-    "他正朝大门走过去。",
-    "他星期天走路。",
-    "他在遛狗。",
-    "他走得很慢。"
-   ],
-   "answer": 0,
-   "pronunciation_tips": "towards /təˈwɔːdz/ 重音在后，gate /ɡeɪt/ 词尾 t 要出声",
-   "explanation_cn": "问的是方向，A 用 towards the gate（朝大门）回答；其余三项没说去哪儿。",
-   "answer_cn_hint": "用 He is walking towards / along / past… 说方向。"
-  },
-  {
-   "sentence": "What is the ladder doing in the picture?",
-   "sentence_cn": "图里的梯子是什么状态？",
-   "options": [
-    "It is standing against the wall.",
-    "It is standing at noon.",
-    "It is made of wood.",
-    "It belongs to my uncle."
-   ],
-   "options_cn": [
-    "它斜靠在墙上。",
-    "它中午立着。",
-    "它是木头做的。",
-    "它是我叔叔的。"
-   ],
-   "answer": 0,
-   "pronunciation_tips": "against /əˈɡenst/ 重音在后，wall /wɔːl/ 别读成 well",
-   "explanation_cn": "A 用 against the wall 说清了「靠着墙」这个位置关系；其余三项都没回答位置。",
-   "answer_cn_hint": "用 It is standing against / beside / under… 描述位置。"
-  }
- ],
- "vocab": [
-  {
-   "word": "opposite",
-   "phonetic": "/ˈɒpəzɪt/",
-   "meaning": "在对面",
-   "emoji": "🔁",
-   "example_en": "The bank is opposite the school gate.",
-   "example_cn": "银行就在校门斜对面。",
-   "hint_cn": "中间隔着一条路或一块空地，面对面",
-   "syllables": [
-    "op",
-    "po",
-    "site"
-   ]
-  },
-  {
-   "word": "against",
-   "phonetic": "/əˈɡenst/",
-   "meaning": "靠着",
-   "emoji": "🧱",
-   "example_en": "The ladder is against the wall.",
-   "example_cn": "梯子斜搭在墙上。",
-   "hint_cn": "有接触，把重量压在那样东西上",
-   "syllables": [
-    "a",
-    "gainst"
-   ]
-  },
-  {
-   "word": "along",
-   "phonetic": "/əˈlɒŋ/",
-   "meaning": "顺着走",
-   "emoji": "🛣️",
-   "example_en": "Walk along this street and turn right.",
-   "example_cn": "顺着这条街往前走，然后右拐。",
-   "hint_cn": "顺着一条长线一直走，中途不拐弯",
-   "syllables": [
-    "a",
-    "long"
-   ]
-  },
-  {
-   "word": "past",
-   "phonetic": "/pɑːst/",
-   "meaning": "经过",
-   "emoji": "🏃",
-   "example_en": "We run past the library every morning.",
-   "example_cn": "我们每天早上从图书馆门前跑过。",
-   "hint_cn": "从旁边走过去，脚步不停，也不进去",
-   "syllables": [
-    "past"
-   ]
-  },
-  {
-   "word": "towards",
-   "phonetic": "/təˈwɔːdz/",
-   "meaning": "朝某方向",
-   "emoji": "🧭",
-   "example_en": "The boy is walking towards the gate.",
-   "example_cn": "男孩正朝大门那边走过去。",
-   "hint_cn": "只说方向，还没走到",
-   "syllables": [
-    "to",
-    "wards"
-   ]
-  }
- ],
- "reading": {
-  "passage": "Our school has a big playground in the middle of the campus. The library stands on the left of the playground, and the science building is on the right. Walk along the green path past the library and you will find the small garden. The garden is not far from the gate, but the dining hall is far from it. Go straight ahead and turn right around the corner to see the art room. A sign above the door tells everyone where to go.",
-  "passage_cn": "我们学校校园中央有一个大操场。图书馆在操场左边，科学楼在右边。沿着绿道往前走，经过图书馆，你就能看到那个小花园。花园离校门不远，食堂却离得很远。一直往前走，在拐角处右转就能看见美术教室。门上方的牌子会告诉大家该往哪儿走。",
-  "questions": [
-   {
-    "question": "Where is the library?",
-    "options": [
-     "On the left of the playground",
-     "On the right of the playground",
-     "Behind the dining hall",
-     "Opposite the gate"
-    ],
-    "answer": 0,
-    "explanation_cn": "第二句写 on the left of the playground（在操场左边）。"
-   },
-   {
-    "question": "What will you find if you walk past the library?",
-    "options": [
-     "The small garden",
-     "The dining hall",
-     "The art room",
-     "The school gate"
-    ],
-    "answer": 0,
-    "explanation_cn": "第三句写 walk along the green path past the library and you will find the small garden。"
-   },
-   {
-    "question": "How can you see the art room?",
-    "options": [
-     "Go straight ahead and turn right around the corner",
-     "Turn left at the library",
-     "Go across the playground",
-     "Walk towards the gate"
-    ],
-    "answer": 0,
-    "explanation_cn": "第五句写 Go straight ahead and turn right around the corner（直走、拐角右转）。"
-   },
-   {
-    "question": "What is above the door of the art room?",
-    "options": [
-     "A sign",
-     "A clock",
-     "A map",
-     "A lamp"
-    ],
-    "answer": 0,
-    "explanation_cn": "末句写 A sign above the door（门上方有一块牌子）。"
-   }
+  "spell": [
+    {
+      "question": "在对面：o_______ [填完整单词]",
+      "answer": "opposite",
+      "explanation_cn": "opposite the school gate；也可说 across from。"
+    },
+    {
+      "question": "靠着：a______ [填完整单词]",
+      "answer": "against",
+      "explanation_cn": "The ladder is against the wall 梯子靠墙。"
+    },
+    {
+      "question": "顺着走：a____ [填完整单词]",
+      "answer": "along",
+      "explanation_cn": "walk along the street 沿着街走。"
+    },
+    {
+      "question": "朝某方向：t______ [填完整单词]",
+      "answer": "towards",
+      "explanation_cn": "walk towards the gate 朝大门走。"
+    }
   ]
- },
- "spell": [
-  {
-   "question": "在对面：o_______ [填完整单词]",
-   "answer": "opposite",
-   "explanation_cn": "opposite the school gate；也可说 across from。"
-  },
-  {
-   "question": "靠着：a______ [填完整单词]",
-   "answer": "against",
-   "explanation_cn": "The ladder is against the wall 梯子靠墙。"
-  },
-  {
-   "question": "顺着走：a____ [填完整单词]",
-   "answer": "along",
-   "explanation_cn": "walk along the street 沿着街走。"
-  },
-  {
-   "question": "朝某方向：t______ [填完整单词]",
-   "answer": "towards",
-   "explanation_cn": "walk towards the gate 朝大门走。"
-  }
- ]
 }

@@ -30,17 +30,17 @@ console.log('v194 · 单词星球校验');
 
 // ---------------------------------------------------------------- 版本钉子
 ok('meta / 全部 script ?v= / SW 版本都是 194', () => {
-  assert(/<meta name="app-version" content="205">/.test(html), 'index.html meta 不是 194');
+  assert(/<meta name="app-version" content="206">/.test(html), 'index.html meta 不是 194');
   const vs = html.match(/<script defer src="[^"]+\?v=(\d+)"/g) || [];
   assert(vs.length >= 7, '脚本版本钉子数量不对：' + vs.length);
-  vs.forEach(s => assert(/\?v=205"/.test(s), '还有旧版本：' + s));
-  assert(/var CACHE_NAME = 'amy-english-v205'/.test(sw), 'SW CACHE_NAME 没升');
-  assert(/var V = 205;/.test(sw), 'SW V 没升');
+  vs.forEach(s => assert(/\?v=206"/.test(s), '还有旧版本：' + s));
+  assert(/var CACHE_NAME = 'amy-english-v206'/.test(sw), 'SW CACHE_NAME 没升');
+  assert(/var V = 206;/.test(sw), 'SW V 没升');
 });
 
 ok('game.js 在 app.js 之前加载，且被 SW 预缓存', () => {
-  const gi = html.indexOf('src="game.js?v=205"');
-  const ai = html.indexOf('src="app.js?v=205"');
+  const gi = html.indexOf('src="game.js?v=206"');
+  const ai = html.indexOf('src="app.js?v=206"');
   assert(gi > 0 && ai > gi, 'game.js 必须排在 app.js 前面（app.js 顶层有同步渲染）');
   assert(/\.\/game\.js\?v=' \+ V/.test(sw), 'SW install 没预缓存 game.js');
 });

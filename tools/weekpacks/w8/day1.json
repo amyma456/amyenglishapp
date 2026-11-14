@@ -1,165 +1,169 @@
 {
- "day_cn": "周二",
- "day_en": "Tuesday",
- "theme_cn": "方位介词辨析（图3 考点巩固） + 阅读理解 + 听力 + 键盘拼写",
- "reading_name": "阅读理解 · 我家的小房子",
- "grammar_name": "语法 · 方位介词 over / under / through / in / between",
- "listening_name": "听力 · 商场里找店铺",
- "spell_name": "今天学的方位介词，敲一遍",
- "reading": {
-  "passage": "My family lives in a small house near a park. There are two bedrooms and one bathroom in it. My bedroom is opposite the bathroom, so I can see its door from my bed. A bookshelf stands against the wall, and my football is under the bed. The kitchen is downstairs, just below my room. At the weekend I often read among the cushions on the floor.",
-  "passage_cn": "我家住在公园附近的一所小房子里。房子里有两间卧室和一间浴室。我的卧室在浴室对面，躺在床上就能看见浴室门。书柜靠墙立着，我的足球在床底下。厨房在楼下，就在我房间的下方。周末我常常坐在地上的一堆靠垫中间看书。",
-  "questions": [
-   {
-    "question": "How many bedrooms are there in the house?",
-    "options": [
-     "Two",
-     "One",
-     "Three",
-     "Four"
-    ],
-    "answer": 0,
-    "explanation_cn": "第二句写 two bedrooms and one bathroom（两间卧室、一间浴室）。"
-   },
-   {
-    "question": "Where is the writer's bedroom?",
-    "options": [
-     "Opposite the bathroom",
-     "Above the kitchen",
-     "Behind the park",
-     "Next to the living room"
-    ],
-    "answer": 0,
-    "explanation_cn": "第三句写 opposite the bathroom（在浴室对面）。"
-   },
-   {
-    "question": "Where is the football?",
-    "options": [
-     "Under the bed",
-     "Against the wall",
-     "On the bookshelf",
-     "Below the kitchen"
-    ],
-    "answer": 0,
-    "explanation_cn": "第四句后半写 my football is under the bed（足球在床底下）。"
-   },
-   {
-    "question": "What does the writer do at the weekend?",
-    "options": [
-     "Read among the cushions on the floor",
-     "Play football in the park",
-     "Cook in the kitchen",
-     "Sleep in the bathroom"
-    ],
-    "answer": 0,
-    "explanation_cn": "末句写 read among the cushions on the floor（在一堆靠垫中间读书）。"
-   }
+  "day_cn": "周二",
+  "day_en": "Tuesday",
+  "theme_cn": "方位介词辨析（图3 考点巩固） + 阅读理解 + 听力 + 键盘拼写",
+  "reading_name": "阅读理解 · 我家的小房子",
+  "grammar_name": "语法 · 方位介词 over / under / through / in / between",
+  "listening_name": "听力 · 商场里找店铺",
+  "spell_name": "今天学的方位介词，敲一遍",
+  "reading": {
+    "passage": "My family lives in a small house near a park. There are two bedrooms and one bathroom in it. My bedroom is opposite the bathroom, so I can see its door from my bed. A bookshelf stands against the wall, and my football is under the bed. The kitchen is downstairs, just below my room. At the weekend I often read among the cushions on the floor.",
+    "passage_cn": "我家住在公园附近的一所小房子里。房子里有两间卧室和一间浴室。我的卧室在浴室对面，躺在床上就能看见浴室门。书柜靠墙立着，我的足球在床底下。厨房在楼下，就在我房间的下方。周末我常常坐在地上的一堆靠垫中间看书。",
+    "questions": [
+      {
+        "question": "Which of the following is TRUE about the house?",
+        "qtype_cn": "正误判断",
+        "options": [
+          "There are three bedrooms.",
+          "The kitchen is upstairs.",
+          "The bookshelf stands against the wall.",
+          "The football is on the bed."
+        ],
+        "answer": 2,
+        "explanation_cn": "正误判断：四个选项逐句回原文核对。第三句写 A bookshelf stands against the wall，选 C。A 把 two bedrooms 改成 three，B 把 downstairs 说成 upstairs，D 把 under the bed 说成 on the bed。方法：TRUE 题要找到一字不差的依据句。"
+      },
+      {
+        "question": "In 'so I can see its door from my bed', what does 'its' refer to?",
+        "qtype_cn": "指代关系",
+        "options": [
+          "The park",
+          "The bathroom",
+          "The bookshelf",
+          "The kitchen"
+        ],
+        "answer": 1,
+        "explanation_cn": "指代关系：its 指前面刚出现、数量对得上的单数名词。上半句 My bedroom is opposite the bathroom，所以看见的是浴室的门，选 B。方法：把选中的名词代回原句读一遍，通了就是它。"
+      },
+      {
+        "question": "How many bedrooms and bathrooms are there altogether?",
+        "qtype_cn": "数字细节",
+        "options": [
+          "One",
+          "Four",
+          "Five",
+          "Three"
+        ],
+        "answer": 3,
+        "explanation_cn": "数字细节：别看到一个数字就选。原文 two bedrooms and one bathroom，2+1=3 间，选 D；A 只数了那间浴室，B、C 都算错。方法：数字题常要自己做一步加减，把文中每个数字都标出来再算。"
+      },
+      {
+        "question": "Which sentence means the same as 'At the weekend I often read among the cushions on the floor'?",
+        "qtype_cn": "同义替换",
+        "options": [
+          "I sometimes sit on the floor cushions and read at weekends.",
+          "I read in bed every morning.",
+          "I clean the cushions at the weekend.",
+          "I read downstairs in the kitchen."
+        ],
+        "answer": 0,
+        "explanation_cn": "同义替换：正确答案换词不换意。often≈常常、among the cushions on the floor≈坐在地上的靠垫中间，所以选 A。B 改成 in bed、C 改成 clean、D 改成 kitchen，意思都变了。方法：逐词比对，只要有一个动作或地点被换掉就排除。"
+      }
+    ]
+  },
+  "grammar": [
+    {
+      "question": "选词填空（over / under / in / on）：This is the only bridge which is ___ the river.",
+      "type": "fill",
+      "answer": "over",
+      "explanation_cn": "桥横跨河面、不接触水面，用 over（图3 考点巩固第 1 题）。"
+    },
+    {
+      "question": "选词填空（over / under / in / on）：Look, the ship is going ___ the bridge.",
+      "type": "fill",
+      "answer": "under",
+      "explanation_cn": "船从桥底下过，正下方用 under（图3 第 2 题）。"
+    },
+    {
+      "question": "选词填空（across / through / along / past）：The man is running ___ the park.",
+      "type": "fill",
+      "answer": "through",
+      "explanation_cn": "从公园内部穿行，四周都有树和路，用 through（图3 第 5 题）。"
+    },
+    {
+      "question": "选词填空（in / on / at / under）：How many apples are there ___ the basket?",
+      "type": "fill",
+      "answer": "in",
+      "explanation_cn": "苹果装在篮子里面，用 in（图3 第 6 题）。"
+    },
+    {
+      "question": "选词填空（under / below / over / above）：The boys are reading ___ the tree.",
+      "type": "fill",
+      "answer": "under",
+      "explanation_cn": "在树冠正下方乘凉读书，用 under（图3 第 7 题）。"
+    },
+    {
+      "question": "选词填空（between / among / across / through）：The girl sat down ___ her mother and father.",
+      "type": "fill",
+      "answer": "between",
+      "explanation_cn": "爸爸妈妈一共两个人，中间用 between（图3 第 8 题）。"
+    }
+  ],
+  "listening": [
+    {
+      "question": "Listen to the dialogue. Where is the shoe shop?",
+      "audio_text": "Boy: Excuse me, where is the shoe shop? Woman: It is between the bookshop and the cake shop. Boy: Thank you very much!",
+      "options": [
+        "Between the bookshop and the cake shop",
+        "Behind the park",
+        "Above the watch shop",
+        "Across the river"
+      ],
+      "answer": 0,
+      "explanation_cn": "女士说 between the bookshop and the cake shop（在书店和蛋糕店之间）。"
+    },
+    {
+      "question": "Listen to the dialogue. Where did Dad put the new watch?",
+      "audio_text": "Girl: Dad, I cannot find my new watch. Dad: I put it in the small box under your bed. Girl: Oh, I see it now!",
+      "options": [
+        "In a box under the bed",
+        "On the table",
+        "Inside the schoolbag",
+        "Behind the door"
+      ],
+      "answer": 0,
+      "explanation_cn": "爸爸说 in the small box under your bed（床底下的小盒子里），两重位置都要听清。"
+    },
+    {
+      "question": "Which picture matches the sentence you hear?",
+      "audio_text": "The cat is sleeping under the chair.",
+      "options": [
+        "🪑",
+        "🛏️",
+        "📦",
+        "🌳"
+      ],
+      "picture_options": true,
+      "answer": 0,
+      "explanation_cn": "句子里说 under the chair（在椅子底下），所以选椅子 🪑。"
+    },
+    {
+      "type": "fill",
+      "question": "Listen and fill in the blank: The bookshop is ___ the cake shop and the shoe shop.",
+      "audio_text": "The bookshop is between the cake shop and the shoe shop.",
+      "answer": "between",
+      "explanation_cn": "听到 between the cake shop and the shoe shop，填 between。"
+    }
+  ],
+  "spell": [
+    {
+      "question": "从内部穿过：t______ [填完整单词]",
+      "answer": "through",
+      "explanation_cn": "through the park / through the tunnel，四周被包着。"
+    },
+    {
+      "question": "横跨在上方：o___ [填完整单词]",
+      "answer": "over",
+      "explanation_cn": "over the river 桥跨过河面。"
+    },
+    {
+      "question": "正下方：u____ [填完整单词]",
+      "answer": "under",
+      "explanation_cn": "under the bed 床底下。"
+    },
+    {
+      "question": "两者之间：b______ [填完整单词]",
+      "answer": "between",
+      "explanation_cn": "between A and B，只管两个。"
+    }
   ]
- },
- "grammar": [
-  {
-   "question": "选词填空（over / under / in / on）：This is the only bridge which is ___ the river.",
-   "type": "fill",
-   "answer": "over",
-   "explanation_cn": "桥横跨河面、不接触水面，用 over（图3 考点巩固第 1 题）。"
-  },
-  {
-   "question": "选词填空（over / under / in / on）：Look, the ship is going ___ the bridge.",
-   "type": "fill",
-   "answer": "under",
-   "explanation_cn": "船从桥底下过，正下方用 under（图3 第 2 题）。"
-  },
-  {
-   "question": "选词填空（across / through / along / past）：The man is running ___ the park.",
-   "type": "fill",
-   "answer": "through",
-   "explanation_cn": "从公园内部穿行，四周都有树和路，用 through（图3 第 5 题）。"
-  },
-  {
-   "question": "选词填空（in / on / at / under）：How many apples are there ___ the basket?",
-   "type": "fill",
-   "answer": "in",
-   "explanation_cn": "苹果装在篮子里面，用 in（图3 第 6 题）。"
-  },
-  {
-   "question": "选词填空（under / below / over / above）：The boys are reading ___ the tree.",
-   "type": "fill",
-   "answer": "under",
-   "explanation_cn": "在树冠正下方乘凉读书，用 under（图3 第 7 题）。"
-  },
-  {
-   "question": "选词填空（between / among / across / through）：The girl sat down ___ her mother and father.",
-   "type": "fill",
-   "answer": "between",
-   "explanation_cn": "爸爸妈妈一共两个人，中间用 between（图3 第 8 题）。"
-  }
- ],
- "listening": [
-  {
-   "question": "Listen to the dialogue. Where is the shoe shop?",
-   "audio_text": "Boy: Excuse me, where is the shoe shop? Woman: It is between the bookshop and the cake shop. Boy: Thank you very much!",
-   "options": [
-    "Between the bookshop and the cake shop",
-    "Behind the park",
-    "Above the watch shop",
-    "Across the river"
-   ],
-   "answer": 0,
-   "explanation_cn": "女士说 between the bookshop and the cake shop（在书店和蛋糕店之间）。"
-  },
-  {
-   "question": "Listen to the dialogue. Where did Dad put the new watch?",
-   "audio_text": "Girl: Dad, I cannot find my new watch. Dad: I put it in the small box under your bed. Girl: Oh, I see it now!",
-   "options": [
-    "In a box under the bed",
-    "On the table",
-    "Inside the schoolbag",
-    "Behind the door"
-   ],
-   "answer": 0,
-   "explanation_cn": "爸爸说 in the small box under your bed（床底下的小盒子里），两重位置都要听清。"
-  },
-  {
-   "question": "Which picture matches the sentence you hear?",
-   "audio_text": "The cat is sleeping under the chair.",
-   "options": [
-    "🪑",
-    "🛏️",
-    "📦",
-    "🌳"
-   ],
-   "picture_options": true,
-   "answer": 0,
-   "explanation_cn": "句子里说 under the chair（在椅子底下），所以选椅子 🪑。"
-  },
-  {
-   "type": "fill",
-   "question": "Listen and fill in the blank: The bookshop is ___ the cake shop and the shoe shop.",
-   "audio_text": "The bookshop is between the cake shop and the shoe shop.",
-   "answer": "between",
-   "explanation_cn": "听到 between the cake shop and the shoe shop，填 between。"
-  }
- ],
- "spell": [
-  {
-   "question": "从内部穿过：t______ [填完整单词]",
-   "answer": "through",
-   "explanation_cn": "through the park / through the tunnel，四周被包着。"
-  },
-  {
-   "question": "横跨在上方：o___ [填完整单词]",
-   "answer": "over",
-   "explanation_cn": "over the river 桥跨过河面。"
-  },
-  {
-   "question": "正下方：u____ [填完整单词]",
-   "answer": "under",
-   "explanation_cn": "under the bed 床底下。"
-  },
-  {
-   "question": "两者之间：b______ [填完整单词]",
-   "answer": "between",
-   "explanation_cn": "between A and B，只管两个。"
-  }
- ]
 }

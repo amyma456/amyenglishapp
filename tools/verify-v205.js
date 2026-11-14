@@ -82,9 +82,9 @@ ok('6 天每天恰好 30 道练习动作，键盘拼写每天 3~6 道', () => {
   });
 });
 ok('版本钉子统一到 v205', () => {
-  assert(/name="app-version" content="205"/.test(html));
-  assert.strictEqual((html.match(/\?v=205/g) || []).length, 7);
-  assert(/var CACHE_NAME = 'amy-english-v205';/.test(swSrc) && /var V = 205;/.test(swSrc));
+  assert(/name="app-version" content="206"/.test(html));
+  assert.strictEqual((html.match(/\?v=206/g) || []).length, 7);
+  assert(/var CACHE_NAME = 'amy-english-v206';/.test(swSrc) && /var V = 206;/.test(swSrc));
 });
 
 // ------------------------------------------------------------------ 方位介词权重

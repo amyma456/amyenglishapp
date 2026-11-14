@@ -1,188 +1,194 @@
 {
- "day_cn": "周日",
- "day_en": "Sunday",
- "theme_cn": "作文跟读 + 词汇 + 方位介词完形（家长 11-14 五张图专项） + 键盘拼写",
- "cloze_name": "完形填空 · 商场找店铺（方位介词 6 空）",
- "spell_name": "今天学的方位介词，敲一遍",
- "vocab": [
-  {
-   "word": "shopping",
-   "phonetic": "/ˈʃɒpɪŋ/",
-   "meaning": "购物",
-   "emoji": "🛍️",
-   "example_en": "I am so happy to go shopping with you tomorrow.",
-   "example_cn": "明天能和你一起去购物我太开心了。",
-   "hint_cn": "go + shopping，去店里买东西",
-   "syllables": [
-    "shop",
-    "ping"
-   ]
-  },
-  {
-   "word": "taxi",
-   "phonetic": "/ˈtæksi/",
-   "meaning": "出租车",
-   "emoji": "🚕",
-   "example_en": "Then we can take a taxi.",
-   "example_cn": "然后我们可以打出租车。",
-   "hint_cn": "挥手就停、按表计价的那种车",
-   "syllables": [
-    "tax",
-    "i"
-   ]
-  },
-  {
-   "word": "boots",
-   "phonetic": "/buːts/",
-   "meaning": "靴子",
-   "emoji": "🥾",
-   "example_en": "I want to buy new football boots.",
-   "example_cn": "我想买新足球鞋。",
-   "hint_cn": "包住脚踝的那种鞋，球场上穿",
-   "syllables": [
-    "boots"
-   ]
-  },
-  {
-   "word": "socks",
-   "phonetic": "/sɒks/",
-   "meaning": "袜子",
-   "emoji": "🧦",
-   "example_en": "Please buy two pairs of socks for me.",
-   "example_cn": "请给我买两双袜子。",
-   "hint_cn": "穿在鞋子里、到脚踝的那种",
-   "syllables": [
-    "socks"
-   ]
-  },
-  {
-   "word": "present",
-   "phonetic": "/ˈpreznt/",
-   "meaning": "礼物",
-   "emoji": "🎁",
-   "example_en": "Thank you for the lovely birthday present.",
-   "example_cn": "谢谢你可爱的生日礼物。",
-   "hint_cn": "生日那天别人送你的那份惊喜",
-   "syllables": [
-    "pre",
-    "sent"
-   ]
-  }
- ],
- "cloze": {
-  "passage": "Last Saturday Mum and I went shopping in the new mall 1___ our town. The shoe shop is 2___ the bookshop and the cake shop, so we found it quickly. A big clock hangs 3___ the door of the watch shop. Mum's bike was 4___ the building, not in front of it. We walked 5___ the bridge to reach the smaller shops. At noon we sat 6___ a tall tree and ate our sandwiches. I was tired but happy, and I carried the bags all the way home.",
-  "sentences_cn": [
-   "上周六我和妈妈去了我们镇附近新开的商场买东西。",
-   "鞋店在书店和蛋糕店之间，所以我们很快就找到了。",
-   "钟表店的门上方挂着一口大钟。",
-   "妈妈的自行车停在楼的后面，而不是楼前面。",
-   "我们走过那座桥，去到小一点的店铺那边。",
-   "中午我们坐在一棵大树底下吃了三明治。",
-   "我虽然累但很开心，一路把袋子提回了家。"
+  "day_cn": "周日",
+  "day_en": "Sunday",
+  "theme_cn": "作文跟读 + 词汇 + 方位介词完形（家长 11-14 五张图专项） + 键盘拼写",
+  "cloze_name": "完形填空 · 商场找店铺（方位介词 6 空）",
+  "spell_name": "今天学的方位介词，敲一遍",
+  "vocab": [
+    {
+      "word": "shopping",
+      "phonetic": "/ˈʃɒpɪŋ/",
+      "meaning": "购物",
+      "emoji": "🛍️",
+      "example_en": "I am so happy to go shopping with you tomorrow.",
+      "example_cn": "明天能和你一起去购物我太开心了。",
+      "hint_cn": "go + shopping，去店里买东西",
+      "syllables": [
+        "shop",
+        "ping"
+      ]
+    },
+    {
+      "word": "taxi",
+      "phonetic": "/ˈtæksi/",
+      "meaning": "出租车",
+      "emoji": "🚕",
+      "example_en": "Then we can take a taxi.",
+      "example_cn": "然后我们可以打出租车。",
+      "hint_cn": "挥手就停、按表计价的那种车",
+      "syllables": [
+        "tax",
+        "i"
+      ]
+    },
+    {
+      "word": "boots",
+      "phonetic": "/buːts/",
+      "meaning": "靴子",
+      "emoji": "🥾",
+      "example_en": "I want to buy new football boots.",
+      "example_cn": "我想买新足球鞋。",
+      "hint_cn": "包住脚踝的那种鞋，球场上穿",
+      "syllables": [
+        "boots"
+      ]
+    },
+    {
+      "word": "socks",
+      "phonetic": "/sɒks/",
+      "meaning": "袜子",
+      "emoji": "🧦",
+      "example_en": "Please buy two pairs of socks for me.",
+      "example_cn": "请给我买两双袜子。",
+      "hint_cn": "穿在鞋子里、到脚踝的那种",
+      "syllables": [
+        "socks"
+      ]
+    },
+    {
+      "word": "present",
+      "phonetic": "/ˈpreznt/",
+      "meaning": "礼物",
+      "emoji": "🎁",
+      "example_en": "Thank you for the lovely birthday present.",
+      "example_cn": "谢谢你可爱的生日礼物。",
+      "hint_cn": "生日那天别人送你的那份惊喜",
+      "syllables": [
+        "pre",
+        "sent"
+      ]
+    }
   ],
-  "questions": [
-   {
-    "question": "1___",
-    "options": [
-     "near",
-     "under",
-     "between",
-     "among"
+  "cloze": {
+    "passage": "Last Saturday Mum and I went shopping in the new mall 1___ our town. The shoe shop is 2___ the bookshop and the cake shop, so we found it quickly. A big clock hangs 3___ the door of the watch shop. Mum's bike was 4___ the building, not in front of it. We walked 5___ the bridge to reach the smaller shops. At noon we sat 6___ a tall tree and ate our sandwiches. I was tired but happy, and I carried the bags all the way home.",
+    "sentences_cn": [
+      "上周六我和妈妈去了我们镇附近新开的商场买东西。",
+      "鞋店在书店和蛋糕店之间，所以我们很快就找到了。",
+      "钟表店的门上方挂着一口大钟。",
+      "妈妈的自行车停在楼的后面，而不是楼前面。",
+      "我们走过那座桥，去到小一点的店铺那边。",
+      "中午我们坐在一棵大树底下吃了三明治。",
+      "我虽然累但很开心，一路把袋子提回了家。"
     ],
-    "answer": 0,
-    "explanation_cn": "商城在我们镇附近，说位置用 near；under / between / among 都讲不通。"
-   },
-   {
-    "question": "2___",
-    "options": [
-     "between",
-     "among",
-     "across",
-     "through"
-    ],
-    "answer": 0,
-    "explanation_cn": "两家店一左一右，一共两个，中间用 between；三者以上才用 among。"
-   },
-   {
-    "question": "3___",
-    "options": [
-     "over",
-     "under",
-     "inside",
-     "off"
-    ],
-    "answer": 0,
-    "explanation_cn": "钟挂在门的上方、不接触门，用 over；under 是正下方。"
-   },
-   {
-    "question": "4___",
-    "options": [
-     "behind",
-     "above",
-     "along",
-     "past"
-    ],
-    "answer": 0,
-    "explanation_cn": "后半句说 not in front of it（不在前面），对应的是 behind（在后面）。"
-   },
-   {
-    "question": "5___",
-    "options": [
-     "across",
-     "through",
-     "into",
-     "onto"
-    ],
-    "answer": 0,
-    "explanation_cn": "从桥的一边走到另一边，贴着桥面横过用 across。"
-   },
-   {
-    "question": "6___",
-    "options": [
-     "under",
-     "over",
-     "between",
-     "among"
-    ],
-    "answer": 0,
-    "explanation_cn": "坐在树底下乘凉，正下方用 under。"
-   }
-  ]
- },
- "spell": [
-  {
-   "question": "横跨在上方：o___ [填完整单词]",
-   "answer": "over",
-   "explanation_cn": "桥架在河上：The bridge is over the river. 注意和 on（接触）区别。"
+    "questions": [
+      {
+        "question": "1___",
+        "qtype_cn": "范围方位",
+        "options": [
+          "between",
+          "under",
+          "near",
+          "among"
+        ],
+        "answer": 2,
+        "explanation_cn": "上下文线索：空后是 our town（一个地点范围），表示「在镇附近」用 near，选 C。between 要两个并列对象，under 是正下方，among 要三者以上。方法：先看空后面接的是「一个地方」还是「几个对象」。"
+      },
+      {
+        "question": "2___",
+        "qtype_cn": "两者之间",
+        "options": [
+          "across",
+          "between",
+          "through",
+          "among"
+        ],
+        "answer": 1,
+        "explanation_cn": "结构线索：看到 A and B 两个并列名词，中间只能用 between，选 B；三者以上才用 among，across / through 是「穿过」。方法：数一数 and 两边有几个对象。"
+      },
+      {
+        "question": "3___",
+        "qtype_cn": "上下辨析",
+        "options": [
+          "inside",
+          "under",
+          "off",
+          "over"
+        ],
+        "answer": 3,
+        "explanation_cn": "常识＋方位：钟挂在门的上方、不贴着门，用 over，选 D；under 恰好相反，inside 是里面，off 是离开／掉落。方法：先判断「接触还是不接触、上方还是下方」。"
+      },
+      {
+        "question": "4___",
+        "qtype_cn": "前后对照",
+        "options": [
+          "behind",
+          "above",
+          "along",
+          "past"
+        ],
+        "answer": 0,
+        "explanation_cn": "转折对照：后半句 not in front of it 已经把「前面」排除，与之相对的是 behind，选 A。方法：完形里出现 not / but，先找它的反义提示。"
+      },
+      {
+        "question": "5___",
+        "qtype_cn": "表面横过",
+        "options": [
+          "into",
+          "onto",
+          "across",
+          "through"
+        ],
+        "answer": 2,
+        "explanation_cn": "介词辨析：贴着桥面从一端走到另一端用 across，选 C；through 指从立体空间内部穿过（森林、隧道），into / onto 是「进入／到…上面」。方法：想清楚是「跨过表面」还是「穿过内部」。"
+      },
+      {
+        "question": "6___",
+        "qtype_cn": "正下方",
+        "options": [
+          "over",
+          "under",
+          "between",
+          "among"
+        ],
+        "answer": 1,
+        "explanation_cn": "固定搭配：坐在大树底下是 under a tree，选 B；over 是正上方，between / among 都需要多个对象。方法：记住 sit under a tree、in front of、next to 这类高频搭配。"
+      }
+    ]
   },
-  {
-   "question": "正下方：u____ [填完整单词]",
-   "answer": "under",
-   "explanation_cn": "小猫在桌子底下：The cat is under the table."
-  },
-  {
-   "question": "两者之间：b______ [填完整单词]",
-   "answer": "between",
-   "explanation_cn": "坐在妈妈和爸爸中间：sit between Mum and Dad."
+  "spell": [
+    {
+      "question": "横跨在上方：o___ [填完整单词]",
+      "answer": "over",
+      "explanation_cn": "桥架在河上：The bridge is over the river. 注意和 on（接触）区别。"
+    },
+    {
+      "question": "正下方：u____ [填完整单词]",
+      "answer": "under",
+      "explanation_cn": "小猫在桌子底下：The cat is under the table."
+    },
+    {
+      "question": "两者之间：b______ [填完整单词]",
+      "answer": "between",
+      "explanation_cn": "坐在妈妈和爸爸中间：sit between Mum and Dad."
+    }
+  ],
+  "writing_drill": {
+    "name_cn": "作文跟读 · 背诵",
+    "title": "第 4、5 句 · 收官自查",
+    "focus_cn": "一周背完，这两句是最容易漏的：take a taxi 和 football boots",
+    "sentences": [
+      {
+        "en": "Then we can take a taxi.",
+        "cn": "然后我们可以打出租车去。",
+        "blank": "taxi",
+        "blank_cn": "出租车"
+      },
+      {
+        "en": "I want to buy new football boots and some pairs of socks.",
+        "cn": "我想买新足球鞋和几双袜子。",
+        "blank": "boots",
+        "blank_cn": "球场上穿的靴子"
+      }
+    ]
   }
- ],
- "writing_drill": {
-  "name_cn": "作文跟读 · 背诵",
-  "title": "第 4、5 句 · 收官自查",
-  "focus_cn": "一周背完，这两句是最容易漏的：take a taxi 和 football boots",
-  "sentences": [
-   {
-    "en": "Then we can take a taxi.",
-    "cn": "然后我们可以打出租车去。",
-    "blank": "taxi",
-    "blank_cn": "出租车"
-   },
-   {
-    "en": "I want to buy new football boots and some pairs of socks.",
-    "cn": "我想买新足球鞋和几双袜子。",
-    "blank": "boots",
-    "blank_cn": "球场上穿的靴子"
-   }
-  ]
- }
 }

@@ -206,6 +206,9 @@ function buildWeek(pack, meta) {
             explanation_cn: q.explanation_cn,
           };
           if (q.explanation_en) o.explanation_en = q.explanation_en;
+          // v206：阅读 / 完形每题的「题型标签」，学生界面会显示成小徽标，
+          // 让孩子知道这题考的是推理、词义、语法还是固定搭配。
+          if (q.qtype_cn) o.qtype_cn = q.qtype_cn;
           return o;
         });
         modules.push(base);
@@ -230,6 +233,7 @@ function buildWeek(pack, meta) {
         if (q.pronunciation_tips) o.pronunciation_tips = q.pronunciation_tips;
         if (q.explanation_cn) o.explanation_cn = q.explanation_cn;
         if (q.explanation_en) o.explanation_en = q.explanation_en;
+        if (q.qtype_cn) o.qtype_cn = q.qtype_cn;
         if (key === 'speaking') {
           o.answer_cn_hint = q.answer_cn_hint;
           o.options_cn = q.options_cn;

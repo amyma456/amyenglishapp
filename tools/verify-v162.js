@@ -98,10 +98,10 @@ section('3. 恢复名单与 showApp 接线');
 
 section('4. 版本号 v162');
 {
-  ok(htmlSrc.includes('app-version" content="205"'), 'index.html app-version=161');
-  ok(/\.js\?v=205/.test(htmlSrc), 'index.html 资源 ?v=205');
-  ok(swSrc.includes('amy-english-v205') && /var V = 205;/.test(swSrc), 'sw.js 版本 161');
-  ok(!/content="(?!205)\d{3}"/.test(htmlSrc) && !/\.js\?v=(?!205)\d{2,3}/.test(htmlSrc) && !/amy-english-v(?!205)\d{3}/.test(swSrc), '无旧版本残留（字符类负向断言）');
+  ok(htmlSrc.includes('app-version" content="206"'), 'index.html app-version=161');
+  ok(/\.js\?v=206/.test(htmlSrc), 'index.html 资源 ?v=206');
+  ok(swSrc.includes('amy-english-v206') && /var V = 206;/.test(swSrc), 'sw.js 版本 161');
+  ok(!/content="(?!206)\d{3}"/.test(htmlSrc) && !/\.js\?v=(?!206)\d{2,3}/.test(htmlSrc) && !/amy-english-v(?!206)\d{3}/.test(swSrc), '无旧版本残留（字符类负向断言）');
 }
 
 section('5. v162 专项：云端纯档 + 班级视图只认后台');

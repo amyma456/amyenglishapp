@@ -1,248 +1,252 @@
 {
- "day_cn": "周一",
- "day_en": "Monday",
- "theme_cn": "方位介词 · 教室里的位置 + 高频词汇 + 阅读理解 + 键盘拼写",
- "reading_name": "阅读理解 · 我们的新教室",
- "spell_name": "今天学的方位介词，敲一遍",
- "speaking": [
-  {
-   "sentence": "Where is the teacher's desk in your classroom?",
-   "sentence_cn": "你们教室里老师的讲台在哪里？",
-   "options": [
-    "It is in front of the blackboard.",
-    "It is under the floor.",
-    "It is behind the whole school.",
-    "It is far from the classroom."
-   ],
-   "options_cn": [
-    "在黑板前面。",
-    "在地板底下。",
-    "在整个学校后面。",
-    "离教室很远。"
-   ],
-   "answer": 0,
-   "pronunciation_tips": "in front of 连读成 /ɪnˈfrʌntəv/，blackboard 的 k 轻轻带过",
-   "explanation_cn": "Where 问位置，答句要说清在什么东西前面。A 用 in front of 给出位置；其余三项都不合常理。",
-   "answer_cn_hint": "用 It is in front of / behind / beside… 说出讲台的位置。"
+  "day_cn": "周一",
+  "day_en": "Monday",
+  "theme_cn": "方位介词 · 教室里的位置 + 高频词汇 + 阅读理解 + 键盘拼写",
+  "reading_name": "阅读理解 · 我们的新教室",
+  "spell_name": "今天学的方位介词，敲一遍",
+  "speaking": [
+    {
+      "sentence": "Where is the teacher's desk in your classroom?",
+      "sentence_cn": "你们教室里老师的讲台在哪里？",
+      "options": [
+        "It is in front of the blackboard.",
+        "It is under the floor.",
+        "It is behind the whole school.",
+        "It is far from the classroom."
+      ],
+      "options_cn": [
+        "在黑板前面。",
+        "在地板底下。",
+        "在整个学校后面。",
+        "离教室很远。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "in front of 连读成 /ɪnˈfrʌntəv/，blackboard 的 k 轻轻带过",
+      "explanation_cn": "Where 问位置，答句要说清在什么东西前面。A 用 in front of 给出位置；其余三项都不合常理。",
+      "answer_cn_hint": "用 It is in front of / behind / beside… 说出讲台的位置。"
+    },
+    {
+      "sentence": "Where do you sit in class?",
+      "sentence_cn": "上课时你坐在哪里？",
+      "options": [
+        "I sit between Lily and Tom, near the window.",
+        "I sit at noon every day.",
+        "I sit a new word.",
+        "I sit very quickly."
+      ],
+      "options_cn": [
+        "我坐在莉莉和汤姆中间，靠窗。",
+        "我每天中午坐着。",
+        "我坐着一个新单词。",
+        "我坐得很快。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "between /bɪˈtwiːn/ 重音在后，window /ˈwɪndəʊ/ 重音在前",
+      "explanation_cn": "问的是座位位置，A 用 between 和 near 说清了；B 说时间，C、D 答非所问。",
+      "answer_cn_hint": "用 I sit between A and B / beside… / near… 说座位。"
+    },
+    {
+      "sentence": "How can I get to the library from here?",
+      "sentence_cn": "从这里怎么去图书馆？",
+      "options": [
+        "Go along this hall and turn left at the stairs.",
+        "The library has many books.",
+        "I go there at six o'clock.",
+        "The library is very quiet."
+      ],
+      "options_cn": [
+        "沿着这条走廊走，在楼梯那儿左转。",
+        "图书馆有很多书。",
+        "我六点去那里。",
+        "图书馆很安静。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "along /əˈlɒŋ/ 别读成 a long，turn left 的 left 词尾 ft 要出声",
+      "explanation_cn": "How can I get to… 问路线，答句要有动词 Go / Turn；只有 A 给了走法。",
+      "answer_cn_hint": "用 Go along… and turn left / right at… 指路。"
+    },
+    {
+      "sentence": "What is above your bed at home?",
+      "sentence_cn": "你家里的床上方有什么？",
+      "options": [
+        "A big map of the world hangs above my bed.",
+        "A map sleeps under my bed.",
+        "I have breakfast above my bed.",
+        "My bed is above the map."
+      ],
+      "options_cn": [
+        "我的床上方挂着一张世界地图。",
+        "一张地图睡在我床底下。",
+        "我在床上方吃早饭。",
+        "我的床在地图上方。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "above /əˈbʌv/ 重音在后，world /wɜːld/ 别丢 l",
+      "explanation_cn": "above 表示高于、不接触；A 用 hangs above 正确。D 把两者说反了。",
+      "answer_cn_hint": "用 A … hangs above / over my bed 说床上方挂着什么。"
+    },
+    {
+      "sentence": "Where can I put my schoolbag?",
+      "sentence_cn": "我可以把书包放在哪儿？",
+      "options": [
+        "You can put it beside the door, next to the small table.",
+        "You can put it on Sunday.",
+        "You can put it between two words.",
+        "You can put it very loudly."
+      ],
+      "options_cn": [
+        "你可以放在门边，挨着小桌子。",
+        "你可以放在星期天。",
+        "你可以放在两个单词中间。",
+        "你可以很大声地放。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "beside /bɪˈsaɪd/ 与 besides（此外）别混，next to 连读成 /nekstə/",
+      "explanation_cn": "A 用 beside / next to 说清了放书包的地方；其余三项都不是地点。",
+      "answer_cn_hint": "用 put it beside / next to / under… 回答放东西的位置。"
+    }
+  ],
+  "vocab": [
+    {
+      "word": "over",
+      "phonetic": "/ˈəʊvə(r)/",
+      "meaning": "横跨在上方",
+      "emoji": "🌉",
+      "example_en": "A stone bridge goes over the river.",
+      "example_cn": "一座石桥架在河面上。",
+      "hint_cn": "不碰到下面那样东西，从它头顶过去",
+      "syllables": [
+        "o",
+        "ver"
+      ]
+    },
+    {
+      "word": "under",
+      "phonetic": "/ˈʌndə(r)/",
+      "meaning": "正下方",
+      "emoji": "⬇️",
+      "example_en": "The cat is sleeping under the table.",
+      "example_cn": "小猫正趴在桌子底下睡觉。",
+      "hint_cn": "和 above 相反，被上面那个东西盖着",
+      "syllables": [
+        "un",
+        "der"
+      ]
+    },
+    {
+      "word": "between",
+      "phonetic": "/bɪˈtwiːn/",
+      "meaning": "两者之间",
+      "emoji": "↔️",
+      "example_en": "I sit between Lily and Tom in class.",
+      "example_cn": "上课时我坐在莉莉和汤姆中间。",
+      "hint_cn": "左右各有一个，一共只有两个",
+      "syllables": [
+        "be",
+        "tween"
+      ]
+    },
+    {
+      "word": "behind",
+      "phonetic": "/bɪˈhaɪnd/",
+      "meaning": "在后面",
+      "emoji": "🔙",
+      "example_en": "The bike is behind the building.",
+      "example_cn": "自行车停在楼房的背面。",
+      "hint_cn": "和 in front of 相反，要绕到另一面才看得见",
+      "syllables": [
+        "be",
+        "hind"
+      ]
+    },
+    {
+      "word": "across",
+      "phonetic": "/əˈkrɒs/",
+      "meaning": "从表面横过",
+      "emoji": "➡️",
+      "example_en": "We walked across the bridge to the shops.",
+      "example_cn": "我们从桥上走过去，到了商店那边。",
+      "hint_cn": "贴着一条线或一个面，从这一边到那一边",
+      "syllables": [
+        "a",
+        "cross"
+      ]
+    }
+  ],
+  "reading": {
+    "passage": "Welcome to our new classroom. The teacher's desk is in front of the blackboard. My seat is between Lily and Tom, and the reading corner is behind the tall bookcase. A big map hangs above the window, and the waste bin is below it. The door is on the right, so the small table beside the door is for our schoolbags. Everyone can find a place here, and I like sitting near my friends.",
+    "passage_cn": "欢迎来到我们的新教室。老师的讲台在黑板前面。我的座位在莉莉和汤姆中间，阅读角在高书柜的后面。窗户上方挂着一张大地图，垃圾桶在它下面。门在右边，所以门边的小桌子是给大家放书包的。每个人都能在这儿找到位置，我最喜欢坐在朋友旁边。",
+    "questions": [
+      {
+        "question": "Where does the big map hang?",
+        "qtype_cn": "细节定位",
+        "options": [
+          "Behind the tall bookcase",
+          "Above the window",
+          "Below the waste bin",
+          "Beside the door"
+        ],
+        "answer": 1,
+        "explanation_cn": "细节定位：带着关键词 big map 回原文找，第四句写 A big map hangs above the window，所以选 B。A 是阅读角的位置，C 把上下关系说反了，D 是放书包的小桌。方法：先圈关键词，再回原文定位那一句。"
+      },
+      {
+        "question": "In 'the reading corner', what does 'corner' most likely mean?",
+        "qtype_cn": "词义猜测",
+        "options": [
+          "The top of a tall bookcase",
+          "A kind of schoolbag",
+          "A small quiet place for one activity",
+          "The front of the classroom"
+        ],
+        "answer": 2,
+        "explanation_cn": "词义猜测：不查字典，用上下文猜。这一段全在说教室里每样东西的位置，reading corner 是「专门用来读书的一小块地方」，因此选 C。方法：生词前后往往就藏着解释或同类词。"
+      },
+      {
+        "question": "What can we infer about the writer?",
+        "qtype_cn": "推理判断",
+        "options": [
+          "The writer enjoys being close to friends",
+          "The writer sits alone at the back",
+          "The writer never uses the bookcase",
+          "The writer cleans the classroom every day"
+        ],
+        "answer": 0,
+        "explanation_cn": "推理判断：答案没有原句照抄，要从语气推。末句 I like sitting near my friends 说明作者喜欢挨着朋友坐，选 A。B、C、D 原文都没提，属于自己想多了。方法：推理题的答案必须能在原文找到依据。"
+      },
+      {
+        "question": "Which is the best title for this passage?",
+        "qtype_cn": "标题选择",
+        "options": [
+          "A Busy Bookshop",
+          "How to Clean a Window",
+          "Lily and Tom's Game",
+          "My New Classroom"
+        ],
+        "answer": 3,
+        "explanation_cn": "标题选择：看首句和全文覆盖面。开头 Welcome to our new classroom，后面每一句都在讲教室里东西的位置，所以标题要概括整篇，选 D。A 是书店、B 只说擦窗、C 只提到两个同学，都太窄。方法：标题要能罩住全文，只提到一个物件或一个人的选项先排除。"
+      }
+    ]
   },
-  {
-   "sentence": "Where do you sit in class?",
-   "sentence_cn": "上课时你坐在哪里？",
-   "options": [
-    "I sit between Lily and Tom, near the window.",
-    "I sit at noon every day.",
-    "I sit a new word.",
-    "I sit very quickly."
-   ],
-   "options_cn": [
-    "我坐在莉莉和汤姆中间，靠窗。",
-    "我每天中午坐着。",
-    "我坐着一个新单词。",
-    "我坐得很快。"
-   ],
-   "answer": 0,
-   "pronunciation_tips": "between /bɪˈtwiːn/ 重音在后，window /ˈwɪndəʊ/ 重音在前",
-   "explanation_cn": "问的是座位位置，A 用 between 和 near 说清了；B 说时间，C、D 答非所问。",
-   "answer_cn_hint": "用 I sit between A and B / beside… / near… 说座位。"
-  },
-  {
-   "sentence": "How can I get to the library from here?",
-   "sentence_cn": "从这里怎么去图书馆？",
-   "options": [
-    "Go along this hall and turn left at the stairs.",
-    "The library has many books.",
-    "I go there at six o'clock.",
-    "The library is very quiet."
-   ],
-   "options_cn": [
-    "沿着这条走廊走，在楼梯那儿左转。",
-    "图书馆有很多书。",
-    "我六点去那里。",
-    "图书馆很安静。"
-   ],
-   "answer": 0,
-   "pronunciation_tips": "along /əˈlɒŋ/ 别读成 a long，turn left 的 left 词尾 ft 要出声",
-   "explanation_cn": "How can I get to… 问路线，答句要有动词 Go / Turn；只有 A 给了走法。",
-   "answer_cn_hint": "用 Go along… and turn left / right at… 指路。"
-  },
-  {
-   "sentence": "What is above your bed at home?",
-   "sentence_cn": "你家里的床上方有什么？",
-   "options": [
-    "A big map of the world hangs above my bed.",
-    "A map sleeps under my bed.",
-    "I have breakfast above my bed.",
-    "My bed is above the map."
-   ],
-   "options_cn": [
-    "我的床上方挂着一张世界地图。",
-    "一张地图睡在我床底下。",
-    "我在床上方吃早饭。",
-    "我的床在地图上方。"
-   ],
-   "answer": 0,
-   "pronunciation_tips": "above /əˈbʌv/ 重音在后，world /wɜːld/ 别丢 l",
-   "explanation_cn": "above 表示高于、不接触；A 用 hangs above 正确。D 把两者说反了。",
-   "answer_cn_hint": "用 A … hangs above / over my bed 说床上方挂着什么。"
-  },
-  {
-   "sentence": "Where can I put my schoolbag?",
-   "sentence_cn": "我可以把书包放在哪儿？",
-   "options": [
-    "You can put it beside the door, next to the small table.",
-    "You can put it on Sunday.",
-    "You can put it between two words.",
-    "You can put it very loudly."
-   ],
-   "options_cn": [
-    "你可以放在门边，挨着小桌子。",
-    "你可以放在星期天。",
-    "你可以放在两个单词中间。",
-    "你可以很大声地放。"
-   ],
-   "answer": 0,
-   "pronunciation_tips": "beside /bɪˈsaɪd/ 与 besides（此外）别混，next to 连读成 /nekstə/",
-   "explanation_cn": "A 用 beside / next to 说清了放书包的地方；其余三项都不是地点。",
-   "answer_cn_hint": "用 put it beside / next to / under… 回答放东西的位置。"
-  }
- ],
- "vocab": [
-  {
-   "word": "over",
-   "phonetic": "/ˈəʊvə(r)/",
-   "meaning": "横跨在上方",
-   "emoji": "🌉",
-   "example_en": "A stone bridge goes over the river.",
-   "example_cn": "一座石桥架在河面上。",
-   "hint_cn": "不碰到下面那样东西，从它头顶过去",
-   "syllables": [
-    "o",
-    "ver"
-   ]
-  },
-  {
-   "word": "under",
-   "phonetic": "/ˈʌndə(r)/",
-   "meaning": "正下方",
-   "emoji": "⬇️",
-   "example_en": "The cat is sleeping under the table.",
-   "example_cn": "小猫正趴在桌子底下睡觉。",
-   "hint_cn": "和 above 相反，被上面那个东西盖着",
-   "syllables": [
-    "un",
-    "der"
-   ]
-  },
-  {
-   "word": "between",
-   "phonetic": "/bɪˈtwiːn/",
-   "meaning": "两者之间",
-   "emoji": "↔️",
-   "example_en": "I sit between Lily and Tom in class.",
-   "example_cn": "上课时我坐在莉莉和汤姆中间。",
-   "hint_cn": "左右各有一个，一共只有两个",
-   "syllables": [
-    "be",
-    "tween"
-   ]
-  },
-  {
-   "word": "behind",
-   "phonetic": "/bɪˈhaɪnd/",
-   "meaning": "在后面",
-   "emoji": "🔙",
-   "example_en": "The bike is behind the building.",
-   "example_cn": "自行车停在楼房的背面。",
-   "hint_cn": "和 in front of 相反，要绕到另一面才看得见",
-   "syllables": [
-    "be",
-    "hind"
-   ]
-  },
-  {
-   "word": "across",
-   "phonetic": "/əˈkrɒs/",
-   "meaning": "从表面横过",
-   "emoji": "➡️",
-   "example_en": "We walked across the bridge to the shops.",
-   "example_cn": "我们从桥上走过去，到了商店那边。",
-   "hint_cn": "贴着一条线或一个面，从这一边到那一边",
-   "syllables": [
-    "a",
-    "cross"
-   ]
-  }
- ],
- "reading": {
-  "passage": "Welcome to our new classroom. The teacher's desk is in front of the blackboard. My seat is between Lily and Tom, and the reading corner is behind the tall bookcase. A big map hangs above the window, and the waste bin is below it. The door is on the right, so the small table beside the door is for our schoolbags. Everyone can find a place here, and I like sitting near my friends.",
-  "passage_cn": "欢迎来到我们的新教室。老师的讲台在黑板前面。我的座位在莉莉和汤姆中间，阅读角在高书柜的后面。窗户上方挂着一张大地图，垃圾桶在它下面。门在右边，所以门边的小桌子是给大家放书包的。每个人都能在这儿找到位置，我最喜欢坐在朋友旁边。",
-  "questions": [
-   {
-    "question": "Where is the teacher's desk?",
-    "options": [
-     "In front of the blackboard",
-     "Behind the bookcase",
-     "Above the window",
-     "Beside the door"
-    ],
-    "answer": 0,
-    "explanation_cn": "第二句写 in front of the blackboard（在黑板前面）。"
-   },
-   {
-    "question": "Who sits next to the writer?",
-    "options": [
-     "Lily and Tom",
-     "The teacher",
-     "Nobody",
-     "Grandma"
-    ],
-    "answer": 0,
-    "explanation_cn": "第三句写 My seat is between Lily and Tom（座位在两人中间）。"
-   },
-   {
-    "question": "What hangs above the window?",
-    "options": [
-     "A big map",
-     "A clock",
-     "A lamp",
-     "A picture of a cat"
-    ],
-    "answer": 0,
-    "explanation_cn": "第四句写 A big map hangs above the window（窗上方挂着大地图）。"
-   },
-   {
-    "question": "Where do the students put their schoolbags?",
-    "options": [
-     "On the small table beside the door",
-     "Under the teacher's desk",
-     "Behind the blackboard",
-     "In the bookcase"
-    ],
-    "answer": 0,
-    "explanation_cn": "第五句说门在右边，门边的小桌子用来放书包，用 beside the door。"
-   }
+  "spell": [
+    {
+      "question": "横跨在上方：o___ [填完整单词]",
+      "answer": "over",
+      "explanation_cn": "over 是不接触地从上方越过；接触时用 on。"
+    },
+    {
+      "question": "正下方：u____ [填完整单词]",
+      "answer": "under",
+      "explanation_cn": "under the tree / under the bed，被上面盖着。"
+    },
+    {
+      "question": "两者之间：b______ [填完整单词]",
+      "answer": "between",
+      "explanation_cn": "between A and B；三者以上用 among。"
+    },
+    {
+      "question": "从表面横过：a_____ [填完整单词]",
+      "answer": "across",
+      "explanation_cn": "walk across the bridge 走过桥面。"
+    }
   ]
- },
- "spell": [
-  {
-   "question": "横跨在上方：o___ [填完整单词]",
-   "answer": "over",
-   "explanation_cn": "over 是不接触地从上方越过；接触时用 on。"
-  },
-  {
-   "question": "正下方：u____ [填完整单词]",
-   "answer": "under",
-   "explanation_cn": "under the tree / under the bed，被上面盖着。"
-  },
-  {
-   "question": "两者之间：b______ [填完整单词]",
-   "answer": "between",
-   "explanation_cn": "between A and B；三者以上用 among。"
-  },
-  {
-   "question": "从表面横过：a_____ [填完整单词]",
-   "answer": "across",
-   "explanation_cn": "walk across the bridge 走过桥面。"
-  }
- ]
 }
