@@ -1707,6 +1707,107 @@ const App = {
     return teacher ? 'weekly' : 'today';
   },
 
+  // ===== v208：学生设备档案 ================================================
+  //
+  // 家长 2026-11-16：「尝试着去读取每个学生型号，备注到后台里头，让我老师
+  // 端能看到每个学生的手机型号，是否用自带的浏览器。如果用的不是自带的，
+  // 他用的是哪个浏览器，方便咱们进行修改和发现问题。」
+  // 已知的第一种组合：华为 nova 14 + 后来下载的头条浏览器。
+  // 孩子端只管静默上报，界面上不出现任何内部逻辑话术。
+  _devicePayload() {
+    var info = {};
+    try { info = (typeof Api !== 'undefined' && Api.deviceInfo) ? Api.deviceInfo() : {}; }
+    catch (e) { info = {}; }
+    var me = (this.state.students || []).filter(function (s) {
+      return s && s.phone === this.state.phone;
+    }, this)[0];
+    info.student_id = this._myStudentId();
+    info.student_name = this.state.userName || (me && me.name) || '';
+    info.student_class = (me && me.class) || (this.state.classes || [])[0] || '';
+    info.phone = this.state.phone || '';
+    return info;
+  },
+
+  _reportDevice() {
+    if (this.isTeacher()) return;          // 老师的电脑不算学生设备
+    try { Api.reportDevice(this._devicePayload()); } catch (e) {}
+    // 换浏览器 / 换设备后回到前台，也补一次（一小时最多一次）。
+    var self = this;
+    if (this._deviceVisibilityBound) return;
+    this._deviceVisibilityBound = true;
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState !== 'visible') return;
+      var t = Date.now();
+      if (self._deviceLastReport && t - self._deviceLastReport < 3600000) return;
+      self._deviceLastReport = t;
+      try { Api.reportDevice(self._devicePayload()); } catch (e) {}
+    });
+    this._deviceLastReport = Date.now();
+  },
+
+  async _pullDeviceList() {
+    if (!this.isTeacher()) return;
+    try {
+      const rows = await Api.fetchDevices(this.state.phone);
+      if (rows) this.state.devices = rows;
+    } catch (e) {}
+  },
+
+  async refreshDevices() {
+    if (!this.isTeacher()) return;
+    await this._pullDeviceList();
+    try { this.renderContent(); } catch (e) {}
+    this.showToast('📱 设备信息已更新');
+  },
+
+  // 老师端「学生管理」里那张设备表：一个正式账号一行，一屏全展开。
+  // 没上报过的孩子也在表里，标「还没记录」，不用等他玩过游戏才有行。
+  _deviceCardHtml(approved) {
+    var devs = this.state.devices || [];
+    var byId = {}, byName = {};
+    devs.forEach(function (d) {
+      if (!d) return;
+      if (d.student_id) byId[d.student_id] = d;
+      var k = String(d.student_name || '').toLowerCase().replace(/\s+/g, '');
+      if (k) byName[k] = d;
+    });
+    var esc = this._escHtml.bind(this);
+    var html = '<div class="card mb-16" id="device-card">';
+    html += '<div style="font-weight:700;margin-bottom:6px">📱 学生设备</div>';
+    html += '<p class="text-sub fs-12 mb-8">每个孩子的手机型号、是不是自带浏览器、'
+          + '用的是哪个浏览器，都记在这里。孩子登录一次之后就有记录。</p>';
+    html += '<div class="dev-table"><div class="dev-head">'
+          + '<span>姓名</span><span>手机型号</span><span>自带浏览器</span>'
+          + '<span>使用浏览器</span><span>系统</span></div>';
+    (approved || []).forEach(function (s) {
+      var key = String(s.name || '').toLowerCase().replace(/\s+/g, '');
+      var d = byId[s.id] || byName[key] || null;
+      var notStock = d && Number(d.is_stock) === 0;
+      html += '<div class="dev-row' + (notStock ? ' dev-row-warn' : '') + '">'
+        + '<span class="dev-name">' + esc(s.name || s.phone) + '</span>'
+        + '<span>' + esc(d ? (d.model_label || d.model || '—') : '还没记录') + '</span>'
+        + '<span>' + esc(d ? (d.stock_text || '—') : '—') + '</span>'
+        + '<span class="dev-browser">' + esc(d ? (d.browser || '—') : '—')
+        + (d && d.browser_ver ? ' ' + esc(d.browser_ver) : '') + '</span>'
+        + '<span>' + esc(d ? (d.os || '—') : '—') + '</span>'
+        + '</div>';
+    });
+    if (!(approved || []).length) {
+      html += '<div class="dev-row"><span class="text-sub fs-12">还没有正式账号</span></div>';
+    }
+    html += '</div>';
+    var at = '';
+    devs.forEach(function (d) { if (d && d.updated_at && d.updated_at > at) at = d.updated_at; });
+    if (at) {
+      html += '<div class="text-sub fs-12" style="margin-top:6px">最近记录：'
+           + esc(String(at).replace('T', ' ').slice(0, 16)) + '</div>';
+    }
+    html += '<button class="btn btn-outline btn-sm" style="margin-top:8px" '
+          + 'onclick="App.refreshDevices()">🔄 刷新设备</button>';
+    html += '</div>';
+    return html;
+  },
+
   showApp() {
     document.getElementById('login-page').classList.add('hidden');
     // v143：开屏层到这里才算完成任务 —— 它盖着的是"正在进入…"。
@@ -1752,6 +1853,10 @@ const App = {
     //       所以先重算再上报 —— 打开一次 App 就把这几天的补回来。
     this._backfillCheckins();
     this._bindCheckinUpload();
+    // v208：把这台手机的型号 / 浏览器记到后台，老师端能一眼看出
+    // 谁用的不是手机自带浏览器（例：华为 nova 14 + 头条浏览器）。
+    this._reportDevice();
+    if (this.isTeacher()) this._pullDeviceList();
     // Update header name - show student name or teacher label
     const headerName = document.getElementById('header-name');
     if (headerName) {
@@ -4304,6 +4409,15 @@ const App = {
 
     this.state.currentTab = tab;
     this._saveTab(tab);          // v150：刷新 / 下拉刷新后回到这一屏
+    // v208：进「学生管理」顺手拉一次设备档案，不阻塞切页，拉到再补画一次。
+    if (tab === 'students' && this.isTeacher()) {
+      const selfTab = this;
+      this._pullDeviceList().then(function () {
+        if (selfTab.state.currentTab === 'students') {
+          try { selfTab.renderContent(); } catch (e) {}
+        }
+      });
+    }
     this.renderTabs();
 
     // 「口语记录」例外：它读的是 IndexedDB，渲染函数是同步的、没法 await，
@@ -5436,6 +5550,8 @@ const App = {
     html += '<div class="text-sub fs-12" style="margin-top:4px">'
          + '不在这 ' + approved.length + ' 个正式账号里的号码，登录时会被拦住并在这里提醒你。</div>';
     html += '</div>';
+    // v208：每个孩子的手机型号 / 是否自带浏览器 / 用的哪个浏览器。
+    html += this._deviceCardHtml(approved);
     if (nOutside) {
       html += '<div class="card mb-16" style="border:2px solid var(--danger)">';
       html += '<h3 style="color:var(--danger);margin:0 0 6px">🔔 名单外登录（' + nOutside + ' 人）</h3>';

@@ -259,9 +259,9 @@ console.log('\n5. 版本号');
 {
   const html = fs.readFileSync(path.join(__dirname, '../public/index.html'), 'utf8');
   const sw = fs.readFileSync(path.join(__dirname, '../public/sw.js'), 'utf8');
-  ok('index.html 版本 = 144', /app-version" content="207"/.test(html));
-  ok('所有脚本都带 ?v=207', /app\.js\?v=207/.test(html) && !/\.js\?v=(?!207)\d{2,3}/.test(html));
-  ok('sw 缓存名 = v144', /amy-english-v207/.test(sw) && /var V = 207;/.test(sw));
+  ok('index.html 版本 = 144', /app-version" content="208"/.test(html));
+  ok('所有脚本都带 ?v=208', /app\.js\?v=208/.test(html) && !/\.js\?v=(?!208)\d{2,3}/.test(html));
+  ok('sw 缓存名 = v144', /amy-english-v208/.test(sw) && /var V = 208;/.test(sw));
 }
 
 console.log('\n' + (fail === 0 ? '全部通过' : '失败 ' + fail + ' 项') + '：' + pass + ' 通过 / ' + fail + ' 失败');

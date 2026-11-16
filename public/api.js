@@ -3504,6 +3504,139 @@ const Api = {
     return res;
   },
 
+  // ===== v208：学生设备档案 ================================================
+  //
+  // 家长 2026-11-16：「尝试着去读取每个学生型号，备注到后台里头，让我老师
+  // 端能看到每个学生的手机型号，是否用自带的浏览器。如果用的不是自带的，
+  // 他用的是哪个浏览器，方便咱们进行修改和发现问题。」
+  // 已知的第一种组合：华为 nova 14 + 后来下载的「头条浏览器」。
+  //
+  // 只靠 UA 就能读出来的东西全在这里解析，不申请任何权限、不弹任何提示，
+  // 也不会因为读不到就把孩子挡在门外。userAgentData.model 在部分安卓
+  // Chromium 上更准，能拿到就用，拿不到退回 UA 里的 Build 段。
+  deviceInfo() {
+    var nav = (typeof navigator !== 'undefined') ? navigator : {};
+    var win = (typeof window !== 'undefined') ? window : {};
+    var ua = String(nav.userAgent || '');
+    var uad = nav.userAgentData || null;
+    var out = {
+      ua: ua.slice(0, 400), brand: '', model: '', model_label: '',
+      browser: '', browser_ver: '', is_stock: -1, stock_text: '待确认',
+      os: '', screen: '', dpr: '', standalone: 0, touch: 0, client_ver: 0,
+    };
+
+    // --- 系统 -------------------------------------------------------------
+    var am = ua.match(/Android\s+(\d+(?:\.\d+)?(?:\.\d+)?)/i);
+    var im = ua.match(/(?:iPhone|iPad|iPod).*?OS\s+(\d+[_\d]*)/i);
+    if (am) out.os = 'Android ' + am[1];
+    else if (im) out.os = 'iOS ' + im[1].replace(/_/g, '.');
+    else if (/Windows/i.test(ua)) out.os = 'Windows';
+    else if (/Mac OS X/i.test(ua)) out.os = 'macOS';
+    else out.os = '其他';
+
+    // --- 机型 -------------------------------------------------------------
+    // Android UA 形如 "Linux; Android 14; FOA-AL00 Build/..."。
+    var mm = ua.match(/Android\s+[^;]+;\s*([^;)]+?)(?:\s+Build\/|\))/i)
+          || ua.match(/;\s*([A-Za-z0-9][A-Za-z0-9 _.\-]{2,40})\s+Build\//);
+    var model = mm ? String(mm[1]).trim() : '';
+    if (uad && uad.model) model = String(uad.model).trim();
+    if (/iPhone|iPad|iPod/i.test(ua)) model = (ua.match(/(iPhone|iPad|iPod)/i) || [])[1] || model;
+    out.model = model.slice(0, 60);
+
+    // --- 品牌 -------------------------------------------------------------
+    var b = '';
+    if (/iPhone|iPad|iPod/i.test(ua)) b = '苹果';
+    else if (/HUAWEI|HONOR|nova\s*\d|FOA-|ALA-|LNA-|PGT-|CLS-|BRA-|REA-|JAD-|MGA-/i.test(ua)) b = /HONOR|REA-|LNA-|JAD-/i.test(ua) ? '荣耀' : '华为';
+    else if (/Xiaomi|Redmi|MI\s?\d|M20[0-9]{2}|POCO/i.test(ua)) b = '小米';
+    else if (/vivo|iQOO/i.test(ua)) b = 'vivo';
+    else if (/OPPO|OnePlus|realme|CPH\d|RMX\d/i.test(ua)) b = 'OPPO';
+    else if (/Samsung|SM-[A-Z]\d/i.test(ua)) b = '三星';
+    else if (/Windows|Mac OS X/i.test(ua)) b = '电脑';
+    out.brand = b;
+
+    // 家长要的是能认出来的名字，不是硬件代号。常见代号补一个中文名。
+    var pretty = model;
+    if (/^nova\s*\d/i.test(model) && b === '华为') pretty = model.replace(/^nova\s*/i, 'nova ');
+    if (/^NOVA\s*14/i.test(model)) pretty = 'nova 14';
+    out.model_label = (b && b !== '电脑' ? b + ' ' : '') + (pretty || '型号未读到');
+
+    // --- 浏览器（顺序不能乱：内置 WebView 的 UA 里也带 Chrome）------------
+    var rules = [
+      ['头条浏览器', /NewsArticle|Toutiao|ByteDance|bytedance|TTWebView|Aweme|snssdk|NewsReader/i],
+      ['华为浏览器', /HuaweiBrowser|HarmonyBrowser|HUAWEI\s+Browser/i],
+      ['荣耀浏览器', /HonorBrowser/i],
+      ['小米浏览器', /MiuiBrowser|MIUIBrowser|XiaoMiBrowser/i],
+      ['vivo 浏览器', /VivoBrowser|VIVOBrowser/i],
+      ['OPPO 浏览器', /HeyTapBrowser|OppoBrowser|HeyTap/i],
+      ['三星浏览器', /SamsungBrowser/i],
+      ['微信内置浏览器', /MicroMessenger/i],
+      ['QQ 浏览器', /QQBrowser|MQQBrowser/i],
+      ['UC 浏览器', /UCBrowser|UCWEB/i],
+      ['夸克浏览器', /Quark/i],
+      ['百度浏览器', /BaiduBoxApp|baidubrowser|BIDUBrowser/i],
+      ['搜狗浏览器', /SogouMobileBrowser/i],
+      ['360 浏览器', /360Browser|QIHU/i],
+      ['Edge', /EdgA|EdgiOS|Edge\//i],
+      ['Chrome', /CriOS|Chrome\//i],
+      ['Firefox', /FxiOS|Firefox\//i],
+      ['Safari', /Safari\//i],
+    ];
+    var name = '';
+    for (var i = 0; i < rules.length; i++) {
+      if (rules[i][1].test(ua)) { name = rules[i][0]; break; }
+    }
+    if (!name) name = /;\s*wv/i.test(ua) ? '系统 WebView（未标名字）' : '未知浏览器';
+    out.browser = name;
+
+    var bm = ua.match(/(?:NewsArticle|Toutiao|HuaweiBrowser|MiuiBrowser|VivoBrowser|HeyTapBrowser|SamsungBrowser|MicroMessenger|QQBrowser|UCBrowser|Quark|Chrome|CriOS|Firefox|FxiOS|Version|Safari)\/(\d+(?:\.\d+)?)/i);
+    out.browser_ver = bm ? bm[1] : '';
+
+    // --- 是否自带 ---------------------------------------------------------
+    var stock = { '华为': '华为浏览器', '荣耀': '荣耀浏览器', '小米': '小米浏览器',
+                  'vivo': 'vivo 浏览器', 'OPPO': 'OPPO 浏览器',
+                  '三星': '三星浏览器', '苹果': 'Safari' };
+    var known = !!b && b !== '电脑' && name !== '未知浏览器' && name !== '系统 WebView（未标名字）';
+    var yes = !!(stock[b] && stock[b] === name);
+    out.is_stock = known ? (yes ? 1 : 0) : -1;
+    out.stock_text = known ? (yes ? '是（自带）' : '否（自己下载）') : '待确认';
+
+    // --- 其它 -------------------------------------------------------------
+    try {
+      var sc = win.screen || {};
+      out.screen = (sc.width || 0) + 'x' + (sc.height || 0);
+      out.dpr = String(win.devicePixelRatio || '');
+      out.standalone = (win.matchMedia && win.matchMedia('(display-mode: standalone)').matches) || nav.standalone ? 1 : 0;
+      out.touch = ('ontouchstart' in win) ? 1 : 0;
+      var meta = (typeof document !== 'undefined') ? document.querySelector('meta[name="app-version"]') : null;
+      out.client_ver = meta ? (Number(meta.getAttribute('content')) || 0) : 0;
+    } catch (e) {}
+    return out;
+  },
+
+  // 孩子端：进 App 时静默报一次。失败也不影响做题。
+  async reportDevice(payload) {
+    try {
+      const res = await fetch(this._classUrl('/api/device/report'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload || {}),
+      });
+      if (!res.ok) return null;
+      return await res.json();
+    } catch (e) { console.warn('reportDevice failed:', e); return null; }
+  },
+
+  // 老师端：读全班设备档案。null = 这次没拉到，保留上一份。
+  async fetchDevices(teacherPhone) {
+    try {
+      const res = await fetch(this._classUrl('/api/device/list?teacher=' +
+        encodeURIComponent(teacherPhone || (this.session && this.session.phone) || '')));
+      if (!res.ok) return null;
+      const data = await res.json();
+      return (data && Array.isArray(data.devices)) ? data.devices : [];
+    } catch (e) { console.warn('fetchDevices failed:', e); return null; }
+  },
+
   syncError() { return CloudSync.lastError(); },
   cloudAvailable() { return CloudSync.available(); },
 };

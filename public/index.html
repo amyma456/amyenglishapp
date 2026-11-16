@@ -2,13 +2,13 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#FF8C42">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="207">
+<meta name="app-version" content="208">
 <link rel="manifest" href="manifest.json">
 <!-- v135：登录第一步就是调 api.amyeng.top 验手机号。提前把 DNS + TLS
      握手做掉，接口首调能省几百毫秒 —— 手机弱网下这几百毫秒很显眼。 -->
@@ -1647,6 +1647,26 @@ body.perf-on .content-area{padding-bottom:54vh}
   .wg-ck-group{font-size:10px}
   .wg-board-hint{font-size:9px}
 }
+/* v208 · 双击不再缩放 / 选中文字，也不把第二次点击派发到答案上。
+   华为 nova 14 的头条浏览器实测会拿 dblclick 做缩放，顺带补一次 click。 */
+button,.q-option,.gate-listen,.hold-btn,.tap-btn,.speak-btn{
+  -webkit-touch-callout:none;-webkit-user-select:none;user-select:none;
+  touch-action:manipulation}
+/* v208 · 老师端「学生设备」：一人一行，一屏全展开，不要内部滚动条。 */
+.dev-table{display:flex;flex-direction:column;gap:4px;margin-top:6px}
+.dev-head,.dev-row{display:grid;
+  grid-template-columns:1fr 1.5fr 1fr 1.3fr .9fr;gap:6px;
+  align-items:center;font-size:11px;line-height:1.35}
+.dev-head{font-weight:700;color:var(--text-sub);padding:4px 6px}
+.dev-row{padding:7px 6px;border-radius:8px;background:#FFF8F0;
+  border:1px solid var(--line);word-break:break-word}
+.dev-row-warn{background:#FFF1DC;border-color:#FFD8A8}
+.dev-name{font-weight:700}
+.dev-browser{color:var(--primary-dark);font-weight:600}
+@media (max-width:420px){
+  .dev-head{display:none}
+  .dev-row{grid-template-columns:1fr 1fr;gap:2px 8px;font-size:10px}
+}
 </style>
 </head>
 <body>
@@ -1866,9 +1886,9 @@ body.perf-on .content-area{padding-bottom:54vh}
 </div>
 
 <script>window.__appReady = false;</script>
-<script defer src="cloud.js?v=207"></script>
-<script defer src="data.js?v=207"></script>
-<script defer src="data-shuffle.js?v=207"></script>
+<script defer src="cloud.js?v=208"></script>
+<script defer src="data.js?v=208"></script>
+<script defer src="data-shuffle.js?v=208"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
 <!--
   ?v= 必须跟着版本号走（v124 修正）。
@@ -1878,13 +1898,13 @@ body.perf-on .content-area{padding-bottom:54vh}
   这个坑很隐蔽：代码明明改了、也部署上去了，手机上跑的还是几个月前的逻辑。
   以后每次发版，这里跟着 app-version 一起改。
 -->
-<script defer src="recorder.js?v=207"></script>
-<script defer src="api.js?v=207"></script>
+<script defer src="recorder.js?v=208"></script>
+<script defer src="api.js?v=208"></script>
 <!-- v194：小游戏独立成文件，不塞进已经 800KB 的 app.js。必须排在 app.js
      **前面**：app.js 顶层有同步初始化，登录回来若正好停在「单词乐园」，
      渲染时 WordGame 得已经存在。game.js 只在被点击/渲染时才读 window.App。 -->
-<script defer src="game.js?v=207"></script>
-<script defer src="app.js?v=207"></script>
+<script defer src="game.js?v=208"></script>
+<script defer src="app.js?v=208"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {

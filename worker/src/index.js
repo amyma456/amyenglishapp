@@ -79,6 +79,12 @@ export default {
       return cors(await gameScoresApi(request, url, env), env);
     }
 
+    // v208：学生设备档案（机型 / 浏览器 / 是否自带）。老师端用来定位
+    // 「就这台手机有问题」的情况，例如华为 nova 14 + 头条浏览器。
+    if (url.pathname.startsWith('/api/device')) {
+      return cors(await deviceApi(request, url, env), env);
+    }
+
     return cors(json({ error: 'not_found' }, 404), env);
   },
 };
@@ -2373,6 +2379,136 @@ async function gameScoresApi(request, url, env) {
 //   DELETE /api/wrong-questions/by-student?student_id=...
 //                                     teacher: clear one student's archive
 //
+// /api/device/* — 学生设备档案（v208）。
+//
+//   POST /api/device/report          孩子登录后静默上报一次机型 / 浏览器
+//   GET  /api/device/list?teacher=   老师端读全班设备
+//
+// 同一台设备每次开屏都会报，但 UA / 机型 / 浏览器没变且 24 小时内报过就
+// 不写库 —— 名单 9 个人、一天开十几次，不省这一下会白烧 D1 写额度。
+// 读接口只认老师号；上报接口不设限，因为设备信息本来就是孩子自己那台
+// 手机给的，拦了只会让档案缺行。
+// ---------------------------------------------------------------------------
+let deviceTableReady = false;
+async function ensureDeviceTable(db) {
+  if (deviceTableReady) return;
+  await db.prepare(
+    `CREATE TABLE IF NOT EXISTS student_devices (
+       student_id    TEXT PRIMARY KEY,
+       student_name  TEXT,
+       student_class TEXT,
+       phone         TEXT,
+       brand         TEXT,
+       model         TEXT,
+       model_label   TEXT,
+       os            TEXT,
+       browser       TEXT,
+       browser_ver   TEXT,
+       is_stock      INTEGER NOT NULL DEFAULT -1,
+       stock_text    TEXT,
+       screen        TEXT,
+       dpr           TEXT,
+       standalone    INTEGER,
+       touch         INTEGER,
+       ua            TEXT,
+       client_ver    INTEGER,
+       updated_at    TEXT NOT NULL
+     )`
+  ).run();
+  deviceTableReady = true;
+}
+
+async function deviceApi(request, url, env) {
+  const db = env.DB;
+  if (!db) return json({ error: 'no_db' }, 500);
+  const path = url.pathname;
+  const clean = (v, n) => String(v == null ? '' : v).trim().slice(0, n || 120);
+  const now = new Date().toISOString();
+
+  if (path === '/api/device/report' && request.method === 'POST') {
+    const b = await readJsonBody(request);
+    if (!b) return json({ error: 'bad_json' }, 400);
+    const sid = clean(b.student_id, 80);
+    if (!sid) return json({ error: 'missing_student_id' }, 400);
+    await ensureDeviceTable(db);
+    const v = {
+      name: clean(b.student_name, 60),
+      klass: clean(b.student_class, 60),
+      phone: clean(b.phone, 30),
+      brand: clean(b.brand, 30),
+      model: clean(b.model, 60),
+      modelLabel: clean(b.model_label, 90),
+      os: clean(b.os, 40),
+      browser: clean(b.browser, 40),
+      browserVer: clean(b.browser_ver, 20),
+      stock: (Number(b.is_stock) === 1 ? 1 : (Number(b.is_stock) === 0 ? 0 : -1)),
+      stockText: clean(b.stock_text, 30),
+      screen: clean(b.screen, 30),
+      dpr: clean(b.dpr, 10),
+      standalone: intOr(b.standalone, 0),
+      touch: intOr(b.touch, 0),
+      ua: clean(b.ua, 400),
+      ver: intOr(b.client_ver, 0),
+    };
+
+    // 内容没变就别写：一天之内同一台手机反复开屏不该产生十几次写入。
+    const prev = await db.prepare(
+      'SELECT ua, model, browser, is_stock, updated_at FROM student_devices WHERE student_id = ?1'
+    ).bind(sid).first();
+    if (prev && prev.ua === v.ua && prev.model === v.model && prev.browser === v.browser
+        && Number(prev.is_stock) === v.stock
+        && (Date.now() - Date.parse(prev.updated_at || '')) < 86400000) {
+      return json({ ok: true, unchanged: true });
+    }
+
+    await db.prepare(
+      `INSERT INTO student_devices
+         (student_id, student_name, student_class, phone, brand, model, model_label,
+          os, browser, browser_ver, is_stock, stock_text, screen, dpr,
+          standalone, touch, ua, client_ver, updated_at)
+       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14,
+               ?15, ?16, ?17, ?18, ?19)
+       ON CONFLICT(student_id) DO UPDATE SET
+         student_name  = excluded.student_name,
+         student_class = excluded.student_class,
+         phone         = excluded.phone,
+         brand         = excluded.brand,
+         model         = excluded.model,
+         model_label   = excluded.model_label,
+         os            = excluded.os,
+         browser       = excluded.browser,
+         browser_ver   = excluded.browser_ver,
+         is_stock      = excluded.is_stock,
+         stock_text    = excluded.stock_text,
+         screen        = excluded.screen,
+         dpr           = excluded.dpr,
+         standalone    = excluded.standalone,
+         touch         = excluded.touch,
+         ua            = excluded.ua,
+         client_ver    = excluded.client_ver,
+         updated_at    = excluded.updated_at`
+    ).bind(
+      sid, v.name, v.klass, v.phone, v.brand, v.model, v.modelLabel,
+      v.os, v.browser, v.browserVer, v.stock, v.stockText, v.screen, v.dpr,
+      v.standalone, v.touch, v.ua, v.ver, now
+    ).run();
+    return json({ ok: true });
+  }
+
+  if (path === '/api/device/list' && request.method === 'GET') {
+    if (!isTeacherPhone(url.searchParams.get('teacher'))) {
+      return json({ error: 'forbidden' }, 403);
+    }
+    await ensureDeviceTable(db);
+    const rows = await db.prepare(
+      'SELECT * FROM student_devices ORDER BY student_class, student_name'
+    ).all();
+    return json({ devices: (rows && rows.results) || [] });
+  }
+
+  return json({ error: 'not_found' }, 404);
+}
+
 // The report path is open — any phone that knows the schema can report. We
 // don't gate it because the report carries the same data the local store
 // already has; gating would just hide bugs, not secrets. Teacher-only reads
