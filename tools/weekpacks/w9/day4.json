@@ -1,0 +1,157 @@
+{
+  "day_cn": "周五",
+  "day_en": "Friday",
+  "theme_cn": "一般将来时 + 风筝听力 + KET 词汇 + 风筝之约作文 + 键盘拼写",
+  "grammar_name": "语法 · 一般将来时 will / be going to",
+  "listening_name": "听力 · 放风筝的计划",
+  "writing_name": "背诵作文 · 写给 Tom 的风筝之约",
+  "spell_name": "本周重点词，敲一遍",
+  "grammar": [
+    {
+      "question": "We ___ fly kites in the park this Saturday.",
+      "type": "choice",
+      "options": ["will", "did", "were", "are"],
+      "answer": 0,
+      "explanation_cn": "this Saturday 是将来的时间，用 will + 动词原形；did 是过去式，were 是过去复数，are 后不能直接跟动词原形。"
+    },
+    {
+      "question": "Look at those dark clouds! It ___ rain soon.",
+      "type": "choice",
+      "options": ["went", "is going to", "goes", "to go"],
+      "answer": 1,
+      "explanation_cn": "看到乌云推断马上要下雨，用 be going to 表有迹象的将来；主语 it 后用 is going to。"
+    },
+    {
+      "question": "What will you do tomorrow? — I ___ my grandparents.",
+      "type": "choice",
+      "options": ["visited", "was visit", "am visited", "will visit"],
+      "answer": 3,
+      "explanation_cn": "问句是 What will you do，答句要保持将来时 will visit；visited 是过去式，其余搭配错误。"
+    },
+    {
+      "question": "There ___ a kite show in our city next weekend.",
+      "type": "choice",
+      "options": ["was", "were", "will be", "is yesterday"],
+      "answer": 2,
+      "explanation_cn": "next weekend 是将来时间，there be 的将来式是 there will be。"
+    },
+    {
+      "question": "选词填空（will / won't / was / did）：My old kite is broken, so I ___ not bring it.",
+      "type": "fill",
+      "answer": "will",
+      "explanation_cn": "will not = won't，表示将来的否定：风筝坏了，所以我不带它去。"
+    },
+    {
+      "question": "选词填空（going to / go to / went to / gone to）：We are ___ have a picnic after the kite show.",
+      "type": "fill",
+      "answer": "going to",
+      "explanation_cn": "be going to + 动词原形表示计划好的事：风筝比赛后去野餐。"
+    },
+    {
+      "question": "选词填空（will / did / does / do）：Grandpa ___ make a new kite for us this weekend.",
+      "type": "fill",
+      "answer": "will",
+      "explanation_cn": "this weekend 这个周末要做，用 will make 表示将来。"
+    }
+  ],
+  "listening": [
+    {
+      "question": "Listen to the dialogue. When will the children fly kites?",
+      "audio_text": "Girl: Hi, Mingming! When will you fly kites? Boy: This Saturday, in the People's Park. Girl: Great! I will go with you.",
+      "options": ["This Saturday", "Next Monday", "This Friday", "Tomorrow morning"],
+      "answer": 0,
+      "explanation_cn": "男孩说 This Saturday, in the People's Park，时间是这个星期六。"
+    },
+    {
+      "question": "Listen to the dialogue. Who made the kite?",
+      "audio_text": "Boy: Look at my new kite, Mum. Mum: It's beautiful! Did Grandpa make it? Boy: Yes, he made it last weekend.",
+      "options": ["Grandpa", "Mum", "Tom", "Uncle Lee"],
+      "answer": 0,
+      "explanation_cn": "妈妈问 Did Grandpa make it，男孩回答 Yes, he made it last weekend，做风筝的是爷爷。"
+    },
+    {
+      "question": "Which picture matches the sentence you hear?",
+      "audio_text": "The children are running with their kites in the spring wind.",
+      "options": ["🪁", "📕", "🚗", "☂️"],
+      "picture_options": true,
+      "answer": 0,
+      "explanation_cn": "句子里说 running with their kites（带着风筝跑），所以选风筝 🪁。"
+    },
+    {
+      "type": "fill",
+      "question": "Listen and fill in the blank: Our kite flies high in the blue ___.",
+      "audio_text": "Our kite flies high in the blue sky.",
+      "answer": "sky",
+      "explanation_cn": "听到 in the blue sky，空里填 sky。"
+    }
+  ],
+  "ket_pet": [
+    {
+      "question": "KET: a toy that flies in the wind at the end of a long string → ___",
+      "type": "choice",
+      "options": ["kite", "bike", "boat", "bell"],
+      "answer": 0,
+      "explanation_cn": "在线末端、随风飞起来的玩具是 kite 风筝；bike 自行车，boat 船，bell 铃铛。"
+    },
+    {
+      "question": "KET: We will have a ___ on the grass with sandwiches and fruit.",
+      "type": "choice",
+      "options": ["lesson", "picnic", "shower", "ticket"],
+      "answer": 1,
+      "explanation_cn": "在草地上带三明治和水果去吃，是 picnic 野餐；have a picnic 是固定搭配。"
+    },
+    {
+      "question": "KET: The opposite of 'north' is ___.",
+      "type": "choice",
+      "options": ["east", "west", "south", "up"],
+      "answer": 2,
+      "explanation_cn": "north 北的反义词是 south 南；east 东，west 西，up 向上。"
+    },
+    {
+      "question": "KET: I cannot come on Saturday. What ___ Sunday?",
+      "type": "choice",
+      "options": ["about", "is", "of", "for"],
+      "answer": 0,
+      "explanation_cn": "What about…? 是提建议的固定句式：星期天怎么样？"
+    },
+    {
+      "question": "KET: Grandpa is good ___ making kites.",
+      "type": "choice",
+      "options": ["to", "at", "of", "up"],
+      "answer": 1,
+      "explanation_cn": "be good at doing sth. 擅长做某事，是固定搭配。"
+    }
+  ],
+  "writing": {
+    "title": "Dear Tom（风筝之约小作文 · 全文背默）",
+    "requirement_cn": "先把整封信读三遍，再把 5 个词填回去，最后背诵全文。五个空全是这一周练的词！",
+    "keywords": ["Saturday", "park", "kites", "picnic", "fun"],
+    "keywords_cn": ["星期六", "公园", "风筝", "野餐", "乐趣"],
+    "template": "Dear Tom, This {{1}} we will fly kites in the People's {{2}}. My grandpa made two beautiful {{3}} for us. At noon we will have a small {{4}} under the trees. Flying kites is an old spring game in China. Please come with us and enjoy the {{5}}! Yours, Li Ming",
+    "full_text_cn": "亲爱的Tom，这个星期六我们要去人民公园放风筝。爷爷为我们做了两只漂亮的风筝。中午我们会在树下小小地野餐一次。放风筝在中国是一项古老的春日游戏。快来和我们一起享受乐趣吧！你的，李明",
+    "explanation_cn": "邀请信三件事：说清时间地点（This Saturday, in the People's park）、说好一起做什么（fly kites, have a picnic）、最后热情邀请（Please come…）。全信用 will 表示将来的打算，正是这一周练的重点。",
+    "explanation_en": "An invitation letter tells when and where, what you will do together, and ends with a warm invitation using 'will'."
+  },
+  "spell": [
+    {
+      "question": "风筝：k___ [填完整单词]",
+      "answer": "kite",
+      "explanation_cn": "fly kites 放风筝；kite 里 i 读长音 /aɪ/。"
+    },
+    {
+      "question": "风：w___ [填完整单词]",
+      "answer": "wind",
+      "explanation_cn": "in the spring wind 在春风里；wind 的 i 读短音 /ɪ/。"
+    },
+    {
+      "question": "春天：s____ [填完整单词]",
+      "answer": "spring",
+      "explanation_cn": "spring 春天；spr 三连辅音要一口气读出来。"
+    },
+    {
+      "question": "野餐：p______ [填完整单词]",
+      "answer": "picnic",
+      "explanation_cn": "have a picnic 去野餐；picnic 双写 c。"
+    }
+  ]
+}

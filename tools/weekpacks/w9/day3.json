@@ -1,0 +1,137 @@
+{
+  "day_cn": "周四",
+  "day_en": "Thursday",
+  "theme_cn": "朱鹮回归阅读 + 比较级与最高级 + 观鸟日听力 + 键盘拼写",
+  "reading_name": "阅读理解 · 朱鹮回来了",
+  "grammar_name": "语法 · 比较级与最高级",
+  "listening_name": "听力 · 观鸟日",
+  "spell_name": "阅读重点词，敲一遍",
+  "reading": {
+    "passage": "The crested ibis is a beautiful bird with white feathers and a pink head. Long ago, ibises lived in many parts of China, but their number fell and fell. In 1981, scientists found the last seven wild ibises in a small village in Shaanxi. People built a nature reserve there and stopped cutting the old trees where the birds build their nests. The villagers also grew their rice without strong poison, so the water and fields stayed clean. Now thousands of crested ibises fly over the village, and their wings shine in the sun.",
+    "passage_cn": "朱鹮是一种美丽的鸟，长着白色的羽毛和粉红色的脑袋。很久以前，朱鹮生活在中国的许多地方，可是它们的数量越来越少。1981 年，科学家在陕西一个小山村找到了最后的 7 只野生朱鹮。人们在那里建起了自然保护区，不再砍伐朱鹮筑巢的老树。村民种水稻也不再使用强毒性的农药，水和田都变得干净了。如今，成千上万只朱鹮飞过村庄，翅膀在阳光下闪闪发亮。",
+    "questions": [
+      {
+        "question": "How many wild ibises did scientists find in 1981?",
+        "qtype_cn": "数字细节",
+        "options": ["Seventy", "Seven", "Seventeen", "Seven hundred"],
+        "answer": 1,
+        "explanation_cn": "数字细节：圈出 1981，第三句 the last seven wild ibises 直接给答案，选 B。A、C、D 都是 seven 的近似音陷阱。方法：数字题要回到那一年那一句，看清数字本身。"
+      },
+      {
+        "question": "Why did people stop cutting the old trees?",
+        "qtype_cn": "细节定位",
+        "options": ["To build a new road", "To sell the wood", "Because the ibises build their nests in them", "Because the trees were too tall"],
+        "answer": 2,
+        "explanation_cn": "细节定位：第四句 stopped cutting the old trees where the birds build their nests，保护的是朱鹮筑巢的老树，选 C。A、B 都是破坏森林的行为，D 不是不砍的理由。方法：where 引导的从句常常就是答案所在。"
+      },
+      {
+        "question": "What is a 'nature reserve'?",
+        "qtype_cn": "词义猜测",
+        "options": ["A place where animals are protected", "A big shopping mall", "A kind of rice field", "A school for birds"],
+        "answer": 0,
+        "explanation_cn": "词义猜测：人们在那里保护朱鹮、不砍树、不用毒药，所以 nature reserve 是「自然保护区」，选 A。B 商场、C 稻田、D 鸟的学校都与保护动物无关。方法：生词前后的动词（protect、stop cutting）就是它的定义。"
+      },
+      {
+        "question": "What can we infer helped the ibises come back?",
+        "qtype_cn": "推理判断",
+        "options": ["Building tall walls around the village", "Clean water and safe old trees", "Feeding them ice cream", "Moving them all to the city"],
+        "answer": 1,
+        "explanation_cn": "推理判断：把第四、五句合起来推——留着筑巢的老树、水和田都干净，朱鹮才从 7 只变几千只，选 B。A 修围墙原文没有；C、D 都不合常理。方法：推理要两句合并，答案常是「保护措施 + 结果」。"
+      }
+    ]
+  },
+  "grammar": [
+    {
+      "question": "An eagle is ___ than a chick.",
+      "type": "choice",
+      "options": ["much bigger", "more big", "biggest", "as bigger"],
+      "answer": 0,
+      "explanation_cn": "than 提示用比较级；big 是单音节词，比较级 bigger，前面加 much 加强程度。more big、as bigger 都是错误形式。"
+    },
+    {
+      "question": "Of all the birds here, the swan has the ___ neck.",
+      "type": "choice",
+      "options": ["long", "longer", "longest", "most long"],
+      "answer": 2,
+      "explanation_cn": "of all… 表示在所有鸟中比，要用最高级 the longest；long 是单音节词，最高级加 -est。"
+    },
+    {
+      "question": "This tree is ___ than that one, so the nest is safer up there.",
+      "type": "choice",
+      "options": ["tall", "taller", "tallest", "more tall"],
+      "answer": 1,
+      "explanation_cn": "than 提示两者比较，用比较级 taller；tall 单音节，加 -er 即可，不加 more。"
+    },
+    {
+      "question": "选词填空（high / higher / highest）：Look, our kite flies ___ than theirs.",
+      "type": "fill",
+      "answer": "higher",
+      "explanation_cn": "than 提示比较级；high 以 gh 结尾，直接加 -er 变 higher。"
+    },
+    {
+      "question": "选词填空（small / smaller / smallest）：The chick is the ___ of the three birds.",
+      "type": "fill",
+      "answer": "smallest",
+      "explanation_cn": "the + 最高级；of the three birds 在三只鸟里比，用 smallest。"
+    },
+    {
+      "question": "选词填空（good / better / best）：Spring is the ___ season for watching birds.",
+      "type": "fill",
+      "answer": "best",
+      "explanation_cn": "good 是不规则变化：good → better → best；the 后面用最高级 best。"
+    }
+  ],
+  "listening": [
+    {
+      "question": "Listen to the dialogue. What bird did the children see?",
+      "audio_text": "Girl: Look, Dad! What a beautiful big bird! Dad: That is a crested ibis. It is a very rare bird in China. Girl: Let's take a photo of it.",
+      "options": ["A crested ibis", "A little penguin", "A big whale", "A small chick"],
+      "answer": 0,
+      "explanation_cn": "爸爸说 That is a crested ibis，还补充它是中国的珍稀鸟类，所以看到的是朱鹮。"
+    },
+    {
+      "question": "Listen to the dialogue. Where do the ibises build their nests?",
+      "audio_text": "Girl: Grandpa, where do the ibises build their nests? Grandpa: In the tall trees near the river. Girl: I hope we can see a baby bird tomorrow!",
+      "options": ["In tall trees near the river", "Under the bridge", "In the science museum", "On the city walls"],
+      "answer": 0,
+      "explanation_cn": "爷爷说 In the tall trees near the river，朱鹮把巢筑在河边的大树上。"
+    },
+    {
+      "question": "Which picture matches the sentence you hear?",
+      "audio_text": "The young bird is opening its wings in the nest.",
+      "options": ["🪺", "🖨️", "🎒", "🕰️"],
+      "picture_options": true,
+      "answer": 0,
+      "explanation_cn": "句子里说 in the nest（在巢里），所以选鸟巢 🪺。"
+    },
+    {
+      "type": "fill",
+      "question": "Listen and fill in the blank: The crested ibis builds its nest in a ___ tree.",
+      "audio_text": "The crested ibis builds its nest in a tall tree.",
+      "answer": "tall",
+      "explanation_cn": "听到 in a tall tree，空里填 tall。"
+    }
+  ],
+  "spell": [
+    {
+      "question": "稀有的；珍稀的：r___ [填完整单词]",
+      "answer": "rare",
+      "explanation_cn": "rare 珍稀的；a rare bird 一只珍稀的鸟。"
+    },
+    {
+      "question": "羽毛：f______ [填完整单词]",
+      "answer": "feather",
+      "explanation_cn": "feather 羽毛；white feathers 白色的羽毛。"
+    },
+    {
+      "question": "鸟巢：n___ [填完整单词]",
+      "answer": "nest",
+      "explanation_cn": "build a nest 筑巢；nest 里 st 结尾。"
+    },
+    {
+      "question": "雏鸟；小鸡：c____ [填完整单词]",
+      "answer": "chick",
+      "explanation_cn": "chick 雏鸟；ch 读 /tʃ/。"
+    }
+  ]
+}

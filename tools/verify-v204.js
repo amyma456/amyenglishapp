@@ -3,7 +3,7 @@
  *   node tools/verify-v204.js
  *
  * 钉住本周关键约束：
- *   - 题库 8 周，HOMEWORK_WEEKS 含 WEEK8
+ *   - 题库 9 周，HOMEWORK_WEEKS 含 WEEK8/WEEK9
  *   - 每天 30 个真实动作；键盘拼写每天 3~6 道（全周 29 道）
  *   - 听力 3 套、≥3 类题型（对话问答/选图/听写填空），复述 0%
  *   - 阅读 5 篇（6 句 4 题 + passage_cn）；完形 1 篇（7 句 6 空 + 7 句译文）
@@ -33,9 +33,9 @@ const ok = (cond, name, extra) => {
   else { fail++; console.log('  ✗ ' + name + (extra !== undefined ? '  (实际 ' + extra + ')' : '')); }
 };
 
-console.log('v204 · 第 8 周题库（2026-11-16）校验');
+console.log('v204 · 第 8 周题库（2026-11-16）校验 · 题库现为 9 周');
 
-ok(WEEKS.length === 8, '题库 8 周', WEEKS.length);
+ok(WEEKS.length === 9, '题库 9 周', WEEKS.length);
 ok(!!W8, 'HOMEWORK_WEEKS 含 WEEK8');
 
 // ---- 骨架：每天 30 动作、键盘拼写 3~6 道 ----
@@ -150,12 +150,12 @@ ok(wr && rebuilt.toLowerCase() === String(wr.full_text).toLowerCase(), '写作�
 ok(wr && String(wr.full_text).match(/[^.!?]+[.!?]+["']?(?=\s|$)/g).length === 5, '写作全文 5 句（10 动作口径）');
 
 // ---- 版本钉子 ----
-ok(/name="app-version" content="206"/.test(html), 'index.html app-version = 204');
-ok((html.match(/\?v=206/g) || []).length === 7, 'index.html 7 处 ?v=206', (html.match(/\?v=206/g) || []).length);
-ok(/var CACHE_NAME = 'amy-english-v206';/.test(swSrc), 'sw.js CACHE_NAME = amy-english-v206');
-ok(/var V = 206;/.test(swSrc), 'sw.js var V = 204');
-ok(!/\.js\?v=(?!206)\d{2,3}/.test(html), '没有残留旧 ?v=（负向前瞻）');
-ok(!/amy-english-v(?!206)\d{3}/.test(swSrc), '没有残留旧缓存名（负向前瞻）');
+ok(/name="app-version" content="207"/.test(html), 'index.html app-version = 204');
+ok((html.match(/\?v=207/g) || []).length === 7, 'index.html 7 处 ?v=207', (html.match(/\?v=207/g) || []).length);
+ok(/var CACHE_NAME = 'amy-english-v207';/.test(swSrc), 'sw.js CACHE_NAME = amy-english-v207');
+ok(/var V = 207;/.test(swSrc), 'sw.js var V = 204');
+ok(!/\.js\?v=(?!207)\d{2,3}/.test(html), '没有残留旧 ?v=（负向前瞻）');
+ok(!/amy-english-v(?!207)\d{3}/.test(swSrc), '没有残留旧缓存名（负向前瞻）');
 
 console.log('\nv204 · ' + (fail ? '❌ ' + fail + ' 项失败（通过 ' + pass + '）' : pass + ' 项全部通过'));
 process.exit(fail ? 1 : 0);

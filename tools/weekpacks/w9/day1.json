@@ -1,0 +1,134 @@
+{
+  "day_cn": "周二",
+  "day_en": "Tuesday",
+  "theme_cn": "杂交水稻阅读 + 一般过去时（不规则动词） + 稻田研学听力 + 键盘拼写",
+  "reading_name": "阅读理解 · 袁隆平的杂交水稻",
+  "grammar_name": "语法 · 一般过去时（不规则动词）",
+  "listening_name": "听力 · 稻田研学记",
+  "spell_name": "阅读重点词，敲一遍",
+  "reading": {
+    "passage": "Yuan Longping was a great Chinese scientist. He studied hybrid rice for more than fifty years. Hybrid rice can give much more grain than common rice, so farmers harvest more food from the same fields. Thanks to his work, millions of people around the world have enough to eat. Yuan often said that his dream was to rest under rice plants as tall as a man. Today, students visit the rice fields and learn to finish every grain in their bowls.",
+    "passage_cn": "袁隆平是一位伟大的中国科学家。他研究杂交水稻五十多年。杂交水稻能比普通水稻结出多得多的谷粒，所以农民在同样的田里能收获更多粮食。多亏了他的工作，世界上几百万人都有了足够的食物。袁爷爷常说，他的梦想是在像人一样高的稻子下面乘凉。今天，同学们走进稻田，学会把碗里的每一粒米都吃干净。",
+    "questions": [
+      {
+        "question": "How long did Yuan Longping study hybrid rice?",
+        "qtype_cn": "数字细节",
+        "options": ["For ten years", "For more than fifty years", "For two weeks", "For one summer"],
+        "answer": 1,
+        "explanation_cn": "数字细节：圈出问的时长，第二句 He studied hybrid rice for more than fifty years 直接给答案，选 B。A、C、D 都是把数字改小了。方法：数字题要把文中数字圈出来，别凭印象选。"
+      },
+      {
+        "question": "In 'farmers harvest more food from the same fields', what does 'harvest' mean?",
+        "qtype_cn": "词义猜测",
+        "options": ["To buy food from shops", "To throw food away", "To gather food from the fields", "To cook food at home"],
+        "answer": 2,
+        "explanation_cn": "词义猜测：前一句说杂交水稻结出更多谷粒，后一句说 from the same fields，所以 harvest 是「收割、收获」，选 C。A 买食物、B 扔食物、D 在家做饭都与田里收粮对不上。方法：生词前后往往藏着解释，先读上下文再猜。"
+      },
+      {
+        "question": "What can we infer from the passage?",
+        "qtype_cn": "推理判断",
+        "options": ["Yuan worked alone with no helpers", "Hybrid rice helps solve the food problem", "Common rice is better than hybrid rice", "Yuan stopped working when he got old"],
+        "answer": 1,
+        "explanation_cn": "推理判断：第四句说 thanks to his work, millions of people have enough to eat，可以推出杂交水稻帮助解决了吃饭问题，选 B。A 原文没说他一个人干；C 与 more grain 相反；D 原文没提他停下工作。方法：推理题的答案必须能在原文找到依据。"
+      },
+      {
+        "question": "Which is the best title for this passage?",
+        "qtype_cn": "标题选择",
+        "options": ["A Trip to a Museum", "How to Cook Rice", "My Happy Weekend", "Yuan Longping and His Hybrid Rice"],
+        "answer": 3,
+        "explanation_cn": "标题选择：首句介绍袁隆平，后面每一句都围绕他和杂交水稻展开，所以标题要罩住全文，选 D。A 博物馆之旅、B 做饭方法、C 快乐周末，都只碰到边角。方法：标题要能概括整篇，只提一个细节的选项先排除。"
+      }
+    ]
+  },
+  "grammar": [
+    {
+      "question": "用所给动词的过去式填空：Last Sunday we ___ (go) to Grandpa Li's rice field.",
+      "type": "fill",
+      "answer": "went",
+      "explanation_cn": "go 的过去式是不规则的 went；last Sunday 是过去的时间标志。"
+    },
+    {
+      "question": "用所给动词的过去式填空：We ___ (see) many golden fields on the way.",
+      "type": "fill",
+      "answer": "saw",
+      "explanation_cn": "see 的过去式是 saw；看见许多金黄的稻田。"
+    },
+    {
+      "question": "用所给动词的过去式填空：I ___ (take) a lot of photos of the rice.",
+      "type": "fill",
+      "answer": "took",
+      "explanation_cn": "take 的过去式是 took；take photos 拍照。"
+    },
+    {
+      "question": "用所给动词的过去式填空：At noon we ___ (eat) noodles at a small farm restaurant.",
+      "type": "fill",
+      "answer": "ate",
+      "explanation_cn": "eat 的过去式是 ate；中午在农家小馆吃面。"
+    },
+    {
+      "question": "用所给动词的过去式填空：Mum ___ (buy) some fresh rice at the village market.",
+      "type": "fill",
+      "answer": "bought",
+      "explanation_cn": "buy 的过去式是 bought；buy 与 brought 别混，brought 是 bring 的过去式。"
+    },
+    {
+      "question": "用所给动词的过去式填空：The little birds ___ (fly) over the fields in the sky.",
+      "type": "fill",
+      "answer": "flew",
+      "explanation_cn": "fly 的过去式是 flew；小鸟从田野上空飞过。"
+    }
+  ],
+  "listening": [
+    {
+      "question": "Listen to the dialogue. Where did the class go this morning?",
+      "audio_text": "Girl: Where did you go this morning, Ben? Boy: We went to Grandpa Li's rice field. We helped him harvest the rice. Girl: That sounds like a real farm class!",
+      "options": ["To a rice field", "To a bookshop", "To the science museum", "To the beach"],
+      "answer": 0,
+      "explanation_cn": "男孩说 We went to Grandpa Li's rice field，还帮着收稻子，所以去的是稻田。"
+    },
+    {
+      "question": "Listen to the dialogue. What did Grandpa Li give the children?",
+      "audio_text": "Girl: Grandpa Li, your rice field is so big! Man: Thank you. Here are some rice seeds for you, kids. Girl: Wow, thank you! I will plant them at school.",
+      "options": ["Some rice seeds", "A big kite", "Two tickets", "A red scarf"],
+      "answer": 0,
+      "explanation_cn": "李爷爷说 Here are some rice seeds for you，送的是稻种，男孩还说要种在学校里。"
+    },
+    {
+      "question": "Which picture matches the sentence you hear?",
+      "audio_text": "The farmers are cutting the golden rice in the field.",
+      "options": ["🌾", "🐦", "🗼", "🏔️"],
+      "picture_options": true,
+      "answer": 0,
+      "explanation_cn": "句子里说 cutting the golden rice（收割金黄的稻子），所以选稻穗 🌾。"
+    },
+    {
+      "type": "fill",
+      "question": "Listen and fill in the blank: In autumn, the rice field turns ___ and gold.",
+      "audio_text": "In autumn, the rice field turns yellow and gold.",
+      "answer": "yellow",
+      "explanation_cn": "听到 turns yellow and gold，空里填 yellow。"
+    }
+  ],
+  "spell": [
+    {
+      "question": "水稻：r__ [填完整单词]",
+      "answer": "rice",
+      "explanation_cn": "rice 水稻；rice field 稻田。"
+    },
+    {
+      "question": "谷粒：g____ [填完整单词]",
+      "answer": "grain",
+      "explanation_cn": "finish every grain 把每一粒米都吃干净。"
+    },
+    {
+      "question": "种子：s___ [填完整单词]",
+      "answer": "seed",
+      "explanation_cn": "rice seeds 稻种；seed 里 ea 读长音 /iː/。"
+    },
+    {
+      "question": "收割；收获：h______ [填完整单词]",
+      "answer": "harvest",
+      "explanation_cn": "harvest the rice 收割水稻。"
+    }
+  ]
+}

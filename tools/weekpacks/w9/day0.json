@@ -1,0 +1,217 @@
+{
+  "day_cn": "周一",
+  "day_en": "Monday",
+  "theme_cn": "北斗导航 · 高频词汇 + 阅读理解 + 键盘拼写",
+  "reading_name": "阅读理解 · 中国北斗",
+  "spell_name": "今天学的词，敲一遍",
+  "speaking": [
+    {
+      "sentence": "What do you do when you cannot find the way?",
+      "sentence_cn": "找不到路的时候你会怎么做？",
+      "options": [
+        "I open a map app on my phone and it shows me the way.",
+        "I close my eyes and wait for a minute.",
+        "I ask the road to move for me.",
+        "I sit down on the ground and cry."
+      ],
+      "options_cn": [
+        "我打开手机上的地图应用，它给我指路。",
+        "我闭上眼睛等一分钟。",
+        "我让马路自己给我挪开。",
+        "我坐在地上大哭。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "map app 连读成 /mæpæp/，shows me the way 里 the 轻轻带过",
+      "explanation_cn": "问做法，答句要说出具体办法。A 说出打开地图 App 看路线这个真实可行的办法；B 闭眼等待解决不了问题；C、D 都不合常理。",
+      "answer_cn_hint": "用 I open / I ask… 说出你会用的找路办法，比如看地图、问路人。"
+    },
+    {
+      "sentence": "Why is Beidou useful for farmers?",
+      "sentence_cn": "为什么北斗对农民很有用？",
+      "options": [
+        "It helps farmers guide their machines and know where the fields are.",
+        "Beidou is an interesting TV show.",
+        "Farmers do not like satellites at all.",
+        "Rice grows much faster at night."
+      ],
+      "options_cn": [
+        "它帮农民引导农机，还能知道田在哪里。",
+        "北斗是一档有趣的电视节目。",
+        "农民一点也不喜欢卫星。",
+        "水稻在晚上长得更快。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "satellites /ˈsætəlaɪts/ 词尾 /ts/ 要轻，machines /məˈʃiːnz/ 重音在后",
+      "explanation_cn": "Why 问原因，答句要给出理由。A 说了北斗帮农民引导农机、定位田块这两个用处；B 说电视节目；C 与问题相反；D 说水稻生长，都答非所问。",
+      "answer_cn_hint": "用 It helps farmers… 说出北斗帮农民做的具体事情。"
+    },
+    {
+      "sentence": "If you could design a new satellite, what would it do?",
+      "sentence_cn": "如果你能设计一颗新卫星，你想让它做什么？",
+      "options": [
+        "I would make it warn people before floods and typhoons come.",
+        "I would eat it for lunch with rice.",
+        "Satellites are very heavy and cold.",
+        "My school has many computers."
+      ],
+      "options_cn": [
+        "我想让它在洪水和台风来之前提醒大家。",
+        "我想把它当午饭吃掉。",
+        "卫星又重又冷。",
+        "我的学校有很多电脑。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "typhoons /taɪˈfuːnz/ 重音在后，warn 与 warm 别读混，floods 里 oo 读短音 /ʌ/",
+      "explanation_cn": "If 引导的假设句用 I would… 回答。A 说出卫星提前预警洪水台风这个真实用途；B 不合理；C、D 都不是卫星的功能。",
+      "answer_cn_hint": "用 I would make it… 说出你想让新卫星做的一件事，比如预警天气、帮迷路的人。"
+    },
+    {
+      "sentence": "How can we travel safely to a far city?",
+      "sentence_cn": "去很远的城市旅行，怎么才能安全？",
+      "options": [
+        "We can check the route on a navigation app and tell our family first.",
+        "We can run very fast to the city.",
+        "Far cities do not have any roads.",
+        "We should travel without any shoes."
+      ],
+      "options_cn": [
+        "我们可以先用导航查好路线，出发前告诉家人。",
+        "我们可以飞快地跑到那个城市。",
+        "远的城市没有路。",
+        "我们应该光着脚去旅行。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "navigation /ˌnævɪˈɡeɪʃn/ 重音在 ga，route 与 root 同音，family 重音在前",
+      "explanation_cn": "How 问方法，答句要给出具体做法。A 给了两条：用导航查路线、出发前告诉家人；B 跑去远城不现实；C、D 都不合常理。",
+      "answer_cn_hint": "用 We can… 说出查路线、告诉家人这样的具体做法。"
+    },
+    {
+      "sentence": "What makes you feel proud of our country?",
+      "sentence_cn": "什么让你为我们的国家感到自豪？",
+      "options": [
+        "Beidou, the fast trains and the space station make me feel proud.",
+        "I am proud because it is hot today.",
+        "Proud people like to shout in class.",
+        "Our country has a very long history of waiting."
+      ],
+      "options_cn": [
+        "北斗、飞快的高铁和空间站让我感到自豪。",
+        "我骄傲是因为今天很热。",
+        "骄傲的人喜欢在上课时大喊。",
+        "我们国家有很长的等待历史。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "proud /praʊd/ 的 r 要卷舌，trains 里 ai 读 /eɪ/，station /ˈsteɪʃn/ 重音在前",
+      "explanation_cn": "问的是让你自豪的东西，答句要点名具体成就。A 点名北斗、高铁、空间站这些了不起的科技成就；B 说天气；C、D 答非所问。",
+      "answer_cn_hint": "先说出具体的成就或名字，再加一句 They make me feel proud。"
+    }
+  ],
+  "vocab": [
+    {
+      "word": "compass",
+      "phonetic": "/ˈkʌmpəs/",
+      "meaning": "罗盘；指南针",
+      "emoji": "🧭",
+      "example_en": "The compass shows us the way in the mountains.",
+      "example_cn": "在山里，罗盘为我们指引方向。",
+      "hint_cn": "圆盘里有一根总是指向南北的小针",
+      "syllables": ["com", "pass"]
+    },
+    {
+      "word": "map",
+      "phonetic": "/mæp/",
+      "meaning": "地图",
+      "emoji": "🗺️",
+      "example_en": "The map app on my phone shows me the way home.",
+      "example_cn": "手机上的地图应用告诉我回家的路。",
+      "hint_cn": "画着路线和城镇、帮我们找路的一张图",
+      "syllables": ["map"]
+    },
+    {
+      "word": "travel",
+      "phonetic": "/ˈtrævl/",
+      "meaning": "旅行",
+      "emoji": "🧳",
+      "example_en": "We travel to Beijing by fast train every spring.",
+      "example_cn": "每年春天我们坐高铁去北京旅行。",
+      "hint_cn": "去别的地方走走看看",
+      "syllables": ["tra", "vel"]
+    },
+    {
+      "word": "radar",
+      "phonetic": "/ˈreɪdɑː/",
+      "meaning": "雷达",
+      "emoji": "📡",
+      "example_en": "The radar helps the ship find the way in the dark.",
+      "example_cn": "黑夜里，雷达帮大船找到航线。",
+      "hint_cn": "用无线电波探测远处东西的机器",
+      "syllables": ["ra", "dar"]
+    },
+    {
+      "word": "proud",
+      "phonetic": "/praʊd/",
+      "meaning": "自豪的；骄傲的",
+      "emoji": "🏅",
+      "example_en": "We feel proud when the Chinese flag goes up.",
+      "example_cn": "五星红旗升起时，我们很自豪。",
+      "hint_cn": "心里美滋滋、觉得了不起的那种感觉",
+      "syllables": ["proud"]
+    }
+  ],
+  "reading": {
+    "passage": "Beidou is China's own navigation satellite system. The satellites fly high above us and send signals to phones, buses and ships. With Beidou, a bus app can tell you when the next bus will arrive. Farmers also use Beidou to guide their machines in big fields. When fishermen sail far from home, Beidou helps them find the safe way back. Many children say they want to build better satellites when they grow up.",
+    "passage_cn": "北斗是中国自己的导航卫星系统。这些卫星在我们头顶很高的地方飞行，把信号发给手机、公交车和轮船。有了北斗，公交应用能告诉你下一班车什么时候到。农民也用北斗在大田里引导农机作业。渔民出海离家很远时，北斗帮他们找到安全回家的路。许多小朋友说，长大以后要造出更好的卫星。",
+    "questions": [
+      {
+        "question": "What do Beidou satellites send to phones, buses and ships?",
+        "qtype_cn": "细节定位",
+        "options": ["Postcards", "Tickets", "Signals", "Letters"],
+        "answer": 2,
+        "explanation_cn": "细节定位：圈出关键词 send，回原文第二句 the satellites fly high above us and send signals to phones, buses and ships，直接选 C。A、B、D 都是文中没有寄过的东西。方法：细节题先圈动词和名词，再回原文找那一句。"
+      },
+      {
+        "question": "In 'a bus app can tell you when the next bus will arrive', what does 'arrive' mean?",
+        "qtype_cn": "词义猜测",
+        "options": ["To get to a place", "To fly away", "To fall down", "To go to sleep"],
+        "answer": 0,
+        "explanation_cn": "词义猜测：不查字典，用上下文猜。公交应用告诉你下一班车什么时候到站，所以 arrive 是「到达」的意思，选 A。B 飞走、C 摔倒、D 睡觉都和公交车到站无关。方法：把选项代回原句读一遍，最通顺的就是答案。"
+      },
+      {
+        "question": "What can we infer about Beidou from the passage?",
+        "qtype_cn": "推理判断",
+        "options": ["Only farmers can use it", "It helps people in many different jobs", "It works only at night", "It is made in America"],
+        "answer": 1,
+        "explanation_cn": "推理判断：把两句合起来推。文中写了乘客、农民、渔民都在用北斗，说明它帮助很多不同行业的人，选 B。A 太绝对，原文还写了公交应用；C 原文没说；D 与首句 China's own 相反。方法：推理要两句合并，别只盯一句。"
+      },
+      {
+        "question": "Why does the writer end with children wanting to build satellites?",
+        "qtype_cn": "作者意图",
+        "options": ["To show Beidou is too hard for children", "To say satellites are cheap toys", "To ask children to stop using phones", "To hope young readers will join this work one day"],
+        "answer": 3,
+        "explanation_cn": "作者意图：末句写许多小朋友长大想造更好的卫星，是在鼓励小读者将来也参与这项事业，选 D。A 把话说死；B 与卫星的高科技属性相反；C 原文没提。方法：注意 maybe、want、one day 这类邀请式措辞。"
+      }
+    ]
+  },
+  "spell": [
+    {
+      "question": "罗盘；指南针：c______ [填完整单词]",
+      "answer": "compass",
+      "explanation_cn": "com + pass；罗盘里的小针总是指向南北。"
+    },
+    {
+      "question": "地图：m__ [填完整单词]",
+      "answer": "map",
+      "explanation_cn": "map 地图；map app 地图应用。"
+    },
+    {
+      "question": "旅行：t_____ [填完整单词]",
+      "answer": "travel",
+      "explanation_cn": "travel 旅行；travel to Beijing 去北京旅行。"
+    },
+    {
+      "question": "自豪的；骄傲的：p____ [填完整单词]",
+      "answer": "proud",
+      "explanation_cn": "be proud of… 为……感到自豪。"
+    }
+  ]
+}

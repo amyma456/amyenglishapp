@@ -79,6 +79,9 @@ const App = {
     this._bindNoCopy();
     // v131：?perf=1 时挂上 ASR 性能诊断面板；普通页面这里什么都不做。
     this._setupPerfPanel();
+    // v208：双击 / 连点统一拦在最外层（华为 nova 14 + 头条浏览器那次
+    // 「双击两下就不用读，直接 100 分」）。必须先于门禁绑定注册。
+    this._bindDoubleTapGuard();
     // 先听再读的门禁：一次绑定，全平台所有朗读控件都走它
     this._bindGateGuard();
     if (typeof Cloud !== 'undefined') Cloud.init();
@@ -3171,6 +3174,56 @@ const App = {
   clearPerfPanel() {
     Api.perfClear();
     this.renderPerfPanel();
+  },
+
+  // ===== v208：双击 / 连点统一闸门 ========================================
+  //
+  // 家长 2026-11-16：「孩子在听系统发音的时候，双击两次系统就不用读，
+  // 并且直接弹出来正确答案 100 分，直接就可以做下一题」
+  // （华为 nova 14 + 后来下载的头条浏览器）。
+  //
+  // 病根：一次双击会连发 pointerdown / touchstart / mousedown / click /
+  // dblclick，各家浏览器派发顺序还不一样。第二次 pointerdown 重设指针
+  // 捕获，浏览器把第一次的 capture 收回去 → lostpointercapture 立刻收尾；
+  // 或者第二次 click 直接把「点一下结束」提前触发 —— 一段没读完的录音被
+  // 当成「读过了」，识别端空手时又走「有声音就算过」的兜底，于是亮答案、
+  // 给满分、点亮下一题。必须在所有手势入口统一吞掉第二次。
+  TAP_GUARD_MS: 420,
+  _bindDoubleTapGuard() {
+    if (this._tapGuardBound) return;
+    this._tapGuardBound = true;
+    var self = this;
+    // 按事件类型各记一次：一次轻点本来就同时有 pointerdown 和 click，
+    // 混在一起记会把正常的一下点击误判成双击。
+    var last = {};
+    var guard = function (ev) {
+      var el = ev.target;
+      if (!el || !el.closest) return;
+      var hit = el.closest('.gate-listen,[data-gate],.hold-btn,[data-hold],.tap-btn,'
+        + '.q-option,.q-opt,#stage-next-btn,.speak-btn,.rd-again-btn,button');
+      if (!hit) return;
+      var now = Date.now();
+      var p = last[ev.type];
+      if (p && p.el === hit && now - p.t < self.TAP_GUARD_MS) {
+        // 第二次手势：连后续那一下 click 一起吞，绝不让第二次点击落到
+        // 答案 / 下一题 / 结束录音上。
+        self._dupGestureAt = now;
+        if (ev.preventDefault) ev.preventDefault();
+        if (ev.stopImmediatePropagation) ev.stopImmediatePropagation();
+        else if (ev.stopPropagation) ev.stopPropagation();
+        return;
+      }
+      last[ev.type] = { el: hit, t: now };
+    };
+    ['pointerdown', 'touchstart', 'mousedown', 'click'].forEach(function (t) {
+      document.addEventListener(t, guard, true);
+    });
+    // 双击本身：头条 / UC 等浏览器会拿它做缩放、选词、甚至补一次 click。
+    document.addEventListener('dblclick', function (ev) {
+      self._dupGestureAt = Date.now();
+      if (ev.preventDefault) ev.preventDefault();
+      if (ev.stopImmediatePropagation) ev.stopImmediatePropagation();
+    }, true);
   },
 
   _bindGateGuard() {
@@ -6757,6 +6810,8 @@ const App = {
   },
 
   _spReadStart(mi, qi, dayIdx) {
+    // v208：新的一遍重新判一次「是不是刚连点过」，别把上一次的标记带进来。
+    this._holdAttemptBad = !!(this._dupGestureAt && Date.now() - this._dupGestureAt < 600);
     if (this._spReadActive) return;
     // 门禁双保险：全局捕获已经拦过一次，这里是兜底，保证"没听不会开录"。
     const gid = this._gid('sp', mi, qi);
@@ -6798,8 +6853,11 @@ const App = {
     clearTimeout(this._spReadTimer);
     if (!ctx || ctx._ended) return;
     ctx._ended = true;
-    // 两次点击隔得太近多半是误触，复位按钮不计这轮。
-    if (Date.now() - ctx.startedAt < 250) {
+    // v208：250ms 太短了 —— 双击间隔 300~500ms 就能绕过，一段空录音被
+    // 当成「读过了」，直接亮出正确答案和 100 分。整句朗读至少要 900ms。
+    if (Date.now() - ctx.startedAt < this.MIN_READ_MS) {
+      this._holdAttemptBad = true;
+      this._spClipMeta = { bad: true };
       this._spReadActive = null;
       this._liveStop();
       this._clearReadMarks(mi, qi);
@@ -6834,7 +6892,8 @@ const App = {
       settled = true;
       clearTimeout(watchdog);
       try {
-        self._spShowResult(mi, qi, dayIdx, ctx, spoken, source, verdict, voiceOk);
+        self._spShowResult(mi, qi, dayIdx, ctx, spoken, source, verdict,
+                           voiceOk && !self._holdAttemptBad);
       } catch (e) {
         console.warn('Speaking settle failed:', e);
         try { self._spReadUI(mi, qi, dayIdx, 'noaudio'); } catch (e2) {}
@@ -6873,6 +6932,7 @@ const App = {
   // 录音照样上传留档，老师事后能听。宁可老师听一遍，也不让孩子做不完作业。
   STALL_PASS_TRIES: 3,
   _stallBump(key) {
+    if (this._holdAttemptBad) return 0;   // v208：连点刷不出「三次放行」
     this._stalls = this._stalls || {};
     this._stalls[key] = (this._stalls[key] || 0) + 1;
     return this._stalls[key];
@@ -7049,6 +7109,15 @@ const App = {
         const next = document.getElementById('stage-next-btn');
         if (next) { next.disabled = true; next.classList.remove('nudge'); }
       }
+      return;
+    }
+    // v208：最后一道闸 —— 被双击污染的那一遍，谁都不许把它画成「已通过」。
+    if (status === 'passed' && this._holdAttemptBad) {
+      btn.style.background = 'var(--primary)';
+      btn.innerHTML = '🎤 再读一遍';
+      btn.disabled = false;
+      if (statusEl) statusEl.innerHTML =
+        '<span style="color:var(--danger)">这一遍不算分，读完再点一下结束</span>';
       return;
     }
     if (status === 'passed') {
@@ -7232,7 +7301,8 @@ const App = {
       .then(out => {
         this._spClipBlob = out ? out.blob : null;
         this._spClipMeta = out ? { duration: out.duration, sampleRate: out.sampleRate,
-                                   peak: out.peak, health: out.health || null } : null;
+                                   peak: out.peak, health: out.health || null,
+                                   bad: !!(this._holdAttemptBad || out._holdBad) } : null;
         this._spClipSamples = out ? out.samples : null;
         this._spClipPending = null;
         if (out) this._micNote(out, 'sp');
@@ -8539,6 +8609,10 @@ const App = {
     return peak >= th && dur >= need;
   },
 
+  // v208：点一下开始、读完再点一下结束的模式，两次点击之间至少要隔这么久。
+  // 双击无论多快都过不了这道闸，也不再有机会进入「有声音就算过」的兜底。
+  MIN_READ_MS: 900,
+
   // 一整句要读多久才算"读过了"？0.16 秒/词，夹在 0.5~2.5 秒之间。
   // 孩子整句读下来通常远超这个数；随便哼一声远不到。
   _minVoiceSec(sentence) {
@@ -8548,6 +8622,8 @@ const App = {
 
   // 整句跟读/口语那两条路只在 _spClipSamples / _spClipMeta 里留着这一段。
   _lastClipVoiceOk(minSec) {
+    // v208：这一遍是被双击打断的假录音，不许靠「有声音」判过。
+    if (this._spClipMeta && this._spClipMeta.bad) return false;
     if (this._spClipSamples && this._spClipSamples.length) {
       return this._voiceOk({ samples: this._spClipSamples, peak: (this._spClipMeta || {}).peak }, minSec);
     }
@@ -8623,7 +8699,9 @@ const App = {
   // 第三档才允许提示"再读一次"，而且提示语要说清是"没听到声音"而不是
   // "你没读清" —— 家长最生气的就是被系统倒打一耙。
   _judgeSilence(out, minSec) {
-    const heard = this._voiceOk(out, minSec);
+    // v208：被双击 / 连点打断的那一遍，录音再响也不算读过。
+    const bad = !!(out && out._holdBad);
+    const heard = !bad && this._voiceOk(out, minSec);
     return {
       voiceOk: heard,
       clipping: heard && this._micClipping(out),
@@ -10519,6 +10597,20 @@ const App = {
   _holdStart(ev, key, promptLabel, statusEl, onDone, needsTranscript, lang, asrHint, asrPrefer, autoStop, tapToggle) {
     // v163：调用方也可以在调用前置 _holdToggleNext = true（比加第 11 参省事）。
     if (this._holdToggleNext) { tapToggle = true; this._holdToggleNext = false; }
+    // v208：正在录音时再来一次按下（双击的第二个 pointerdown）必须**在任何
+    // 指针捕获动作之前**直接退出。以前这里会重设 setPointerCapture，浏览器
+    // 随即收回第一次的 capture，触发 lostpointercapture 立刻收尾 —— 一段没
+    // 读完的录音被当成「读过了」。
+    if (this._holdKey) {
+      if (ev && ev.preventDefault) ev.preventDefault();
+      this._dupGestureAt = Date.now();
+      this._holdAttemptBad = true;
+      return;
+    }
+    // v208：这一遍朗读的凭据。被双击 / 连点污染的一遍不许换到任何分数。
+    this._holdAttemptBad = !!(this._dupGestureAt && Date.now() - this._dupGestureAt < 600);
+    this._holdAttemptAt = Date.now();
+    this._holdAttemptId = (this._holdAttemptId || 0) + 1;
     if (ev) {
       ev.preventDefault();
       // v163：一键录音模式（点一下开始、再点一下结束）下**不**捕获指针 ——
@@ -10646,6 +10738,16 @@ const App = {
     this._holdCapEl = null;
     if (!key) return;
 
+    // v208：双击 / 连点造成的这一遍，一律不判分、不亮正确答案、不解锁下一题。
+    // 直接把空录音交给上层，它只会显示「再读一遍」，不会再有任何兜底放行。
+    if (this._holdAttemptBad) {
+      try { await Recorder.stop(); } catch (e) {}
+      if (statusEl) statusEl.innerHTML =
+        '<div class="tap-result bad">慢一点，按住读完再松手，这一遍不算分</div>';
+      if (onDone) { try { onDone(null, null); } catch (e) {} }
+      return;
+    }
+
     // A stray tap is not an attempt — drop it rather than scoring silence.
     // v106：门槛从 220ms 收到 140ms。字母本来就只有半秒长，孩子快按快松是
     // 正常的读法（家长："不要让学生点那么久"），220 会把认真的快读判成
@@ -10678,6 +10780,10 @@ const App = {
     // 没回话"结算（上层会用本地录音判断到底有没有出声，出了声照样算过）。
     // v195：删掉 4 秒后那句解释网络状态的提示。孩子既看不懂也帮不上
     //   忙，只会觉得又卡了；改为全程一个「出分中…」，到点直接结算。
+    if (out) {
+      out._holdAttempt = this._holdAttemptId;
+      out._holdBad = !!this._holdAttemptBad;
+    }
     var done = false;
     var hardCap = null;
     var finish = function(payload, txt) {
@@ -13837,8 +13943,9 @@ const App = {
     if (!R || !R.rec) return;
     R.rec = false;
     clearTimeout(R.capTimer);
-    // 误触保护：250ms 内的两下不算一次朗读。
-    if (Date.now() - R.startedAt < 250) {
+    // v208：误触保护从 250ms 提到 MIN_READ_MS，双击不再能换到分数。
+    if (Date.now() - R.startedAt < this.MIN_READ_MS) {
+      this._holdAttemptBad = true;
       this._finishClipCapture();
       const btn = document.getElementById('wrep-btn');
       if (btn) btn.innerHTML = '🎤 点我读这个单词';
@@ -14027,6 +14134,8 @@ const App = {
   },
 
   _holdReadStart(mi, qi, dayIdx, sentence) {
+    // v208：同上，每一遍独立判定。
+    this._holdAttemptBad = !!(this._dupGestureAt && Date.now() - this._dupGestureAt < 600);
     if (this._holdReadActive) return;
     // 门禁双保险：这一句必须先听过示范
     const gid = this._gid('hrg', mi, qi);
@@ -14066,10 +14175,11 @@ const App = {
     clearTimeout(this._holdReadTimer);
     if (!ctx || ctx._ended) return;
     ctx._ended = true;
-    // Mis-tap guard: two taps less than 250 ms apart is almost certainly an
-    // accidental double-touch — reset the button rather than firing a
-    // half-empty transcription through the ASR pipeline.
-    if (Date.now() - ctx.startedAt < 250) {
+    // Mis-tap guard: v208 从 250ms 提到 MIN_READ_MS。华为 nova 14 的头条
+    // 浏览器双击间隔常在 300~500ms，旧的 250ms 挡不住，半截录音被判过。
+    if (Date.now() - ctx.startedAt < this.MIN_READ_MS) {
+      this._holdAttemptBad = true;
+      this._spClipMeta = { bad: true };
       this._holdReadActive = null;
       this._liveStop();
       this._clearReadMarks(mi, qi);
@@ -14097,7 +14207,8 @@ const App = {
       settled = true;
       clearTimeout(watchdog);
       try {
-        self._showHoldReadResult(mi, qi, dayIdx, ctx.sentence, spoken, source, verdict, voiceOk);
+        self._showHoldReadResult(mi, qi, dayIdx, ctx.sentence, spoken, source, verdict,
+                                 voiceOk && !self._holdAttemptBad);
       } catch (e) {
         console.warn('Hold-read settle failed:', e);
         try { self._setHoldReadUI(mi, qi, 'noaudio', null, false); } catch (e2) {}
@@ -14167,6 +14278,15 @@ const App = {
       btn.disabled = false;
       if (statusEl) statusEl.innerHTML =
         '<span style="color:var(--danger)">再读一遍就好啦</span>';
+      return;
+    }
+    // v208：最后一道闸 —— 被双击污染的那一遍，谁都不许把它画成「已通过」。
+    if (status === 'passed' && this._holdAttemptBad) {
+      btn.style.background = 'var(--primary)';
+      btn.innerHTML = '🎤 再读一遍';
+      btn.disabled = false;
+      if (statusEl) statusEl.innerHTML =
+        '<span style="color:var(--danger)">这一遍不算分，读完再点一下结束</span>';
       return;
     }
     if (status === 'passed') {

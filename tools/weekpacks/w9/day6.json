@@ -1,0 +1,143 @@
+{
+  "day_cn": "周日",
+  "day_en": "Sunday",
+  "theme_cn": "高频词汇 + 完形填空（乡村小学研学日） + 键盘拼写",
+  "cloze_name": "完形填空 · 乡村小学研学日",
+  "spell_name": "今天学的词，敲一遍",
+  "vocab": [
+    {
+      "word": "chalk",
+      "phonetic": "/tʃɔːk/",
+      "meaning": "粉笔",
+      "emoji": "🖍️",
+      "example_en": "The teacher writes with a white chalk on the board.",
+      "example_cn": "老师用白色粉笔在黑板上写字。",
+      "hint_cn": "在黑板上写字用的小白棒",
+      "syllables": ["chalk"]
+    },
+    {
+      "word": "blackboard",
+      "phonetic": "/ˈblækbɔːd/",
+      "meaning": "黑板",
+      "emoji": "⬛",
+      "example_en": "Please copy the new words from the blackboard.",
+      "example_cn": "请把新单词从黑板上抄下来。",
+      "hint_cn": "教室前面老师写字的大板子",
+      "syllables": ["black", "board"]
+    },
+    {
+      "word": "letter",
+      "phonetic": "/ˈletə/",
+      "meaning": "信件；书信",
+      "emoji": "✉️",
+      "example_en": "Grandpa writes a letter to his old friend every month.",
+      "example_cn": "爷爷每个月都给老朋友写一封信。",
+      "hint_cn": "装进信封寄给别人的话",
+      "syllables": ["let", "ter"]
+    },
+    {
+      "word": "dream",
+      "phonetic": "/driːm/",
+      "meaning": "梦想",
+      "emoji": "💫",
+      "example_en": "My dream is to become a scientist like Yuan Longping.",
+      "example_cn": "我的梦想是成为袁隆平那样的科学家。",
+      "hint_cn": "心里最想实现的大愿望",
+      "syllables": ["dream"]
+    },
+    {
+      "word": "future",
+      "phonetic": "/ˈfjuːtʃə/",
+      "meaning": "未来；将来",
+      "emoji": "🌅",
+      "example_en": "Study hard today, and your future will be bright.",
+      "example_cn": "今天努力学习，未来就会一片光明。",
+      "hint_cn": "还没有到来、等着你的日子",
+      "syllables": ["fu", "ture"]
+    }
+  ],
+  "cloze": {
+    "passage": "Last Friday, our class took a long bus ride to a small village school in the mountains. A young teacher, Miss Wang, welcomed us and wrote her name on the blackboard with a piece of 1___. She told us that the children write 2___ to friends in big cities, because there are no phones in the mountains. Then we played a game about every child's 3___ — what to be when they grow up. Miss Wang said that hard study today builds a wonderful 4___ tomorrow. At noon, we ate 5___ and vegetables with the children and helped them clean the classroom. On the bus home, we agreed to come back 6___ to fly kites with our new friends.",
+    "passage_cn": "上个星期五，我们班坐了很久的大巴，去山里的一所乡村小学。年轻的王老师欢迎我们，用一支粉笔在黑板上写下自己的名字。她告诉我们，山里没有手机，孩子们靠写信和大城市的朋友联系。接着我们玩了一个关于梦想的游戏——每个人都说说长大想做什么。王老师说，今天努力学习，明天就能建起美好的未来。中午，我们和孩子们一起吃米饭和青菜，还帮他们打扫了教室。回家的大巴上，我们约好明年再来，和新朋友一起放风筝。",
+    "sentences_cn": [
+      "上个星期五，我们班坐了很久的大巴，去山里的一所乡村小学。",
+      "年轻的王老师欢迎我们，用一支粉笔在黑板上写下自己的名字。",
+      "她告诉我们，山里没有手机，孩子们靠写信和大城市的朋友联系。",
+      "接着我们玩了一个关于梦想的游戏——每个人都说说长大想做什么。",
+      "王老师说，今天努力学习，明天就能建起美好的未来。",
+      "中午，我们和孩子们一起吃米饭和青菜，还帮他们打扫了教室。",
+      "回家的大巴上，我们约好明年再来，和新朋友一起放风筝。"
+    ],
+    "questions": [
+      {
+        "question": "1___",
+        "qtype_cn": "语义搭配",
+        "options": ["bread", "clock", "chalk", "key"],
+        "answer": 2,
+        "explanation_cn": "语义搭配：a piece of chalk 一支粉笔，前文说她在黑板上写名字，能在黑板上写字的就是粉笔，选 C。bread 面包、clock 钟表、key 钥匙都与黑板无关。方法：完形先读空前后，看它和什么东西搭配。"
+      },
+      {
+        "question": "2___",
+        "qtype_cn": "固定搭配",
+        "options": ["letters", "jokes", "stories", "songs"],
+        "answer": 0,
+        "explanation_cn": "固定搭配：write letters to sb. 给某人写信，后半句解释因为山里没有手机，所以靠写信联系，选 A。jokes 玩笑、stories 故事、songs 歌曲都不能表达「联系朋友」的意思。方法：先读 because 后面的原因，再回头选。"
+      },
+      {
+        "question": "3___",
+        "qtype_cn": "词义理解",
+        "options": ["lunch", "weather", "holiday", "dream"],
+        "answer": 3,
+        "explanation_cn": "词义理解：破折号后面 what to be when they grow up（长大想做什么）就是「梦想」的解释，选 D。lunch 午饭、weather 天气、holiday 假期都与「长大做什么」无关。方法：破折号常常就是生词的小字典。"
+      },
+      {
+        "question": "4___",
+        "qtype_cn": "上下文线索",
+        "options": ["past", "future", "ticket", "picture"],
+        "answer": 1,
+        "explanation_cn": "上下文线索：hard study today 与 tomorrow 相对，今天努力、明天美好，说的是将来，选 B。A 过去方向相反，C 票、D 图画都讲不通。方法：today / tomorrow 这对时间词在给方向提示。"
+      },
+      {
+        "question": "5___",
+        "qtype_cn": "语义搭配",
+        "options": ["rice", "grass", "paper", "sand"],
+        "answer": 0,
+        "explanation_cn": "语义搭配：ate… and vegetables（吃……和青菜），能和蔬菜一起当午饭吃的合理选择是 rice 米饭，选 A。grass 草、paper 纸、sand 沙子都不能吃。方法：看动词 ate 给名词划的范围。"
+      },
+      {
+        "question": "6___",
+        "qtype_cn": "固定短语",
+        "options": ["often", "again", "early", "alone"],
+        "answer": 1,
+        "explanation_cn": "固定短语：come back again 再来一次，末句说约好明年再来，选 B。often 表频率、early 表时间早、alone 表独自，都拼不成「再来」。方法：把整句连起来读，选读得最顺的那个。"
+      }
+    ]
+  },
+  "spell": [
+    {
+      "question": "粉笔：c____ [填完整单词]",
+      "answer": "chalk",
+      "explanation_cn": "a piece of chalk 一支粉笔；chalk 的 ch 读 /tʃ/，alk 读 /ɔːk/。"
+    },
+    {
+      "question": "黑板：b_________ [填完整单词]",
+      "answer": "blackboard",
+      "explanation_cn": "black + board，黑 + 板就是黑板。"
+    },
+    {
+      "question": "信件；书信：l____ [填完整单词]",
+      "answer": "letter",
+      "explanation_cn": "write a letter 写信；letter 里双写 tt。"
+    },
+    {
+      "question": "梦想：d____ [填完整单词]",
+      "answer": "dream",
+      "explanation_cn": "my dream 我的梦想；dream 的 ea 读长音 /iː/。"
+    },
+    {
+      "question": "未来；将来：f_____ [填完整单词]",
+      "answer": "future",
+      "explanation_cn": "in the future 在未来；future 与 picture 押韵。"
+    }
+  ]
+}

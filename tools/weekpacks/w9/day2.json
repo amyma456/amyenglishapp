@@ -1,0 +1,217 @@
+{
+  "day_cn": "周三",
+  "day_en": "Wednesday",
+  "theme_cn": "港珠澳大桥 · 高频词汇 + 阅读理解 + 键盘拼写",
+  "reading_name": "阅读理解 · 港珠澳大桥",
+  "spell_name": "今天学的词，敲一遍",
+  "speaking": [
+    {
+      "sentence": "How do you like to travel, by bus, by train or by ship?",
+      "sentence_cn": "你喜欢怎么出行，坐公交、火车还是轮船？",
+      "options": [
+        "I like the train best, because it is fast and I can watch the view outside.",
+        "Trains are made of metal.",
+        "I had my lunch at noon.",
+        "Ships cannot swim like fish."
+      ],
+      "options_cn": [
+        "我最喜欢坐火车，因为它又快，我还能看窗外的风景。",
+        "火车是金属做的。",
+        "我中午吃了午饭。",
+        "轮船不能像鱼一样游泳。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "train 里 ai 读 /eɪ/，view /vjuː/ 的 v 要咬唇，outside 重音在前",
+      "explanation_cn": "问偏好和理由，答句要选一种并说明为什么。A 选了火车并给出快、能看风景两个理由；B 只说材质；C、D 答非所问。",
+      "answer_cn_hint": "先说 I like … best，再用 because 说一条理由，比如快、稳、能看到风景。"
+    },
+    {
+      "sentence": "What can you see from a high bridge?",
+      "sentence_cn": "从高高的桥上你能看到什么？",
+      "options": [
+        "I can see ships sailing under the bridge and waves below.",
+        "I can see my homework on the desk.",
+        "Bridges are very expensive to build.",
+        "The bridge goes to my school."
+      ],
+      "options_cn": [
+        "我能看到船在桥下航行，脚下是海浪。",
+        "我能看到书桌上的作业。",
+        "修桥非常花钱。",
+        "这座桥通向我的学校。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "bridge 里 dg 读 /dʒ/，sailing /ˈseɪlɪŋ/ 的 ai 读 /eɪ/，below 重音在后",
+      "explanation_cn": "What 问看到的东西，答句要说出具体的景物。A 说了桥下航行的船和脚下的海浪；B 说作业；C、D 都不是从桥上看到的东西。",
+      "answer_cn_hint": "用 I can see… 说出桥上的视野，比如船、海浪、远处的岛。"
+    },
+    {
+      "sentence": "What should we do to stay safe near the sea?",
+      "sentence_cn": "在海边怎样保证安全？",
+      "options": [
+        "We should swim only where adults can see us and never go into deep water alone.",
+        "We should run quickly into the big waves.",
+        "The sea water is full of salt.",
+        "Fish like swimming in warm water."
+      ],
+      "options_cn": [
+        "我们应该只在大人看得见的地方游泳，绝不独自去深水区。",
+        "我们应该飞快地冲进大浪里。",
+        "海水里全是盐。",
+        "鱼喜欢在温水里游泳。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "adults /əˈdʌlts/ 重音在后，deep water 连读，alone /əˈləʊn/ 重音在后",
+      "explanation_cn": "问安全做法，答句要给出具体规则。A 说了两条：只在大人看得见的地方游、不独自去深水；B 是危险行为；C、D 都不是安全建议。",
+      "answer_cn_hint": "用 We should… 说出海边安全规则，比如跟着大人、不下深水。"
+    },
+    {
+      "sentence": "Where would you like to go for a class trip?",
+      "sentence_cn": "班级出游你想去哪里？",
+      "options": [
+        "I would like to visit a big sea bridge and learn how engineers built it.",
+        "Trips always make me sleepy.",
+        "Our classroom is on the third floor.",
+        "Buses in our city are often late."
+      ],
+      "options_cn": [
+        "我想去看一座跨海大桥，了解工程师是怎么把它建起来的。",
+        "出游总让我犯困。",
+        "我们的教室在三楼。",
+        "我们市的公交车经常迟到。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "engineer /ˌendʒɪˈnɪə/ 重音在后，built 与 bite 别混，visit 重音在前",
+      "explanation_cn": "Where 问地点，答句要说出想去的地方。A 说想去看跨海大桥、学建桥知识；B 说感受；C、D 答非所问。",
+      "answer_cn_hint": "用 I would like to visit… 说出想去的地方，再加一句想学什么。"
+    },
+    {
+      "sentence": "Why do engineers build tunnels under the sea?",
+      "sentence_cn": "工程师为什么要在海底修隧道？",
+      "options": [
+        "Because big ships must pass over the sea, so cars go under the seabed in a tunnel.",
+        "Because tunnels are very colourful.",
+        "Because cars like to stay in dark places.",
+        "Because the sea is always noisy."
+      ],
+      "options_cn": [
+        "因为大船要在海面上通行，所以汽车从海底的隧道里走。",
+        "因为隧道五颜六色。",
+        "因为汽车喜欢待在黑暗的地方。",
+        "因为大海总是很吵。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "tunnel /ˈtʌnl/ 重音在前，seabed 里 ea 读长音 /iː/，noisy 的 oi 读 /ɔɪ/",
+      "explanation_cn": "Why 问原因，答句要用 Because 说清楚。A 说了船要过海面、车走海底，互不打扰；B、C、D 都不是修海底隧道的真正原因。",
+      "answer_cn_hint": "用 Because 说出船在上面走、车在下面走这样的理由。"
+    }
+  ],
+  "vocab": [
+    {
+      "word": "tower",
+      "phonetic": "/ˈtaʊə/",
+      "meaning": "塔楼；塔",
+      "emoji": "🗼",
+      "example_en": "The bridge stands on tall towers over the sea.",
+      "example_cn": "大桥立在海面上高高的塔楼上面。",
+      "hint_cn": "又高又结实、顶天立地的柱子",
+      "syllables": ["tow", "er"]
+    },
+    {
+      "word": "tunnel",
+      "phonetic": "/ˈtʌnl/",
+      "meaning": "隧道",
+      "emoji": "🚇",
+      "example_en": "The train goes through a long tunnel under the mountain.",
+      "example_cn": "火车穿过山下的长隧道。",
+      "hint_cn": "从山里或海底穿过去的路",
+      "syllables": ["tun", "nel"]
+    },
+    {
+      "word": "sail",
+      "phonetic": "/seɪl/",
+      "meaning": "航行",
+      "emoji": "⛵",
+      "example_en": "Big ships sail on the wide sea.",
+      "example_cn": "大船在宽阔的海面上航行。",
+      "hint_cn": "船鼓起帆，在海面前进",
+      "syllables": ["sail"]
+    },
+    {
+      "word": "storm",
+      "phonetic": "/stɔːm/",
+      "meaning": "风暴；暴风雨",
+      "emoji": "⛈️",
+      "example_en": "The ships go back to the harbour before the storm.",
+      "example_cn": "风暴来之前，船都回到了港口。",
+      "hint_cn": "狂风大雨、海上很危险的天气",
+      "syllables": ["storm"]
+    },
+    {
+      "word": "fog",
+      "phonetic": "/fɒɡ/",
+      "meaning": "雾气；大雾",
+      "emoji": "🌫️",
+      "example_en": "The thick fog covers the bridge in the early morning.",
+      "example_cn": "清晨，浓雾笼罩着大桥。",
+      "hint_cn": "白蒙蒙一片、看不清远处的天气",
+      "syllables": ["fog"]
+    }
+  ],
+  "reading": {
+    "passage": "The Hong Kong-Zhuhai-Macao Bridge opened in 2018. It is the longest sea-crossing bridge in the world, about fifty-five kilometres long. The road runs over the sea on tall towers, and part of it goes through a tunnel under the seabed. Engineers built a small artificial island there, so cars can drive down from the bridge into the tunnel. On days with thick fog or strong wind, the bridge closes to keep drivers safe. Now a bus ride from Zhuhai to Hong Kong takes only about forty minutes.",
+    "passage_cn": "港珠澳大桥于 2018 年建成通车。它是世界上最长的跨海大桥，全长约 55 公里。路面立在高高的塔楼上跨越海面，其中一段还要穿过海底隧道。工程师在那儿修了一座小人工岛，汽车从桥上开下去就能进入隧道。遇到大雾或大风的天气，大桥会关闭，保证司机安全。现在从珠海坐大巴去香港，只需要大约 40 分钟。",
+    "questions": [
+      {
+        "question": "How long is the Hong Kong-Zhuhai-Macao Bridge?",
+        "qtype_cn": "数字细节",
+        "options": ["About 40 kilometres", "About 15 kilometres", "About 55 kilometres", "About 8 kilometres"],
+        "answer": 2,
+        "explanation_cn": "数字细节：第二句 about fifty-five kilometres long 直接给出桥长，选 C。A 的 40 是坐车时间，D 的 8 也是文中数字陷阱之外的干扰。方法：数字题要把每个数字对应的对象标清楚再选。"
+      },
+      {
+        "question": "Why did engineers build a small artificial island there?",
+        "qtype_cn": "细节定位",
+        "options": ["So cars can go down from the bridge into the tunnel", "So tourists can camp on it", "To grow rice on the island", "To keep the fish away"],
+        "answer": 0,
+        "explanation_cn": "细节定位：圈出 artificial island，第四句 so cars can drive down from the bridge into the tunnel 给出目的，选 A。B 露营、C 种稻、D 赶鱼，原文都没提。方法：so 后面往往就是目的，顺着读下去。"
+      },
+      {
+        "question": "In 'an artificial island', what does 'artificial' mean?",
+        "qtype_cn": "词义猜测",
+        "options": ["Very old", "Natural and wild", "Made by people", "Under the water"],
+        "answer": 2,
+        "explanation_cn": "词义猜测：这座岛是工程师 build 出来的，用来连接桥和隧道，所以 artificial 是「人造的」，选 C。A 老旧、B 天然野生正好相反，D 在水下说的是 tunnel。方法：看谁「建造」了它，就知道它是不是人造的。"
+      },
+      {
+        "question": "What can we infer about the bridge on a foggy day?",
+        "qtype_cn": "推理判断",
+        "options": ["More cars cross the bridge", "The bridge is open as usual", "The tunnel becomes longer", "The bridge closes for safety"],
+        "answer": 3,
+        "explanation_cn": "推理判断：第五句说大雾大风天桥会关闭保安全，可以推出雾天桥关闭，选 D。A、B 与「关闭」相反；C 隧道长度不会变。方法：推理就是把原文条件往前推一步，别想太远。"
+      }
+    ]
+  },
+  "spell": [
+    {
+      "question": "塔楼；塔：t____ [填完整单词]",
+      "answer": "tower",
+      "explanation_cn": "tower 塔；大桥立在高高的 tower 上。"
+    },
+    {
+      "question": "隧道：t_____ [填完整单词]",
+      "answer": "tunnel",
+      "explanation_cn": "tunnel 隧道；海底隧道是 undersea tunnel。"
+    },
+    {
+      "question": "航行：s___ [填完整单词]",
+      "answer": "sail",
+      "explanation_cn": "sail 航行；sail on the sea 在海上航行。"
+    },
+    {
+      "question": "雾气；大雾：f__ [填完整单词]",
+      "answer": "fog",
+      "explanation_cn": "thick fog 浓雾；foggy 是它的形容词。"
+    }
+  ]
+}

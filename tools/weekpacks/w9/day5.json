@@ -1,0 +1,217 @@
+{
+  "day_cn": "周六",
+  "day_en": "Saturday",
+  "theme_cn": "泥人张非遗 · 高频词汇 + 阅读理解 + 键盘拼写",
+  "reading_name": "阅读理解 · 泥人张",
+  "spell_name": "今天学的词，敲一遍",
+  "speaking": [
+    {
+      "sentence": "Have you ever made something with clay or paper? What was it?",
+      "sentence_cn": "你用泥或纸做过东西吗？做的是什么？",
+      "options": [
+        "Yes, I made a small clay rabbit with two long ears last week.",
+        "Clay is a kind of food.",
+        "Paper cannot be folded.",
+        "My mother buys bread every day."
+      ],
+      "options_cn": [
+        "做过，上周我捏了一只长着两只长耳朵的小泥兔。",
+        "泥是一种食物。",
+        "纸不能折叠。",
+        "我妈妈每天买面包。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "clay /kleɪ/ 里 ay 读 /eɪ/，rabbit 重音在前，ears 与 years 的 s 别漏",
+      "explanation_cn": "问经历，答句要用过去时说出做过的东西。A 用 I made… 说清了做的小泥兔；B 说法错误；C 与常识相反；D 答非所问。",
+      "answer_cn_hint": "用 Yes, I made… 说清做过什么，加上时间或样子会更好。"
+    },
+    {
+      "sentence": "What handmade gift would you like to make for your mum?",
+      "sentence_cn": "你想为妈妈做什么手工礼物？",
+      "options": [
+        "I would like to make a clay flower, because mum loves flowers.",
+        "Gifts must be very expensive.",
+        "Mum goes to work by bus.",
+        "I like cold drinks in summer."
+      ],
+      "options_cn": [
+        "我想捏一朵泥花，因为妈妈喜欢花。",
+        "礼物必须非常贵。",
+        "妈妈坐公交车上班。",
+        "夏天我喜欢冷饮。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "handmade /ˈhændmeɪd/ 重音在前，because 重音在后，flowers 的 er 轻轻带过",
+      "explanation_cn": "问想做什么、为什么，答句要点名礼物并给理由。A 说做泥花、因为妈妈爱花；B 观念不对；C、D 答非所问。",
+      "answer_cn_hint": "用 I would like to make… 说出礼物，再用 because 说一句理由。"
+    },
+    {
+      "sentence": "Why do old crafts like clay figures make people happy?",
+      "sentence_cn": "为什么泥人这样的老手艺让人开心？",
+      "options": [
+        "Because the little figures look alive and carry old stories.",
+        "Because clay figures can run fast.",
+        "Because crafts are always free.",
+        "Because old things are all broken."
+      ],
+      "options_cn": [
+        "因为小泥人活灵活现，还装着老故事。",
+        "因为泥人能跑得飞快。",
+        "因为手艺品总是免费的。",
+        "因为老东西都是坏的。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "figures /ˈfɪɡəz/ 重音在前，stories 的 ie 读 /ɔː/，alive /əˈlaɪv/ 重音在后",
+      "explanation_cn": "Why 问原因，答句要用 Because 说清楚。A 说了活灵活现、装着老故事两条；B 泥人不会跑；C、D 都不合常理。",
+      "answer_cn_hint": "用 Because 说出老手艺有趣在哪里，比如像活的、有故事。"
+    },
+    {
+      "sentence": "Which is more fun, drawing a picture or making a clay figure?",
+      "sentence_cn": "画画和捏泥人，哪个更有趣？",
+      "options": [
+        "Making a clay figure is more fun, because I can hold it in my hand.",
+        "Pictures are on the wall.",
+        "Clay figures are very heavy.",
+        "Drawing needs many books."
+      ],
+      "options_cn": [
+        "捏泥人更有趣，因为我能把它捧在手里。",
+        "画挂在墙上。",
+        "泥人非常重。",
+        "画画需要很多书。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "more fun 里 more 别读成毛，hold 重音短促，hand 与 hang 的 a 同音",
+      "explanation_cn": "两者选一要给出选择和理由。A 选了捏泥人并说明能捧在手里的理由；B 只说画的位置；C、D 答非所问。",
+      "answer_cn_hint": "先选一个并说 … is more fun，再用 because 给一条理由。"
+    },
+    {
+      "sentence": "How can we help more people learn about Chinese folk art?",
+      "sentence_cn": "我们可以怎样帮助更多人了解中国民间艺术？",
+      "options": [
+        "We can show our clay works at the school art show and tell their stories.",
+        "We can hide all the old works at home.",
+        "Folk art is only for old people.",
+        "We can throw the old tools away."
+      ],
+      "options_cn": [
+        "我们可以在学校艺术展上展示泥塑作品，讲讲它们的故事。",
+        "我们可以把老作品都藏在家里。",
+        "民间艺术只属于老年人。",
+        "我们可以把旧工具都扔掉。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "folk /fəʊk/ 里 l 不发音，art show 连读，works 词尾 ks 要出声",
+      "explanation_cn": "How 问方法，答句要给出具体做法。A 说了办展示、讲故事两条；B、D 是反着来的做法；C 说法错误。",
+      "answer_cn_hint": "用 We can… 说出展示、讲解、教同学这样的具体做法。"
+    }
+  ],
+  "vocab": [
+    {
+      "word": "feather",
+      "phonetic": "/ˈfeðə/",
+      "meaning": "羽毛",
+      "emoji": "🪶",
+      "example_en": "The peacock opens its long feathers like a fan.",
+      "example_cn": "孔雀像扇子一样展开长长的羽毛。",
+      "hint_cn": "鸟身上轻飘飘盖着的那一层",
+      "syllables": ["feath", "er"]
+    },
+    {
+      "word": "nest",
+      "phonetic": "/nest/",
+      "meaning": "鸟巢；巢",
+      "emoji": "🪺",
+      "example_en": "The mother bird keeps her eggs warm in the nest.",
+      "example_cn": "鸟妈妈在鸟巢里给蛋保暖。",
+      "hint_cn": "鸟儿用树枝搭起来的小家",
+      "syllables": ["nest"]
+    },
+    {
+      "word": "wing",
+      "phonetic": "/wɪŋ/",
+      "meaning": "翅膀",
+      "emoji": "🦅",
+      "example_en": "The little bird stretches its wings before flying.",
+      "example_cn": "小鸟起飞前先伸展翅膀。",
+      "hint_cn": "鸟类用来飞的两片",
+      "syllables": ["wing"]
+    },
+    {
+      "word": "chick",
+      "phonetic": "/tʃɪk/",
+      "meaning": "雏鸟；小鸡",
+      "emoji": "🐤",
+      "example_en": "A yellow chick runs after its mother in the yard.",
+      "example_cn": "一只黄色雏鸟在院子里追着妈妈跑。",
+      "hint_cn": "刚从蛋里钻出来的小鸟",
+      "syllables": ["chick"]
+    },
+    {
+      "word": "rare",
+      "phonetic": "/reə/",
+      "meaning": "稀有的；珍稀的",
+      "emoji": "💎",
+      "example_en": "The crested ibis is a rare bird in China.",
+      "example_cn": "朱鹮是中国的一种珍稀鸟类。",
+      "hint_cn": "很少见、特别珍贵",
+      "syllables": ["rare"]
+    }
+  ],
+  "reading": {
+    "passage": "In Tianjin there is a famous folk art called Niren Zhang, which means Clay Figure Zhang. Artists use soft coloured clay to make small figures of people. With quick fingers, they can shape a head, a body and tiny hands in a few minutes. The finished figures look so alive that people often smile when they see them. In our art class, we made a small clay rabbit with two long ears. Our teacher says folk art keeps old stories alive in new hands.",
+    "passage_cn": "在天津，有一门有名的民间手艺叫「泥人张」，意思是捏泥人的张师傅。艺人们用彩色的软泥捏出一个个小人。他们的手指飞快，几分钟就能捏出脑袋、身体和小手。捏好的小人活灵活现，人们一看到就忍不住笑。在美术课上，我们也捏了一只长着两只长耳朵的小泥兔。老师说，民间手艺让老故事在新手里继续活着。",
+    "questions": [
+      {
+        "question": "What do the artists use to make figures?",
+        "qtype_cn": "细节定位",
+        "options": ["Stone", "Soft coloured clay", "Paper and glue", "Glass bottles"],
+        "answer": 1,
+        "explanation_cn": "细节定位：第二句 use soft coloured clay to make small figures 直接给答案，选 B。A 石头、C 纸和胶水、D 玻璃瓶都不是泥人的材料。方法：材料题回原文找 use… to make 的句式。"
+      },
+      {
+        "question": "In 'small figures of people', what does 'figure' mean here?",
+        "qtype_cn": "词义猜测",
+        "options": ["A number", "A kind of food", "A small shape of a person", "A school subject"],
+        "answer": 2,
+        "explanation_cn": "词义猜测：后文说 shape a head, a body and tiny hands，捏出的是人的样子，所以 figure 是「人像、塑像」，选 C。A 数字、B 食物、D 科目都与捏泥人对不上。方法：跟着动作（shape、head、body）猜词义。"
+      },
+      {
+        "question": "What can we infer about Clay Figure Zhang?",
+        "qtype_cn": "推理判断",
+        "options": ["The artists work slowly for a whole day", "The figures are fun and lifelike", "The clay comes from the sea", "Nobody likes the figures"],
+        "answer": 1,
+        "explanation_cn": "推理判断：几句话合起来看——几分钟捏好、活灵活现、人们看了就笑，说明泥人有趣又逼真，选 B。A 与 quick fingers 相反；C 原文没说泥的来源；D 与 smile 相反。方法：把几句连成一条线索再推。"
+      },
+      {
+        "question": "Why does the writer tell about the class clay rabbit?",
+        "qtype_cn": "作者意图",
+        "options": ["To sell the clay rabbit", "To say art class is boring", "To complain about school", "To show readers can try this art too"],
+        "answer": 3,
+        "explanation_cn": "作者意图：写自己在美术课捏泥兔，是在告诉小读者这门手艺大家也能上手试一试，选 D。A 卖兔子、C 抱怨学校都不对；B 与亲手捏泥兔的兴致相反。方法：作者写自己的经历，多半是想邀请读者参与。"
+      }
+    ]
+  },
+  "spell": [
+    {
+      "question": "羽毛：f______ [填完整单词]",
+      "answer": "feather",
+      "explanation_cn": "feath + er；轻飘飘的羽毛。"
+    },
+    {
+      "question": "翅膀：w___ [填完整单词]",
+      "answer": "wing",
+      "explanation_cn": "wing 翅膀； Birds fly with two wings。"
+    },
+    {
+      "question": "雏鸟；小鸡：c____ [填完整单词]",
+      "answer": "chick",
+      "explanation_cn": "chick 雏鸟；ch 读 /tʃ/。"
+    },
+    {
+      "question": "鸟巢；巢：n___ [填完整单词]",
+      "answer": "nest",
+      "explanation_cn": "nest 鸟巢；a bird in its nest 巢里的鸟。"
+    }
+  ]
+}

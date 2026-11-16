@@ -250,8 +250,14 @@ ok(doneDays >= 2, '统计出 ' + doneDays + ' 天已完成');
 ok(prof.indexOf('已打卡') >= 0, '页面上出现"已打卡"（不再是清一色"未打卡"）');
 ok(prof.indexOf('92%') >= 0 || prof.indexOf('88%') >= 0, '正确率显示出来了');
 ok(prof.indexOf('19:20') >= 0, '完成时间显示出来了');
-ok(prof.indexOf('badge-danger">未打卡') >= 0 || doneDays === HOMEWORK_DATA.length,
-  '剩下的天数仍然老实显示"未打卡"（没全绿）');
+// v189 起没到的天显示「还没到」而不是「未打卡」，所以这一条必须按当天星期几
+// 动态判断：只有「已经到了、又没打卡」的天存在时，页面才必须出现「未打卡」。
+const hasOverdue = HOMEWORK_DATA.some((d, di) => {
+  const ck = App.state.checkins[kOf(SID, di)];
+  return !(ck && ck.done) && App._ckDayPhase(di) !== 'future';
+});
+ok(prof.indexOf('badge-danger">未打卡') >= 0 || !hasOverdue || doneDays === HOMEWORK_DATA.length,
+  '剩下的天数仍然老实显示"未打卡"（没全绿；周初未到的天显示"还没到"是正常的）');
 
 console.log('== 8) 渲染：完成率对比的 x/7 与平均正确率 ==');
 // v161：完成率对比只认云端纯档（state.cloudCheckins）—— 把上面种的本机
