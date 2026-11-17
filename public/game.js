@@ -942,22 +942,24 @@
     var ck = r._ck || null, rec = ck && ck.rec;
     var lv = levelOf(Number(r.total) || 0);
     var bits = [];
-    // v203：一个孩子一条紧凑状态栏，错几道 / 剩几道 / 今日得多少分 / 打卡
-    // 全在这一行，右边是累计总分，第一行是第几名 —— 不用滚榜单就能看完。
-    bits.push('<span class="wg-st-wrong">' + (ck && ck.wrong !== null
-      ? '错 <b>' + ck.wrong + '</b> 道' : '错题待同步') + '</span>');
-    bits.push('<span class="wg-st-left">' + (ck && ck.left !== null
-      ? '剩 <b>' + ck.left + '</b> 道' : '剩题待同步') + '</span>');
-    bits.push('<span class="wg-st-today">今日 <b>+' +
+    // v213：分数 / 错题 / 打卡 全部并到同一行（原来分数单列在最右、错题打卡在
+    // 第二行，家长要「一眼在同一行看完」）。精简单位文字，手机上才塞得下。
+    bits.push('<span class="wg-st-wrong">错<b>' + (ck && ck.wrong !== null
+      ? ck.wrong : '?') + '</b></span>');
+    bits.push('<span class="wg-st-left">剩<b>' + (ck && ck.left !== null
+      ? ck.left : '?') + '</b></span>');
+    bits.push('<span class="wg-st-today">今日<b>+' +
       (Number(r.today_score) || 0) + '</b></span>');
     if (ck && ck.done) {
-      bits.push('<span class="wg-st-ck wg-st-done">✅ 已打卡</span>');
+      bits.push('<span class="wg-st-ck wg-st-done">✅打卡</span>');
     } else if (rec && (Number(rec.answered) || 0) > 0) {
-      bits.push('<span class="wg-st-ck wg-st-partial">◐ 答了 ' +
-        (Number(rec.answered) || 0) + '/' + (Number(rec.total) || 0) + ' 题</span>');
+      bits.push('<span class="wg-st-ck wg-st-partial">◐' +
+        (Number(rec.answered) || 0) + '/' + (Number(rec.total) || 0) + '</span>');
     } else {
-      bits.push('<span class="wg-st-ck wg-st-wait">⏳ 还没打卡</span>');
+      bits.push('<span class="wg-st-ck wg-st-wait">⏳未打卡</span>');
     }
+    // 分数放进同一行，末尾加粗，名次/姓名依旧在第一行
+    bits.push('<span class="wg-st-total">总<b>' + (Number(r.total) || 0) + '</b></span>');
     return '<div class="wg-board-row wg-ck-row' + (isMe ? ' wg-board-me' : '') +
       (scored ? '' : ' wg-board-idle') + (ck && ck.done ? ' is-done' : '') + '">' +
       '<span class="wg-rank' + (scored ? '' : ' wg-rank-none') + '">' + medal + '</span>' +
@@ -965,11 +967,9 @@
         '<div class="wg-board-line"><span class="wg-board-name">' +
           esc(r.student_name || '小指挥官') + (isMe ? '<em>我</em>' : '') + '</span>' +
           '<span class="wg-st-pos">' + (scored ? '第 ' + (i + 1) + ' 名' : '还没出击') +
-          '</span></div>' +
+          '</span><span class="wg-board-lv">' + lv.icon + '</span></div>' +
         '<div class="wg-status">' + bits.join('<i>·</i>') + '</div>' +
       '</div>' +
-      '<span class="wg-board-lv">' + lv.icon + '</span>' +
-      '<span class="wg-board-score">总 <b>' + (Number(r.total) || 0) + '</b> 分</span>' +
     '</div>';
   }
 
@@ -1012,10 +1012,6 @@
     h += '<div class="wg-card-hd"><span>🏆 全班状态榜 · 分数 / 错题 / 打卡</span>' +
       '<span class="wg-pill">' + (rows.length ? rows.length + ' 位指挥官' : '连线中') +
       '</span></div>';
-    h += '<div class="wg-board-hint">📋 今日打卡记录 · 错=错题 / 剩=剩余题 / ' +
-      '今日=今日得分 / 总=累计总分 · 🕒 ' +
-      (BOARD.at ? '刚更新 ' + hhmm(BOARD.at) : '正在更新') +
-      ' · 按第 1 到第 ' + (rows.length || 9) + ' 名顺序排列</div>';
     if (!rows.length) {
       h += '<div class="wg-board-empty">基地正在连线，马上就能看到全班同学啦。</div>';
     } else {

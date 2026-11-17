@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="212">
+<meta name="app-version" content="213">
 <link rel="manifest" href="manifest.json">
 <!-- v135：登录第一步就是调 api.amyeng.top 验手机号。提前把 DNS + TLS
      握手做掉，接口首调能省几百毫秒 —— 手机弱网下这几百毫秒很显眼。 -->
@@ -1669,6 +1669,12 @@ body.perf-on .content-area{padding-bottom:54vh}
 .wg-status i{font-size:max(calc(9px*var(--fs)),var(--fs-min))}
 .wg-st-left b{color:#AD6800;font-size:max(calc(11px*var(--fs)),var(--fs-min))}
 .wg-st-today b{color:var(--teal);font-size:max(calc(11px*var(--fs)),var(--fs-min))}
+/* v213 · 分数并入状态行：错/剩/今日/打卡/总 全在同一行，总分末尾加粗醒目 */
+.wg-st-total{margin-left:auto;padding-left:5px;color:var(--primary-dark);font-weight:700;white-space:nowrap}
+.wg-st-total b{font-size:max(calc(14px*var(--fs)),var(--fs-min));font-weight:900;color:#D4380D}
+.wg-board-row.wg-ck-row .wg-board-lv{display:none}
+.wg-status{flex-wrap:nowrap;overflow:hidden;white-space:nowrap}
+.wg-status i{padding:0 1px}
 .wg-board-score{width:72px;flex:0 0 72px;font-size:max(calc(10px*var(--fs)),var(--fs-min))}
 .wg-board-score b{font-size:max(calc(14px*var(--fs)),var(--fs-min))}
 .wg-ck-foot,.wg-board-foot{margin-top:4px;padding-top:4px;font-size:max(calc(11px*var(--fs)),var(--fs-min))}
@@ -2062,9 +2068,9 @@ button,.q-option,.gate-listen,.hold-btn,.tap-btn,.speak-btn{
 </div>
 
 <script>window.__appReady = false;</script>
-<script defer src="cloud.js?v=212"></script>
-<script defer src="data.js?v=212"></script>
-<script defer src="data-shuffle.js?v=212"></script>
+<script defer src="cloud.js?v=213"></script>
+<script defer src="data.js?v=213"></script>
+<script defer src="data-shuffle.js?v=213"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
 <!--
   ?v= 必须跟着版本号走（v124 修正）。
@@ -2074,13 +2080,13 @@ button,.q-option,.gate-listen,.hold-btn,.tap-btn,.speak-btn{
   这个坑很隐蔽：代码明明改了、也部署上去了，手机上跑的还是几个月前的逻辑。
   以后每次发版，这里跟着 app-version 一起改。
 -->
-<script defer src="recorder.js?v=212"></script>
-<script defer src="api.js?v=212"></script>
+<script defer src="recorder.js?v=213"></script>
+<script defer src="api.js?v=213"></script>
 <!-- v194：小游戏独立成文件，不塞进已经 800KB 的 app.js。必须排在 app.js
      **前面**：app.js 顶层有同步初始化，登录回来若正好停在「单词乐园」，
      渲染时 WordGame 得已经存在。game.js 只在被点击/渲染时才读 window.App。 -->
-<script defer src="game.js?v=212"></script>
-<script defer src="app.js?v=212"></script>
+<script defer src="game.js?v=213"></script>
+<script defer src="app.js?v=213"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {
