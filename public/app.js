@@ -6766,10 +6766,13 @@ const App = {
     if (!this._speakingShuffle) this._speakingShuffle = {};
     this._speakingShuffle[mi + '-' + qi] = shuffled;
 
-    let html = '<div class="speaking-card">';
-    html += '<div class="auto-read-badge"><svg class="icon icon-sm speaking-anim"><use href="#i-sound"/></svg> 正在朗读…</div>';
-    html += '<div class="fs-12 text-sub">第' + (qi+1) + '题 / 共' + m.questions.length + '题</div>';
-    html += '<div class="vocab-progress mt-8"><div class="fill" style="width:' + (qi/m.questions.length*100) + '%"></div></div>';
+    // v211：徽标和「第N题」原来各占一行，头部就吃掉一截屏幕 —— 并成一行，
+    // 题干和 ABCD 才有机会一屏放下。卡片加 id，录音时要把它切成录音模式。
+    let html = '<div class="speaking-card" id="sp-card-' + mi + '">';
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px">'
+         + '<div class="auto-read-badge" style="margin-bottom:0"><svg class="icon icon-sm speaking-anim"><use href="#i-sound"/></svg> 正在朗读…</div>'
+         + '<div class="fs-12 text-sub">第' + (qi+1) + '题 / 共' + m.questions.length + '题</div></div>';
+    html += '<div class="vocab-progress" style="margin-bottom:4px"><div class="fill" style="width:' + (qi/m.questions.length*100) + '%"></div></div>';
     // v193：口语练习这一屏以前是**纯文本**，一个短语横线都没有 —— 家长
     // 2026-11-11：「AI 口语练习里面的短语还是太少了，没有一句里两三个
     // 短语的提示」。题干、四个选项现在都走 _wordSpans 画短语，句子下面
@@ -7032,8 +7035,8 @@ const App = {
       + '<div class="gate-bar">' + this._gateListenHtml(gid, sentence, '🔊 先听一遍示范', 'cf') + '</div>'
       + '<div id="sp-status-' + mi + '-' + qi + '" style="min-height:18px;margin:6px 0;color:var(--text-sub);font-size:max(calc(14px*var(--fs)),var(--fs-min))"></div>'
       + '<button id="sphr-' + mi + '-' + qi + '" class="speak-btn gate-locked" data-gate="' + gid + '" '
-      + 'style="background:var(--primary);margin-top:8px;font-size:max(calc(18px*var(--fs)),var(--fs-min));padding:18px 32px;'
-      + 'user-select:none;-webkit-user-select:none;touch-action:none;border-radius:24px;min-width:200px">'
+      + 'style="background:var(--primary);margin-top:6px;font-size:max(calc(16px*var(--fs)),var(--fs-min));padding:12px 22px;'
+      + 'user-select:none;-webkit-user-select:none;touch-action:none;border-radius:22px;min-width:170px">'
       + '🎤 点我读</button>'
       + '<p class="fs-12 text-sub" style="margin-top:8px">先听完上面的示范，再点「点我读」；读到的词会变绿打勾，读完了再点一下就打分。读错的词要读对了才能进下一题。</p>'
       + '<p class="fs-12 text-sub" style="margin-top:2px">不认识的词，点一下就有读音和中文意思。</p>'
@@ -7054,6 +7057,9 @@ const App = {
     btn.addEventListener('contextmenu', function(e) { e.preventDefault(); });
     // v143：刷新后把上次读错的词还原回去（台账里的错词只增不减）。
     this.restoreReadMarks(mi, qi, dayIdx, 'sp-status-' + mi + '-' + qi);
+    // v211：跟读面板刚出现在卡片底部，直接把它滚进屏幕 —— 孩子答对题
+    // 不用再往下滑找「点我读」。
+    if (readArea.scrollIntoView) readArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   },
 
   // 问句 + 正确答句拼成整句。跟读面板和"听示范"都用这一句，
@@ -7111,6 +7117,10 @@ const App = {
     this._liveStart(mi, qi, sentence);
     // v156：录音一开始就把问句答句钉在屏幕顶上，孩子边看边读。
     this._setSentenceSticky(mi, qi, true);
+    // v211：录音模式 —— 卡片上的选项、徽标全部暂时隐藏，整屏只剩
+    // 「句子 + 录音按钮」，读的时候句子不会跑出视线。
+    var spCard = document.getElementById('sp-card-' + mi);
+    if (spCard) spCard.classList.add('is-recording');
     // 20 秒兜底：问句 + 答句比单句长，防止忘了点停止麦克风一直开着。
     this._spReadTimer = setTimeout(() => this._spReadEnd(mi, qi, dayIdx), 20000);
     this._spReadUI(mi, qi, dayIdx, 'recording');
@@ -7132,6 +7142,7 @@ const App = {
       this._liveStop();
       this._clearReadMarks(mi, qi);
       this._setSentenceSticky(mi, qi, false);
+      this._exitRecordingMode(mi);
       this._spReadUI(mi, qi, dayIdx, 'mistap');
       return;
     }
@@ -7215,6 +7226,8 @@ const App = {
     const stallKey = 'sp-' + dayIdx + '-' + mi + '-' + qi;
     // 出分了，句子不再需要吸顶（结果面板会接住孩子的视线）。
     this._setSentenceSticky(mi, qi, false);
+    // v211：同时退出录音模式，选项等内容回到卡片上。
+    this._exitRecordingMode(mi);
     if (!spoken) {
       // v139：识别端没回话，但录音里确实有人声 → 这道题算做完。
       // 家长 2026-10-17：「明明说得很清楚，他就说没听清，孩子要重复四五遍」——
@@ -7419,6 +7432,9 @@ const App = {
           html += '<div class="badge badge-success mt-8" style="font-size:max(calc(16px*var(--fs)),var(--fs-min))">🎉 全部完成！</div>';
         }
         statusEl.innerHTML = html;
+        // v211：分数和「下一题 →」按钮必须当场可见，不许再让孩子往下滑。
+        const ra = document.getElementById('sp-read-' + mi);
+        if (ra && ra.scrollIntoView) ra.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }
       return;
     }
@@ -7450,6 +7466,9 @@ const App = {
                 + 'onclick="App._spReplay(' + mi + ',' + qi + ',\'' + dayIdx + '\')">🔊 听一遍示范</button></div></div>';
         }
         statusEl.innerHTML = html;
+        // v211：同上 —— 没通过时，重读入口和示范按钮也要当场可见。
+        const ra2 = document.getElementById('sp-read-' + mi);
+        if (ra2 && ra2.scrollIntoView) ra2.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }
       return;
     }
@@ -13778,6 +13797,13 @@ const App = {
     } else {
       panel.classList.remove('rd-rec');
     }
+  },
+
+  // v211：退出口语卡片的录音模式（CSS .is-recording 会隐藏其他内容）。
+  // 出分、误触、看门狗复位等所有"录音结束"的出口都要走这里。
+  _exitRecordingMode(mi) {
+    const card = document.getElementById('sp-card-' + mi);
+    if (card) card.classList.remove('is-recording');
   },
 
   _clearReadMarks(mi, qi) {
