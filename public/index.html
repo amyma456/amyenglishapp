@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="211">
+<meta name="app-version" content="212">
 <link rel="manifest" href="manifest.json">
 <!-- v135：登录第一步就是调 api.amyeng.top 验手机号。提前把 DNS + TLS
      握手做掉，接口首调能省几百毫秒 —— 手机弱网下这几百毫秒很显眼。 -->
@@ -1680,6 +1680,48 @@ body.perf-on .content-area{padding-bottom:54vh}
   .wg-ck-group{font-size:max(calc(10px*var(--fs)),var(--fs-min))}
   .wg-board-hint{font-size:max(calc(9px*var(--fs)),var(--fs-min))}
 }
+/* ==========================================================================
+   v212 · 太空站星空大背景
+   一进游戏整屏橘黑→橘紫深空 + 星星，浅色面板浮在星空中（面板内文字仍清晰）。
+   用 .wg-root::before fixed 铺满视口，z-index:-1 只在游戏页生效，
+   不碰其他页面；不用 :has()/inset/vw 单位，老华为 / 平板浏览器照样渲染。
+   ========================================================================== */
+.wg-root{position:relative}
+.wg-root::before{
+  content:"";
+  position:fixed;
+  top:0;left:0;right:0;bottom:0;
+  z-index:-1;
+  pointer-events:none;
+  background:
+    radial-gradient(1.7px 1.7px at 7% 14%, #fff 99%, transparent 100%),
+    radial-gradient(1.3px 1.3px at 19% 33%, #ffe9cf 99%, transparent 100%),
+    radial-gradient(1.1px 1.1px at 31% 9%, #fff 99%, transparent 100%),
+    radial-gradient(1.6px 1.6px at 43% 24%, #ffd7a8 99%, transparent 100%),
+    radial-gradient(1.2px 1.2px at 57% 7%, #fff 99%, transparent 100%),
+    radial-gradient(1.4px 1.4px at 68% 19%, #ffe0bd 99%, transparent 100%),
+    radial-gradient(1.1px 1.1px at 79% 11%, #fff 99%, transparent 100%),
+    radial-gradient(1.7px 1.7px at 91% 27%, #ffd0a0 99%, transparent 100%),
+    radial-gradient(1.2px 1.2px at 12% 58%, #fff 99%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 26% 71%, #ffe9cf 99%, transparent 100%),
+    radial-gradient(1.1px 1.1px at 38% 63%, #fff 99%, transparent 100%),
+    radial-gradient(1.4px 1.4px at 52% 78%, #ffd7a8 99%, transparent 100%),
+    radial-gradient(1.2px 1.2px at 64% 66%, #fff 99%, transparent 100%),
+    radial-gradient(1.6px 1.6px at 76% 81%, #ffe0bd 99%, transparent 100%),
+    radial-gradient(1.1px 1.1px at 88% 69%, #fff 99%, transparent 100%),
+    radial-gradient(1.3px 1.3px at 5% 88%, #fff 99%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 33% 92%, #ffe9cf 99%, transparent 100%),
+    radial-gradient(1.2px 1.2px at 61% 94%, #fff 99%, transparent 100%),
+    radial-gradient(1.4px 1.4px at 84% 90%, #ffd7a8 99%, transparent 100%),
+    radial-gradient(ellipse 48% 34% at 80% 10%, rgba(255,110,60,.30), transparent 72%),
+    radial-gradient(ellipse 56% 42% at 12% 46%, rgba(155,75,220,.26), transparent 72%),
+    radial-gradient(ellipse 46% 34% at 86% 74%, rgba(255,70,130,.18), transparent 72%),
+    linear-gradient(155deg, #2c1512 0%, #3c1d34 42%, #251736 74%, #191231 100%);
+}
+/* 裸露在星空上（没有被浅色卡片托底）的文字改浅色 + 阴影，保证看得清 */
+.wg-top-l,.wg-call,.wg-clockbar,.wg-bottom .wg-note,
+.wg-actions > .wg-note,.wg-link{color:#FFE8D5;text-shadow:0 1px 3px rgba(0,0,0,.55)}
+.wg-clockbar b{color:#FFD08A}
 /* v208 · 双击不再缩放 / 选中文字，也不把第二次点击派发到答案上。
    华为 nova 14 的头条浏览器实测会拿 dblclick 做缩放，顺带补一次 click。 */
 button,.q-option,.gate-listen,.hold-btn,.tap-btn,.speak-btn{
@@ -2020,9 +2062,9 @@ button,.q-option,.gate-listen,.hold-btn,.tap-btn,.speak-btn{
 </div>
 
 <script>window.__appReady = false;</script>
-<script defer src="cloud.js?v=211"></script>
-<script defer src="data.js?v=211"></script>
-<script defer src="data-shuffle.js?v=211"></script>
+<script defer src="cloud.js?v=212"></script>
+<script defer src="data.js?v=212"></script>
+<script defer src="data-shuffle.js?v=212"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
 <!--
   ?v= 必须跟着版本号走（v124 修正）。
@@ -2032,13 +2074,13 @@ button,.q-option,.gate-listen,.hold-btn,.tap-btn,.speak-btn{
   这个坑很隐蔽：代码明明改了、也部署上去了，手机上跑的还是几个月前的逻辑。
   以后每次发版，这里跟着 app-version 一起改。
 -->
-<script defer src="recorder.js?v=211"></script>
-<script defer src="api.js?v=211"></script>
+<script defer src="recorder.js?v=212"></script>
+<script defer src="api.js?v=212"></script>
 <!-- v194：小游戏独立成文件，不塞进已经 800KB 的 app.js。必须排在 app.js
      **前面**：app.js 顶层有同步初始化，登录回来若正好停在「单词乐园」，
      渲染时 WordGame 得已经存在。game.js 只在被点击/渲染时才读 window.App。 -->
-<script defer src="game.js?v=211"></script>
-<script defer src="app.js?v=211"></script>
+<script defer src="game.js?v=212"></script>
+<script defer src="app.js?v=212"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {
