@@ -1374,8 +1374,8 @@ const App = {
     if (!box) return;
     const denied = !!(status && status.denied);
     box.innerHTML =
-      '<div style="font-size:48px;margin-bottom:8px">' + (denied ? '📩' : '🔔') + '</div>' +
-      '<p style="font-size:15px;color:var(--warning);font-weight:600">' +
+      '<div style="font-size:max(calc(48px*var(--fs)),var(--fs-min));margin-bottom:8px">' + (denied ? '📩' : '🔔') + '</div>' +
+      '<p style="font-size:max(calc(15px*var(--fs)),var(--fs-min));color:var(--warning);font-weight:600">' +
         (denied ? '上次的申请没有通过' : '已经通知老师了') + '</p>' +
       '<p class="text-sub fs-12 mt-8">' +
         (denied ? '请联系老师重新开通，或稍后再试' : '这个号码不在班级名单里，老师同意后会自动进入') +
@@ -1498,8 +1498,8 @@ const App = {
       desc = '老师没有同意这次申请。你可以再次提交申请，或直接联系老师';
     }
     card.innerHTML =
-      '<div style="font-size:48px;margin-bottom:8px">' + icon + '</div>' +
-      '<p style="font-size:15px;color:var(--warning);font-weight:600">' + title + '</p>' +
+      '<div style="font-size:max(calc(48px*var(--fs)),var(--fs-min));margin-bottom:8px">' + icon + '</div>' +
+      '<p style="font-size:max(calc(15px*var(--fs)),var(--fs-min));color:var(--warning);font-weight:600">' + title + '</p>' +
       '<p class="text-sub fs-12 mt-8">' + desc + '</p>';
     btn.textContent = pending ? '⏳ 等待老师同意…' : '✉️ 申请重新加入';
     btn.disabled = pending;
@@ -1581,8 +1581,8 @@ const App = {
     const btn = document.getElementById('removed-btn');
     if (card) {
       card.innerHTML =
-        '<div style="font-size:48px;margin-bottom:8px">📡</div>'
-        + '<p style="font-size:15px;color:var(--warning);font-weight:600">正在核对你的身份</p>'
+        '<div style="font-size:max(calc(48px*var(--fs)),var(--fs-min));margin-bottom:8px">📡</div>'
+        + '<p style="font-size:max(calc(15px*var(--fs)),var(--fs-min));color:var(--warning);font-weight:600">正在核对你的身份</p>'
         + '<p class="text-sub fs-12 mt-8">马上就好，会自动进入。'
         + '会自动重试，也可以点下面的按钮。</p>';
     }
@@ -3845,7 +3845,7 @@ const App = {
     var emojis = ['\ud83c\udf89', '\u2b50', '\ud83d\udcab', '\ud83c\udf8a', '\u2728', '\ud83d\ude0d'];
     var emoji = emojis[Math.floor(Math.random() * emojis.length)];
     var div = document.createElement('div');
-    div.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:60px;pointer-events:none;z-index:100;animation:celebrate 1s ease-out forwards';
+    div.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:max(calc(60px*var(--fs)),var(--fs-min));pointer-events:none;z-index:100;animation:celebrate 1s ease-out forwards';
     div.textContent = emoji;
     el.style.position = 'relative';
     el.appendChild(div);
@@ -4208,7 +4208,7 @@ const App = {
           '<button class="btn btn-outline btn-sm" onclick="App.testTTS(2)">\ud83d\udd0a \u8bd5\u542c\u767e\u5ea6TTS</button>' +
           '<button class="btn btn-outline btn-sm" onclick="App.testTTS(3)">\ud83d\udd0a \u8bd5\u542c\u6d4f\u89c8\u5668TTS</button>' +
           '</div>' +
-          '<div id="tts-test-result" style="margin-top:8px;font-size:12px"></div>' +
+          '<div id="tts-test-result" style="margin-top:8px;font-size:max(calc(12px*var(--fs)),var(--fs-min))"></div>' +
         '</div>' +
         '<div class="settings-card">' +
           '<div class="sc-title">\ud83d\udcca \u6570\u636e\u7ba1\u7406</div>' +
@@ -4556,8 +4556,8 @@ const App = {
       weekDays.forEach((day, i) => {
         const isToday = this.isDayToday(i, weekOffset);
         out += '<div class="day-card ' + (day.is_speaking_day ? 'speaking' : '') + '" style="' + (isToday ? 'border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-light)' : '') + '" onclick="App.viewDay(' + i + ',' + weekOffset + ')">';
-        out += '<div class="day-name">' + day.day_cn + (isToday ? ' <span style="font-size:11px;color:var(--primary)">今天</span>' : '') + '</div>';
-        out += '<div class="day-type" style="font-size:11px;color:var(--primary-dark)">' + this.formatDateCn(dates[i]) + '</div>';
+        out += '<div class="day-name">' + day.day_cn + (isToday ? ' <span style="font-size:max(calc(11px*var(--fs)),var(--fs-min));color:var(--primary)">今天</span>' : '') + '</div>';
+        out += '<div class="day-type" style="font-size:max(calc(11px*var(--fs)),var(--fs-min));color:var(--primary-dark)">' + this.formatDateCn(dates[i]) + '</div>';
         out += '<div class="day-type">' + (day.is_speaking_day ? '🎤 AI口语日' : '📝 练习日') + '</div>';
         out += '<div class="day-modules">' + day.modules.map(m => m.name_cn).join('<br>') + '</div>';
         out += '<div class="day-duration">共' + day.total_duration + '分钟</div>';
@@ -4838,8 +4838,8 @@ const App = {
     html += '<div class="day-grid mb-16">';
     HOMEWORK_DATA.forEach((day, i) => {
       html += '<div class="day-card ' + (i===this.state.currentDay?'':'') + '" style="' + (i===this.state.currentDay?'border-color:var(--primary)':'') + '" onclick="App.selectDay(' + i + ')">';
-      html += '<div class="day-name">' + day.day_cn + (this.isDayToday(i, 0) ? ' <span style="font-size:11px;color:var(--primary)">今天</span>' : '') + '</div>';
-      html += '<div class="day-type" style="font-size:11px;color:var(--primary-dark)">' + this.getDayDateLabel(i, 0) + '</div>';
+      html += '<div class="day-name">' + day.day_cn + (this.isDayToday(i, 0) ? ' <span style="font-size:max(calc(11px*var(--fs)),var(--fs-min));color:var(--primary)">今天</span>' : '') + '</div>';
+      html += '<div class="day-type" style="font-size:max(calc(11px*var(--fs)),var(--fs-min));color:var(--primary-dark)">' + this.getDayDateLabel(i, 0) + '</div>';
       html += '<div class="day-type">' + day.modules.map(m=>m.name_cn).join('·') + '</div>';
       html += '</div>';
     });
@@ -4882,7 +4882,7 @@ const App = {
         m.words.forEach((w, wi) => {
           html += '<div class="q-item">';
           html += '<div class="q-num">单词' + (wi+1) + '</div>';
-          html += '<div class="q-text" style="font-size:18px">' + w.emoji + ' <strong>' + w.word + '</strong> ' + w.phonetic + ' = ' + w.meaning + '</div>';
+          html += '<div class="q-text" style="font-size:max(calc(18px*var(--fs)),var(--fs-min))">' + w.emoji + ' <strong>' + w.word + '</strong> ' + w.phonetic + ' = ' + w.meaning + '</div>';
           html += '<div class="text-sub fs-12">例句：' + w.example_en + ' ' + w.example_cn + '</div>';
           html += '<div class="mt-8 fs-12">闯关阶段：</div>';
           w.stages.forEach((s, si) => {
@@ -5110,7 +5110,7 @@ const App = {
     html += '<div class="stat-box"><div class="num" style="color:var(--success)">' + totalDone + '</div><div class="label">已打卡</div></div>';
     html += '<div class="stat-box"><div class="num" style="color:var(--danger)">' + totalUndone + '</div><div class="label">未打卡</div></div>';
     html += '<div class="stat-box"><div class="num">' + Math.round(totalDone/(totalDone+totalUndone)*100) + '%</div><div class="label">完成率</div></div>';
-    html += '<div class="stat-box"><div class="num" style="color:var(--primary-dark)">' + today.done + '<span style="font-size:12px;color:var(--text-sub)">/' + today.total + '</span></div><div class="label">今天打卡</div></div>';
+    html += '<div class="stat-box"><div class="num" style="color:var(--primary-dark)">' + today.done + '<span style="font-size:max(calc(12px*var(--fs)),var(--fs-min));color:var(--text-sub)">/' + today.total + '</span></div><div class="label">今天打卡</div></div>';
     html += '</div>';
 
     // Table
@@ -5119,7 +5119,7 @@ const App = {
       const ph = this._ckDayPhase(di);
       html += '<th' + (ph === 'today' ? ' class="ck-th-today"' : '') + '>' + d.day_cn
         + (ph === 'today' ? '·今天' : '')
-        + '<br><span style="font-weight:400;font-size:10px;color:var(--text-sub,#888)">' + this.getDayDateLabel(di, 0) + '</span></th>';
+        + '<br><span style="font-weight:400;font-size:max(calc(10px*var(--fs)),var(--fs-min));color:var(--text-sub,#888)">' + this.getDayDateLabel(di, 0) + '</span></th>';
     });
     html += '<th>总完成</th><th>平均正确率</th></tr></thead><tbody>';
     roster.forEach(s => {
@@ -5544,8 +5544,8 @@ const App = {
     html += '<div class="card mb-16" id="pending-card-top" style="border-left:4px solid var(--primary)">';
     html += '<div style="font-weight:700;margin-bottom:6px">📋 账号总览</div>';
     html += '<div class="fs-12" style="line-height:1.9">'
-         + '✅ 正式账号 <b style="font-size:16px;color:var(--success)">' + approved.length + '</b> 人'
-         + '　·　⏳ 等你同意 <b style="font-size:16px;color:var(--warning)">' + nOutside + '</b> 人'
+         + '✅ 正式账号 <b style="font-size:max(calc(16px*var(--fs)),var(--fs-min));color:var(--success)">' + approved.length + '</b> 人'
+         + '　·　⏳ 等你同意 <b style="font-size:max(calc(16px*var(--fs)),var(--fs-min));color:var(--warning)">' + nOutside + '</b> 人'
          + '　·　🚫 已拦截 <b>' + nGatedTop + '</b> 人</div>';
     html += '<div class="text-sub fs-12" style="margin-top:4px">'
          + '不在这 ' + approved.length + ' 个正式账号里的号码，登录时会被拦住并在这里提醒你。</div>';
@@ -5582,7 +5582,7 @@ const App = {
         html += this._studentPickLabel(s);
         html += '</div>';
         html += '<div class="ac-actions">';
-        html += '<select id="assign-sel-' + s.id + '" style="padding:4px 8px;border-radius:6px;border:1.5px solid #FFE0CC;font-size:12px">';
+        html += '<select id="assign-sel-' + s.id + '" style="padding:4px 8px;border-radius:6px;border:1.5px solid #FFE0CC;font-size:max(calc(12px*var(--fs)),var(--fs-min))">';
         html += '<option value="">-- 选择班级 --</option>';
         (this.state.classes || []).forEach(c => { html += '<option value="' + c + '">' + c + '</option>'; });
         html += '</select>';
@@ -6519,7 +6519,7 @@ const App = {
         const isToday = i === todayIdx;
         html += '<div class="day-card" style="' + (isToday?'border-color:var(--primary)':'') + '" onclick="App.switchTodayDay(' + i + ')">';
         html += '<div class="day-name">' + d.day_cn + '</div>';
-        html += '<div class="day-type" style="font-size:11px">' + this.getDayDateLabel(i, 0) + (this.isDayToday(i, 0) ? ' · 今天' : '') + '</div>';
+        html += '<div class="day-type" style="font-size:max(calc(11px*var(--fs)),var(--fs-min))">' + this.getDayDateLabel(i, 0) + (this.isDayToday(i, 0) ? ' · 今天' : '') + '</div>';
         html += '<div class="day-type">' + d.modules.map(m=>m.name_cn).join('·') + '</div>';
         html += '</div>';
       });
@@ -6634,7 +6634,7 @@ const App = {
       html += this._spPhraseBar(o, '短语', 3);
     });
     html += '</div>';
-    html += '<div class="listen-wait" id="sp-wait-' + mi + '" style="text-align:center;padding:8px;color:var(--text-sub);font-size:12px">⏳ 请先听完整朗读，再选择答案</div>';
+    html += '<div class="listen-wait" id="sp-wait-' + mi + '" style="text-align:center;padding:8px;color:var(--text-sub);font-size:max(calc(12px*var(--fs)),var(--fs-min))">⏳ 请先听完整朗读，再选择答案</div>';
     html += '<div class="speak-tip" id="sp-tip-' + mi + '"></div>';
     html += '<div id="sp-read-' + mi + '"></div>';
     html += '</div>';
@@ -6876,9 +6876,9 @@ const App = {
       + '<div class="rd-sentence" id="rd-sent-' + mi + '-' + qi + '">' + sentHtml + '</div>'
       + '<div class="rd-live-hint" id="rd-live-' + mi + '-' + qi + '"></div>'
       + '<div class="gate-bar">' + this._gateListenHtml(gid, sentence, '🔊 先听一遍示范', 'cf') + '</div>'
-      + '<div id="sp-status-' + mi + '-' + qi + '" style="min-height:18px;margin:6px 0;color:var(--text-sub);font-size:14px"></div>'
+      + '<div id="sp-status-' + mi + '-' + qi + '" style="min-height:18px;margin:6px 0;color:var(--text-sub);font-size:max(calc(14px*var(--fs)),var(--fs-min))"></div>'
       + '<button id="sphr-' + mi + '-' + qi + '" class="speak-btn gate-locked" data-gate="' + gid + '" '
-      + 'style="background:var(--primary);margin-top:8px;font-size:18px;padding:18px 32px;'
+      + 'style="background:var(--primary);margin-top:8px;font-size:max(calc(18px*var(--fs)),var(--fs-min));padding:18px 32px;'
       + 'user-select:none;-webkit-user-select:none;touch-action:none;border-radius:24px;min-width:200px">'
       + '🎤 点我读</button>'
       + '<p class="fs-12 text-sub" style="margin-top:8px">先听完上面的示范，再点「点我读」；读到的词会变绿打勾，读完了再点一下就打分。读错的词要读对了才能进下一题。</p>'
@@ -7195,8 +7195,8 @@ const App = {
       btn.innerHTML = '⏳ 正在出分…';
       btn.disabled = true;
       if (statusEl) statusEl.innerHTML =
-        '<div style="font-size:34px;font-weight:700;color:var(--primary);line-height:1.15">…</div>'
-        + '<span style="color:var(--text-sub);font-size:13px">核对中，分数马上到</span>';
+        '<div style="font-size:max(calc(34px*var(--fs)),var(--fs-min));font-weight:700;color:var(--primary);line-height:1.15">…</div>'
+        + '<span style="color:var(--text-sub);font-size:max(calc(13px*var(--fs)),var(--fs-min))">核对中，分数马上到</span>';
       return;
     }
     if (status === 'mistap') {
@@ -7253,8 +7253,8 @@ const App = {
       }
       if (statusEl) {
         let html = (hasScore
-          ? '<div style="font-size:34px;font-weight:700;color:var(--success);line-height:1.15">' + score + ' 分</div>'
-          : '<div style="font-size:34px;font-weight:700;color:var(--success);line-height:1.15">✓</div>')
+          ? '<div style="font-size:max(calc(34px*var(--fs)),var(--fs-min));font-weight:700;color:var(--success);line-height:1.15">' + score + ' 分</div>'
+          : '<div style="font-size:max(calc(34px*var(--fs)),var(--fs-min));font-weight:700;color:var(--success);line-height:1.15">✓</div>')
                  + '<span style="color:var(--success);font-weight:600">'
                  + (hasScore ? '✅ 读得很好，通过！' : '✅ 读到了，通过！录音已经存下来')
                  + '</span>';
@@ -7262,7 +7262,7 @@ const App = {
           html += '<div style="margin-top:10px"><button class="speak-btn" style="background:var(--success)" '
                 + 'onclick="App.nextSpeaking(' + mi + ',' + (qi + 1) + ',\'' + dayIdx + '\')">下一题 →</button></div>';
         } else {
-          html += '<div class="badge badge-success mt-8" style="font-size:16px">🎉 全部完成！</div>';
+          html += '<div class="badge badge-success mt-8" style="font-size:max(calc(16px*var(--fs)),var(--fs-min))">🎉 全部完成！</div>';
         }
         statusEl.innerHTML = html;
       }
@@ -7279,7 +7279,7 @@ const App = {
       }
       if (statusEl) {
         const bad = (extra && extra.badWords) || [];
-        let html = '<div style="font-size:34px;font-weight:700;color:var(--danger);line-height:1.15">'
+        let html = '<div style="font-size:max(calc(34px*var(--fs)),var(--fs-min));font-weight:700;color:var(--danger);line-height:1.15">'
                  + score + ' 分</div>'
                  + '<span style="color:var(--danger);font-weight:600">⚠️ 不到 60 分，带 ✗ 的红词再读清楚些</span>';
         if (bad.length) {
@@ -7288,11 +7288,11 @@ const App = {
           }).join('、');
           html += '<div class="fs-12 text-sub" style="margin-top:6px">没读对的词：' + list
                 + '<br>先听一遍示范，再把<b>整句</b>重读一次。'
-                + '<div style="margin-top:6px"><button class="speak-btn" style="font-size:13px;padding:6px 14px" '
+                + '<div style="margin-top:6px"><button class="speak-btn" style="font-size:max(calc(13px*var(--fs)),var(--fs-min));padding:6px 14px" '
                 + 'onclick="App._spReplay(' + mi + ',' + qi + ',\'' + dayIdx + '\')">🔊 听一遍示范</button></div></div>';
         } else {
           html += '<div class="fs-12 text-sub" style="margin-top:6px">把整句再读一次，注意读清楚每个词。'
-                + '<div style="margin-top:6px"><button class="speak-btn" style="font-size:13px;padding:6px 14px" '
+                + '<div style="margin-top:6px"><button class="speak-btn" style="font-size:max(calc(13px*var(--fs)),var(--fs-min));padding:6px 14px" '
                 + 'onclick="App._spReplay(' + mi + ',' + qi + ',\'' + dayIdx + '\')">🔊 听一遍示范</button></div></div>';
         }
         statusEl.innerHTML = html;
@@ -7312,7 +7312,7 @@ const App = {
     const readArea = document.getElementById('sp-read-' + mi);
     var sentence = this._speakingReadSentence(mi, qi, dayIdx).replace(/'/g, "\\'");
     var html = '<div class="speak-record show" style="text-align:center">';
-    html += '<p style="font-size:15px;font-weight:600;color:var(--primary);margin-bottom:8px">请给自己打分</p>';
+    html += '<p style="font-size:max(calc(15px*var(--fs)),var(--fs-min));font-weight:600;color:var(--primary);margin-bottom:8px">请给自己打分</p>';
     // Be explicit about why the automatic comparison is not shown.
     html += '<p class="fs-12 text-sub mb-8">' + (reason ? reason + '，改为自评。' : '')
          + '听一听标准发音，对比自己的朗读</p>';
@@ -7335,7 +7335,7 @@ const App = {
     var html = '<div class="speak-record show" style="text-align:center">';
     html += '<div class="speak-score" style="color:' + (passed?'var(--success)':'var(--danger)') + '">' + score + '分</div>';
     if (passed) {
-      html += '<div class="badge badge-success mt-8" style="font-size:14px">✅ 继续加油！</div>';
+      html += '<div class="badge badge-success mt-8" style="font-size:max(calc(14px*var(--fs)),var(--fs-min))">✅ 继续加油！</div>';
       this._playCorrectSound();
     } else {
       html += '<div class="badge badge-warning mt-8">多听多读，你会越来越好！</div>';
@@ -7345,7 +7345,7 @@ const App = {
     if (passed && qi < m.questions.length - 1) {
       html += '<button class="speak-btn" style="background:var(--success)" onclick="App.nextSpeaking(' + mi + ',' + (qi+1) + ',\'' + dayIdx + '\')">下一题 →</button>';
     } else if (passed) {
-      html += '<div class="badge badge-success" style="font-size:16px;align-self:center">🎉 全部完成！</div>';
+      html += '<div class="badge badge-success" style="font-size:max(calc(16px*var(--fs)),var(--fs-min));align-self:center">🎉 全部完成！</div>';
     }
     html += '</div>';
     html += '<div id="sp-clip-' + mi + '" class="mt-8"></div>';
@@ -7910,7 +7910,7 @@ const App = {
         html += '<div class="vc-word-item"><span class="vcw-emoji tap-speak-sm" onclick="App.speak(\'' + w.word.replace(/'/g, "\\'") + '\')" title="点一下听发音">' + w.emoji + '</span><div class="vcw-info"><div class="vcw-word">' + w.word + '</div><div class="vcw-meaning">' + w.meaning + '</div></div><button class="vrw-play" onclick="App.speak(\'' + w.word.replace(/'/g, "\\'") + '\')" aria-label="听发音"><svg class="icon icon-sm"><use href="#i-sound"/></svg></button></div>';
       });
       html += '</div>';
-      html += '<div style="font-size:13px;color:var(--text-sub);margin-top:8px">明天学习新单词时，会先复习这' + m.words.length + '个单词哦</div>';
+      html += '<div style="font-size:max(calc(13px*var(--fs)),var(--fs-min));color:var(--text-sub);margin-top:8px">明天学习新单词时，会先复习这' + m.words.length + '个单词哦</div>';
       html += '</div>';
       // Save completed words for next-day review
       this._saveLearnedWords(dayIdx, m.words);
@@ -7947,7 +7947,7 @@ const App = {
         html += '<div class="vocab-option-card" onclick="App.checkVocabAnswer(' + mi + ',' + oi + ',' + stage.answer + ',' + dayIdx + ',' + m.words.length + ',' + word.stages.length + ')">' + opt + '</div>';
       });
       html += '</div>';
-      html += '<div class="listen-wait" id="vw-' + mi + '" style="text-align:center;padding:8px;color:var(--text-sub);font-size:12px">⏳ 请先听完整朗读，再选择答案</div>';
+      html += '<div class="listen-wait" id="vw-' + mi + '" style="text-align:center;padding:8px;color:var(--text-sub);font-size:max(calc(12px*var(--fs)),var(--fs-min))">⏳ 请先听完整朗读，再选择答案</div>';
       // Auto-read the word, then enable options
       this.autoSpeak(word.word, function() {
         var el = document.getElementById('vo-' + mi);
@@ -7966,10 +7966,10 @@ const App = {
       html += this._vocabHintSlot(mi);
       html += '<div class="vocab-options" id="vo-' + mi + '" style="opacity:0.4;pointer-events:none">';
       stage.options.forEach((opt, oi) => {
-        html += '<div class="vocab-option-card" style="font-size:16px;padding:14px 8px" onclick="App.checkVocabAnswer(' + mi + ',' + oi + ',' + stage.answer + ',' + dayIdx + ',' + m.words.length + ',' + word.stages.length + ')">' + opt + '</div>';
+        html += '<div class="vocab-option-card" style="font-size:max(calc(16px*var(--fs)),var(--fs-min));padding:14px 8px" onclick="App.checkVocabAnswer(' + mi + ',' + oi + ',' + stage.answer + ',' + dayIdx + ',' + m.words.length + ',' + word.stages.length + ')">' + opt + '</div>';
       });
       html += '</div>';
-      html += '<div class="listen-wait" id="vw-' + mi + '" style="text-align:center;padding:8px;color:var(--text-sub);font-size:12px">⏳ 请先听完整朗读，再选择答案</div>';
+      html += '<div class="listen-wait" id="vw-' + mi + '" style="text-align:center;padding:8px;color:var(--text-sub);font-size:max(calc(12px*var(--fs)),var(--fs-min))">⏳ 请先听完整朗读，再选择答案</div>';
       // Auto-read the word, then enable options
       this.autoSpeak(word.word, function() {
         var el = document.getElementById('vo-' + mi);
@@ -8055,7 +8055,7 @@ const App = {
       if (resultDiv) {
         this._clearWrongHint(resultDiv);
         resultDiv.style.display = 'block';   // 内嵌槽位默认藏着，这里要显出来
-        resultDiv.innerHTML = '<div style="color:var(--success);font-size:14px;font-weight:600;margin-top:8px">✅ 正确！</div>';
+        resultDiv.innerHTML = '<div style="color:var(--success);font-size:max(calc(14px*var(--fs)),var(--fs-min));font-weight:600;margin-top:8px">✅ 正确！</div>';
       }
       // v106：答对之后停 800ms 就走（原来 1200ms）。孩子一天要在词汇模块里
       // 点几十次，每次多等 0.4 秒就是"点久了不耐烦"（家长原话）。庆祝动画
@@ -8192,7 +8192,7 @@ const App = {
       if (resultDiv) {
         var hintText = answer.length === 1 ? '还差一个字母，再试一次' : '还差 ' + answer.length + ' 个字母，再试一次';
         var attemptS = this._wrongTryBump(spellKey);
-        var lines = ['<div style="color:var(--danger);font-size:13px;margin-top:8px">❌ ' + hintText + '</div>'];
+        var lines = ['<div style="color:var(--danger);font-size:max(calc(13px*var(--fs)),var(--fs-min));margin-top:8px">❌ ' + hintText + '</div>'];
         // v107：拼写题同样是"记词"，答错就给围绕词义的提示，而不是干说一句
         // "还差几个字母" —— 孩子缺的往往不是字母个数，是"这是哪个词"。
         // 答错两次起再补上我们学过的中文例句，但**始终不给整词**（要他打出来）。
@@ -8326,7 +8326,7 @@ const App = {
   _wordImage(word, big) {
     var w = String(word.word || '').replace(/'/g, "\\'");
     return '<div class="vocab-emoji-card tap-speak"'
-         + (big ? ' style="width:100px;height:100px;font-size:52px"' : '')
+         + (big ? ' style="width:100px;height:100px;font-size:max(calc(52px*var(--fs)),var(--fs-min))"' : '')
          + ' onclick="App.speak(\'' + w + '\')" title="点一下听发音"'
          + ' role="button" aria-label="听 ' + w + ' 的发音">'
          + word.emoji + '<span class="tap-speak-badge"><svg class="icon icon-sm"><use href="#i-sound"/></svg></span></div>';
@@ -9817,15 +9817,15 @@ const App = {
     const box = document.createElement('div');
     box.style.cssText = 'position:fixed;inset:0;background:#fff;z-index:99999;overflow:auto;'
       + 'padding:18px 16px 60px;font:15px/1.75 -apple-system,"PingFang SC",sans-serif;color:#222';
-    box.innerHTML = '<h2 style="font-size:19px;margin:0 0 6px">🎤 手机录音自检</h2>'
-      + '<p style="color:#666;margin:0 0 14px;font-size:13px">老师排查用。孩子读一句英文就好，'
+    box.innerHTML = '<h2 style="font-size:max(calc(19px*var(--fs)),var(--fs-min));margin:0 0 6px">🎤 手机录音自检</h2>'
+      + '<p style="color:#666;margin:0 0 14px;font-size:max(calc(13px*var(--fs)),var(--fs-min))">老师排查用。孩子读一句英文就好，'
       + '读完把这一页截图发出来。</p>'
       + '<div id="md-status" style="min-height:52px;padding:12px;border-radius:10px;'
-      + 'background:#f4f6fa;font-size:14px">点下面的按钮开始</div>'
+      + 'background:#f4f6fa;font-size:max(calc(14px*var(--fs)),var(--fs-min))">点下面的按钮开始</div>'
       + '<div id="md-meter" style="height:12px;border-radius:6px;background:#e6eaf2;margin:12px 0;overflow:hidden">'
       + '<div id="md-bar" style="height:100%;width:0%;background:#2ecc71;transition:width .05s"></div></div>'
       + '<button id="md-go" style="width:100%;padding:16px;border:0;border-radius:12px;'
-      + 'background:#2b6cff;color:#fff;font-size:17px;font-weight:600">按住这里，读一句英文</button>'
+      + 'background:#2b6cff;color:#fff;font-size:max(calc(17px*var(--fs)),var(--fs-min));font-weight:600">按住这里，读一句英文</button>'
       + '<div id="md-report" style="margin-top:18px"></div>';
     document.body.appendChild(box);
 
@@ -9878,7 +9878,7 @@ const App = {
           ['录音时长', out.duration.toFixed(2) + ' 秒', ''],
         ];
         let html = '<div style="font-weight:600;margin-bottom:8px">报告</div>'
-          + '<table style="width:100%;border-collapse:collapse;font-size:13px">';
+          + '<table style="width:100%;border-collapse:collapse;font-size:max(calc(13px*var(--fs)),var(--fs-min))">';
         rows.forEach(function (r) {
           html += '<tr>'
             + '<td style="padding:7px 4px;border-bottom:1px solid #eef1f6;color:#666;white-space:nowrap">' + r[0] + '</td>'
@@ -9887,18 +9887,18 @@ const App = {
             + '</tr>';
         });
         html += '</table>';
-        html += '<div style="margin-top:12px;font-size:12px;color:#888">'
+        html += '<div style="margin-top:12px;font-size:max(calc(12px*var(--fs)),var(--fs-min));color:#888">'
           + '设备：' + ((navigator.userAgent || '').slice(0, 120)) + '</div>';
-        html += '<div style="margin-top:6px;font-size:12px;color:#888">'
+        html += '<div style="margin-top:6px;font-size:max(calc(12px*var(--fs)),var(--fs-min));color:#888">'
           + '判定：' + (out.healthLabel || '—') + '</div>';
         // 回放：家长自己也听一遍，比任何数字都直观
         try {
           const url = URL.createObjectURL(out.blob);
-          html += '<div style="margin-top:14px"><div style="font-size:13px;color:#666;margin-bottom:6px">'
+          html += '<div style="margin-top:14px"><div style="font-size:max(calc(13px*var(--fs)),var(--fs-min));color:#666;margin-bottom:6px">'
             + '听一下刚才的录音（这一条就是要发出去的那份）：</div>'
             + '<audio controls src="' + url + '" style="width:100%;height:40px"></audio></div>';
         } catch (e) {}
-        html += '<div style="margin-top:18px;padding:12px;border-radius:10px;background:#f4f6fa;font-size:13px;line-height:1.8">'
+        html += '<div style="margin-top:18px;padding:12px;border-radius:10px;background:#f4f6fa;font-size:max(calc(13px*var(--fs)),var(--fs-min));line-height:1.8">'
           + '<b>怎么读这一页：</b><br>'
           + '· 采样率偏低 + 爆音偏高 → 这台机器的音频通路有问题，请先试试<b>关掉其他正在用麦克风的 App</b>，'
           + '或在系统设置里把"录音"权限重新授予浏览器；<br>'
@@ -9935,7 +9935,7 @@ const App = {
     box.style.cssText = 'position:fixed;inset:0;background:#fff;z-index:99999;overflow:auto;padding:16px;font:14px/1.7 -apple-system,sans-serif';
     box.innerHTML = '<h3 style="margin-bottom:8px">语音自检</h3>'
       + '<div id="tt-out">点下面的按钮开始（必须点一下，浏览器才允许播放）</div>'
-      + '<button id="tt-go" style="margin-top:14px;padding:12px 22px;border-radius:999px;background:#F07000;color:#fff;font-size:16px">开始测试</button>'
+      + '<button id="tt-go" style="margin-top:14px;padding:12px 22px;border-radius:999px;background:#F07000;color:#fff;font-size:max(calc(16px*var(--fs)),var(--fs-min))">开始测试</button>'
       + '<button id="tt-close" style="margin-left:8px;padding:12px 18px;border-radius:999px;background:#eee">关闭</button>';
     document.body.appendChild(box);
     box.querySelector('#tt-close').onclick = () => box.remove();
@@ -11013,7 +11013,7 @@ const App = {
         + (fillOpen ? '' : ' readonly onclick="App._writingLockedClick(' + mi + ')"')
         + ' autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="done"'
         + ' onfocus="App._writingInputFocus(event)" onblur="App._writingInputBlur(event,' + mi + ',' + bi + ')"'
-        + ' style="border:none;border-bottom:2px solid var(--primary);text-align:center;color:var(--primary);font-weight:600;width:140px;background:transparent;font-size:16px;padding:3px 10px;margin:0 2px;border-radius:10px 10px 0 0">';
+        + ' style="border:none;border-bottom:2px solid var(--primary);text-align:center;color:var(--primary);font-weight:600;width:140px;background:transparent;font-size:max(calc(16px*var(--fs)),var(--fs-min));padding:3px 10px;margin:0 2px;border-radius:10px 10px 0 0">';
     });
     const self = this;
     String(m.template).split(/(\{\{[0-9A-Za-z_-]+\}\})/).forEach(function (seg) {
@@ -11819,7 +11819,7 @@ const App = {
     sents.forEach((s, i) => {
       const bl = (m.blank_list && String(m.blank_list[i] || '').trim()) || '';
       const bc = (m.blank_cn_list && m.blank_cn_list[i]) || '';
-      html += '<div style="margin:6px 0;line-height:1.6;font-size:15px">' + (i + 1) + '. '
+      html += '<div style="margin:6px 0;line-height:1.6;font-size:max(calc(15px*var(--fs)),var(--fs-min))">' + (i + 1) + '. '
            + (bl ? this._escHtml(String(s).replace(new RegExp('\\b' + bl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'i'), '____（' + bl + '）'))
                  : this._escHtml(s))
            + (cn[i] ? '<div class="fs-12 text-sub">' + this._escHtml(cn[i]) + '</div>' : '')
@@ -11892,7 +11892,7 @@ const App = {
     this._saveWritingFill();
     const score = Math.round(correct / total * 100);
     const result = document.getElementById('writing-result-' + mi);
-    result.innerHTML = '<div class="card mt-16" style="background:var(--primary-light)"><div class="card-title">📊 批改结果</div><div class="text-center mb-16"><span style="font-size:36px;font-weight:700;color:' + (score>=80?'var(--success)':score>=60?'var(--warning)':'var(--danger)') + '">' + score + '</span><span class="text-sub">分/100</span></div>' + detail + '<div class="q-explanation show mt-8"><div class="cn">📖 ' + (m.explanation_cn||'') + '</div><div class="en">📘 ' + (m.explanation_en||'') + '</div></div><div class="card mt-16" style="background:var(--success-light)"><div class="card-title fs-12">✅ 完整范文</div><div class="mt-8" style="white-space:pre-line">' + m.full_text + '</div></div><div class="writing-banner mt-16">📝 请背诵这篇作文！明天将进行挖空默写测试</div></div>';
+    result.innerHTML = '<div class="card mt-16" style="background:var(--primary-light)"><div class="card-title">📊 批改结果</div><div class="text-center mb-16"><span style="font-size:max(calc(36px*var(--fs)),var(--fs-min));font-weight:700;color:' + (score>=80?'var(--success)':score>=60?'var(--warning)':'var(--danger)') + '">' + score + '</span><span class="text-sub">分/100</span></div>' + detail + '<div class="q-explanation show mt-8"><div class="cn">📖 ' + (m.explanation_cn||'') + '</div><div class="en">📘 ' + (m.explanation_en||'') + '</div></div><div class="card mt-16" style="background:var(--success-light)"><div class="card-title fs-12">✅ 完整范文</div><div class="mt-8" style="white-space:pre-line">' + m.full_text + '</div></div><div class="writing-banner mt-16">📝 请背诵这篇作文！明天将进行挖空默写测试</div></div>';
 
     // 填对了才放行去朗读 —— 要读的必须是写对的那篇作文。空没填对就先
     // 别往下走，改对了再提交一次，「开始朗读」才会亮。
@@ -12627,7 +12627,7 @@ const App = {
            + ' onclick="App.nextVocabWord(' + step.mi + ',' + dayIdx + ')">下一个单词</button>';
       // 预览里词汇这一屏也锁着：老师想快进就整块跳过（学生看不到这颗键）。
       if (vLocked && this.isTeacher() && this.state.currentTab === 'preview') {
-        html += '<button class="btn-ghost" id="pv-skip-btn" style="font-size:12px;opacity:.75"'
+        html += '<button class="btn-ghost" id="pv-skip-btn" style="font-size:max(calc(12px*var(--fs)),var(--fs-min));opacity:.75"'
              + ' onclick="App.nextStep(true)">跳过本题（老师）</button>';
       }
     } else {
@@ -12666,7 +12666,7 @@ const App = {
       // 但老师不能因此被卡在某一屏翻不下去 —— 给老师一颗**明说的**跳过键，
       // 只出现在「题库预览」里，学生端永远看不到（也不受它影响）。
       if (lockedNow && this.isTeacher() && this.state.currentTab === 'preview') {
-        html += '<button class="btn-ghost" id="pv-skip-btn" style="font-size:12px;opacity:.75"'
+        html += '<button class="btn-ghost" id="pv-skip-btn" style="font-size:max(calc(12px*var(--fs)),var(--fs-min));opacity:.75"'
              + ' onclick="App.nextStep(true)">跳过本题（老师）</button>';
       }
     }
@@ -12970,7 +12970,7 @@ const App = {
       });
       html += '</div>';
       if (!isReading) {
-        html += '<div class="listen-wait" id="qw-' + mi + '-' + qi + '" style="text-align:center;padding:8px;color:var(--text-sub);font-size:12px">⏳ 请先听完整朗读，再选择答案</div>';
+        html += '<div class="listen-wait" id="qw-' + mi + '-' + qi + '" style="text-align:center;padding:8px;color:var(--text-sub);font-size:max(calc(12px*var(--fs)),var(--fs-min))">⏳ 请先听完整朗读，再选择答案</div>';
       }
     } else {
       html += '<input type="text" class="vocab-input" style="width:100%;letter-spacing:1px;border:1.5px solid #FFE0CC;margin-top:8px" id="fill-' + mi + '-' + qi + '" placeholder="填入答案" onkeyup="if(event.key===\'Enter\')App.submitFill(' + mi + ',' + qi + ',' + dayIdx + ')">';
@@ -13394,9 +13394,9 @@ const App = {
       + '<div class="rd-sentence" id="' + sentid + '">' + sentHtml + '</div>'
       + '<div class="rd-live-hint" id="rd-live-' + mi + '-' + qi + '"></div>'
       + '<div class="gate-bar">' + this._gateListenHtml(gid, sentence, '🔊 先听一遍示范') + '</div>'
-      + '<div id="' + stid + '" style="min-height:18px;margin:6px 0;color:var(--text-sub);font-size:14px"></div>'
+      + '<div id="' + stid + '" style="min-height:18px;margin:6px 0;color:var(--text-sub);font-size:max(calc(14px*var(--fs)),var(--fs-min))"></div>'
       + '<button id="' + sid + '" class="speak-btn qr-hold-btn gate-locked" data-gate="' + gid + '" '
-      + 'style="background:var(--primary);margin-top:8px;font-size:18px;padding:18px 32px;'
+      + 'style="background:var(--primary);margin-top:8px;font-size:max(calc(18px*var(--fs)),var(--fs-min));padding:18px 32px;'
       + 'user-select:none;-webkit-user-select:none;touch-action:none;border-radius:24px;min-width:200px">'
       + '🎤 点我读</button>'
       + '<p class="fs-12 text-sub" style="margin-top:8px">先听完上面的示范，再点「点我读」；读到的词会变绿打勾，读完了再点一下就打分。读错的词要读对了才能进下一题。</p>'
@@ -13986,7 +13986,7 @@ const App = {
         + '<div class="gate-bar">' + this._gateListenHtml(wgid, word, '🔊 先听这个词') + '</div>'
         + '<div style="display:flex;gap:8px;justify-content:center;margin-top:8px;flex-wrap:wrap">'
         + '<button class="speak-btn" style="background:var(--primary)" onclick="App._wordRepairHearSentence()">🔊 听整句</button>'
-        + '<button class="speak-btn gate-locked" data-gate="' + wgid + '" id="wrep-btn" style="background:var(--danger);font-size:18px;padding:16px 28px;border-radius:22px;user-select:none;-webkit-user-select:none;touch-action:none">🎤 点我读这个单词</button>'
+        + '<button class="speak-btn gate-locked" data-gate="' + wgid + '" id="wrep-btn" style="background:var(--danger);font-size:max(calc(18px*var(--fs)),var(--fs-min));padding:16px 28px;border-radius:22px;user-select:none;-webkit-user-select:none;touch-action:none">🎤 点我读这个单词</button>'
         + '</div>'
         + '<div id="wrep-hint" class="fs-12 text-sub" style="margin-top:8px;min-height:18px"></div>'
         + '</div>';
@@ -14375,8 +14375,8 @@ const App = {
       btn.innerHTML = '⏳ 正在出分…';
       btn.disabled = true;
       if (statusEl) statusEl.innerHTML =
-        '<div style="font-size:34px;font-weight:700;color:var(--primary);line-height:1.15">…</div>'
-        + '<span style="color:var(--text-sub);font-size:13px">核对中，分数马上到</span>';
+        '<div style="font-size:max(calc(34px*var(--fs)),var(--fs-min));font-weight:700;color:var(--primary);line-height:1.15">…</div>'
+        + '<span style="color:var(--text-sub);font-size:max(calc(13px*var(--fs)),var(--fs-min))">核对中，分数马上到</span>';
       return;
     }
     if (status === 'mistap') {
@@ -14412,9 +14412,9 @@ const App = {
       btn.innerHTML = '✅ 已通过' + (hasScore ? ' ' + score + ' 分' : '');
       btn.disabled = true;
       if (statusEl) statusEl.innerHTML = hasScore
-        ? ('<div style="font-size:34px;font-weight:700;color:var(--success);line-height:1.15">' + score + ' 分</div>'
+        ? ('<div style="font-size:max(calc(34px*var(--fs)),var(--fs-min));font-weight:700;color:var(--success);line-height:1.15">' + score + ' 分</div>'
           + '<span style="color:var(--success);font-weight:600">✅ 每个词都读到了，通过！</span>')
-        : ('<div style="font-size:34px;font-weight:700;color:var(--success);line-height:1.15">✓</div>'
+        : ('<div style="font-size:max(calc(34px*var(--fs)),var(--fs-min));font-weight:700;color:var(--success);line-height:1.15">✓</div>'
           + '<span style="color:var(--success);font-weight:600">✅ 读到了，通过！录音已经存下来</span>');
       return;
     }
@@ -14424,7 +14424,7 @@ const App = {
       btn.disabled = false;
       if (statusEl) {
         const bad = (extra && extra.badWords) || [];
-        let html = '<div style="font-size:34px;font-weight:700;color:var(--danger);line-height:1.15">'
+        let html = '<div style="font-size:max(calc(34px*var(--fs)),var(--fs-min));font-weight:700;color:var(--danger);line-height:1.15">'
                  + score + ' 分</div>'
                  + '<span style="color:var(--danger);font-weight:600">⚠️ 未达 60 分，需要重读</span>';
         if (bad.length) {
@@ -14433,7 +14433,7 @@ const App = {
           }).join('、');
           html += '<div class="rd-retry">带 ✗ 的红词就是没读对的：' + list
                 + '<br>先听一遍示范，再把<b>整句</b>重读一次。'
-                + '<div><button class="speak-btn rd-again-btn" style="font-size:13px;padding:6px 14px" '
+                + '<div><button class="speak-btn rd-again-btn" style="font-size:max(calc(13px*var(--fs)),var(--fs-min));padding:6px 14px" '
                 + 'onclick="App._replayReadSentence(' + mi + ',' + qi + ')">🔊 听一遍示范</button></div></div>';
         } else {
           html += '<div class="rd-retry">把整句再读一次，注意读清楚每个词。</div>';
@@ -15667,7 +15667,7 @@ const App = {
       const ph = this._ckDayPhase(di);
       html += '<th' + (ph === 'today' ? ' class="ck-th-today"' : '') + '>' + d.day_cn
         + (ph === 'today' ? '·今天' : '')
-        + '<br><span style="font-weight:400;font-size:10px;color:var(--text-sub,#888)">' + this.getDayDateLabel(di, 0) + '</span></th>';
+        + '<br><span style="font-weight:400;font-size:max(calc(10px*var(--fs)),var(--fs-min));color:var(--text-sub,#888)">' + this.getDayDateLabel(di, 0) + '</span></th>';
     });
     html += '<th>完成率</th></tr></thead><tbody>';
     rankings.forEach(r => {
