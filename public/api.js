@@ -60,6 +60,10 @@ const Store = {
   // v144：登录表单草稿（手机号 + 备注名）。和"正式凭据"分开存 ——
   // 孩子刚敲了半截手机号也得记住，但那时还不能算登录过。
   DRAFT_KEY: 'amy_login_draft',
+  // v210：本机「登录账号簿」—— 这台设备上**登录成功过**的每一组手机号 +
+  // 备注名（最多 8 组，最近用的排最前）。
+  BOOK_KEY: 'amy_login_book_v2',
+  BOOK_COOKIE: 'amy_login_book',
 
   // The canonical document. Api holds this; App.state is a view onto it.
   _doc: null,
@@ -316,6 +320,75 @@ const Store = {
     try { localStorage.removeItem(this.DRAFT_KEY); } catch (e) {}
     try { sessionStorage.removeItem(this.DRAFT_KEY); } catch (e) {}
     try { document.cookie = this._DRAFT_COOKIE + '=; Max-Age=0; path=/; SameSite=Lax'; } catch (e) {}
+  },
+
+  // ---------------------------------------------------------------------
+  // v210：登录账号簿
+  //
+  // 家长 2026-11-17：「手机号码和备注的名字默认写在上面，只需要点登录就行。
+  // 如果不行，我输 132 的时候系统就检测到我要输 2991，给我一个下拉栏，我
+  // 点一下完整的 13259532991 即可；识别到这个号，备注名也自动出来。」
+  //
+  // 为什么不能只用 DRAFT_KEY：那里只存**一组**（最后一次敲的内容）。这台设备
+  // 上老师自己、家里两个孩子、来串门的同学都会登，谁来谁覆盖，下次全都得重敲。
+  // 账号簿存一串，默认填最近那个，敲半截号码时出下拉，点一下就两栏全填。
+  //
+  // 只记「登录成功过」的号（_markDeviceKnown / login 里写入），所以不会把敲错
+  // 一半的号码记下来。localStorage 被某些手机内核清掉时，cookie 那份还能顶上。
+  // ---------------------------------------------------------------------
+  readLoginBook() {
+    let list = null;
+    try { list = JSON.parse(localStorage.getItem(this.BOOK_KEY) || 'null'); } catch (e) {}
+    if (!Array.isArray(list) || !list.length) {
+      try {
+        const m = document.cookie.match(new RegExp('(?:^|;\\s*)' + this.BOOK_COOKIE + '=([^;]+)'));
+        if (m) list = JSON.parse(decodeURIComponent(m[1]));
+      } catch (e) {}
+    }
+    if (!Array.isArray(list)) return [];
+    return list
+      .filter(e => e && typeof e.phone === 'string' && e.phone.length === 11)
+      .map(e => ({ phone: e.phone, name: String(e.name || ''), ts: Number(e.ts) || 0 }))
+      .sort((a, b) => b.ts - a.ts)
+      .slice(0, 8);
+  },
+
+  writeLoginBook(list) {
+    const arr = Array.isArray(list) ? list.slice(0, 8) : [];
+    try { localStorage.setItem(this.BOOK_KEY, JSON.stringify(arr)); } catch (e) {}
+    try {
+      const v = encodeURIComponent(JSON.stringify(arr));
+      if (v.length < 3500) {
+        document.cookie = this.BOOK_COOKIE + '=' + v +
+          '; Max-Age=31536000; path=/; SameSite=Lax';
+      }
+    } catch (e) {}
+    return arr;
+  },
+
+  // 登录成功后记一笔；同一个号再登一次 = 更新备注名并挪到最前。
+  addToLoginBook(phone, name) {
+    const p = String(phone == null ? '' : phone).trim();
+    const n = String(name == null ? '' : name).trim();
+    if (p.length !== 11) return this.readLoginBook();   // 没填完整不记
+    const list = this.readLoginBook().filter(e => e.phone !== p);
+    list.unshift({ phone: p, name: n, ts: Date.now() });
+    return this.writeLoginBook(list);
+  },
+
+  removeFromLoginBook(phone) {
+    const p = String(phone || '').trim();
+    return this.writeLoginBook(this.readLoginBook().filter(e => e.phone !== p));
+  },
+
+  // 按手机号前缀 / 备注名片段找匹配项，给登录页的下拉栏用。
+  matchLoginBook(q) {
+    const s = String(q || '').trim().toLowerCase();
+    const list = this.readLoginBook();
+    if (!s) return list;
+    return list.filter(e =>
+      e.phone.indexOf(s) >= 0 ||
+      (e.name || '').toLowerCase().indexOf(s) >= 0);
   },
 
   readWords() {
@@ -2021,6 +2094,23 @@ const Api = {
     return Store.writeLoginDraft(phone, name, known);
   },
 
+  // v210：本机登录账号簿（登录页默认填 / 下拉选人用）
+  bookList() {
+    return Store.readLoginBook();
+  },
+
+  bookAdd(phone, name) {
+    return Store.addToLoginBook(phone, name);
+  },
+
+  bookForget(phone) {
+    return Store.removeFromLoginBook(phone);
+  },
+
+  bookMatch(q) {
+    return Store.matchLoginBook(q);
+  },
+
   async resolveSession(phone, name) {
     this.session = {
       phone: phone,
@@ -2039,6 +2129,11 @@ const Api = {
 
   isTeacher() {
     return !!(this.session && this.session.role === 'teacher');
+  },
+
+  // v210：给登录页账号簿打「老师」标签用（纯本地判定，不发请求）
+  isTeacherPhone(phone) {
+    return isTeacherPhone(phone);
   },
 
   // -- assignments --------------------------------------------------------

@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="209">
+<meta name="app-version" content="210">
 <link rel="manifest" href="manifest.json">
 <!-- v135：登录第一步就是调 api.amyeng.top 验手机号。提前把 DNS + TLS
      握手做掉，接口首调能省几百毫秒 —— 手机弱网下这几百毫秒很显眼。 -->
@@ -1740,6 +1740,30 @@ button,.q-option,.gate-listen,.hold-btn,.tap-btn,.speak-btn{
    外面（用 justify-content:center 就会裁）。 */
 .stage-body > .sent-step{flex:0 1 auto;margin-block:auto;
   padding-block:min(2vh,16px)}
+
+/* ===== v210：登录页「本机登录过的账号」下拉 ==============================
+   家长 2026-11-17：「我输 132 的时候，系统就检测到我要输 2991，给我一个下拉
+   栏，我点一下完整的号码就行；识别到这个号，备注名也自动出来。」
+   贴在手机号输入框正下方，点一行 = 手机号 + 备注名一起填好。 */
+.login-book{position:absolute;left:0;right:0;top:100%;margin-top:4px;z-index:3000;
+  background:var(--surface);border:1px solid var(--line);border-radius:12px;
+  box-shadow:0 10px 28px rgba(0,0,0,.14);max-height:46vh;overflow-y:auto;
+  -webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.login-book[hidden]{display:none}
+.login-book-item{display:flex;align-items:center;gap:10px;
+  padding:11px 12px;border-bottom:1px solid var(--line);cursor:pointer;
+  touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.login-book-item:last-child{border-bottom:none}
+.login-book-item:active{background:var(--orange-wash)}
+.lbk-phone{font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;
+  letter-spacing:.4px;font-size:max(calc(15px*var(--fs)),var(--fs-min))}
+.lbk-name{margin-left:auto;color:var(--ink-2);text-align:right;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;max-width:54%;
+  font-size:max(calc(13px*var(--fs)),var(--fs-min))}
+.lbk-tag{flex:none;background:var(--orange-wash);color:var(--orange-press);
+  border-radius:999px;padding:1px 8px;font-size:max(calc(11px*var(--fs)),var(--fs-min))}
+.login-book-empty{padding:10px 12px;color:var(--ink-3);
+  font-size:max(calc(12px*var(--fs)),var(--fs-min))}
 </style>
 </head>
 <body>
@@ -1778,13 +1802,15 @@ button,.q-option,.gate-listen,.hold-btn,.tap-btn,.speak-btn{
     <div class="login-photo" style="margin-bottom:4px"><img src="photo.jpeg?v=65" alt="Amy老师英语打卡" width="56" height="56"></div>
     <h2 style="font-size:max(calc(18px*var(--fs)),var(--fs-min));margin-bottom:2px">Amy老师英语打卡</h2>
     <p class="subtitle" style="font-size:max(calc(12px*var(--fs)),var(--fs-min));margin-bottom:14px">登录打卡，每天进步一点点</p>
-    <div class="form-group" style="margin-bottom:10px">
+    <div class="form-group" style="margin-bottom:10px;position:relative">
       <label style="font-size:max(calc(11px*var(--fs)),var(--fs-min))">手机号</label>
-      <input type="tel" id="login-phone" placeholder="请输入11位手机号" maxlength="11" style="padding:9px 12px;font-size:max(calc(14px*var(--fs)),var(--fs-min))">
+      <input type="tel" id="login-phone" placeholder="请输入11位手机号" maxlength="11" autocomplete="off" enterkeyhint="next" style="padding:9px 12px;font-size:max(calc(14px*var(--fs)),var(--fs-min))">
+      <!-- v210：本机登录过的账号下拉（输入即筛选，点一下就两栏填满） -->
+      <div id="login-book" class="login-book" hidden></div>
     </div>
     <div class="form-group" style="margin-bottom:8px">
       <label style="font-size:max(calc(11px*var(--fs)),var(--fs-min))">备注名（中文名-英文名）</label>
-      <input type="text" id="login-name" placeholder="如：马慧-Amy" oninput="App.checkNameFormat()" style="padding:9px 12px;font-size:max(calc(14px*var(--fs)),var(--fs-min))">
+      <input type="text" id="login-name" placeholder="如：马慧-Amy" autocomplete="off" oninput="App.checkNameFormat()" style="padding:9px 12px;font-size:max(calc(14px*var(--fs)),var(--fs-min))">
       <div id="name-hint" style="font-size:max(calc(10px*var(--fs)),var(--fs-min));margin-top:2px;color:var(--text-sub);white-space:normal;line-height:1.5">格式：中文名(2-4字)-英文名(2-20字母)，如：马慧-Amy</div>
     </div>
     <button class="login-btn" id="login-btn" style="padding:11px;font-size:max(calc(15px*var(--fs)),var(--fs-min));margin-top:4px" onclick="if(window.__appReady){App.login()}else{window.__pendingLogin=true;this.innerHTML='正在加载，马上进入…'}">登录</button>
@@ -1829,6 +1855,34 @@ button,.q-option,.gate-listen,.hold-btn,.tap-btn,.speak-btn{
   if ((!draft || (!draft.phone && !draft.name)) && ok) {
     draft = { phone: creds.phone, name: creds.name, known: true };
   }
+
+  // v210：账号簿（这台设备登录成功过的每一组手机号 + 备注名）。
+  // 首帧就按它回填，页面第一次画出来就是「号码 + 备注名」都在框里的样子。
+  // 规则：
+  //   · 草稿里是**另一个完整的号**（11 位 + 备注名）→ 尊重草稿，那是故意换人登；
+  //   · 其它情况（草稿空着 / 只敲了半截 / 和账号簿里同一个号）→ 用最近用过的那个，
+  //     备注名一并填好，孩子只需点「登录」。
+  var book = null;
+  try { book = JSON.parse(localStorage.getItem('amy_login_book_v2') || 'null'); } catch (e) {}
+  if (!Array.isArray(book) || !book.length) {
+    try {
+      var bm = document.cookie.match(/(?:^|;\s*)amy_login_book=([^;]+)/);
+      if (bm) book = JSON.parse(decodeURIComponent(bm[1]));
+    } catch (e) {}
+  }
+  if (Array.isArray(book) && book.length && book[0] && book[0].phone) {
+    var top = book[0];
+    var draftIsOther = !!(draft && draft.phone && draft.phone.length === 11 &&
+      draft.name && draft.phone !== top.phone);
+    if (!draftIsOther) {
+      draft = {
+        phone: top.phone,
+        name: top.name || (draft && draft.phone === top.phone ? draft.name : '') || '',
+        known: true
+      };
+    }
+  }
+
   window.__bootDraft = (draft && (draft.phone || draft.name)) ? draft : null;
 
   // 回填输入框 —— 在解析期做，页面第一次画出来就是填好的，不闪。
@@ -1959,9 +2013,9 @@ button,.q-option,.gate-listen,.hold-btn,.tap-btn,.speak-btn{
 </div>
 
 <script>window.__appReady = false;</script>
-<script defer src="cloud.js?v=209"></script>
-<script defer src="data.js?v=209"></script>
-<script defer src="data-shuffle.js?v=209"></script>
+<script defer src="cloud.js?v=210"></script>
+<script defer src="data.js?v=210"></script>
+<script defer src="data-shuffle.js?v=210"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
 <!--
   ?v= 必须跟着版本号走（v124 修正）。
@@ -1971,13 +2025,13 @@ button,.q-option,.gate-listen,.hold-btn,.tap-btn,.speak-btn{
   这个坑很隐蔽：代码明明改了、也部署上去了，手机上跑的还是几个月前的逻辑。
   以后每次发版，这里跟着 app-version 一起改。
 -->
-<script defer src="recorder.js?v=209"></script>
-<script defer src="api.js?v=209"></script>
+<script defer src="recorder.js?v=210"></script>
+<script defer src="api.js?v=210"></script>
 <!-- v194：小游戏独立成文件，不塞进已经 800KB 的 app.js。必须排在 app.js
      **前面**：app.js 顶层有同步初始化，登录回来若正好停在「单词乐园」，
      渲染时 WordGame 得已经存在。game.js 只在被点击/渲染时才读 window.App。 -->
-<script defer src="game.js?v=209"></script>
-<script defer src="app.js?v=209"></script>
+<script defer src="game.js?v=210"></script>
+<script defer src="app.js?v=210"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {

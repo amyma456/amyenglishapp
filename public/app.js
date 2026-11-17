@@ -154,8 +154,7 @@ const App = {
       // 只有"本机登录过的那个号"才算老设备；改了号就重新走核对（v132 红线）。
       self._loginDraftKnown = !!(d && d.known && d.phone && d.phone === p);
       self._draftPhone = p;
-      const hint = document.getElementById('login-remember-hint');
-      if (hint) hint.style.display = (p.length >= 11 && n) ? 'block' : 'none';
+      self._refreshLoginHint();
       if (typeof Api.writeLoginDraft !== 'function') return;
       try { Api.writeLoginDraft(p, n, self._loginDraftKnown); } catch (e) {}
     };
@@ -170,11 +169,151 @@ const App = {
       if (document.visibilityState === 'hidden') save();
     });
 
+    // v210：账号簿（默认填好 + 打字出下拉 + 备注名自动跟）
+    this._initLoginBook(phoneEl, nameEl, save);
+
     // 填好了就明说一句，孩子不用猜"是不是还要再输一遍"
+    this._refreshLoginHint();
+  },
+
+  /* ===== v210：登录页「账号簿」交互 ======================================
+     家长 2026-11-17 的原话拆成三条：
+       ① 最好「手机号码和备注的名字默认写在上面，只需要点登录」；
+       ② 做不到就「我输 132 的时候给我一个下拉栏，点一下完整的 13259532991」；
+       ③ 「识别到是 2991 这个号，备注名也要自动出来，不用再单另输一遍」。
+
+     ①在首帧脚本里做（页面画出来就是填好的），这里补三件事：
+       · 点/敲手机号 → 出本机登录过的号（按输入内容筛）；
+       · 点一行 → 手机号和备注名一起填满；
+       · 手机号敲满 11 位、正好是本机登录过的号 → 备注名自动补上。
+     只覆盖"空着的"或"上次由我们自动填的"备注名，家长手动改过的绝不抢。 */
+  _initLoginBook(phoneEl, nameEl, save) {
+    const box = document.getElementById('login-book');
+    if (!box || this._bookWired) return;
+    this._bookWired = true;
+    const self = this;
+    let autoName = '';        // 上一次由我们自动填进备注名的值
+    let autoNamePhone = '';   // 这个备注名是"哪个手机号"带出来的
+
+    const esc = function (s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    };
+    const book = function () {
+      try { return (typeof Api.bookList === 'function') ? Api.bookList() : []; } catch (e) { return []; }
+    };
+    const hide = function () { box.hidden = true; box.innerHTML = ''; self._bookRows = null; };
+
+    // 选中一行：手机号 + 备注名一次性填好，并把它记成这台设备的"最近使用"
+    const pick = function (entry) {
+      phoneEl.value = entry.phone;
+      nameEl.value = entry.name || '';
+      autoName = entry.name || '';
+      autoNamePhone = entry.phone;
+      try { self.checkNameFormat(); } catch (e) {}
+      self._loginDraftKnown = !!(entry.known !== false);
+      self._draftPhone = entry.phone;
+      if (typeof Api.writeLoginDraft === 'function') {
+        try { Api.writeLoginDraft(entry.phone, entry.name || '', true); } catch (e) {}
+      }
+      // 选过 = 最近用过，挪到账号簿最前面（下次开页面默认就是它）
+      try { if (typeof Api.bookAdd === 'function') Api.bookAdd(entry.phone, entry.name || ''); } catch (e) {}
+      if (typeof save === 'function') { try { save(); } catch (e) {} }
+      hide();
+      self._refreshLoginHint();
+      try { phoneEl.blur(); } catch (e) {}
+    };
+
+    const render = function (q) {
+      const list = q
+        ? ((typeof Api.bookMatch === 'function') ? Api.bookMatch(q) : book())
+        : book();
+      if (!list.length) { hide(); return; }
+      self._bookRows = list;
+      box.innerHTML = list.map(function (e, i) {
+        const isT = (typeof Api.isTeacherPhone === 'function') ? Api.isTeacherPhone(e.phone) : false;
+        return '<div class="login-book-item" data-i="' + i + '">' +
+          '<span class="lbk-phone">' + esc(e.phone) + '</span>' +
+          (isT ? '<span class="lbk-tag">老师</span>' : '') +
+          '<span class="lbk-name">' + esc(e.name || '') + '</span>' +
+          '</div>';
+      }).join('');
+      box.hidden = false;
+    };
+
+    // 手指按下就选，不等 click —— 输入框先 blur 再 click 的话，下拉已经收起来了
+    box.addEventListener('pointerdown', function (ev) {
+      const row = ev.target && ev.target.closest ? ev.target.closest('.login-book-item') : null;
+      if (!row) return;
+      ev.preventDefault();
+      const e = (self._bookRows || [])[Number(row.getAttribute('data-i'))];
+      if (e) pick(e);
+    });
+
+    // 点一下手机号就列出本机登录过的号（含已填满的那个）—— 想换人登时不用
+    // 先把号码删掉再敲，直接点另一个。
+    phoneEl.addEventListener('focus', function () { render(''); });
+    // 首帧脚本已经把「最近的号 + 备注名」填进框里了，这里要认出"这个名字
+    // 是系统填的"，否则家长改号码时它不会被清掉，就成了错配。
+    (function () {
+      const p0 = phoneEl.value.trim();
+      const n0 = nameEl.value.trim();
+      if (p0.length === 11 && n0) {
+        const hit = book().filter(function (e) { return e.phone === p0; })[0];
+        if (hit && (hit.name || '') === n0) { autoName = n0; autoNamePhone = p0; }
+      }
+    })();
+    phoneEl.addEventListener('input', function () {
+      const p = phoneEl.value.trim();
+      // 一改号码，之前自动带出来的备注名就不再属于这个号了 —— 必须清掉。
+      // 否则会出现"手机号是 A 的、备注名还是 B 的"这种错配，家长点一下登录
+      // 就把 B 的名字注册到 A 的号上（这是 v210 特意堵的坑）。
+      if (autoName && autoNamePhone && autoNamePhone !== p && nameEl.value.trim() === autoName) {
+        nameEl.value = '';
+        autoName = '';
+        autoNamePhone = '';
+        try { self.checkNameFormat(); } catch (e) {}
+        if (typeof save === 'function') { try { save(); } catch (e) {} }
+      }
+      // 敲满 11 位正好是本机的号 → 备注名自动跟上（家长最烦的就是再输一遍名字）
+      const hit = book().filter(function (e) { return e.phone === p; })[0];
+      if (hit) {
+        const cur = nameEl.value.trim();
+        if (!cur || cur === autoName) {
+          if (cur !== (hit.name || '')) {
+            nameEl.value = hit.name || '';
+            autoName = hit.name || '';
+            autoNamePhone = p;
+            try { self.checkNameFormat(); } catch (e) {}
+            if (typeof save === 'function') { try { save(); } catch (e) {} }
+          } else {
+            autoNamePhone = p;
+          }
+        }
+      }
+      if (p.length >= 11) hide(); else render(p);
+    });
+    phoneEl.addEventListener('blur', function () { setTimeout(hide, 150); });
+    // 点别处收起
+    document.addEventListener('pointerdown', function (ev) {
+      if (box.hidden) return;
+      if (ev.target === phoneEl || (box.contains && box.contains(ev.target))) return;
+      hide();
+    }, true);
+  },
+
+  // 两栏都填好时给一句明确的话，并把内容说清楚（"直接点登录"）
+  _refreshLoginHint() {
     const hint = document.getElementById('login-remember-hint');
-    if (hint) {
-      hint.style.display = (phoneEl.value.trim().length >= 11 && nameEl.value.trim()) ? 'block' : 'none';
-    }
+    const pEl = document.getElementById('login-phone');
+    const nEl = document.getElementById('login-name');
+    if (!hint || !pEl || !nEl) return;
+    const p = pEl.value.trim();
+    const n = nEl.value.trim();
+    const ready = p.length >= 11 && !!n;
+    hint.style.display = ready ? 'block' : 'none';
+    if (ready) hint.textContent = '✅ 已填好 ' + p + ' · ' + n + '，直接点「登录」';
   },
 
   // v143：同步版数据装载。localStorage 是同步的，没有理由 await ——
@@ -1187,6 +1326,8 @@ const App = {
         this.state.className = '';
         this.showApp();
         restoreBtn();
+        // v210：老师号也进账号簿，下次开登录页两栏都是填好的
+        try { if (typeof Api.bookAdd === 'function') Api.bookAdd(phone, name); } catch (e) {}
       } else {
         this.state.role = 'user';
         this.registerStudent(phone, name, knownDevice);
@@ -1285,6 +1426,9 @@ const App = {
   // 注意这里**不**写云端名单、不 syncToCloud —— 那属于 _commitStudent，
   // 要等核对通过才做（v132 的红线）。
   _enterAsStudent(phone, name) {
+    // v210：这一组「手机号 + 备注名」记进本机账号簿 —— 下次开登录页默认就填它，
+    // 不用再敲。放在最前面，后面任何一步出错都不影响"下次不用重输"。
+    try { if (typeof Api.bookAdd === 'function') Api.bookAdd(phone, name); } catch (e) {}
     this.state.parentStudents = this.state.parentStudents || {};
     this.state.parentStudents[phone] = { name: name, class: '', approved: false };
 
@@ -1336,6 +1480,8 @@ const App = {
   _markDeviceKnown(phone, name) {
     try {
       if (typeof Api.writeLoginDraft === 'function') Api.writeLoginDraft(phone, name, true);
+      // v210：核对通过的号才进账号簿（敲错一半的号不会被记下来）
+      if (typeof Api.bookAdd === 'function') Api.bookAdd(phone, name);
       this._loginDraftKnown = true;
       this._draftPhone = phone;
     } catch (e) {}
@@ -1655,20 +1801,28 @@ const App = {
     this.state.removedStatus = null;
     // v144：退出登录**不清空**输入框 —— 草稿还在，返回登录页时手机号和
     // 姓名已经填好，孩子点一下「登录」就能回去（家长 2026-10-19）。
+    // v210：优先按「账号簿里最近用过的那个」填（草稿可能停在一半），
+    // 没有账号簿才退回草稿。
     try {
-      const d = (typeof Api.readLoginDraft === 'function') ? Api.readLoginDraft() : null;
       const pEl = document.getElementById('login-phone');
       const nEl = document.getElementById('login-name');
-      if (d) {
-        if (pEl) pEl.value = d.phone || '';
-        if (nEl) nEl.value = d.name || '';
-        this._draftPhone = d.phone || '';
-        this._loginDraftKnown = !!d.known;
+      const bk = (typeof Api.bookList === 'function') ? Api.bookList() : [];
+      const top = bk && bk[0];
+      if (top && top.phone) {
+        if (pEl) pEl.value = top.phone;
+        if (nEl) nEl.value = top.name || '';
+        this._draftPhone = top.phone;
+        this._loginDraftKnown = true;
+      } else {
+        const d = (typeof Api.readLoginDraft === 'function') ? Api.readLoginDraft() : null;
+        if (d) {
+          if (pEl) pEl.value = d.phone || '';
+          if (nEl) nEl.value = d.name || '';
+          this._draftPhone = d.phone || '';
+          this._loginDraftKnown = !!d.known;
+        }
       }
-      const hint = document.getElementById('login-remember-hint');
-      if (hint && pEl && nEl) {
-        hint.style.display = (pEl.value.trim().length >= 11 && nEl.value.trim()) ? 'block' : 'none';
-      }
+      this._refreshLoginHint();
     } catch (e) {}
     this.state.currentTab = 'weekly';
     this.state.audioEnabled = false;
