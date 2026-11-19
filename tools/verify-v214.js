@@ -94,7 +94,10 @@ section('3. 真跑：开录 / 结束 / 兜底三条路径');
   };
   let obj = null;
   try {
-    obj = vm.runInNewContext('({' + helperSrc + '})', { document: doc });
+    // v216：_pinReadEndBtn / _unpinAllReadBtns 现在会顺手收统一录音浮条。
+    // 这段只截了 helper 本身，补一个桩让三条老路径照样能真跑。
+    const stub = '\n  _recDockHide: function () {},\n';
+    obj = vm.runInNewContext('({' + helperSrc + stub + '})', { document: doc });
   } catch (e) {
     ok(false, 'helper 可被解析执行', e.message);
   }
@@ -144,14 +147,21 @@ section('4. 字号分层：大字继续放大，小字回落');
   ok(/:root\{[\s\S]*?--fs-sm:1\.06/.test(htmlSrc), '令牌定义在 :root，老师/学生端同时生效');
 }
 
-section('5. 版本钉子 = 214');
+section('5. 版本钉子四处一致（随发版滚动，不再写死 214）');
 {
-  ok(/name="app-version" content="214"/.test(htmlSrc), 'index.html app-version = 214');
-  ok((htmlSrc.match(/\?v=214/g) || []).length === 7,
-    'index.html 7 处 ?v=214', (htmlSrc.match(/\?v=214/g) || []).length);
-  ok((htmlSrc.match(/\?v=213/g) || []).length === 0, 'index.html 无残留 ?v=213');
-  ok(/var CACHE_NAME = 'amy-english-v214';/.test(swSrc), 'sw.js CACHE_NAME = v214');
-  ok(/var V = 214;/.test(swSrc), 'sw.js V = 214');
+  // v216 起改成「一致性」而不是「等于某个数字」：以后每次升版本，这套
+  // 校验都该继续通过，而不是把上一次的版本号当圣旨。
+  const mv = htmlSrc.match(/name="app-version" content="(\d+)"/);
+  const ver = mv ? mv[1] : '';
+  ok(!!ver, 'index.html 有 app-version', ver);
+  const hits = (htmlSrc.match(new RegExp('\\?v=' + ver + '(?![0-9])', 'g')) || []).length;
+  ok(hits === 7, 'index.html 7 处 ?v=' + ver, hits);
+  // 只看脚本资源：图片/图标也带 ?v= 做缓存 bust（如 ?v=65），那不是版本钉子。
+  const stale = (htmlSrc.match(/\.js\?v=\d+/g) || []).filter(function (x) { return x !== '.js?v=' + ver; });
+  ok(stale.length === 0, 'index.html 没有旧版本脚本 ?v= 残留', stale.join(','));
+  ok(swSrc.indexOf("var CACHE_NAME = 'amy-english-v" + ver + "';") >= 0,
+    'sw.js CACHE_NAME = v' + ver);
+  ok(swSrc.indexOf('var V = ' + ver + ';') >= 0, 'sw.js V = ' + ver);
 }
 
 console.log('\n结果: ' + pass + ' 通过, ' + fail + ' 失败');

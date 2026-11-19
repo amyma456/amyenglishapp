@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="214">
+<meta name="app-version" content="216">
 <link rel="manifest" href="manifest.json">
 <!-- v135：登录第一步就是调 api.amyeng.top 验手机号。提前把 DNS + TLS
      握手做掉，接口首调能省几百毫秒 —— 手机弱网下这几百毫秒很显眼。 -->
@@ -891,10 +891,17 @@ body.wf-typing .writing-banner{display:none}
 .speak-record{background:var(--danger-light);border-radius:var(--radius-sm);padding:10px;margin-top:10px;display:none}
 .speak-record.show{display:block}
 .speak-score{font-size:max(calc(28px*var(--fs)),var(--fs-min));font-weight:700;margin:4px 0}
-/* v211 录音模式：整句跟读一开始，卡片上其他内容全部让位 —— 屏幕上只剩
-   「要读的句子 + 录音按钮」，句子不用找、按钮不用划，读完自动恢复。 */
-.speaking-card.is-recording>*{display:none}
-.speaking-card.is-recording>[id^="sp-read-"]{display:block}
+/* v211 → v216 修正：录音模式原本是一条 `>*{display:none}`，把题干、中文
+   意思、短语提示**一起藏了**，只留跟读面板。家长 2026-11-19 晚：「看见按钮
+   的时候字又划不动，导致读的时候不知道文本」。现在只收起选项（防误点答案）、
+   进度/提示/重新听这些干扰项，题干、中文、短语、跟读面板全部留在屏幕上。
+   配合 v216 的录音浮条，舞台临时可滚，长句也读得到、划得动。 */
+.speaking-card.is-recording > div:first-child,
+.speaking-card.is-recording > .vocab-progress,
+.speaking-card.is-recording > .speak-btn.play,
+.speaking-card.is-recording > .speak-options,
+.speaking-card.is-recording > .listen-wait,
+.speaking-card.is-recording > .speak-tip{display:none}
 .speaking-card.is-recording .speak-record{margin-top:0}
 
 /* ===== v214：录音中的「结束」按钮固定吸底 ===============================
@@ -930,6 +937,52 @@ body.wf-typing .writing-banner{display:none}
 body.rd-end-on .stage-body{padding-bottom:78px}
 body.rd-end-on .rd-sentence.rd-rec{max-height:38vh;overflow-y:auto;
   overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+
+/* ===== v216：统一录音控制条 =============================================
+   家长 2026-11-19 晚：「第 15 题点了正在录音就看不到按钮，或者看见按钮时
+   字又划不动……点停止也不能停止，类似这种情况很多」。
+   根因是三件事叠在一起，跟某一道题无关：
+     ① 舞台一屏不滚（body.stage-mode / .stage-body{overflow:hidden}），长句
+        加一堆说明把「结束」顶出可视区；v214 的 .rd-end-pin 只盖了 3 个入口，
+        其余「点一下开始、再点一下结束」的屏完全没有吸底；
+     ② 上面那条 is-recording 把题干和中文一起藏了；
+     ③ 结束只能点原按钮，而原按钮可能已被裁掉、或被祖先 display:none 吃掉
+        （position:fixed 也救不了 display:none 的祖先）。
+   所以不修某一颗按钮：录音一开始就挂一个**脱离所有容器的顶层浮条**，
+   z-index 2000、pointer-events 只在按钮上，点它一定停；同时舞台临时允许
+   滚动，孩子边读边看得到整句文本。所有录音入口共用这一套，不再逐个打补丁。 */
+.rec-dock{position:fixed;left:0;right:0;bottom:0;z-index:2000;display:none;
+  padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));
+  background:linear-gradient(180deg,rgba(255,255,255,0) 0%,rgba(255,255,255,.94) 42%,#fff 100%);
+  pointer-events:none}
+body.rec-dock-on .rec-dock{display:block}
+.rec-dock-in{max-width:430px;margin:0 auto;display:flex;align-items:center;gap:10px;
+  background:#fff;border:1px solid var(--line);border-radius:999px;padding:7px 8px 7px 14px;
+  box-shadow:0 8px 28px rgba(0,0,0,.22);pointer-events:none}
+.rec-dock-label{flex:0 0 auto;white-space:nowrap;color:var(--danger);font-weight:700;
+  font-size:max(calc(13px*var(--fs-sm)),var(--fs-sm-min))}
+.rec-dock-stop{flex:1 1 auto;min-height:50px;border:0;border-radius:999px;
+  background:var(--danger);color:#fff;font-weight:700;
+  font-size:max(calc(17px*var(--fs)),var(--fs-min));
+  pointer-events:auto;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.rec-dock-stop:active{transform:scale(.98);filter:brightness(.94)}
+/* 录音时舞台内容整体可滚：长句、题干、中文、短语、结果卡片都不会再被裁掉。
+   原来只有「句子自己滚」一层，外面的提示/按钮仍被 overflow:hidden 吃掉。 */
+body.rec-dock-on .stage-body{overflow-y:auto!important;
+  overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+  padding-bottom:100px!important}
+body.rec-dock-on .stage-body > .module-card,
+body.rec-dock-on .stage-body > .stage-q,
+body.rec-dock-on .stage-body > .sent-step,
+body.rec-dock-on .stage-body > .passage-full{overflow:visible!important}
+/* 舞台能滚之后，句子就别再自己滚了 —— 两层滚动嵌套会把上下滑的手势吞掉
+   （家长说的「字划不动」）。sticky 保留，边读边看，句子始终在眼前。 */
+body.rec-dock-on .rd-sentence.rd-rec{max-height:none;overflow:visible;
+  position:sticky;top:0;z-index:40;background:var(--card)}
+/* 浮条接管之后，v214 那颗 fixed 吸底按钮就别再出现了 —— 否则屏幕底部
+   会叠着两颗「读完点我结束」，孩子不知道该点哪一个。 */
+body.rec-dock-on .rd-end-pin{display:none!important}
+
 .speak-words{font-size:max(calc(12px*var(--fs-sm)),var(--fs-sm-min));color:var(--text-sub);margin-top:8px}
 .voice-select{display:flex;gap:8px;justify-content:center;margin-bottom:12px}
 .voice-select button{padding:6px 14px;border-radius:16px;background:var(--bg);font-size:max(calc(12px*var(--fs-sm)),var(--fs-sm-min));color:var(--text-sub)}
@@ -2109,9 +2162,9 @@ button,.q-option,.gate-listen,.hold-btn,.tap-btn,.speak-btn{
 </div>
 
 <script>window.__appReady = false;</script>
-<script defer src="cloud.js?v=214"></script>
-<script defer src="data.js?v=214"></script>
-<script defer src="data-shuffle.js?v=214"></script>
+<script defer src="cloud.js?v=216"></script>
+<script defer src="data.js?v=216"></script>
+<script defer src="data-shuffle.js?v=216"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
 <!--
   ?v= 必须跟着版本号走（v124 修正）。
@@ -2121,13 +2174,13 @@ button,.q-option,.gate-listen,.hold-btn,.tap-btn,.speak-btn{
   这个坑很隐蔽：代码明明改了、也部署上去了，手机上跑的还是几个月前的逻辑。
   以后每次发版，这里跟着 app-version 一起改。
 -->
-<script defer src="recorder.js?v=214"></script>
-<script defer src="api.js?v=214"></script>
+<script defer src="recorder.js?v=216"></script>
+<script defer src="api.js?v=216"></script>
 <!-- v194：小游戏独立成文件，不塞进已经 800KB 的 app.js。必须排在 app.js
      **前面**：app.js 顶层有同步初始化，登录回来若正好停在「单词乐园」，
      渲染时 WordGame 得已经存在。game.js 只在被点击/渲染时才读 window.App。 -->
-<script defer src="game.js?v=214"></script>
-<script defer src="app.js?v=214"></script>
+<script defer src="game.js?v=216"></script>
+<script defer src="app.js?v=216"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {
@@ -2311,5 +2364,12 @@ function triggerPWAInstall() {
   document.addEventListener('touchend', function() { guard = false; });
 })();
 </script>
+<!-- v216 统一录音控制条：任何录音入口都挂它，点一下必定结束 -->
+<div id="rec-dock" class="rec-dock" aria-hidden="true">
+  <div class="rec-dock-in">
+    <span id="rec-dock-label" class="rec-dock-label">🔴 录音中</span>
+    <button id="rec-dock-stop" class="rec-dock-stop" type="button">读完点我结束</button>
+  </div>
+</div>
 </body>
 </html>

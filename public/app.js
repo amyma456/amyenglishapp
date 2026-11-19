@@ -7124,11 +7124,13 @@ const App = {
     // 20 秒兜底：问句 + 答句比单句长，防止忘了点停止麦克风一直开着。
     this._spReadTimer = setTimeout(() => this._spReadEnd(mi, qi, dayIdx), 20000);
     this._spReadUI(mi, qi, dayIdx, 'recording');
+    this._recDockShow(() => this._spReadEnd(mi, qi, dayIdx));
   },
 
   // 第二次点击（或 20 秒兜底）就到这里：停识别、停录音，出分。
   // A 路手机自带识别优先（能逐词实时高亮），拿不到再走 B 路 whisper。
   _spReadEnd(mi, qi, dayIdx) {
+    this._recDockHide();
     const ctx = this._spReadActive;
     clearTimeout(this._spReadTimer);
     if (!ctx || ctx._ended) return;
@@ -10894,6 +10896,13 @@ const App = {
     // 读完的录音被当成「读过了」。
     if (this._holdKey) {
       if (ev && ev.preventDefault) ev.preventDefault();
+      // v216：隔了一秒以上的「第二次按下」不是双击，是孩子想停却点偏了
+      // （按钮被裁出屏幕 / 手指落在了旁边）。这时候直接收尾，别把人锁在
+      // 录音里。真正 300~500ms 的连点仍然按 v208 的防双击作废处理。
+      if (this._holdStartedAt && Date.now() - this._holdStartedAt > 1000) {
+        this._holdEnd(ev);
+        return;
+      }
       this._dupGestureAt = Date.now();
       this._holdAttemptBad = true;
       return;
@@ -10928,6 +10937,11 @@ const App = {
     var self = this;
     Api.warmup();                              // 手指按下就把连接热好
     this._holdKey = key;
+    // v216：这一层覆盖了点一下说中文、翻译句、写作句、复习词等所有入口。
+    // tap-toggle 的孩子靠它结束；按住模式松手照旧结束，浮条只是多一层保险。
+    this._recDockShow(function () { self._holdEnd(); },
+      tapToggle ? '🔴 录音中' : '🔴 正在听你说',
+      tapToggle ? '读完点我结束' : '松手即可结束');
     this._holdDone = onDone;
     this._holdNeedsTranscript = needsTranscript !== false;
     this._holdFast = lang !== 'zh';
@@ -10963,6 +10977,7 @@ const App = {
     if (!Recorder.supported()) {
       setStatus('<div class="tap-result bad">此浏览器不支持录音</div>');
       this._holdKey = null;
+      this._recDockHide();
       return;
     }
 
@@ -10991,6 +11006,7 @@ const App = {
       .catch(function() {
         setStatus('<div class="tap-result bad">无法访问麦克风，请允许权限</div>');
         self._holdKey = null;
+        self._recDockHide();
         // v171：录音根本没开成 —— 把刚才遮起来的译文/结果放回来。
         if (self._trRestore) self._trRestore();
       });
@@ -11014,6 +11030,7 @@ const App = {
   HOLD_MAX_MS: 9000,
 
   async _holdEnd(ev) {
+    this._recDockHide();
     if (ev && ev.preventDefault) ev.preventDefault();
     var key = this._holdKey, onDone = this._holdDone, statusEl = this._holdStatusEl;
     var needs = this._holdNeedsTranscript;
@@ -12612,6 +12629,11 @@ const App = {
   // The fixed, non-scrolling stage. Only the passage box scrolls internally
   // so a long reading text stays reachable without the page moving.
   renderStage(dayIdx) {
+    // v216：换题/重渲染时不许把上一题的录音浮条带过去；但**录音还在进行**
+    // 时的重渲染不能把浮条收掉，否则孩子又找不到「结束」了。
+    var busy = !!this._holdKey || !!this._holdReadActive || !!this._spReadActive
+      || !!(this._wordRepair && this._wordRepair.rec);
+    if (!busy) this._recDockHide();
     const day = HOMEWORK_DATA[dayIdx];
     const steps = this._buildSteps(dayIdx);
     if (steps.length === 0) return '<div class="card text-center text-sub">今天没有作业</div>';
@@ -13806,6 +13828,39 @@ const App = {
   // v214：录音中的「结束」按钮固定吸底（CSS 见 index.html .rd-end-pin）。
   // 长句子把跟读面板撑出舞台可视区时，按钮仍钉在屏幕底部，孩子读完随时
   // 能点，不用被动等 15~20 秒看门狗自动结算。on=true 只在真正开录时给。
+  // ===== v216：统一录音控制条 =============================================
+  //
+  // 所有录音入口（口语整句跟读、阅读理解/选择/填空跟读、错词重读、按住说
+  // 中文、翻译句、写作句、复习词……）共用这一颗「读完点我结束」。它挂在
+  // body 顶层、position:fixed、z-index 2000，不受任何祖先的 display:none /
+  // overflow:hidden 影响，也不依赖原按钮还在不在屏幕里。
+  // 点它直接调当前录音的结束函数，绕开"按钮被裁掉 / 双击被当误触"两条死路。
+  _recDockShow(stopFn, label, btnLabel) {
+    this._recDockStop = (typeof stopFn === 'function') ? stopFn : null;
+    var lab = document.getElementById('rec-dock-label');
+    var btn = document.getElementById('rec-dock-stop');
+    if (lab) lab.textContent = label || '🔴 录音中';
+    if (btn) btn.textContent = btnLabel || '读完点我结束';
+    document.body.classList.add('rec-dock-on');
+    clearTimeout(this._recDockTimer);
+    var self = this;
+    // 最后一道兜底：切页 / 崩溃 / 录音卡死，浮条都不许赖在屏幕上。
+    this._recDockTimer = setTimeout(function () { self._recDockHide(); }, 130000);
+  },
+  _recDockHide() {
+    clearTimeout(this._recDockTimer);
+    this._recDockTimer = null;
+    this._recDockStop = null;
+    document.body.classList.remove('rec-dock-on');
+  },
+  _recDockTap(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    var fn = this._recDockStop;
+    this._recDockHide();            // 先收，结束函数里再收一次也无害
+    if (!fn) return;
+    try { fn(); } catch (err) { console.warn('rec dock stop failed', err); }
+  },
+
   _pinReadEndBtn(btn, on) {
     if (!btn) return;
     if (on) {
@@ -13814,6 +13869,7 @@ const App = {
     } else {
       btn.classList.remove('rd-end-pin');
       document.body.classList.remove('rd-end-on');
+      this._recDockHide();
     }
   },
 
@@ -13822,12 +13878,14 @@ const App = {
     var pins = document.querySelectorAll('.rd-end-pin');
     for (var i = 0; i < pins.length; i++) pins[i].classList.remove('rd-end-pin');
     document.body.classList.remove('rd-end-on');
+    this._recDockHide();
   },
 
   _exitRecordingMode(mi) {
     const card = document.getElementById('sp-card-' + mi);
     if (card) card.classList.remove('is-recording');
     this._unpinAllReadBtns();
+    this._recDockHide();
   },
 
   _clearReadMarks(mi, qi) {
@@ -14254,12 +14312,14 @@ const App = {
     const hint = document.getElementById('wrep-hint');
     if (btn) btn.innerHTML = '🔴 录音中 · 读完点我结束';
     this._pinReadEndBtn(btn, true);
+    this._recDockShow(() => this._wordRepairStop());
     if (hint) hint.textContent = '';
     clearTimeout(R.capTimer);
     R.capTimer = setTimeout(() => this._wordRepairStop(), 6000);
   },
 
   _wordRepairStop() {
+    this._recDockHide();
     const R = this._wordRepair;
     if (!R || !R.rec) return;
     R.rec = false;
@@ -14491,9 +14551,11 @@ const App = {
     // 防止孩子忘了点停止、麦克风一直开着。
     this._holdReadTimer = setTimeout(() => this._holdReadEnd(mi, qi, dayIdx), 15000);
     this._setHoldReadUI(mi, qi, 'recording', null, false);
+    this._recDockShow(() => this._holdReadEnd(mi, qi, dayIdx));
   },
 
   _holdReadEnd(mi, qi, dayIdx) {
+    this._recDockHide();
     const ctx = this._holdReadActive;
     clearTimeout(this._holdReadTimer);
     if (!ctx || ctx._ended) return;
@@ -16361,6 +16423,18 @@ if (typeof window !== 'undefined') {
   try { if (typeof WordHelp !== 'undefined') window.WordHelp = WordHelp; } catch (e) {}
   try { if (typeof HOMEWORK_DATA !== 'undefined') window.HOMEWORK_DATA = HOMEWORK_DATA; } catch (e) {}
 }
+
+// v216：统一录音控制条 —— 一次绑定，所有录音入口共用。
+// touchstart 上 preventDefault 挡住手机补发的 mousedown/click，click 留作
+// 老内核兜底；_recDockTap 自己先收回调，重复触发也只会停一次。
+(function () {
+  var stop = document.getElementById('rec-dock-stop');
+  if (!stop) return;
+  var tap = function (e) { if (e && e.preventDefault) e.preventDefault(); App._recDockTap(e); };
+  stop.addEventListener('touchstart', tap, { passive: false });
+  stop.addEventListener('mousedown', tap);
+  stop.addEventListener('click', tap);
+})();
 
 // Init
 App.init();
