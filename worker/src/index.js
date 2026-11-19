@@ -1087,44 +1087,107 @@ const AZURE_STT_URL = function (region) {
 };
 const AZURE_ASR_TIMEOUT_MS = 1900;
 
-async function azureTranscribe(bytes, env, mode, bias) {
+// v215 · 首发路径给得宽松一点。
+//
+// 实测（tools/probe-azure-pa2.js，本机 → eastus，真实人声）：冷连接 2.6s，
+// 预热后 4/7/9 词的句子都是 0.9~1.0s；10 路并发最慢的一路 2.5s。
+// 1900ms 会把冷启动那一下误杀成"没结果"，所以在首发路径上放到 2600ms ——
+// 它只是上限，正常请求 0.9s 就回来了，到点没回来还有阿里云/CF 在旁边兜着。
+const AZURE_PA_TIMEOUT_MS = 2600;
+
+/**
+ * 微软语音识别。opts.pa = true 时带上「发音评估」请求头，一次调用同时拿到
+ * 转写文本 + 微软官方的发音准确度分（0~100）+ 每个词的分数与错误类型。
+ *
+ * 这是 v215 提速的关键：以前这孩子读完要等阿里云 3.2s（实测经常直接超时，
+ * 重试再 3.2s = 6.4s），而 Azure 这条 0.9s 就带着分数回来了 —— 只是它以前
+ * 只被当成兜底，最快的那条路只在最慢的时候才用。
+ */
+async function azureTranscribe(bytes, env, mode, bias, opts) {
   const key = (env && env.AZURE_TTS_KEY) || '';
   const region = (env && env.AZURE_TTS_REGION) || '';
   if (!key || !region) throw new Error('azure_key_missing');
   const locale = mode === 'zh' ? 'zh-CN' : 'en-US';
   const url = AZURE_STT_URL(region) + '?language=' + locale + '&format=detailed';
-  const ctrl = new AbortController();
-  const timer = setTimeout(function () { try { ctrl.abort(); } catch (e) {} }, AZURE_ASR_TIMEOUT_MS);
-  try {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: {
+  // 只有「知道孩子在读哪一句」时发音评估才有意义（它要一个参考文本）。
+  const wantPa = !!(opts && opts.pa) && mode !== 'zh' && !!bias;
+  // 首发路径（opts.first）放 2600ms：冷连接实测 1.5~2.6s，1900 会把第一次
+  // 请求误杀成"没结果"，孩子那一遍就白读了。它只是上限，预热后 0.5~0.9s 就回。
+  const timeoutMs = wantPa ? AZURE_PA_TIMEOUT_MS
+    : ((opts && opts.first) ? AZURE_PA_TIMEOUT_MS : AZURE_ASR_TIMEOUT_MS);
+
+  async function once(withPa) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(function () { try { ctrl.abort(); } catch (e) {} }, timeoutMs);
+    try {
+      const headers = {
         'Ocp-Apim-Subscription-Key': key,
         'Content-Type': 'audio/wav; codec=audio/pcm; samplerate=16000',
         'Accept': 'application/json',
-      },
-      body: bytes,
-      signal: ctrl.signal,
-    });
-    if (!res.ok) throw new Error('azure_stt_http_' + res.status);
-    const d = await res.json();
-    if (!d || d.RecognitionStatus !== 'Success') return { text: '', model: 'azure' };
-    const best = (d.NBest && d.NBest[0]) || {};
-    const text = String(best.Display || best.Lexical || d.DisplayText || '').trim();
-    if (!text) return { text: '', model: 'azure' };
-    const words = Array.isArray(best.Words) ? best.Words.map(function (w) {
-      return { Word: String(w.Word || ''), Confidence: Number(w.Confidence) || 0 };
-    }) : [];
-    return {
-      text: mode === 'zh' ? text : restoreDigits(text, bias),
-      words: words,
-      confidence: Number(best.Confidence) || 0,
-      model: 'azure-stt',
-      answered: true,
-    };
-  } finally {
-    clearTimeout(timer);
+      };
+      if (withPa) {
+        headers['Pronunciation-Assessment'] = btoa(JSON.stringify({
+          ReferenceText: bias,
+          GradingSystem: 'HundredMark',
+          Granularity: 'Word',
+          EnableMiscue: true,      // 漏读的词要给出来（CompletenessScore 才有意义）
+          Dimension: 'Comprehensive',
+        }));
+      }
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: headers,
+        body: bytes,
+        signal: ctrl.signal,
+      });
+      if (!res.ok) return { httpStatus: res.status };
+      const d = await res.json();
+      if (!d || d.RecognitionStatus !== 'Success') return { text: '', model: wantPa ? 'azure-pa' : 'azure' };
+      const best = (d.NBest && d.NBest[0]) || {};
+      let text = String(best.Display || best.Lexical || d.DisplayText || '').trim();
+      // 静音 / 只有噪声时它会回一个 "." —— 那不是"读到了标点"，是没内容。
+      // 放过它会让上层当成"识别成功但读错"，孩子被白判一次。
+      if (!/[A-Za-z0-9\u4e00-\u9fa5]/.test(text)) text = '';
+      if (!text) return { text: '', model: wantPa ? 'azure-pa' : 'azure' };
+      const words = Array.isArray(best.Words) ? best.Words.map(function (w) {
+        const pa = w && w.PronunciationAssessment ? w.PronunciationAssessment : null;
+        return {
+          Word: String(w.Word || ''),
+          Confidence: Number(w.Confidence) || 0,
+          // 词级发音分（PA 模式下才有）：前端以后可以据此高亮"哪个词没读准"。
+          AccuracyScore: Number(w.AccuracyScore != null ? w.AccuracyScore
+            : (pa && pa.AccuracyScore)) || 0,
+          ErrorType: (w.ErrorType || (pa && pa.ErrorType) || ''),
+        };
+      }) : [];
+      const accuracy = Number(
+        best.AccuracyScore != null ? best.AccuracyScore
+          : (best.PronunciationAssessment && best.PronunciationAssessment.AccuracyScore)
+      );
+      return {
+        text: mode === 'zh' ? text : restoreDigits(text, bias),
+        words: words,
+        confidence: Number(best.Confidence) || 0,
+        // 微软官方的发音准确度（HundredMark，0~100）。取不到就是 NaN → 上层退回本地合分。
+        accuracy: (isFinite(accuracy) && accuracy > 0) ? Math.round(accuracy) : null,
+        model: wantPa ? 'azure-pa' : 'azure-stt',
+        answered: true,
+      };
+    } finally {
+      clearTimeout(timer);
+    }
   }
+
+  const first = await once(wantPa);
+  // PA 头被拒（参考文本里混进了它不认的字符 / 该区域不支持）时，退回普通识别
+  // —— 宁可少一个分数，也不能让孩子这一遍白读。
+  if (wantPa && first && first.httpStatus) {
+    const retry = await once(false);
+    if (retry && retry.httpStatus) throw new Error('azure_stt_http_' + retry.httpStatus);
+    return retry;
+  }
+  if (first && first.httpStatus) throw new Error('azure_stt_http_' + first.httpStatus);
+  return first;
 }
 
 /** 词级对齐 + 置信度加权 → 0~100 的 AI 合分。纯计算，不碰网络。 */
@@ -1246,6 +1309,9 @@ async function transcribe(request, env) {
   // （prefer=cf）靠 Cloudflare 的偏置才认得出孤立字母，别去搅它。
   const azureReady = !!(env.AZURE_TTS_KEY && env.AZURE_TTS_REGION);
   let azureWords = null, azureConf = null, azMs = 0;
+  // v215：微软发音评估给的官方准确度（0~100）。有它就不再用本地 LCS 估分 ——
+  // 本地那套是"命中率 + 置信度"的近似，它是同一个模型对每个音素的打分。
+  let azureAccuracy = null;
 
   let model = '';
   let text = '';
@@ -1356,9 +1422,9 @@ async function transcribe(request, env) {
   // 以前兜底只有 CF 一条，它慢的时候孩子就一直盯着「核对中」；现在是
   // min(两趟)。Azure 那条还带词级置信度，AI 合分直接拿去加权。
   // 任何异常都 swallow 掉，CF 仍稳稳兜住，行为绝不会比原来差。
-  async function runBackup() {
+  async function runBackup(skipAzure) {
     const cfP = withTimeout(runCloudflare(), CF_ASR_TIMEOUT_MS);
-    if (!azureReady || preferCf || mode === 'letter' || mode === 'zh' || force === 'ali') {
+    if (skipAzure || !azureReady || preferCf || mode === 'letter' || mode === 'zh' || force === 'ali') {
       return cfP;
     }
     const a0 = Date.now();
@@ -1420,57 +1486,98 @@ async function transcribe(request, env) {
       detail = (ali.err || cf.err) || '';
     }
   } else {
-    // 对冲，不是并行发（v98；对冲点 v103 收紧到 450ms / 中文 1200ms）。
+    // ── v215 · 微软发音评估首发（家长 2026-11-19：「出分还是要很久」）────
     //
-    // 为什么不是两条无条件都发：Cloudflare 每天 1 万 neurons 免费额度，跟读兜底
-    // 识别和 AI 口语的母语音色都指着它。让阿里云先跑一段，它正常就一次 CF 都不碰。
-    // 但这段"先跑"不能太长 —— 它直接决定了慢请求的下限：
-    //   总耗时 ≈ 对冲点 + CF 那一趟（1.0~2.4s），对冲点 1500 时就是 2.5~3.9s，
-    //   孩子这边就是"评分怎么这么慢"。收到 450ms 之后同一批请求压到 1.5~2.9s。
-    // 实测 whisper-turbo 只要 1~3 neurons/次（最忙的一天 534 次 = 930/10000），
-    // 多打几次换来少等一秒，这笔账是划算的。
-    const HEDGE = { hedge: true };
+    // 同一条真实人声、同一条跨境链路实测（tools/probe-azure-pa2.js）：
+    //   Azure 发音评估    4 / 7 / 9 词的句子全部 0.9~1.0s，且一次就带分数
+    //                     （读对 95 / 读错 55 / 读一半 68，词级还标出哪个词错）
+    //   阿里云 qwen3-asr   6400ms（第一次 3200 超时，重试又 3200）
+    //   Cloudflare         2878ms
+    // v195 已经把 Azure 接进来了，但只当兜底 —— 最快的那条路，只在最慢的时候
+    // 才用上。现在让 Azure 和阿里云**同时起跑**，谁先给出文本用谁：
+    //   · 阿里云先回    → 与 v214 行为完全一致（判定容差都是照它调的，零回归）
+    //   · 阿里云慢/超时 → Azure 那趟早在路上，0.9s 就顶上来
+    //   · 两边都空手    → Cloudflare 兜底（和以前一样）
+    // 450ms 对冲点保持不动：它管的是"CF 什么时候加入"，不是主路径的等待时长。
     const hedgeMs = hedgeMsFor(mode);
     hedgeUsed = hedgeMs;
+
+    const azP = (azureReady && bias && mode !== 'letter' && mode !== 'zh' && force !== 'ali')
+      ? (function () {
+          const a0 = Date.now();
+          // 注意：这里**必须**用普通识别（不带发音评估）。
+          //
+          // 微软的发音评估会把识别结果按参考句对齐：孩子读成 "eat / before"，
+          // 它回给你的文本是 "read / after"（词级 AccuracyScore 倒是 6 分和 3 分，
+          // 说明它听出来了，只是不往外吐）。拿这种文本去判"读没读对"，等于
+          // "读错也满分" —— 实测 bad7 那段（读成 eat/before）在 PA 下判 pass 100，
+          // 换回普通识别/阿里云才判 fail。速度不能拿准确度换，所以走普通识别。
+          //
+          // PA 的分数（读对 95 / 读错 55 / 读一半 68）确实存在也验证通了，但它
+          // 的分档和真人儿童的发音分布重叠（儿童读对常在 60~80），没有真实学生
+          // 录音校准之前不能拿来当判定门槛，见 tools/probe-azure-pa2.js。
+          return azureTranscribe(cfBytes, env, mode, bias, { first: true })
+            .then(function (r) { azMs = Date.now() - a0; return { who: 'az', r: r }; })
+            .catch(function () { azMs = Date.now() - a0; return { who: 'az', r: { text: '' } }; });
+        })()
+      : null;
+
     const aliP = runAliyun();
-    let ali = null;
-    let cf = null;
-    const hedged = await Promise.race([
-      aliP,
-      new Promise(function (r) { setTimeout(function () { r(HEDGE); }, hedgeMs); }),
-    ]);
-    if (hedged !== HEDGE) {
-      ali = hedged;                       // 阿里云赶在对冲点之前就回来了
-      // 快是快，但它空手而归（报错 / 识别为空）——照样得请兜底（v195 起
-      // Cloudflare + Azure 语音 AI 并行，谁先答上来用谁）。
-      if (!ali.text) cf = await runBackup();
-    } else {
-      const cfP = runBackup();
-      const win = await Promise.race([
-        aliP.then(function (r) { return { who: 'ali', r: r }; }),
-        cfP.then(function (r) { return { who: 'cf', r: r }; }),
-      ]);
-      if (win.who === 'ali') {
-        ali = win.r;
-        if (ali.text) cfP.catch(function () {});
-        else cf = await cfP;              // 阿里云空手而归，等 CF 那一手
-      } else {
-        cf = win.r;
-        if (cf.text) aliP.catch(function () {});
-        else ali = await aliP;
+    const entries = [{ who: 'ali', p: aliP.then(function (r) { return { who: 'ali', r: r }; }) }];
+    if (azP) entries.push({ who: 'az', p: azP });
+
+    let cfStarted = null;
+    const fireCf = function () {
+      if (!cfStarted) {
+        // 首发路径上 Azure 已经在跑，兜底里那份就别再打一次同样的请求。
+        cfStarted = runBackup(!!azP).then(function (r) { return { who: 'cf', r: r }; });
+      }
+      return cfStarted;
+    };
+
+    // 取"第一个有文本"的结果。空手而归的那一路**不占位** —— 继续等还在跑的
+    // 另一路。这样「阿里云 700ms 回了个空」不会让孩子直接掉进兜底，而 Azure
+    // 的 0.9s 结果本来就在路上。
+    async function firstText(list, capMs) {
+      let queue = list.slice();
+      let last = null;
+      const deadline = Date.now() + capMs;
+      while (queue.length) {
+        const left = Math.max(0, deadline - Date.now());
+        const timer = new Promise(function (r) { setTimeout(function () { r(null); }, left); });
+        const w = await Promise.race(queue.map(function (e) { return e.p; }).concat([timer]));
+        if (!w) return last;
+        last = w;
+        if (w.r && w.r.text) return w;
+        queue = queue.filter(function (e) { return e.who !== w.who; });
+      }
+      return last;
+    }
+
+    // 前 hedgeMs 只等 Azure / 阿里云；到点还没有文本才放 CF 进来（同一个开关）。
+    let win = await firstText(entries, hedgeMs);
+    if (!win || !win.r || !win.r.text) {
+      const w2 = await firstText(entries.concat([{ who: 'cf', p: fireCf() }]), CF_ASR_TIMEOUT_MS + 1200);
+      if (w2) win = w2;
+    }
+
+    if (win && win.r) {
+      if (win.r.text) { text = win.r.text; model = win.r.model; answered = true; }
+      if (win.r.answered) answered = true;
+      if (win.r.dead) deadAny = true;
+      detail = win.r.err || '';
+      if (win.who === 'az') {
+        azureWords = win.r.words || null;
+        azureConf = win.r.confidence || 0;
+        if (typeof win.r.accuracy === 'number') azureAccuracy = win.r.accuracy;
+      }
+      if (win.who === 'cf') raw = win.r.raw || null;
+      // 输掉的那几条让它们自然结束，避免响应发出去还有未处理的 rejection。
+      if (win.r.text) {
+        if (win.who !== 'ali') aliP.catch(function () {});
+        if (win.who !== 'cf' && cfStarted) cfStarted.catch(function () {});
       }
     }
-    if (ali) {
-      if (ali.text) { text = ali.text; model = ali.model; answered = true; }
-      if (ali.answered) answered = true;
-      if (ali.dead) deadAny = true;
-    }
-    if (cf) {
-      if (!text && cf.text) { text = cf.text; model = cf.model; raw = cf.raw; answered = true; }
-      if (cf.answered) answered = true;
-      if (cf.dead) deadAny = true;
-    }
-    detail = ((ali && ali.err) || (cf && cf.err)) || '';
   }
 
   // 埋点打包成响应头。孩子手机上也能看到这三段各自多少毫秒。
@@ -1502,6 +1609,11 @@ async function transcribe(request, env) {
   const ai = canGrade
     ? aiCombineScore(bias, text, azureWords || (raw && raw.words) || null, azureConf)
     : null;
+  // v215：这条文本是 Azure 发音评估回的就直接用微软的分（官方 AccuracyScore，
+  // HundredMark 0~100），本地合分只作为"命中几个词"的补充信息。
+  // 没有 PA 分时（Azure 没配 / PA 被拒 / 走的是阿里云或 CF）完全按原样用本地合分。
+  const usePa = !!(ai && azureAccuracy != null && String(model).indexOf('azure-pa') >= 0);
+  const aiScore = usePa ? azureAccuracy : (ai ? ai.score : null);
 
   return json({
     model: model,
@@ -1509,9 +1621,14 @@ async function transcribe(request, env) {
     words: (raw && raw.words) || null,
     wordCount: (raw && raw.word_count) || null,
     // 前端可以直接拿这个分数做「读得准不准」的参考；不改原有对错判定。
-    aiScore: ai ? ai.score : null,
-    aiBy: ai ? (azureWords ? 'azure-ai' : 'edge-ai') : '',
+    aiScore: aiScore,
+    aiBy: ai ? (usePa ? 'azure-pa' : (azureWords ? 'azure-ai' : 'edge-ai')) : '',
     aiDetail: ai ? { hit: ai.hit, total: ai.total, confidence: ai.confidence } : null,
+    // v215：微软发音评估的词级分数与错误标记（Omission / Mispronunciation /
+    // Insertion）。现在只透传，判定层不用它 —— 留着给"哪个词没读准"的高亮用。
+    paWords: (usePa && azureWords) ? azureWords.map(function (w) {
+      return { w: w.Word, s: w.AccuracyScore || 0, e: w.ErrorType || '' };
+    }) : null,
   }, 200, timingHeaders());
 }
 
