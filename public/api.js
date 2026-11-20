@@ -3620,10 +3620,24 @@ const Api = {
       os: '', screen: '', dpr: '', standalone: 0, touch: 0, client_ver: 0,
     };
 
+    // --- 屏幕先算出来（v217）：机型读不到时，屏幕尺寸是老师唯一能认的线索 --
+    var sc0 = win.screen || {};
+    var sw0 = Math.min(Number(sc0.width) || 0, Number(sc0.height) || 0);
+    var sh0 = Math.max(Number(sc0.width) || 0, Number(sc0.height) || 0);
+
     // --- 系统 -------------------------------------------------------------
+    // v217：iPad 的 Safari 默认「请求桌面网站」，UA 里**根本没有 iPad 两个字** ——
+    // 它长得跟 Mac 一模一样：
+    //   Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15
+    //   (KHTML, like Gecko) Version/16.6 Safari/605.1.15
+    // 张子皓那台 iPad 就是这么被记成「型号未读到 / 待确认 / macOS」的。
+    // 判据是触点数：真 Mac 没有触摸屏，iPad 的 maxTouchPoints 是 5。
+    var isIPad = /iPad/i.test(ua) || (/Macintosh/i.test(ua) && Number(nav.maxTouchPoints || 0) > 1);
     var am = ua.match(/Android\s+(\d+(?:\.\d+)?(?:\.\d+)?)/i);
     var im = ua.match(/(?:iPhone|iPad|iPod).*?OS\s+(\d+[_\d]*)/i);
+    var iv = ua.match(/Version\/(\d+\.\d+)/i);
     if (am) out.os = 'Android ' + am[1];
+    else if (isIPad) out.os = 'iPadOS' + (iv ? ' ' + iv[1] : '') + '（桌面版网页）';
     else if (im) out.os = 'iOS ' + im[1].replace(/_/g, '.');
     else if (/Windows/i.test(ua)) out.os = 'Windows';
     else if (/Mac OS X/i.test(ua)) out.os = 'macOS';
@@ -3635,12 +3649,35 @@ const Api = {
           || ua.match(/;\s*([A-Za-z0-9][A-Za-z0-9 _.\-]{2,40})\s+Build\//);
     var model = mm ? String(mm[1]).trim() : '';
     if (uad && uad.model) model = String(uad.model).trim();
-    if (/iPhone|iPad|iPod/i.test(ua)) model = (ua.match(/(iPhone|iPad|iPod)/i) || [])[1] || model;
+    if (isIPad) model = 'iPad';
+    else if (/iPhone|iPod/i.test(ua)) model = (ua.match(/(iPhone|iPod)/i) || [])[1] || model;
+    // v217：UA 里那一段不一定是型号。WebView 的 UA 常把 "wv"、"K"、"Mobile"
+    // 塞在这个位置上，直接当型号显示出来比「未读到」更误导人。
+    if (/^(wv|mobile|linux|android|generic|unknown|k|u|x11|arm)$/i.test(model) || model.length < 2) model = '';
     out.model = model.slice(0, 60);
+
+    // iPad 的 UA 只有 "iPad" 三个字母，具体是哪一代只能靠屏幕尺寸推。
+    // 下面这张表按「物理点数」对（竖屏为 宽×高），命中就给个能认的名字；
+    // 没命中就老老实实把分辨率写出来 —— 老师拿它对一眼就知道是哪台。
+    out.model_detail = '';
+    if (isIPad) {
+      var padMap = {
+        '744x1133': 'iPad mini 8.3 英寸',
+        '768x1024': 'iPad 9.7 英寸 / iPad mini 7.9 英寸',
+        '810x1080': 'iPad 10.2 英寸',
+        '820x1180': 'iPad Air 10.9 英寸 / iPad 10.9 英寸',
+        '834x1112': 'iPad Pro 10.5 英寸',
+        '834x1194': 'iPad Pro 11 英寸 / iPad Air 11 英寸',
+        '834x1210': 'iPad Pro 11 英寸（M4）',
+        '1024x1366': 'iPad Pro 12.9 英寸',
+        '1032x1376': 'iPad Pro 13 英寸（M4）'
+      };
+      out.model_detail = padMap[sw0 + 'x' + sh0] || '';
+    }
 
     // --- 品牌 -------------------------------------------------------------
     var b = '';
-    if (/iPhone|iPad|iPod/i.test(ua)) b = '苹果';
+    if (isIPad || /iPhone|iPod/i.test(ua)) b = '苹果';
     else if (/HUAWEI|HONOR|nova\s*\d|FOA-|ALA-|LNA-|PGT-|CLS-|BRA-|REA-|JAD-|MGA-/i.test(ua)) b = /HONOR|REA-|LNA-|JAD-/i.test(ua) ? '荣耀' : '华为';
     else if (/Xiaomi|Redmi|MI\s?\d|M20[0-9]{2}|POCO/i.test(ua)) b = '小米';
     else if (/vivo|iQOO/i.test(ua)) b = 'vivo';
@@ -3653,7 +3690,17 @@ const Api = {
     var pretty = model;
     if (/^nova\s*\d/i.test(model) && b === '华为') pretty = model.replace(/^nova\s*/i, 'nova ');
     if (/^NOVA\s*14/i.test(model)) pretty = 'nova 14';
-    out.model_label = (b && b !== '电脑' ? b + ' ' : '') + (pretty || '型号未读到');
+    // v217：iPad 用「屏幕推出的一代」当名字；推不出来就写分辨率，别只写个「iPad」。
+    if (isIPad) {
+      pretty = out.model_detail
+        || ('iPad（屏 ' + (sw0 || '?') + '×' + (sh0 || '?') + '）');
+    }
+    // 安卓读不到型号时（少数定制 WebView 的 UA 里没有 Build 段），
+    // 至少把屏幕尺寸留下 —— 老师靠它也能分出是哪台手机。
+    var noModel = !pretty;
+    out.model_label = (b && b !== '电脑' ? b + ' ' : '')
+      + (pretty || ('型号未读到（屏 ' + (sw0 || '?') + '×' + (sh0 || '?') + '）'));
+    out.model_missing = noModel ? 1 : 0;
 
     // --- 浏览器（顺序不能乱：内置 WebView 的 UA 里也带 Chrome）------------
     var rules = [

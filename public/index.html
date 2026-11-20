@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="216">
+<meta name="app-version" content="217">
 <link rel="manifest" href="manifest.json">
 <!-- v135：登录第一步就是调 api.amyeng.top 验手机号。提前把 DNS + TLS
      握手做掉，接口首调能省几百毫秒 —— 手机弱网下这几百毫秒很显眼。 -->
@@ -1042,6 +1042,18 @@ body.rec-dock-on .rd-end-pin{display:none!important}
 .gate-locked{opacity:.42;filter:grayscale(.45)}
 /* 按钮上加个小锁，一看就知道"还不能点"，不用去猜为什么按了没反应 */
 button.gate-locked::before{content:'🔒 '}
+/* ===== v217（家长 2026-11-20）==========================================
+   跟读按钮锁着的时候不能只是一块灰：孩子会以为按钮坏了、一直点、点到刷新。
+   · 没听完 → 虚线描边 + 白底，写着「先听一遍，再跟读」，点它当场放示范；
+   · 听完了 → 实心橙「🎤 点一下跟读」，也就是家长要的"全部听完才亮起来"。
+   只改真正的跟读入口（.word-read-btn），选项、词盒那类一律保持原来的灰。 */
+.word-read-btn.gate-locked{
+  opacity:1;filter:none;background:#fff;color:var(--orange);
+  border:2px dashed var(--orange);box-shadow:none;font-weight:600}
+.word-read-btn.gate-locked:active{background:var(--orange-light,#FFF3E6)}
+/* 大字体之后长句会把按钮挤出屏幕：跟读按钮在句子卡里吸底，
+   句子再长也划得到它（不与 v216 的录音浮条冲突 —— 那条只在录音中出现）。 */
+.stage-body > .sent-step > .word-read-btn{position:sticky;bottom:6px;z-index:12}
 /* 句子当听入口时，正在播 + 被提示时给点反馈（句子不能吞 touchstart，只能靠这个） */
 [data-listen="1"].playing{opacity:.6}
 .tap-speak-sm.gate-hint-glow,.wr-sent.gate-hint-glow,.sent-text.gate-hint-glow{animation:gateGlow 1.2s ease-in-out}
@@ -2162,9 +2174,9 @@ button,.q-option,.gate-listen,.hold-btn,.tap-btn,.speak-btn{
 </div>
 
 <script>window.__appReady = false;</script>
-<script defer src="cloud.js?v=216"></script>
-<script defer src="data.js?v=216"></script>
-<script defer src="data-shuffle.js?v=216"></script>
+<script defer src="cloud.js?v=217"></script>
+<script defer src="data.js?v=217"></script>
+<script defer src="data-shuffle.js?v=217"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
 <!--
   ?v= 必须跟着版本号走（v124 修正）。
@@ -2174,13 +2186,13 @@ button,.q-option,.gate-listen,.hold-btn,.tap-btn,.speak-btn{
   这个坑很隐蔽：代码明明改了、也部署上去了，手机上跑的还是几个月前的逻辑。
   以后每次发版，这里跟着 app-version 一起改。
 -->
-<script defer src="recorder.js?v=216"></script>
-<script defer src="api.js?v=216"></script>
+<script defer src="recorder.js?v=217"></script>
+<script defer src="api.js?v=217"></script>
 <!-- v194：小游戏独立成文件，不塞进已经 800KB 的 app.js。必须排在 app.js
      **前面**：app.js 顶层有同步初始化，登录回来若正好停在「单词乐园」，
      渲染时 WordGame 得已经存在。game.js 只在被点击/渲染时才读 window.App。 -->
-<script defer src="game.js?v=216"></script>
-<script defer src="app.js?v=216"></script>
+<script defer src="game.js?v=217"></script>
+<script defer src="app.js?v=217"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {

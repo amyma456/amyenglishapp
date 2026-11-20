@@ -3172,6 +3172,11 @@ const App = {
   _gateUnlock(gid) {
     if (!gid) return;
     this._gates[gid] = true;
+    // v217：示范放完了，"正在读…"的临时标记要摘掉，否则按钮会一直停在
+    // 那句话上（_syncGates 见到这个标记就跳过改字）。
+    document.querySelectorAll('[data-gate="' + gid + '"][data-gate-painting]').forEach(function(el) {
+      el.removeAttribute('data-gate-painting');
+    });
     this._syncGates();
   },
 
@@ -3197,7 +3202,24 @@ const App = {
     scope.querySelectorAll('[data-gate]').forEach(function(el) {
       const isListen = el.classList.contains('gate-listen') || el.getAttribute('data-listen') === '1';
       if (!isListen) {
-        if (self._gates[el.getAttribute('data-gate')]) el.classList.remove('gate-locked');
+        // 正在放示范的那一下不动它 —— 否则 MutationObserver 会把「🔊 正在读…」
+        // 立刻改回「先听一遍」，孩子看不到任何进展。
+        if (el.getAttribute('data-gate-painting') === '1') return;
+        const gid = el.getAttribute('data-gate');
+        const open = !!self._gates[gid];
+        if (open) el.classList.remove('gate-locked');
+        else el.classList.add('gate-locked');
+        // v217（家长 2026-11-20）：跟读按钮要有**两副脸**。
+        // 以前没听完只是变灰，字还是"点一下跟读"，孩子不知道为什么不理他，
+        // 就一直点、点到自己刷新页面。现在没听完写「先听一遍，再跟读」，
+        // 听完了才换成「点一下跟读」并变实心 —— 家长原话："全部听完才能亮起来"。
+        // 只在文字真的不一样时才写：textContent 每次赋值都会产生新的子节点，
+        // 无条件写会把这个 MutationObserver 自己喂成死循环。
+        const lbl = el.getAttribute('data-read-label');
+        if (lbl) {
+          const want = open ? lbl : (el.getAttribute('data-lock-label') || '先听一遍，再跟读');
+          if (el.textContent !== want) el.textContent = want;
+        }
         return;
       }
       // 听入口一出现就把它要播的东西预取好：孩子点「先听一遍」时音频应该
@@ -3235,6 +3257,20 @@ const App = {
       setTimeout(function() { listen.classList.remove('gate-hint-glow'); }, 1250);
     }
     this.showToast(msg || '🔊 先听一遍示范，再开口读哦', 'warn');
+  },
+
+  // v217：示范正在放的时候，把被这道门锁着的跟读按钮写成「🔊 正在读…」。
+  // 只改带 data-read-label 的按钮（真正的跟读入口），不去动选项、词盒那些。
+  // data-gate-painting 是"这一刻别按门禁状态改字"的标记，_gateUnlock 会摘掉它。
+  _gatePaintPlaying(gid, text) {
+    document.querySelectorAll('[data-gate="' + gid + '"]').forEach(function(el) {
+      if (el.classList.contains('gate-listen') || el.getAttribute('data-listen') === '1') return;
+      if (!el.getAttribute('data-read-label')) return;
+      el.classList.add('gate-locked');
+      el.setAttribute('data-gate-painting', '1');
+      const want = text || '🔊 正在读…';
+      if (el.textContent !== want) el.textContent = want;
+    });
   },
 
   // 那颗「🔊 先听一遍」按钮。say 是示范内容（英文），label 可换措辞。
@@ -3512,6 +3548,9 @@ const App = {
       const say = el.getAttribute('data-say') || '';
       const seq = el.getAttribute('data-seq');         // 一串示范（字母→音节→整词）
       const pref = el.getAttribute('data-prefer') || '';
+      // v217：正在放的时候，被这道门锁着的跟读按钮也要说话 —— 让孩子看见
+      // "它在读，读完我就能读"，而不是对着一个灰按钮猜。
+      self._gatePaintPlaying(gid, '🔊 正在读…');
       const done = function() {
         if (el.dataset.playing !== '1') return;
         el.dataset.playing = '';
@@ -3549,6 +3588,13 @@ const App = {
         ev.preventDefault();
         ev.stopPropagation();
         self._gateNudge(gid);
+        // v217（家长 2026-11-20）：「点我跟读，要多点几次才动」。
+        // 病根：孩子点的是跟读按钮，可门还锁着 —— 这一下被吞掉，什么都没发生；
+        // 他再点、再点，直到自己刷新页面。现在这一下**不白点**：点跟读就等于
+        // 点「先听一遍」，示范当场放（pointerdown 本身就是用户手势，iOS 也
+        // 允许播），放完自动解锁，按钮立刻从「先听一遍」变成「点一下跟读」。
+        const ls = document.querySelector('.gate-listen[data-gate="' + gid + '"]');
+        if (ls && ls.dataset.playing !== '1') playAndUnlock(ls, gid);
       }
     };
     ['pointerdown', 'touchstart', 'mousedown'].forEach(function(tn) {
@@ -7035,9 +7081,10 @@ const App = {
       + '<div class="gate-bar">' + this._gateListenHtml(gid, sentence, '🔊 先听一遍示范', 'cf') + '</div>'
       + '<div id="sp-status-' + mi + '-' + qi + '" style="min-height:18px;margin:6px 0;color:var(--text-sub);font-size:max(calc(14px*var(--fs)),var(--fs-min))"></div>'
       + '<button id="sphr-' + mi + '-' + qi + '" class="speak-btn gate-locked" data-gate="' + gid + '" '
+      + 'data-read-label="🎤 点我读" data-lock-label="先听一遍，再读" '
       + 'style="background:var(--primary);margin-top:6px;font-size:max(calc(16px*var(--fs)),var(--fs-min));padding:12px 22px;'
       + 'user-select:none;-webkit-user-select:none;touch-action:none;border-radius:22px;min-width:170px">'
-      + '🎤 点我读</button>'
+      + '先听一遍，再读</button>'
       + '<p class="fs-12 text-sub" style="margin-top:8px">先听完上面的示范，再点「点我读」；读到的词会变绿打勾，读完了再点一下就打分。读错的词要读对了才能进下一题。</p>'
       + '<p class="fs-12 text-sub" style="margin-top:2px">不认识的词，点一下就有读音和中文意思。</p>'
       + '<div id="sp-clip-' + mi + '" class="mt-8"></div>'
@@ -9489,8 +9536,9 @@ const App = {
     html += '<div class="sent-listen">' + this._gateListenHtml(gid, sent, '🔊 先听一遍整句') + '</div>';
     html += '<button class="word-read-btn hold-target gate-locked" data-gate="' + gid + '"'
          + ' id="sent-btn-' + mi + '-' + si + '"'
+         + ' data-read-label="🎤 点一下跟读" data-lock-label="先听一遍，再跟读"'
          + ' onpointerdown="App._readSentence(event,' + mi + ',' + si + ')"'
-         + ' oncontextmenu="return false">🎤 点一下跟读</button>';
+         + ' oncontextmenu="return false">先听一遍，再跟读</button>';
     html += '<div id="sent-status-' + mi + '-' + si + '"></div>';
     html += '<div id="sent-result-' + mi + '-' + si + '"></div>';
     html += '</div>';
@@ -11716,8 +11764,9 @@ const App = {
       }
       html += '<button class="word-read-btn hold-target gate-locked" data-gate="' + gid + '"'
            + ' id="wr-btn-' + mi + '-' + si + '"'
+           + ' data-read-label="' + (ok ? '重读这句' : '🎤 点一下跟读') + '" data-lock-label="先听一遍，再跟读"'
            + ' onpointerdown="App._readWritingSentence(event,' + mi + ',' + si + ')"'
-           + ' oncontextmenu="return false">' + (ok ? '重读这句' : '🎤 点一下跟读') + '</button>';
+           + ' oncontextmenu="return false">先听一遍，再跟读</button>';
       html += '<div id="wr-status-' + mi + '-' + si + '"></div>';
       html += '<div id="wr-result-' + mi + '-' + si + '"></div>';
       html += '</div>';
@@ -12567,6 +12616,19 @@ const App = {
     var opts = gate ? { onDone: function() { self._gateUnlock(gate); } } : undefined;
     if (this._ttsUnlocked) this.speak(sent, opts);
     else { this._pendingSpeak = sent; this._pendingSpeakGate = gate; }
+    // v217（家长 2026-11-20）：「全部听完才能亮起来」，所以解锁只认播完那一下。
+    // 但"一个音都没响"是另一回事 —— 静音、断网、系统拦了自动播，onDone 永远
+    // 不来，孩子就对着一个灰按钮一直点（这就是他说的"多点几次才动"）。
+    // 这条只管"压根没播出来"的兜底：正常播放时它早就被 onDone 抢先解锁了。
+    if (gate) {
+      var g = gate;
+      setTimeout(function() {
+        if (!self._gateOpen(g)) {
+          self._gateUnlock(g);
+          if (!self._audioStarted) self.showToast('🔇 没听到示范？点按钮可以再听一遍', 'warn');
+        }
+      }, this._gateFallbackMs(sent) + 2000);
+    }
   },
 
   nextStep(force) {
@@ -13593,9 +13655,10 @@ const App = {
       + '<div class="gate-bar">' + this._gateListenHtml(gid, sentence, '🔊 先听一遍示范') + '</div>'
       + '<div id="' + stid + '" style="min-height:18px;margin:6px 0;color:var(--text-sub);font-size:max(calc(14px*var(--fs)),var(--fs-min))"></div>'
       + '<button id="' + sid + '" class="speak-btn qr-hold-btn gate-locked" data-gate="' + gid + '" '
+      + 'data-read-label="🎤 点我读" data-lock-label="先听一遍，再读" '
       + 'style="background:var(--primary);margin-top:8px;font-size:max(calc(18px*var(--fs)),var(--fs-min));padding:18px 32px;'
       + 'user-select:none;-webkit-user-select:none;touch-action:none;border-radius:24px;min-width:200px">'
-      + '🎤 点我读</button>'
+      + '先听一遍，再读</button>'
       + '<p class="fs-12 text-sub" style="margin-top:8px">先听完上面的示范，再点「点我读」；读到的词会变绿打勾，读完了再点一下就打分。读错的词要读对了才能进下一题。</p>'
       + '<p class="fs-12 text-sub" style="margin-top:2px">不认识的词，点一下就有读音和中文意思。</p>'
       + '</div>';
