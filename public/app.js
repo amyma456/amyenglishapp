@@ -7171,7 +7171,7 @@ const App = {
     // 20 秒兜底：问句 + 答句比单句长，防止忘了点停止麦克风一直开着。
     this._spReadTimer = setTimeout(() => this._spReadEnd(mi, qi, dayIdx), 20000);
     this._spReadUI(mi, qi, dayIdx, 'recording');
-    this._recDockShow(() => this._spReadEnd(mi, qi, dayIdx));
+    this._recDockShow(() => this._spReadEnd(mi, qi, dayIdx), null, null, sentence);
   },
 
   // 第二次点击（或 20 秒兜底）就到这里：停识别、停录音，出分。
@@ -14527,7 +14527,7 @@ const App = {
     const hint = document.getElementById('wrep-hint');
     if (btn) btn.innerHTML = '🔴 录音中 · 读完点我结束';
     this._pinReadEndBtn(btn, true);
-    this._recDockShow(() => this._wordRepairStop());
+    this._recDockShow(() => this._wordRepairStop(), null, null, R.word);
     if (hint) hint.textContent = '';
     clearTimeout(R.capTimer);
     R.capTimer = setTimeout(() => this._wordRepairStop(), 6000);
@@ -14766,7 +14766,7 @@ const App = {
     // 防止孩子忘了点停止、麦克风一直开着。
     this._holdReadTimer = setTimeout(() => this._holdReadEnd(mi, qi, dayIdx), 15000);
     this._setHoldReadUI(mi, qi, 'recording', null, false);
-    this._recDockShow(() => this._holdReadEnd(mi, qi, dayIdx));
+    this._recDockShow(() => this._holdReadEnd(mi, qi, dayIdx), null, null, sentence);
   },
 
   _holdReadEnd(mi, qi, dayIdx) {

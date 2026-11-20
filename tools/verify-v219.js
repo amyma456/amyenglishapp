@@ -61,6 +61,12 @@ section('[3] 所有录音入口都把当前句带出来');
   ok(/_rsTag\(key\)[\s\S]{0,220}第 /.test(appSrc), '作文/阅读逐句会标出「第几句」');
   ok(/_rsActiveText\(\)/.test(appSrc) && /_rsFromDom\(statusEl, ev\)/.test(appSrc),
     '口语/选择/填空/错词等老入口也有就近抓句子的兜底');
+  ok(/_recDockShow\(\(\) => this\._spReadEnd\(mi, qi, dayIdx\), null, null, sentence\)/.test(appSrc),
+    '口语整句跟读：显式带上目标句');
+  ok(/_recDockShow\(\(\) => this\._holdReadEnd\(mi, qi, dayIdx\), null, null, sentence\)/.test(appSrc),
+    '阅读理解/选择/填空跟读：显式带上目标句');
+  ok(/_recDockShow\(\(\) => this\._wordRepairStop\(\), null, null, R\.word\)/.test(appSrc),
+    '错词重读：显式带上目标词');
 }
 
 section('[4] 系统带读：读到哪句，哪句也弹出来');
