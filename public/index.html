@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="218">
+<meta name="app-version" content="219">
 <link rel="manifest" href="manifest.json">
 <!-- v135：登录第一步就是调 api.amyeng.top 验手机号。提前把 DNS + TLS
      握手做掉，接口首调能省几百毫秒 —— 手机弱网下这几百毫秒很显眼。 -->
@@ -820,6 +820,10 @@ body.wf-typing .writing-banner{display:none}
 .wr-blank-warn{animation:wrBlankShake .4s}
 @keyframes wrBlankShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
 .wr-item.lead-cur{border-color:var(--orange);box-shadow:0 0 0 2px rgba(240,112,0,.14);background:#fff}
+/* v219：五六个句子按顺序读，把「现在该读哪一句」亮出来，不漏读 */
+.wr-item.wr-now{border-color:var(--orange);box-shadow:0 0 0 2px rgba(240,112,0,.18);background:#fff}
+.wr-item.wr-now::before{content:'👉 现在读这一句';display:block;margin-bottom:6px;
+  font-size:max(calc(12px*var(--fs-sm)),var(--fs-sm-min));font-weight:700;color:var(--orange-press)}
 .wr-cn-line{display:flex;gap:8px;font-size:max(calc(14px*var(--fs)),var(--fs-min));line-height:1.85;margin:2px 0}
 .wr-cn-line .n{flex:0 0 16px;color:var(--ink-3);font-size:max(calc(12px*var(--fs-sm)),var(--fs-sm-min));line-height:1.95}
 
@@ -982,6 +986,41 @@ body.rec-dock-on .rd-sentence.rd-rec{max-height:none;overflow:visible;
 /* 浮条接管之后，v214 那颗 fixed 吸底按钮就别再出现了 —— 否则屏幕底部
    会叠着两颗「读完点我结束」，孩子不知道该点哪一个。 */
 body.rec-dock-on .rd-end-pin{display:none!important}
+
+/* ===== v219：读哪句，哪句弹出来 ==========================================
+   家长 2026-11-21：「读到第三句第四句，一点开始录音那个句子就哗得不见了，
+   只有把句子记住才能读对」。根因：录音一开始舞台从 overflow:hidden 切成
+   auto，五六个句子的列表瞬间重排，当前句被甩出视野；长句在列表里也只有
+   16px，一屏放不下。解法不靠"滚回去"—— 把「当前正在读的这一句」做成
+   body 顶层 fixed 卡片，脱离所有滚动/裁切容器，读哪句就弹哪句；字号按
+   句长和屏幕自动缩放，短句放到最大、长句缩到刚好一屏放得下，另外给
+   A- / A+ 两句手动微调，孩子/老师可以自己调。
+   卡片只占上方区域（底部留给 v216 的录音控制条），pointer-events:none
+   保证不挡「读完点我结束」。 */
+#rec-sentence{position:fixed;left:0;right:0;top:0;z-index:2100;display:none;
+  height:calc(100vh - 92px - env(safe-area-inset-bottom,0px));
+  height:calc(100dvh - 92px - env(safe-area-inset-bottom,0px));
+  padding:calc(10px + env(safe-area-inset-top,0px)) 12px 0;
+  align-items:center;justify-content:center;pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,255,255,.90),rgba(255,255,255,.97))}
+body.rec-sentence-on #rec-sentence{display:flex}
+#rec-sentence-box{width:min(440px,94vw);max-height:100%;display:flex;
+  flex-direction:column;align-items:center;background:#fff;
+  border:2px solid var(--orange);border-radius:22px;padding:12px 16px 18px;
+  box-shadow:0 14px 44px rgba(0,0,0,.20);overflow:hidden}
+#rec-sentence-bar{flex:0 0 auto;width:100%;display:flex;align-items:center;
+  justify-content:space-between;gap:8px;margin-bottom:8px}
+#rec-sentence-tag{font-size:max(calc(12px*var(--fs-sm)),var(--fs-sm-min));
+  font-weight:700;letter-spacing:.5px;color:var(--orange-press)}
+#rec-sentence-tools{display:flex;gap:6px;pointer-events:auto}
+#rec-sentence-tools button{width:32px;height:28px;border:1px solid var(--line);
+  border-radius:9px;background:var(--canvas);color:var(--ink);font-weight:700;
+  font-size:13px;line-height:1;touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent}
+#rec-sentence-tools button:active{background:var(--orange-wash)}
+#rec-sentence-text{flex:0 1 auto;min-height:0;width:100%;overflow:hidden;
+  font-weight:700;line-height:1.42;color:var(--ink);text-align:center;
+  overflow-wrap:break-word;word-break:normal}
 
 .speak-words{font-size:max(calc(12px*var(--fs-sm)),var(--fs-sm-min));color:var(--text-sub);margin-top:8px}
 .voice-select{display:flex;gap:8px;justify-content:center;margin-bottom:12px}
@@ -2174,9 +2213,9 @@ button,.q-option,.gate-listen,.hold-btn,.tap-btn,.speak-btn{
 </div>
 
 <script>window.__appReady = false;</script>
-<script defer src="cloud.js?v=218"></script>
-<script defer src="data.js?v=218"></script>
-<script defer src="data-shuffle.js?v=218"></script>
+<script defer src="cloud.js?v=219"></script>
+<script defer src="data.js?v=219"></script>
+<script defer src="data-shuffle.js?v=219"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
 <!--
   ?v= 必须跟着版本号走（v124 修正）。
@@ -2186,13 +2225,13 @@ button,.q-option,.gate-listen,.hold-btn,.tap-btn,.speak-btn{
   这个坑很隐蔽：代码明明改了、也部署上去了，手机上跑的还是几个月前的逻辑。
   以后每次发版，这里跟着 app-version 一起改。
 -->
-<script defer src="recorder.js?v=218"></script>
-<script defer src="api.js?v=218"></script>
+<script defer src="recorder.js?v=219"></script>
+<script defer src="api.js?v=219"></script>
 <!-- v194：小游戏独立成文件，不塞进已经 800KB 的 app.js。必须排在 app.js
      **前面**：app.js 顶层有同步初始化，登录回来若正好停在「单词乐园」，
      渲染时 WordGame 得已经存在。game.js 只在被点击/渲染时才读 window.App。 -->
-<script defer src="game.js?v=218"></script>
-<script defer src="app.js?v=218"></script>
+<script defer src="game.js?v=219"></script>
+<script defer src="app.js?v=219"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {
@@ -2376,6 +2415,19 @@ function triggerPWAInstall() {
   document.addEventListener('touchend', function() { guard = false; });
 })();
 </script>
+<!-- v219 读哪句哪句弹出：fixed 卡片脱离所有滚动容器，句子永远在当前屏 -->
+<div id="rec-sentence" aria-hidden="true">
+  <div id="rec-sentence-box">
+    <div id="rec-sentence-bar">
+      <span id="rec-sentence-tag">🎤 现在读这一句</span>
+      <span id="rec-sentence-tools">
+        <button type="button" onclick="App._rsFont(-1)" aria-label="把字调小">A-</button>
+        <button type="button" onclick="App._rsFont(1)" aria-label="把字调大">A+</button>
+      </span>
+    </div>
+    <div id="rec-sentence-text"></div>
+  </div>
+</div>
 <!-- v216 统一录音控制条：任何录音入口都挂它，点一下必定结束 -->
 <div id="rec-dock" class="rec-dock" aria-hidden="true">
   <div class="rec-dock-in">

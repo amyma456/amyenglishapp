@@ -152,9 +152,13 @@ ok(/recheckMs = Date\.now\(\) - r0/.test(wsrc), '复核耗时有埋点');
 
 console.log('\n[7] 发版号一致');
 const ver = (html.match(/name="app-version" content="(\d+)"/) || [])[1];
-ok(ver === '218', 'app-version = ' + ver);
-ok(html.indexOf('app.js?v=218') > 0 && html.indexOf('api.js?v=218') > 0, '脚本都带 ?v=218');
-ok(swSrc.indexOf("'amy-english-v218'") > 0 && /var V = 218/.test(swSrc), 'sw 缓存名与 V 都升到 218');
+// 版本断言跟随当前发版滚动（v214 起的老规矩），不写死 218
+ok(Number(ver) >= 218, 'app-version >= 218（当前 ' + ver + '）');
+ok(html.indexOf('app.js?v=' + ver) > 0 && html.indexOf('api.js?v=' + ver) > 0,
+  '脚本都带当前 ?v=' + ver);
+ok(swSrc.indexOf("'amy-english-v" + ver + "'") > 0
+  && new RegExp('var V = ' + ver + ';').test(swSrc),
+  'sw 缓存名与 V 都跟着当前版本 ' + ver);
 
 console.log('\n通过 ' + pass + ' 项，失败 ' + fail + ' 项');
 process.exit(fail ? 1 : 0);

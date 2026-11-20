@@ -10984,12 +10984,29 @@ const App = {
     if (this._holdKey) return;                 // already recording something
     var self = this;
     Api.warmup();                              // 手指按下就把连接热好
+    // v219：开录即弹出当前句。作文/阅读逐句等已把目标句放在 asrHint 里，
+    // 老入口从 DOM 就近抓；tag 标出「第几句」，五六个句子不漏读。
+    var rsText = String(asrHint || '').slice(0, 300)
+      || this._rsFromDom(statusEl, ev) || this._rsActiveText();
+    var rsTag = this._rsTag(key);
+    // v219：带读还没放完就开录 —— 掐掉示范、停掉带读队列，免得机器声被
+    // 一起录进去，也别让带读回头抢这张句子卡片（按钮文案一并复原）。
+    if (this._leadReadRunning) {
+      this._leadReadRunning = false;
+      try { this._stopCurrentAudio(); } catch (e) {}
+      var leadBtn = document.querySelector('.wr-lead.playing');
+      if (leadBtn) {
+        leadBtn.classList.remove('playing');
+        leadBtn.textContent = '▶ 再带读一遍';
+      }
+    }
     this._holdKey = key;
     // v216：这一层覆盖了点一下说中文、翻译句、写作句、复习词等所有入口。
     // tap-toggle 的孩子靠它结束；按住模式松手照旧结束，浮条只是多一层保险。
     this._recDockShow(function () { self._holdEnd(); },
       tapToggle ? '🔴 录音中' : '🔴 正在听你说',
-      tapToggle ? '读完点我结束' : '松手即可结束');
+      tapToggle ? '读完点我结束' : '松手即可结束',
+      rsText, rsTag);
     this._holdDone = onDone;
     this._holdNeedsTranscript = needsTranscript !== false;
     this._holdFast = lang !== 'zh';
@@ -11846,16 +11863,21 @@ const App = {
       (document.querySelectorAll('.wr-item.lead-cur') || []).forEach(function (el) {
         el.classList.remove('lead-cur');
       });
+      this._leadReadRunning = false;
+      if (!this._holdKey) this._rsHide();   // v219：停带读就收起弹出的句子
       idle('▶ 再带读一遍（' + sents.length + ' 句）');
       return;
     }
     this._leadReadStop = false;
+    this._leadReadRunning = true;
     if (btn) { btn.textContent = '⏸ 正在带读…（点一下停）'; btn.classList.add('playing'); }
     let i = 0;
     const tick = function () {
-      if (self._leadReadStop) return;
+      if (self._leadReadStop || !self._leadReadRunning) return;
       if (i >= sents.length) {
         self._leadReadDone = true;
+        self._leadReadRunning = false;
+        if (!self._holdKey) self._rsHide();   // v219：带读完了收起卡片
         idle('▶ 再带读一遍（' + sents.length + ' 句）');
         return;
       }
@@ -11865,9 +11887,13 @@ const App = {
         item.classList.add('lead-cur');
         try { item.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
       }
+      // v219：系统读到哪句，哪句也弹出来 —— 孩子跟着看，不用在长列表里找
+      if (!self._holdKey) {
+        self._rsShow(sents[idx], '🔊 系统带读 · 第 ' + (idx + 1) + ' 句');
+      }
       self.speak(sents[idx], {
         onDone: function () {
-          if (self._leadReadStop) return;
+          if (self._leadReadStop || !self._leadReadRunning) return;
           const el = document.getElementById('wr-item-' + mi + '-' + idx);
           if (el) el.classList.remove('lead-cur');
           // 这一句听过了 → 它的麦克风解锁（跟「点 🔊 听这句」走同一个门）
@@ -12028,6 +12054,18 @@ const App = {
       prog.innerHTML = allRead
         ? '<span class="wr-allok">🎉 全部读完了，中文翻译在下面</span>'
         : '已读对 <b>' + done + '</b> / ' + sents.length + ' 句';
+    }
+
+    // v219：把「现在该读哪一句」亮出来 —— 一屏五六个句子，按顺序读不漏句
+    var nextIdx = -1;
+    for (var i = 0; i < sents.length; i++) {
+      if (!st.passed[i]) { nextIdx = i; break; }
+    }
+    var items = document.querySelectorAll('.wr-item[id^="wr-item-"]');
+    for (var j = 0; j < items.length; j++) items[j].classList.remove('wr-now');
+    if (nextIdx >= 0) {
+      var nowEl = document.getElementById('wr-item-' + mi + '-' + nextIdx);
+      if (nowEl) nowEl.classList.add('wr-now');
     }
 
     if (allRead) {
@@ -13898,13 +13936,126 @@ const App = {
   // body 顶层、position:fixed、z-index 2000，不受任何祖先的 display:none /
   // overflow:hidden 影响，也不依赖原按钮还在不在屏幕里。
   // 点它直接调当前录音的结束函数，绕开"按钮被裁掉 / 双击被当误触"两条死路。
-  _recDockShow(stopFn, label, btnLabel) {
+
+  // ===== v219：读哪句，哪句弹出来 =========================================
+  // 家长 2026-11-21：作文一屏五六个句子，读到第三、四句一点录音，那句就
+  // "哗"地不见了，只能靠背。根因是录音时舞台 overflow:hidden→auto 一切换，
+  // 整个列表重排、滚动位置丢失。不再试图"滚回去"—— 把当前句做成 body 顶层
+  // 的 fixed 卡片，脱离所有滚动/裁切容器，读哪句就弹哪句，长短都完整可见。
+  _rsShow(text, tag) {
+    var card = document.getElementById('rec-sentence');
+    var el = document.getElementById('rec-sentence-text');
+    var tagEl = document.getElementById('rec-sentence-tag');
+    if (!card || !el) return;
+    var t = String(text || '').replace(/\s+/g, ' ').trim();
+    if (!t) { this._rsHide(); return; }
+    if (tagEl) tagEl.textContent = tag || '🎤 现在读这一句';
+    document.body.classList.add('rec-sentence-on');
+    this._rsText = t;
+    this._rsFit(t);
+    if (!this._rsResizeBound) {
+      this._rsResizeBound = true;
+      var selfR = this;
+      window.addEventListener('resize', function () {
+        if (document.body.classList.contains('rec-sentence-on') && selfR._rsText) {
+          selfR._rsFit(selfR._rsText);
+        }
+      });
+    }
+  },
+  _rsHide() {
+    document.body.classList.remove('rec-sentence-on');
+    this._rsText = '';
+  },
+  // A- / A+ 手动调字号，按本机记住（老师调过一次，以后都按这个来）
+  _rsFont(d) {
+    var s = 1;
+    try { s = parseFloat(localStorage.getItem('amy-rs-scale') || '1') || 1; } catch (e) {}
+    s = Math.max(0.7, Math.min(1.4, Math.round((s + d * 0.1) * 10) / 10));
+    try { localStorage.setItem('amy-rs-scale', String(s)); } catch (e) {}
+    this._rsScale = s;
+    if (this._rsText) this._rsFit(this._rsText);
+  },
+  // 字号自适应：短句用"手机屏幕放得下的最大字"，长句逐级缩到整句能完整
+  // 落在一屏里。量的是真实渲染高度，比按字数估行数准（换行随屏宽变）。
+  _rsFit(text) {
+    var box = document.getElementById('rec-sentence-box');
+    var el = document.getElementById('rec-sentence-text');
+    if (!box || !el) return;
+    el.textContent = text;
+    if (this._rsScale == null) {
+      var saved = 1;
+      try { saved = parseFloat(localStorage.getItem('amy-rs-scale') || '1') || 1; } catch (e) {}
+      this._rsScale = Math.max(0.7, Math.min(1.4, saved));
+    }
+    var fs = 1;
+    try { fs = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--fs')) || 1; } catch (e) {}
+    var vw = Math.min(window.innerWidth || 390, 480);
+    var size = Math.round(Math.max(22, Math.min(42, 30 * fs * Math.min(1.12, vw / 390) * this._rsScale)));
+    var min = 14;
+    el.style.fontSize = size + 'px';
+    for (var i = 0; i < 48 && size > min; i++) {
+      if (el.scrollHeight <= el.clientHeight + 1) break;
+      size -= 1;
+      el.style.fontSize = size + 'px';
+    }
+    // 极长的句子缩到最小仍差一点：允许在卡片内部上下滑，绝不裁掉半句
+    if (el.scrollHeight > el.clientHeight + 1) {
+      el.style.overflowY = 'auto';
+      el.style.pointerEvents = 'auto';
+    } else {
+      el.style.overflowY = 'hidden';
+      el.style.pointerEvents = 'none';
+    }
+  },
+  // 没显式传目标句时，从当前录音按钮/面板就近抓一句（覆盖所有老入口）
+  _rsActiveText() {
+    var btn = document.querySelector('.word-read-btn.reading, .hold-target.reading');
+    if (btn) return this._rsFromDom(null, { currentTarget: btn });
+    var sels = ['.rd-sentence.rd-rec', '.speaking-card.is-recording .rd-sentence',
+                '.sp-card.is-recording .speak-phrase'];
+    for (var i = 0; i < sels.length; i++) {
+      var hit = document.querySelector(sels[i]);
+      if (hit) {
+        var t = (hit.textContent || '').replace(/\s+/g, ' ').trim();
+        if (t.length > 2) return t.slice(0, 300);
+      }
+    }
+    return '';
+  },
+  // 从 status 元素 / 事件按钮向上找最近的一句英文
+  _rsFromDom(statusEl, ev) {
+    var roots = [];
+    if (statusEl) roots.push(statusEl);
+    if (ev && ev.currentTarget) roots.push(ev.currentTarget);
+    var sels = '.wr-words,.sent-text,.rd-sentence,.speak-phrase,.q-text,.passage-full';
+    for (var r = 0; r < roots.length; r++) {
+      var node = roots[r];
+      for (var up = 0; node && up < 5; up++, node = node.parentElement) {
+        var hit = node.querySelector ? node.querySelector(sels) : null;
+        if (hit && (hit.textContent || '').trim().length > 2) {
+          return (hit.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 300);
+        }
+      }
+    }
+    return '';
+  },
+  _rsTag(key) {
+    var m = /^(?:wr|sent|trs|cqtrs)-(\d+)-(\d+)$/.exec(String(key || ''));
+    if (m) return '🎤 第 ' + (Number(m[2]) + 1) + ' 句 · 看着读';
+    return '🎤 现在读这一句';
+  },
+
+  _recDockShow(stopFn, label, btnLabel, sentence, sentenceTag) {
     this._recDockStop = (typeof stopFn === 'function') ? stopFn : null;
     var lab = document.getElementById('rec-dock-label');
     var btn = document.getElementById('rec-dock-stop');
     if (lab) lab.textContent = label || '🔴 录音中';
     if (btn) btn.textContent = btnLabel || '读完点我结束';
     document.body.classList.add('rec-dock-on');
+    // v219：把「当前正在读的这一句」弹到屏幕上层。列表怎么重排、滚到哪儿
+    // 都不影响这张 fixed 卡片 —— 抬眼就能看着读，不用把句子背下来。
+    this._rsShow(sentence || this._rsActiveText(), sentenceTag);
     clearTimeout(this._recDockTimer);
     var self = this;
     // 最后一道兜底：切页 / 崩溃 / 录音卡死，浮条都不许赖在屏幕上。
@@ -13915,6 +14066,7 @@ const App = {
     this._recDockTimer = null;
     this._recDockStop = null;
     document.body.classList.remove('rec-dock-on');
+    this._rsHide();                 // v219：录音一结束，弹出的句子一起收起来
   },
   _recDockTap(e) {
     if (e && e.preventDefault) e.preventDefault();
