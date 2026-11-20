@@ -281,10 +281,16 @@ if (App) {
 }
 
 // ---------------------------------------------------------------------------
+// 版本钉子只要求「>= 208 且三处一致」。后续发版版本号会继续往前走，
+// 硬钉 208 会在每次回归里误报，反而把真正的功能回归淹掉。
 console.log('\n[5] 版本钉子');
-ok(/<meta name="app-version" content="208">/.test(html), 'index.html meta = 208');
-ok((html.match(/\?v=208/g) || []).length === 7, '7 处脚本引用都升到 208');
-ok(/var V = 208;/.test(swSrc) && /amy-english-v208/.test(swSrc), 'sw.js V / CACHE_NAME = 208');
+const cur208 = (html.match(/name="app-version" content="(\d+)"/) || [])[1] || '0';
+ok(Number(cur208) >= 208, 'index.html app-version >= 208（当前 ' + cur208 + '）');
+ok((html.match(new RegExp('\\?v=' + cur208 + '\\b', 'g')) || []).length === 7,
+  '7 处脚本引用都跟着当前版本 ' + cur208);
+ok(new RegExp('var V = ' + cur208 + ';').test(swSrc) &&
+   swSrc.indexOf('amy-english-v' + cur208) >= 0,
+  'sw.js V / CACHE_NAME = ' + cur208);
 
 console.log('\nv208: ' + pass + ' passed, ' + fail + ' failed');
 if (fail) process.exit(1);

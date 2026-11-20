@@ -1237,6 +1237,202 @@ function aiCombineScore(target, text, words, confidence) {
   };
 }
 
+// ---------------------------------------------------------------------------
+// v218 · 「第二意见」贴合度门控
+//
+// 家长 2026-11-20：「时间又短，判分又准」。
+//
+// v215 把微软提到首发后，出分从 6.4s 降到 0.9s，但微软的普通识别**不带
+// 目标句提示**（它的 REST 接口没有 phrase list；带 ReferenceText 的发音评估
+// 又会把转写硬对齐到参考句，读错也满分，见上面 v215 的注释）。孩子发音含糊
+// 时，微软容易把词听岔，前端 alignSpeech 拿这条转写去比对目标句就判不过 ——
+// 这正是 Harvey「平时读了就能过，今天读好几次都过不了」的时间点来源。
+//
+// 阿里云 qwen3-asr-flash 的 system prompt 里带目标句（见 aliyunSystem），对
+// 含糊发音贴合得更好，但它在这条跨境链路上常 3.2s 超时、重试到 6.4s。
+//
+// 所以不二选一、也不等齐：
+//   · 两条同时起跑，微软先回且**贴合目标句** → 0.9s 直接用，一点没变慢；
+//   · 微软先回但明显对不上 → 不拿它直接判「不过」，等已经在路上的阿里云给
+//     第二意见，最多等 V218_RECHECK_WAIT_MS，谁更贴目标句就用谁；
+//   · 等不到 / 第二意见更差 → 用原结果，绝不把孩子卡在转圈里。
+//
+// 门控口径必须和前端判分一致，否则「服务端觉得贴、前端判不过」就漏救了。
+// 下面这组函数是 public/app.js 里 alignSpeech / _wordSame / _tokens 的等价
+// 复刻（故意省略复合词合并那一小段：宁可低估贴合度多复核一次，也不能高估）。
+// ⚠️ 改前端那几个判分函数时这里要同步改；tools/verify-v218.js 拿真实句子
+//    把两边的分数对一遍，守着这条一致性。
+// ---------------------------------------------------------------------------
+// v218-pure-start
+const V218_FAST_PASS = 60;          // 与前端 App.PASS_SCORE 保持一致
+const V218_RECHECK_WAIT_MS = 1200;  // 第二意见最多等这么久，超时就用原结果
+
+const V218_GLUE = {
+  a: 1, an: 1, the: 1, is: 1, am: 1, are: 1, was: 1, were: 1, be: 1, been: 1,
+  do: 1, does: 1, did: 1, of: 1, to: 1, and: 1, or: 1, in: 1, on: 1, at: 1,
+  as: 1, so: 1, but: 1, for: 1, with: 1, that: 1, this: 1, us: 1, not: 1,
+};
+const V218_NUM_WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six',
+  'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen',
+  'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty'];
+const V218_CONTRACTIONS = {
+  "i'm": 'i am', "i've": 'i have', "i'll": 'i will', "i'd": 'i would',
+  "you're": 'you are', "you've": 'you have', "you'll": 'you will', "you'd": 'you would',
+  "we're": 'we are', "we've": 'we have', "we'll": 'we will', "we'd": 'we would',
+  "they're": 'they are', "they've": 'they have', "they'll": 'they will', "they'd": 'they would',
+  "he's": 'he is', "she's": 'she is', "it's": 'it is', "that's": 'that is',
+  "what's": 'what is', "where's": 'where is', "who's": 'who is', "how's": 'how is',
+  "there's": 'there is', "here's": 'here is', "let's": 'let us',
+  "don't": 'do not', "doesn't": 'does not', "didn't": 'did not',
+  "isn't": 'is not', "aren't": 'are not', "wasn't": 'was not', "weren't": 'were not',
+  "can't": 'cannot', "couldn't": 'could not', "won't": 'will not', "wouldn't": 'would not',
+  "shouldn't": 'should not', "mustn't": 'must not',
+  "haven't": 'have not', "hasn't": 'has not', "hadn't": 'had not',
+  "gonna": 'going to', "wanna": 'want to', "gotta": 'got to', "ok": 'okay',
+};
+
+function v218SpellNumber(n) {
+  const v = parseInt(n, 10);
+  if (isNaN(v)) return String(n);
+  if (v <= 20) return V218_NUM_WORDS[v];
+  if (v < 100) {
+    const tens = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
+    const t = tens[Math.floor(v / 10)], o = v % 10;
+    return o ? t + ' ' + V218_NUM_WORDS[o] : t;
+  }
+  return String(v);
+}
+function v218Tokens(s) {
+  const raw = String(s || '').toLowerCase()
+    .replace(/(\d+)/g, function (_, d) { return ' ' + v218SpellNumber(d) + ' '; })
+    .replace(/[^a-z'\s]/g, ' ')
+    .split(/\s+/).filter(Boolean);
+  const out = [];
+  for (let i = 0; i < raw.length; i++) {
+    const t = raw[i];
+    if (t === 'can' && raw[i + 1] === 'not') { out.push('cannot'); i++; continue; }
+    const e = V218_CONTRACTIONS[t];
+    if (e) {
+      const parts = e.split(' ');
+      for (let k = 0; k < parts.length; k++) out.push(parts[k]);
+    } else out.push(t);
+  }
+  return out;
+}
+function v218SoundKey(w) {
+  let x = String(w).toLowerCase().replace(/[^a-z]/g, '');
+  if (!x) return '';
+  x = x.replace(/^kn/, 'n').replace(/^wr/, 'r').replace(/^gn/, 'n')
+       .replace(/^ps/, 's').replace(/^x/, 'z')
+       .replace(/dge/g, 'j').replace(/tch/g, 'ch')
+       .replace(/ph/g, 'f').replace(/ck/g, 'k').replace(/qu/g, 'kw')
+       .replace(/ch/g, 'sh').replace(/gh/g, '')
+       .replace(/([a-z])\1+/g, '$1');
+  if (x.length > 2) x = x.replace(/e$/, '').replace(/([aeiou])w$/, '$1');
+  x = x.replace(/([aeiou])\1/g, '$1');
+  return x || String(w).toLowerCase().replace(/[^a-z]/g, '');
+}
+function v218EditDistance(a, b) {
+  const n = a.length, m = b.length;
+  if (!n) return m;
+  if (!m) return n;
+  let prev = Array.from({ length: m + 1 }, (_, j) => j);
+  for (let i = 1; i <= n; i++) {
+    const cur = [i];
+    for (let j = 1; j <= m; j++) {
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1,
+        prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    }
+    prev = cur;
+  }
+  return prev[m];
+}
+function v218InflectSame(a, b) {
+  if (a.length < 4 || b.length < 4) return false;
+  const rules = [['ies', 'y'], ['ing', ''], ['est', ''], ['ed', ''], ['es', ''],
+                 ['er', ''], ['ly', ''], ['s', ''], ['d', '']];
+  const strip = function (w) {
+    const out = [w];
+    for (let i = 0; i < rules.length; i++) {
+      const suf = rules[i][0];
+      if (w.length > suf.length + 2 && w.slice(-suf.length) === suf) {
+        out.push(w.slice(0, w.length - suf.length) + rules[i][1]);
+      }
+    }
+    return out;
+  };
+  const A = strip(a), B = strip(b);
+  for (let i = 0; i < A.length; i++) {
+    for (let j = 0; j < B.length; j++) if (A[i] === B[j]) return true;
+  }
+  return false;
+}
+function v218WordSame(expected, heard) {
+  const a0 = String(expected == null ? '' : expected).toLowerCase();
+  const b0 = String(heard == null ? '' : heard).toLowerCase();
+  if (!a0 || !b0) return false;
+  if (a0 === b0) return true;
+  const x = v218SoundKey(a0), y = v218SoundKey(b0);
+  if (!x || !y) return false;
+  if (x === y) return true;
+  if (v218EditDistance(x, y) <= 1 && (x.length !== y.length || (x.length >= 4 && y.length >= 4))) return true;
+  if (v218InflectSame(a0, b0)) return true;
+  if (x.length >= 6 && y.length >= 6 && (x.indexOf(y) === 0 || y.indexOf(x) === 0)) return true;
+  return false;
+}
+/** 目标句与转写的贴合度 0~100，口径 == 前端 alignSpeech().score（略保守）。 */
+function v218TargetMatch(target, spoken) {
+  const t = v218Tokens(target), s = v218Tokens(spoken);
+  const n = t.length, m = s.length;
+  if (!n || !m) return 0;
+  const d = [], bt = [];
+  for (let i = 0; i <= n; i++) { d.push(new Array(m + 1).fill(0)); bt.push(new Array(m + 1).fill('')); }
+  for (let i = 1; i <= n; i++) { d[i][0] = i; bt[i][0] = 'del'; }
+  for (let j = 1; j <= m; j++) { d[0][j] = j; bt[0][j] = 'ins'; }
+  for (let i = 1; i <= n; i++) {
+    for (let j = 1; j <= m; j++) {
+      const same = v218WordSame(t[i - 1], s[j - 1]);
+      const sub = d[i - 1][j - 1] + (same ? 0 : 1);
+      const del = d[i - 1][j] + 1, ins = d[i][j - 1] + 1;
+      const best = Math.min(sub, del, ins);
+      d[i][j] = best;
+      bt[i][j] = best === sub ? (same ? 'match' : 'sub') : (best === del ? 'del' : 'ins');
+    }
+  }
+  const out = [];
+  let i = n, j = m;
+  while (i > 0 || j > 0) {
+    const op = i === 0 ? 'ins' : j === 0 ? 'del' : bt[i][j];
+    if (op === 'match' || op === 'sub') {
+      out.push({ target: t[i - 1], status: op === 'match' ? 'ok' : 'wrong' }); i--; j--;
+    } else if (op === 'del') { out.push({ target: t[i - 1], status: 'missing' }); i--; }
+    else { out.push({ target: null, status: 'extra' }); j--; }
+  }
+  let ok = 0;
+  for (let k = 0; k < out.length; k++) {
+    const it = out[k];
+    if (it.target && (it.status === 'ok' || V218_GLUE[it.target])) ok++;
+  }
+  return Math.round(ok / n * 100);
+}
+/** 只有「微软无偏置那条先赢、且明显对不上」才需要第二意见。 */
+function v218NeedRecheck(who, match, bias, mode) {
+  if (who !== 'az') return false;
+  if (!bias || mode === 'zh' || mode === 'letter') return false;
+  return match < V218_FAST_PASS;
+}
+/** 纯函数：两份转写里挑更贴目标句的。primary/alt 形如 {who, r:{text,...}}。 */
+function v218ChooseAsr(primary, alt, bias) {
+  const pm = v218TargetMatch(bias, primary && primary.r ? primary.r.text : '');
+  if (!alt || !alt.r || !alt.r.text) {
+    return { win: primary, decision: 'recheck-empty', match: pm, altMatch: 0 };
+  }
+  const am = v218TargetMatch(bias, alt.r.text);
+  if (am > pm) return { win: alt, decision: 'recheck', match: am, altMatch: pm };
+  return { win: primary, decision: 'keep', match: pm, altMatch: am };
+}
+// v218-pure-end
+
 async function transcribe(request, env) {
   // 耗时埋点（v99）。家长问"为什么这么慢"，吵架没有意义，把时间切开看：
   //   upload = 孩子的音频从手机爬到边缘这段（跨境链路，代码管不了）
@@ -1312,6 +1508,12 @@ async function transcribe(request, env) {
   // v215：微软发音评估给的官方准确度（0~100）。有它就不再用本地 LCS 估分 ——
   // 本地那套是"命中率 + 置信度"的近似，它是同一个模型对每个音素的打分。
   let azureAccuracy = null;
+  // v218：第二意见的决策记录。只用于线上排查（谁赢了、贴合度多少、等了多久），
+  // 不参与前端的对错判定。
+  let asrDecision = 'fast';
+  let asrMatch = null;
+  let asrAltMatch = null;
+  let recheckMs = 0;
 
   let model = '';
   let text = '';
@@ -1562,6 +1764,32 @@ async function transcribe(request, env) {
     }
 
     if (win && win.r) {
+      // ── v218 · 第二意见 ────────────────────────────────────────────────
+      // 微软（无目标句偏置）先赢、但转写明显对不上这一句时，别急着把它交给
+      // 前端判「不过」。阿里云那条带着目标句提示、从一开始就并行在跑，等它
+      // 一小会儿，谁的转写更贴目标句就用谁。读对了的情况贴合度达标，直接走
+      // 0.9s 快路径，下面这段 if 根本不进 —— 提速成果一点不丢。
+      const primaryMatch = win.r.text ? v218TargetMatch(bias, win.r.text) : 0;
+      asrMatch = primaryMatch;
+      if (win.r.text && v218NeedRecheck(win.who, primaryMatch, bias, mode)) {
+        const r0 = Date.now();
+        const second = await Promise.race([
+          aliP.then(function (r) { return { who: 'ali', r: r }; })
+            .catch(function () { return null; }),
+          new Promise(function (r) {
+            setTimeout(function () { r(null); }, V218_RECHECK_WAIT_MS);
+          }),
+        ]);
+        recheckMs = Date.now() - r0;
+        const choice = second
+          ? v218ChooseAsr(win, second, bias)
+          : { win: win, decision: 'timeout', match: primaryMatch, altMatch: 0 };
+        win = choice.win;
+        asrDecision = choice.decision;
+        asrMatch = choice.match;
+        asrAltMatch = choice.altMatch;
+      }
+      // ── 以下与 v215 完全一致 ──────────────────────────────────────────
       if (win.r.text) { text = win.r.text; model = win.r.model; answered = true; }
       if (win.r.answered) answered = true;
       if (win.r.dead) deadAny = true;
@@ -1587,8 +1815,12 @@ async function transcribe(request, env) {
     return {
       'Server-Timing': 'upload;dur=' + uploadMs + ', ali;dur=' + aliMs +
         ', cf;dur=' + cfMs + ', az;dur=' + azMs + ', hedge;dur=' + hedgeUsed +
+        ', verify;dur=' + recheckMs +
         ', total;dur=' + (Date.now() - t0),
       'X-Asr-Channel': channel,
+      // v218：curl 一下就能看到这次走的是快路径还是复核、贴合度多少。
+      'X-Asr-Decision': asrDecision,
+      'X-Asr-Match': asrMatch == null ? '' : String(asrMatch),
       // 实际收进来的是什么编码 + 多少字节（v103）。µ-law 生效时字节数应该是
       // 老客户端的一半 —— 排查"压缩到底有没有上"直接看这个，不用猜。
       'X-Audio-In': audioIn + ';bytes=' + (bytes ? bytes.length : 0),
@@ -1624,6 +1856,10 @@ async function transcribe(request, env) {
     aiScore: aiScore,
     aiBy: ai ? (usePa ? 'azure-pa' : (azureWords ? 'azure-ai' : 'edge-ai')) : '',
     aiDetail: ai ? { hit: ai.hit, total: ai.total, confidence: ai.confidence } : null,
+    // v218：这一遍的决策留痕，方便线上核对「是不是第二意见救回来的」。
+    asrDecision: asrDecision,
+    asrMatch: asrMatch,
+    asrAltMatch: asrAltMatch,
     // v215：微软发音评估的词级分数与错误标记（Omission / Mispronunciation /
     // Insertion）。现在只透传，判定层不用它 —— 留着给"哪个词没读准"的高亮用。
     paWords: (usePa && azureWords) ? azureWords.map(function (w) {
@@ -2757,7 +2993,9 @@ function cors(res, env) {
   h.set('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
   h.set('Access-Control-Allow-Headers', 'Content-Type');
   // 让 api. 子域这条跨域路也能读到耗时埋点（同域本来就能读）。
-  h.set('Access-Control-Expose-Headers', 'Server-Timing, X-Asr-Channel, X-Edge-Colo, X-Audio-In');
+  // v218：补上第二意见的决策头，老师端/排查脚本跨域也能看到走的是哪条路。
+  h.set('Access-Control-Expose-Headers',
+    'Server-Timing, X-Asr-Channel, X-Asr-Decision, X-Asr-Match, X-Edge-Colo, X-Audio-In');
   h.set('Access-Control-Max-Age', '86400');
   return new Response(res.body, { status: res.status, headers: h });
 }

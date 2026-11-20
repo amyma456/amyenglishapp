@@ -89,13 +89,16 @@ section('[4] 点停止一定能停');
     '录音中重渲染不会把浮条弄丢');
 }
 
-section('[5] 版本钉子 = 216');
+section('[5] 版本钉子（>= 216 且各处一致，后续发版不误报）');
 {
-  ok(/name="app-version" content="216"/.test(htmlSrc), 'index.html app-version = 216');
-  ok((htmlSrc.match(/\?v=216/g) || []).length === 7, 'index.html 7 处 ?v=216');
+  const cur216 = (htmlSrc.match(/name="app-version" content="(\d+)"/) || [])[1] || '0';
+  ok(Number(cur216) >= 216, 'index.html app-version >= 216（当前 ' + cur216 + '）');
+  ok((htmlSrc.match(new RegExp('\\?v=' + cur216 + '\\b', 'g')) || []).length === 7,
+    'index.html 7 处 ?v=' + cur216);
   ok((htmlSrc.match(/\?v=214/g) || []).length === 0, '无残留 ?v=214');
-  ok(/var CACHE_NAME = 'amy-english-v216';/.test(swSrc), 'sw.js CACHE_NAME = v216');
-  ok(/var V = 216;/.test(swSrc), 'sw.js V = 216');
+  ok(swSrc.indexOf("var CACHE_NAME = 'amy-english-v" + cur216 + "';") >= 0,
+    'sw.js CACHE_NAME = v' + cur216);
+  ok(new RegExp('var V = ' + cur216 + ';').test(swSrc), 'sw.js V = ' + cur216);
 }
 
 section('[6] 真跑状态机：点浮条确实停、且只停一次');

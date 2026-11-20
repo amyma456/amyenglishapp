@@ -129,11 +129,14 @@ ok(/\.stage-body > \.sent-step > \.word-read-btn\{position:sticky/.test(html),
   '跟读按钮在句子卡里吸底，长句也划得到');
 
 // ---------------------------------------------------------------------------
+// 版本钉子只要求「>= 217 且三处一致」，后续发版不误报。
 console.log('\n[4] 发版号一致');
 const ver = (html.match(/name="app-version" content="(\d+)"/) || [])[1];
-ok(ver === '217', 'app-version = ' + ver);
-ok(html.indexOf('app.js?v=217') > 0 && html.indexOf('api.js?v=217') > 0, '脚本都带 ?v=217');
-ok(swSrc.indexOf("'amy-english-v217'") > 0 && /var V = 217/.test(swSrc), 'sw 缓存名与 V 都升到 217');
+ok(Number(ver) >= 217, 'app-version >= 217（当前 ' + ver + '）');
+ok(html.indexOf('app.js?v=' + ver) > 0 && html.indexOf('api.js?v=' + ver) > 0,
+  '脚本都带当前 ?v=' + ver);
+ok(swSrc.indexOf("'amy-english-v" + ver + "'") > 0 &&
+   new RegExp('var V = ' + ver + ';').test(swSrc), 'sw 缓存名与 V 都是 ' + ver);
 
 console.log('\n通过 ' + pass + ' 项，失败 ' + fail + ' 项');
 process.exit(fail ? 1 : 0);
