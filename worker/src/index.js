@@ -1028,7 +1028,10 @@ async function aliyunTranscribe(bytes, env, mode, bias, mime) {
   if (Array.isArray(content)) {
     content = content.map((p) => (typeof p === 'string' ? p : (p && p.text) || '')).join('');
   }
-  return String(content || '').trim();
+  const text = String(content || '').trim();
+  // v218：静音/纯噪声时它会把 system prompt 连同目标句复读出来，那不是转写，
+  // 交给前端比对会变成「没读也满分」。函数定义在下方 v218 纯函数块（声明提升）。
+  return v218StripPromptEcho(text, aliyunSystem(mode, bias), bias);
 }
 
 // 阿里云会把 "11-year-old" 规范化成 "eleven-year-old"。英文正常走 Cloudflare
@@ -1430,6 +1433,31 @@ function v218ChooseAsr(primary, alt, bias) {
   const am = v218TargetMatch(bias, alt.r.text);
   if (am > pm) return { win: alt, decision: 'recheck', match: am, altMatch: pm };
   return { win: primary, decision: 'keep', match: pm, altMatch: am };
+}
+
+/**
+ * v218 附带的判分漏洞修复：qwen3-asr-flash 在几乎没听到声音时，会把
+ * system prompt 连同里面的目标句一起**复读**出来。线上 2026-11-20 用 0.1s
+ * 静音打 /api/transcribe 实测，返回的是：
+ *   "The speaker is reading this text aloud: The cat is sleeping on the mat."
+ * 这段不是转写，却正好含目标句 —— 交给前端 alignSpeech 会判 100 分，
+ * 变成「孩子一个字没读也能过」。只在「整段就是提示/目标句的照抄」时判为
+ * 没听清；正常转写、以及提示后面还跟着孩子真读的内容，一律原样放行。
+ */
+function v218StripPromptEcho(content, sys, bias) {
+  const c = String(content || '').trim();
+  if (!c) return '';
+  const s = String(sys || '').trim();
+  if (!s) return c;
+  const norm = function (x) {
+    return String(x || '').toLowerCase().replace(/[^a-z0-9\s']/g, ' ')
+      .replace(/\s+/g, ' ').trim();
+  };
+  const nc = norm(c), ns = norm(s), want = norm(bias);
+  if (nc.indexOf(ns) !== 0) return c;     // 不是复读，正常转写
+  const rest = nc.slice(ns.length).trim();
+  if (!rest || (want && rest === want)) return '';   // 纯复读 → 没听清
+  return c;                              // 后面还有真内容，保留
 }
 // v218-pure-end
 

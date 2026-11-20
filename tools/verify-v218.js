@@ -36,7 +36,8 @@ let W = null;
 try {
   const pure = wsrc.slice(pureStart, pureEnd);
   W = new Function(pure + '\nreturn {v218TargetMatch, v218NeedRecheck, v218ChooseAsr, ' +
-    'v218WordSame, v218Tokens, V218_FAST_PASS, V218_RECHECK_WAIT_MS};')();
+    'v218WordSame, v218Tokens, v218StripPromptEcho, ' +
+    'V218_FAST_PASS, V218_RECHECK_WAIT_MS};')();
 } catch (e) { console.log('    加载失败：' + String(e).slice(0, 200)); }
 ok(!!W, 'worker 纯函数块能在沙箱里加载');
 if (!W) { console.log('\n通过 ' + pass + ' 项，失败 ' + fail + ' 项'); process.exit(1); }
@@ -114,7 +115,23 @@ ok(c2.decision === 'keep' && c2.win === primary, '第二意见更差 → 保留�
 const c3 = W.v218ChooseAsr(primary, empty, bias);
 ok(c3.decision === 'recheck-empty' && c3.win === primary, '第二意见空手 → 原样返回');
 
-console.log('\n[5] 主流程接线与超时兜底');
+console.log('\n[5] 顺带修掉的判分漏洞：静音时模型复读提示词');
+const echoBias = 'the cat is sleeping on the mat';
+const echoSys = 'The speaker is reading this text aloud: ' + echoBias;
+const echoHeard = 'The speaker is reading this text aloud: The cat is sleeping on the mat.';
+ok(W.v218StripPromptEcho(echoHeard, echoSys, echoBias) === '',
+  '线上实测那段复读 → 判为没听清，不再「一个字没读也满分」');
+ok(W.v218StripPromptEcho(echoSys, echoSys, echoBias) === '',
+  '只复读提示、连目标句都没有 → 同样判没听清');
+ok(W.v218StripPromptEcho('the cat is sleeping on the mat', echoSys, echoBias)
+  === 'the cat is sleeping on the mat', '正常转写原样放行，不误伤');
+ok(W.v218StripPromptEcho('The speaker is reading this text aloud: The dog is running', echoSys, echoBias)
+  .indexOf('The dog is running') >= 0, '提示后面跟着孩子真读的内容 → 保留');
+ok(W.v218StripPromptEcho('', echoSys, echoBias) === '', '空文本仍是空');
+ok(/v218StripPromptEcho\(text, aliyunSystem\(mode, bias\), bias\)/.test(wsrc),
+  '过滤接在阿里云转写返回处（不是只写了函数没接线）');
+
+console.log('\n[6] 主流程接线与超时兜底');
 ok(/v218NeedRecheck\(win\.who, primaryMatch, bias, mode\)/.test(wsrc),
   '门控接在拿到首发结果之后、所有赋值之前');
 ok(/aliP\.then\(function \(r\) \{ return \{ who: 'ali', r: r \}; \}\)/.test(wsrc),
@@ -133,7 +150,7 @@ ok(/'X-Asr-Decision', 'X-Asr-Match'/.test(wsrc) || /X-Asr-Decision, X-Asr-Match/
 ok(/verify;dur=/.test(wsrc), 'Server-Timing 里能看出复核等了多久');
 ok(/recheckMs = Date\.now\(\) - r0/.test(wsrc), '复核耗时有埋点');
 
-console.log('\n[6] 发版号一致');
+console.log('\n[7] 发版号一致');
 const ver = (html.match(/name="app-version" content="(\d+)"/) || [])[1];
 ok(ver === '218', 'app-version = ' + ver);
 ok(html.indexOf('app.js?v=218') > 0 && html.indexOf('api.js?v=218') > 0, '脚本都带 ?v=218');
