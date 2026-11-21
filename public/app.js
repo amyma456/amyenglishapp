@@ -8920,9 +8920,32 @@ const App = {
       // 按钮跟着状态走：没达标 → 变成"我背好了，再说一遍"。
       if (btn) btn.textContent = below ? '🎤 我背好了，再说一遍' : '🎤 点一下说中文';
 
-      const passed = heard ? self._gateStep(r.score, true)
-                           : (voiceOk ? self._gateStep(self.TRANS_PASS, true) : false);
-      if (slot && !passed) slot.insertAdjacentHTML('beforeend', self._retryHint(false, false));
+      // v221（Harvey 平板 2026-11-21 卡在第 19 题）：阅读理解逐句翻译原来
+      // 只有 >=60 分才放行，而第 19 题是「海水用非常大的重量压着潜水器，
+      // 就像一头大象站在一张小桌上」这种长比喻句，LCS 覆盖率天然偏低；
+      // 孩子反复说也过不了，底部「下一句」永远灰着，一整天的打卡就停在
+      // 这一屏。现在与完形填空逐句翻译统一口径：
+      //   · 有声音但识别端没回话 → 放行（v148 原有）
+      //   · 40~60 分（soft，意思差一点）→ 放行，参考译文照样给
+      //   · 只有"出入太大 / 完全没录到"才要求重说，且连续两次自动放行
+      const band = self._transBand(heard ? r.score : 0, !!heard);
+      let okSpeak = voiceOk ? true : (heard ? band !== 'hard' : false);
+      const failKey = 'tr-' + self.state.currentDay + '-' + mi + '-' + si;
+      self._trFail = self._trFail || {};
+      if (!okSpeak) {
+        self._trFail[failKey] = (self._trFail[failKey] || 0) + 1;
+        if (self._trFail[failKey] >= 2) okSpeak = true;   // 绝不把孩子锁死在一题上
+      } else {
+        delete self._trFail[failKey];
+      }
+      const passed = okSpeak ? self._gateStep(self.TRANS_PASS, true)
+                             : self._gateStep(0, false);
+      if (slot && !passed) {
+        slot.insertAdjacentHTML('beforeend', self._retryHint(false, !!heard));
+      } else if (okSpeak && slot && band === 'soft') {
+        slot.insertAdjacentHTML('beforeend',
+          '<div class="retry-hint" style="color:#8A6D3B">意思差不多，先往下做，回头再练一遍这句～</div>');
+      }
 
       if (heard) {
         Api.submitSpeakingScore({
@@ -9327,7 +9350,21 @@ const App = {
 
   _gateStep(score, hasSpeech) {
     const next = document.getElementById('stage-next-btn');
-    const passed = !!hasSpeech && score >= this.PASS_SCORE;
+    let passed = !!hasSpeech && score >= this.PASS_SCORE;
+    // v221 防卡死：同一屏连续两次没过（识别没回话 / 分数不够 / 设备不出声 /
+    // 平板录音异常），就不再把「下一题」锁死。第一次仍按老规矩要求，
+    // 教学口径不变；两次还不行说明是设备或识别的问题，不该算孩子的账。
+    const key = this.state.currentDay + ':' + this.state.stepIdx;
+    this._gateFail = this._gateFail || {};
+    if (!passed) {
+      this._gateFail[key] = (this._gateFail[key] || 0) + 1;
+      if (this._gateFail[key] >= 2) {
+        passed = true;
+        this.showToast('这题先过，回头再练一遍就好', 'warn');
+      }
+    } else {
+      delete this._gateFail[key];
+    }
     if (next) {
       next.disabled = !passed;
       next.classList.toggle('nudge', passed);
@@ -12788,6 +12825,26 @@ const App = {
     }
   },
 
+  // v221：孩子/家长点「这题做不了？先跳过」时走这里。只有明确点了才绕开
+  // 判分/录音门，平时「下一题」照旧锁着，不影响必须做完的规矩。
+  //  Harvey 的平板 2026-11-21 卡在第 19 题（逐句翻译长句判分不过）就是
+  //  缺这个出口：一整天的打卡停在一屏上，刷新回来还是那一屏。
+  _bailStep() {
+    const steps = this._buildSteps(this.state.currentDay);
+    if (!steps.length) return;
+    try { this._stopCurrentAudio(); } catch (e) {}
+    clearTimeout(this._advanceTimer);
+    if (this.state.stepIdx < steps.length - 1) {
+      this.state.stepIdx++;
+      this.renderContent();
+      this._flushSpeakOnRender();
+    } else {
+      this.state.stepIdx = steps.length;
+      this.renderContent();
+    }
+    this.showToast('这题先跳过，回头再练一遍就好', 'warn');
+  },
+
   prevStep() {
     clearTimeout(this._advanceTimer);
     this._stopCurrentAudio();
@@ -13041,6 +13098,14 @@ const App = {
       if (lockedNow && this.isTeacher() && this.state.currentTab === 'preview') {
         html += '<button class="btn-ghost" id="pv-skip-btn" style="font-size:max(calc(12px*var(--fs-sm)),var(--fs-sm-min));opacity:.75"'
              + ' onclick="App.nextStep(true)">跳过本题（老师）</button>';
+      }
+      // v221：学生端的「卡住自救」出口。平时照旧锁着必须做完，只有明确点
+      // 这颗灰色小字才走 —— 平板录音/识别异常、长句判分不过时，孩子和
+      // 家长不用再对着灰按钮干等，一点就能继续把今天的卡打完。
+      if (lockedNow && !this.isTeacher()) {
+        html += '<button class="btn-ghost" id="st-stuck-btn" '
+             + 'style="font-size:max(calc(12px*var(--fs-sm)),var(--fs-sm-min));opacity:.55;margin-left:6px" '
+             + 'onclick="App._bailStep()">这题做不了？先跳过 →</button>';
       }
     }
     html += '</div>';
