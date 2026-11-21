@@ -19,9 +19,9 @@
 //      会把带 ?v= 的新脚本**预存**进缓存 —— 更新后的第一次启动也是秒开；
 //   3. skipWaiting + clients.claim 保证新 SW 立即接管。
 
-var CACHE_NAME = 'amy-english-v219';
+var CACHE_NAME = 'amy-english-v220';
 // 与 index.html 里 script src 的 ?v= 保持一致（发版时一起改这一个数字）。
-var V = 219;
+var V = 220;
 
 self.addEventListener('install', function(event) {
   event.waitUntil(
@@ -33,6 +33,9 @@ self.addEventListener('install', function(event) {
         './index.html',
         './cloud.js?v=' + V,
         './data.js?v=' + V,
+        // v220：data-shuffle.js 排在 defer 链里（data.js 之后、api.js 之前），
+        // 以前漏了预存 —— 每次冷启动都要为它多走一趟网络，后面的脚本全等它。
+        './data-shuffle.js?v=' + V,
         './recorder.js?v=' + V,
         './api.js?v=' + V,
         './game.js?v=' + V,

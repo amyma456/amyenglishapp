@@ -286,7 +286,10 @@ if (App) {
 console.log('\n[5] 版本钉子');
 const cur208 = (html.match(/name="app-version" content="(\d+)"/) || [])[1] || '0';
 ok(Number(cur208) >= 208, 'index.html app-version >= 208（当前 ' + cur208 + '）');
-ok((html.match(new RegExp('\\?v=' + cur208 + '\\b', 'g')) || []).length === 7,
+// v220 起 <head> 多了 3 条 <link rel=preload> 也带 ?v=（提前下载大脚本），
+// 全文数 ?v= 会变成 10。断言本意是「7 个 defer 脚本引用都跟当前版本一致」，
+// 改成只数 <script src> 更准确，preload 由 verify-v220.js 单独钉。
+ok((html.match(new RegExp('<script[^>]+src="[^"]+\\.js\\?v=' + cur208 + '\\b', 'g')) || []).length === 7,
   '7 处脚本引用都跟着当前版本 ' + cur208);
 ok(new RegExp('var V = ' + cur208 + ';').test(swSrc) &&
    swSrc.indexOf('amy-english-v' + cur208) >= 0,

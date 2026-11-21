@@ -93,8 +93,10 @@ section('[5] 版本钉子（>= 216 且各处一致，后续发版不误报）');
 {
   const cur216 = (htmlSrc.match(/name="app-version" content="(\d+)"/) || [])[1] || '0';
   ok(Number(cur216) >= 216, 'index.html app-version >= 216（当前 ' + cur216 + '）');
-  ok((htmlSrc.match(new RegExp('\\?v=' + cur216 + '\\b', 'g')) || []).length === 7,
-    'index.html 7 处 ?v=' + cur216);
+  // v220：<head> 多了 3 条 preload（也带 ?v=），全文计数不再等于 7。
+  // 改为只数 <script src> 的 7 个 defer 脚本引用。
+  ok((htmlSrc.match(new RegExp('<script[^>]+src="[^"]+\\.js\\?v=' + cur216 + '\\b', 'g')) || []).length === 7,
+    'index.html 7 处脚本引用 ?v=' + cur216);
   ok((htmlSrc.match(/\?v=214/g) || []).length === 0, '无残留 ?v=214');
   ok(swSrc.indexOf("var CACHE_NAME = 'amy-english-v" + cur216 + "';") >= 0,
     'sw.js CACHE_NAME = v' + cur216);

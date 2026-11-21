@@ -49,7 +49,10 @@ ok(/STALE-WHILE-REVALIDATE/.test(swSrc), '新策略注释在位（SWR）');
 section('② 版本化预存');
 ok(/'\.\/app\.js\?v=' \+ V/.test(swSrc) && /'\.\/data\.js\?v=' \+ V/.test(swSrc),
    '★ install 预存带 ?v= 的脚本（发版后首次启动也秒开）');
-ok(/var V = 208;/.test(swSrc), 'V 与本次版本号一致（151）', swSrc.match(/var V = (\d+);/)[1]);
+// v220：改为跟随当前发版版本（以前写死 208，每次回归都误报）。
+const curV = (swSrc.match(/var V = (\d+);/) || [])[1] || '';
+const curMeta = (htmlSrc.match(/name="app-version" content="(\d+)"/) || [])[1] || '';
+ok(!!curV && curV === curMeta, 'sw.js V 与 index.html app-version 一致', curV + ' / ' + curMeta);
 ok(/cache\.match\(event\.request, \{ ignoreSearch: true \}\)/.test(swSrc),
    '裸文件名兜底匹配（新旧版本号交接瞬间不等网络）');
 
@@ -63,15 +66,23 @@ ok(/window\.__safeReload = function/.test(htmlSrc), '★ 自动刷新统一走 _
 ok(/if \(window\.Recorder && Recorder\.recording && Recorder\.recording\(\)\)/.test(htmlSrc),
    '★ 正在录音绝不刷新（推迟 5 秒）', '掐断孩子跟读是事故');
 ok(/setTimeout\(window\.__safeReload, 5000\)/.test(htmlSrc), '录音中推迟 5 秒重试');
-ok(/controllerchange[\s\S]{0,220}__safeReload\(\)/.test(htmlSrc),
-   '新 SW 接管时走 __safeReload（不是裸 reload）');
-// v200：版本落后时先清掉 SWR 旧缓存再刷，否则 reload 完还是旧首页。
-// 刷新仍统一走 __safeReload，不裸调 location.reload。
+// v220：SW 接管与版本自检**共用一个闸门**，避免发版当天连刷两次。
+// 两条路都收敛到 __amyReloadOnce() → 内部仍走 __safeReload()（录音保护不丢）。
+ok(/controllerchange[\s\S]{0,220}__amyReloadOnce\(\)/.test(htmlSrc) &&
+   /__amyReloadOnce = function[\s\S]{0,220}__safeReload\(\)/.test(htmlSrc),
+   '新 SW 接管与版本自检共用闸门，仍走 __safeReload（不是裸 reload）');
+// v220 反转了 v200 的做法：以前版本落后先 caches.delete 清掉全部缓存再刷，
+// 结果把新 SW 刚预存的 2MB 脚本也删了，reload 全部重新下载 —— 发版当天
+// 每个学生第一次打开都白等好几秒。现在导航本来就网络优先，直接刷即可。
 ok(/if \(!live \|\| live === __myVersion\) return;/.test(htmlSrc) &&
-   /var go = function \(\) \{ if \(fired\) return; fired = true; window\.__safeReload\(\); \}/.test(htmlSrc) &&
-   /caches\.delete\(n\)/.test(htmlSrc),
-   '版本落后时清缓存并走 __safeReload（不是裸 reload）');
-ok(/__swReloaded/.test(htmlSrc), '防刷新循环的守卫还在');
+   /window\.__amyReloadOnce\(\)/.test(htmlSrc) &&
+   !/caches\.delete\(n\)/.test(htmlSrc) &&
+   !/var go = function/.test(htmlSrc),
+   '版本落后只刷一次、不再清空缓存（脚本命中新 SW 预存）');
+ok(/__amyReloadDone/.test(htmlSrc), '防刷新循环的守卫还在');
+// 开屏自检从 3 秒推到 8 秒，别在孩子刚落地时整页刷新。
+ok(/setTimeout\(__checkVersion, 8000\)/.test(htmlSrc),
+   '开屏版本自检让出首帧（8 秒后）');
 
 section('⑤ 版本探针');
 ok(/fetch\('\.\/\?vchk=' \+ Date\.now\(\), \{ cache: 'no-store' \}\)/.test(htmlSrc),

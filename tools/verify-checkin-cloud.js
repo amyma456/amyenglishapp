@@ -387,7 +387,11 @@ ok(/const curWeek = \(typeof HOMEWORK_WEEK_IDX === 'number'\)/.test(apiSrc),
 
 console.log('== 14) 回到前台会再补一次（孩子不用做任何操作） ==');
 ok(/_bindCheckinUpload\(\)/.test(appSrc), '_bindCheckinUpload 存在');
-ok(/this\._bindCheckinUpload\(\);/.test(appSrc), 'showApp 里绑上');
+// v220：启动后台活儿从 showApp() 挪到 _bootDeferred() 让出首帧，
+// 绑定仍在启动路径上（闭包里用 self），语义没变，别再钉死 this. 前缀。
+ok(/_bindCheckinUpload\(\)/.test(appSrc) &&
+   /_bootDeferred\(wantTab\)[\s\S]{0,1600}self\._bindCheckinUpload\(\)/.test(appSrc),
+   '启动路径上绑上（v220 起在 _bootDeferred 里）');
 ['visibilitychange', 'focus', 'pageshow'].forEach(ev => {
   ok(new RegExp("addEventListener\\('" + ev + "'").test(appSrc),
     '监听 ' + ev + '（切出去又切回来，上一次没发成的补一次）');

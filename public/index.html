@@ -8,11 +8,18 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="219">
+<meta name="app-version" content="220">
 <link rel="manifest" href="manifest.json">
 <!-- v135：登录第一步就是调 api.amyeng.top 验手机号。提前把 DNS + TLS
      握手做掉，接口首调能省几百毫秒 —— 手机弱网下这几百毫秒很显眼。 -->
 <link rel="preconnect" href="https://api.amyeng.top" crossorigin>
+<!-- v220：把最重的三个脚本提前到 <head> 就开始并行下载。以前浏览器要
+     解析到文档末尾的 <script defer> 才发现它们（那时 180KB 的 HTML 已经
+     解析完了），白白晚了几百毫秒到一秒。preload 只提前取、不执行，顺序
+     仍由 defer 保证，不会改变任何依赖关系。 -->
+<link rel="preload" as="script" href="data.js?v=220">
+<link rel="preload" as="script" href="api.js?v=220">
+<link rel="preload" as="script" href="app.js?v=220">
 <!-- iOS 的"添加到主屏幕"不认 SVG（装出来是白板/网页截图），必须给 PNG。
      图标与启动图由 tools/gen-pwa-icons.js 生成，别手改。 -->
 <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon-180.png">
@@ -1976,10 +1983,30 @@ button,.q-option,.gate-listen,.hold-btn,.tap-btn,.speak-btn{
        · 有凭据 → 登录页立刻隐藏，开屏一直留到 App.showApp() 把它摘掉；
        · 没有   → 开屏当场摘掉，登录页正常显示（和以前一样）。
      内联脚本在解析期执行、首帧绘制之前，所以两种情况都不会闪。 -->
-<div id="boot-splash" style="position:fixed;inset:0;z-index:99999;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px">
-  <img src="photo.jpeg?v=65" alt="Amy老师英语打卡" width="72" height="72" style="border-radius:50%;box-shadow:0 6px 18px rgba(255,140,66,.28)">
-  <div style="font-size:max(calc(16px*var(--fs)),var(--fs-min));font-weight:700;color:#333">Amy老师英语打卡</div>
-  <div style="font-size:max(calc(13px*var(--fs-sm)),var(--fs-sm-min));color:#8E8E9A" id="boot-splash-hint">正在进入…</div>
+<!-- v220 首帧骨架屏：家长 2026-11-21「学生总体反应进入系统还是太久了……
+     只要一进去，所有界面马上能看见，要等好久」。以前开屏是一整块白底
+     +「正在进入…」，而真主界面要等 app.js(891KB)/data.js(893KB)/api.js
+     全部下载解析完、跑到 App.init()→showApp() 才出现 —— 孩子盯着白屏数秒，
+     偶尔只先冒出一个页面，其余页签像没有一样。
+     现在开屏本身就画成主界面的样子：顶部一排**全部页签**（解析期同步按角色
+     填好）、下面内容占位。首帧绘制时孩子已经「进到里头」，所有界面都在；
+     JS 就绪后 showApp() 摘掉骨架、真页签栏与内容无缝顶上，不会白屏闪一下。 -->
+<div id="boot-splash" style="position:fixed;inset:0;z-index:99999;background:#FFFAF5;display:flex;flex-direction:column;overflow:hidden">
+  <div style="flex:none;background:#fff;border-bottom:1px solid #E6E6EA;display:flex;align-items:center;gap:10px;padding:8px 12px;box-shadow:0 1px 2px rgba(0,0,0,.04)">
+    <div id="boot-tabs" style="display:flex;align-items:center;gap:2px;flex:1 1 auto;min-width:0;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none"></div>
+    <div style="display:flex;align-items:center;gap:8px;flex:none;padding-left:12px;border-left:1px solid #E6E6EA">
+      <img id="boot-photo" src="students.jpeg?v=65" alt="" width="30" height="30" style="border-radius:50%;object-fit:cover;display:block">
+      <span id="boot-name" style="font-size:max(calc(14px*var(--fs)),var(--fs-min));font-weight:500;color:#17171A;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">同学</span>
+    </div>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:20px">
+    <img src="photo.jpeg?v=65" alt="Amy老师英语打卡" width="72" height="72" style="border-radius:50%;box-shadow:0 6px 18px rgba(255,140,66,.28)">
+    <div style="font-size:max(calc(16px*var(--fs)),var(--fs-min));font-weight:700;color:#333">Amy老师英语打卡</div>
+    <div style="font-size:max(calc(13px*var(--fs-sm)),var(--fs-sm-min));color:#8E8E9A" id="boot-splash-hint">正在打开今天的作业…</div>
+    <div style="width:min(320px,80%);height:12px;border-radius:6px;background:#EFEAE4;margin-top:8px"></div>
+    <div style="width:min(260px,66%);height:12px;border-radius:6px;background:#F3EEE8"></div>
+    <div style="width:min(300px,74%);height:12px;border-radius:6px;background:#F3EEE8"></div>
+  </div>
 </div>
 
 <!-- PWA Install Banner -->
@@ -2094,23 +2121,87 @@ button,.q-option,.gate-listen,.hold-btn,.tap-btn,.speak-btn{
       if (ni && !ni.value) ni.value = window.__bootDraft.name || '';
     }
   } catch (e) {}
+  // ===== v220：首帧就把「所有界面」画出来 ==============================
+  // 家长 2026-11-21「一进去，所有界面马上能看见，要等好久」。以前页签栏要等
+  // app.js/data.js/api.js 共 2MB 下载解析完、showApp()→renderTabs() 才出现。
+  // 这里在**解析期**（首帧绘制之前）同步把整排页签写进骨架，孩子第一眼就在
+  // 「里头」了；JS 就绪后 showApp() 摘掉骨架，真页签栏无缝顶上。
+  // 角色判断只认一个手机号常量（与 api.js 的 TEACHER_PHONES 一致，
+  // verify-v220.js 会钉住两处相同）—— 本脚本跑在 api.js 之前，拿不到 Api。
+  var BOOT_TEACHER_PHONES = ['13259532991'];
+  var bootCreds = window.__bootSavedLogin;
+  var bootIsTeacher = !!(bootCreds &&
+    BOOT_TEACHER_PHONES.indexOf(String(bootCreds.phone || '').trim()) >= 0);
+  window.__bootIsTeacher = bootIsTeacher;
+
+  var STUDENT_TABS = [
+    ['today', '今日作业'], ['wordgame', '单词乐园'], ['myprogress', '孩子打卡'],
+    ['compare', '完成率对比'], ['myerrors', '错题改错']
+  ];
+  var TEACHER_TABS = [
+    ['weekly', '周计划'], ['preview', '题库预览'], ['daily', '每日详情'],
+    ['edit', '作业编辑'], ['checkin', '打卡监控'], ['scores', '成绩分析'],
+    ['errors', '错题本'], ['print', '错题卷打印'], ['speaking', '口语记录'],
+    ['students', '学生管理'], ['classmgmt', '班级管理'], ['wordgame', '游戏试玩']
+  ];
+  var bootTabs = bootIsTeacher ? TEACHER_TABS : STUDENT_TABS;
+  window.__bootTabs = bootTabs.map(function (t) { return t[0]; });
+
+  // 骨架页签在 App 就绪前也要「点得动」：先记下来并立刻高亮，showApp() 消费。
+  window.__bootTab = function (id) {
+    window.__bootPendingTab = id;
+    var box = document.getElementById('boot-tabs');
+    if (!box) return;
+    var bs = box.querySelectorAll('button');
+    for (var j = 0; j < bs.length; j++) {
+      var on = bs[j].getAttribute('data-tab') === id;
+      bs[j].style.background = on ? '#F07000' : 'transparent';
+      bs[j].style.color = on ? '#fff' : '#5B5B63';
+    }
+  };
+
+  var tabsBox = document.getElementById('boot-tabs');
+  if (tabsBox) {
+    var th = '';
+    for (var ti = 0; ti < bootTabs.length; ti++) {
+      var ton = (ti === 0);
+      th += '<button type="button" data-tab="' + bootTabs[ti][0] + '" '
+        + 'onclick="window.__bootTab(\'' + bootTabs[ti][0] + '\')" '
+        + 'style="flex:none;border:0;border-radius:999px;padding:9px 14px;white-space:nowrap;'
+        + 'font-size:max(calc(14px*var(--fs)),var(--fs-min));font-weight:500;'
+        + 'background:' + (ton ? '#F07000' : 'transparent') + ';'
+        + 'color:' + (ton ? '#fff' : '#5B5B63') + '">'
+        + bootTabs[ti][1] + '</button>';
+    }
+    tabsBox.innerHTML = th;
+  }
+  var bnEl = document.getElementById('boot-name');
+  if (bnEl && bootCreds && bootCreds.name) bnEl.textContent = bootIsTeacher ? 'Amy老师' : bootCreds.name;
+  var bpEl = document.getElementById('boot-photo');
+  if (bpEl && bootIsTeacher) bpEl.src = 'photo.jpeg?v=65';
+
   var splash = document.getElementById('boot-splash');
   var lp = document.getElementById('login-page');
   if (!ok) {
     if (splash && splash.parentNode) splash.parentNode.removeChild(splash);
   } else {
     if (lp) lp.classList.add('hidden');
-    // 兜底：脚本万一中途出错，8 秒后也必须把开屏摘掉，绝不能白屏卡死。
+    // v220：兜底不再把孩子踢回登录页。骨架屏本身就是「已经在里头」，
+    // 脚本慢只把提示改一句继续等，绝不闪登录页、绝不留白屏。
+    // 只有真出错（20 秒还没就绪）才露出登录页当逃生口。
     setTimeout(function () {
       var s2 = document.getElementById('boot-splash');
-      var main = document.getElementById('main-app');
-      if (main && !main.classList.contains('hidden')) {
-        if (s2 && s2.parentNode) s2.parentNode.removeChild(s2);
-      } else if (lp) {
-        if (s2 && s2.parentNode) s2.parentNode.removeChild(s2);
-        lp.classList.remove('hidden');
-      }
-    }, 8000);
+      if (!s2 || !s2.parentNode) return;              // showApp 已摘掉 = 正常
+      var hint = document.getElementById('boot-splash-hint');
+      if (hint) hint.textContent = '网络有点慢，正在努力打开…';
+      setTimeout(function () {
+        var s3 = document.getElementById('boot-splash');
+        if (!s3 || !s3.parentNode) return;
+        if (window.__appReady) return;                // 脚本已好，showApp 马上来
+        s3.parentNode.removeChild(s3);
+        if (lp) lp.classList.remove('hidden');
+      }, 14000);
+    }, 6000);
   }
 })();
 </script>
@@ -2173,7 +2264,15 @@ button,.q-option,.gate-listen,.hold-btn,.tap-btn,.speak-btn{
     </div>
   </div>
 
-  <div class="content-area" id="content-area"></div>
+  <!-- v220：内容区也预置一份占位。骨架摘掉与 renderContent()（下一帧）
+       之间还差一帧，有它就不会出现一段空白；JS 就绪后整块被覆盖。 -->
+  <div class="content-area" id="content-area">
+    <div id="boot-content" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:52vh;padding:20px">
+      <div style="width:min(320px,84%);height:14px;border-radius:7px;background:#EFEAE4"></div>
+      <div style="width:min(260px,68%);height:14px;border-radius:7px;background:#F3EEE8"></div>
+      <div style="width:min(300px,76%);height:14px;border-radius:7px;background:#F3EEE8"></div>
+    </div>
+  </div>
 </div>
 
 <!-- v131：ASR 性能诊断面板。**只**在 ?perf=1 时才被填内容并显示；
@@ -2213,9 +2312,9 @@ button,.q-option,.gate-listen,.hold-btn,.tap-btn,.speak-btn{
 </div>
 
 <script>window.__appReady = false;</script>
-<script defer src="cloud.js?v=219"></script>
-<script defer src="data.js?v=219"></script>
-<script defer src="data-shuffle.js?v=219"></script>
+<script defer src="cloud.js?v=220"></script>
+<script defer src="data.js?v=220"></script>
+<script defer src="data-shuffle.js?v=220"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
 <!--
   ?v= 必须跟着版本号走（v124 修正）。
@@ -2225,24 +2324,32 @@ button,.q-option,.gate-listen,.hold-btn,.tap-btn,.speak-btn{
   这个坑很隐蔽：代码明明改了、也部署上去了，手机上跑的还是几个月前的逻辑。
   以后每次发版，这里跟着 app-version 一起改。
 -->
-<script defer src="recorder.js?v=219"></script>
-<script defer src="api.js?v=219"></script>
+<script defer src="recorder.js?v=220"></script>
+<script defer src="api.js?v=220"></script>
 <!-- v194：小游戏独立成文件，不塞进已经 800KB 的 app.js。必须排在 app.js
      **前面**：app.js 顶层有同步初始化，登录回来若正好停在「单词乐园」，
      渲染时 WordGame 得已经存在。game.js 只在被点击/渲染时才读 window.App。 -->
-<script defer src="game.js?v=219"></script>
-<script defer src="app.js?v=219"></script>
+<script defer src="game.js?v=220"></script>
+<script defer src="app.js?v=220"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {
   // 新 SW 接管时刷新一次，让新代码立刻生效。必须在 register() 之外注册，
   // 写在 .then() 里会错过事件。首装时（接管前没有 controller）不刷。
   var __swHadController = !!navigator.serviceWorker.controller;
-  var __swReloaded = false;
+  // v220：SW 接管刷新 与 版本自检刷新 **共用一个闸门**，只准刷一次。
+  // 以前两条路各刷各的，发版后连着整页重载两遍 —— 每遍都要把 2MB 脚本
+  // 重新拉一遍，孩子就在白屏上干等，正是家长说的「要等好久」。
+  window.__amyReloadDone = false;
+  window.__amyReloadOnce = function () {
+    if (window.__amyReloadDone) return false;
+    window.__amyReloadDone = true;
+    window.__safeReload();
+    return true;
+  };
   navigator.serviceWorker.addEventListener('controllerchange', function() {
-    if (__swReloaded || !__swHadController) return;
-    __swReloaded = true;
-    __safeReload();
+    if (!__swHadController) return;   // 首装（接管前没有 controller）不刷
+    window.__amyReloadOnce();
   });
   // v135：自动刷新统一走 __safeReload —— 孩子正在录音（跟读/口语/翻译）
   // 时绝不刷新，不然这条录音就没了。推迟 5 秒再试，录完自然放行。
@@ -2293,14 +2400,12 @@ if ('serviceWorker' in navigator) {
         if (sessionStorage.getItem(key)) return;
         sessionStorage.setItem(key, '1');
       } catch (e) {}
-      var fired = false;
-      var go = function () { if (fired) return; fired = true; window.__safeReload(); };
-      if (window.caches && caches.keys) {
-        caches.keys().then(function (names) {
-          return Promise.all(names.map(function (n) { return caches.delete(n); }));
-        }).then(go, go);
-        setTimeout(go, 1500);          // 清缓存卡住也不能不刷新
-      } else go();
+      // v220：**不再清空缓存**。以前一发现版本落后就 caches.delete 掉全部
+      // cache（连刚装好的新 SW 预存的 ?v= 脚本一起删），reload 时 2MB 脚本
+      // 全部重新走网络 —— 发版当天每个学生第一次打开都要多等好几秒。
+      // 现在导航本来就走网络优先（sw.js 的 isNav 分支），拿到的首页一定是
+      // 最新版；新脚本由新 SW 的 install 预存好了，reload 直接命中缓存。
+      window.__amyReloadOnce();
     }).catch(function() {});
   }
   document.addEventListener('visibilitychange', function() {
@@ -2310,7 +2415,9 @@ if ('serviceWorker' in navigator) {
     if (e.persisted) __checkVersion(); // 从浏览器往返缓存恢复时也查一次
   });
   window.addEventListener('online', function() { __swCheck(); __checkVersion(); });
-  setTimeout(__checkVersion, 3000);        // 开屏 3 秒后自纠一次
+  // v220：开屏自检从 3 秒推到 8 秒 —— 别在孩子刚落地那一瞬间整页刷新，
+  // 把首帧让给做题；版本落后时也只是「闪一下」，脚本仍在缓存里。
+  setTimeout(__checkVersion, 8000);
   setInterval(function() { __swCheck(); __checkVersion(); }, 10 * 60 * 1000); // 挂着不动也每 10 分钟查一次
   window.addEventListener('load', function() {
     navigator.serviceWorker.register('sw.js').then(function() {

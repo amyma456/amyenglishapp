@@ -100,8 +100,10 @@ section('[6] 版本钉子（跟随当前发版滚动）');
 {
   const ver = (htmlSrc.match(/name="app-version" content="(\d+)"/) || [])[1] || '0';
   ok(Number(ver) >= 219, 'index.html app-version >= 219（当前 ' + ver + '）');
-  ok((htmlSrc.match(new RegExp('\\?v=' + ver + '\\b', 'g')) || []).length === 7,
-    'index.html 7 处 ?v=' + ver);
+  // v220：<head> 多了 3 条 preload（也带 ?v=），全文计数不再等于 7。
+  // 改为只数 <script src> 的 7 个 defer 脚本引用。
+  ok((htmlSrc.match(new RegExp('<script[^>]+src="[^"]+\\.js\\?v=' + ver + '\\b', 'g')) || []).length === 7,
+    'index.html 7 处脚本引用 ?v=' + ver);
   ok(swSrc.indexOf("'amy-english-v" + ver + "'") > 0
     && new RegExp('var V = ' + ver + ';').test(swSrc), 'sw.js 缓存名与 V 都是 ' + ver);
 }

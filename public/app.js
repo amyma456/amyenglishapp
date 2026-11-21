@@ -1312,7 +1312,12 @@ const App = {
     const knownDevice = !!(prevCreds && prevCreds.phone === phone)
       // v144：凭据被系统清掉、但草稿里存着"这台设备登录过这个号" → 同样
       // 算老设备，点下去直接进（后台照样核对删除状态，被删的人 1~2 秒后出局）。
-      || !!(this._loginDraftKnown && this._draftPhone === phone);
+      || !!(this._loginDraftKnown && this._draftPhone === phone)
+      // v220：**换号登录也不等网络**。家长 2026-11-21「陈浩转 UN 的账号……
+      // 要等好久」—— 账号簿里明明记着这个号成功登录过，却因为当前凭据是
+      // 另一个号，被当成"全新设备"去 await 一次 classStatus 核对（Worker 冷
+      // 启动能挂 4~20 秒）。本机名单/账号簿认得这个号，就直接进，核对放后台。
+      || this._deviceKnows(phone);
     try {
       // v143：同步拿会话（只比手机号），点下去这一帧就能切界面。
       // Api.login 的函数体会在第一个 await 之前就把 session 设好，所以这里
@@ -1769,6 +1774,12 @@ const App = {
       const d = (typeof Api.readLoginDraft === 'function') ? Api.readLoginDraft() : null;
       if (d && d.known && d.phone === phone) return true;
     } catch (e) {}
+    // v220：账号簿（这台设备登录成功过的每一组号）也算「认识」。换号登录、
+    // 或凭据被系统清掉时，不必再站在这里等一趟网络核对。
+    try {
+      if (typeof Api.bookList === 'function' &&
+          (Api.bookList() || []).some(function (e) { return e && e.phone === phone; })) return true;
+    } catch (e) {}
     if ((this.state.parentStudents || {})[phone]) return true;
     return (this.state.students || []).some(function (s) { return s.phone === phone; });
   },
@@ -1842,7 +1853,15 @@ const App = {
   // 那是"带着当前选中对象进去"的临时页面，单独刷新回来只会是空壳）——
   // v160 起预览的天/周也持久化了（amy_last_preview），刷新能原样回到
   // 同一天同一周，所以老师端把它加回名单。'print' 仍然不恢复。
-  _tabMemoryKey() { return 'amy_last_tab'; },
+  // v220：页签记忆**按账号隔离**。家长 2026-11-21「陈浩转 UN 的账号进入系统，
+  // 刚开始只能看见玩游戏这个界面做题，其他的界面都看不到」—— 根子就是这个
+  // key 原来是全局的：在这台设备上换一个号登录，会继承上一个号最后停在的
+  // 'wordgame'（单词乐园是沉浸式全屏，页签栏看着像没有），于是「一进去只有
+  // 游戏界面」。现在每个手机号各记各的，换号一律回自己的首页。
+  _tabMemoryKey() {
+    var p = (this.state && this.state.phone) ? String(this.state.phone) : '';
+    return p ? ('amy_last_tab_' + p) : 'amy_last_tab';
+  },
   _saveTab(tab) {
     try { localStorage.setItem(this._tabMemoryKey(), String(tab || '')); } catch (e) {}
   },
@@ -1857,8 +1876,17 @@ const App = {
     var allowed = teacher
       ? ['wordgame', 'weekly', 'daily', 'edit', 'checkin', 'scores', 'errors', 'speaking', 'students', 'classmgmt', 'preview']
       : ['wordgame', 'today', 'myprogress', 'compare', 'myerrors'];
-    if (allowed.indexOf(t) >= 0) return t;
-    return teacher ? 'weekly' : 'today';
+    var fallback = teacher ? 'weekly' : 'today';
+    if (allowed.indexOf(t) < 0) return fallback;
+    // v220：**新的一次打开**不落在游戏页。孩子/家长要的是「一进去所有界面
+    // 马上能看见」，而单词乐园是全屏沉浸的一屏，进去容易以为别的界面没了。
+    // 同一会话里下拉刷新（v150 老师要的「刷新还停在那一屏」）仍完整保留。
+    if (t === 'wordgame') {
+      var fresh = false;
+      try { fresh = !sessionStorage.getItem('amy_session_opened'); } catch (e) {}
+      if (fresh) return fallback;
+    }
+    return t;
   },
 
   // ===== v208：学生设备档案 ================================================
@@ -1964,9 +1992,9 @@ const App = {
 
   showApp() {
     document.getElementById('login-page').classList.add('hidden');
-    // v143：开屏层到这里才算完成任务 —— 它盖着的是"正在进入…"。
-    var splash = document.getElementById('boot-splash');
-    if (splash && splash.parentNode) splash.parentNode.removeChild(splash);
+    // v220：开屏骨架**不在开头摘** —— 那时真页签栏还没画，摘掉会白闪一帧。
+    // 改成 renderTabs() 之后由 _dropBootSplash() 摘：骨架与真页签栏长得一样，
+    // 首帧到真界面之间不出现空白，孩子感觉是一直都在里面。
     const wp = document.getElementById('waiting-page');
     if (wp) wp.classList.add('hidden');
     const rp = document.getElementById('removed-page');
@@ -1979,6 +2007,18 @@ const App = {
     // 想要刷新一下，下拉刷新之后它还是要在这个打卡监控页面」）。以前这里
     // 写死回 'weekly'，手机下拉刷新 / 电脑 F5 都会把人踢回首页。
     this.state.currentTab = this._restoreTab();
+    // v220：这次会话已经打开过 → 之后的下拉刷新照旧停在原页（v150 不变）。
+    try { sessionStorage.setItem('amy_session_opened', '1'); } catch (e) {}
+    // v220：孩子在骨架屏上点过某个页签（JS 还没就绪时点的），进来直接落在
+    // 那一页 —— 首帧的「所有界面」不只是看得见，也点得动。
+    var bootTab = (typeof window !== 'undefined') ? window.__bootPendingTab : null;
+    if (bootTab) {
+      var validBoot = (this.isTeacher()
+        ? ['weekly', 'preview', 'daily', 'edit', 'checkin', 'scores', 'errors', 'print', 'speaking', 'students', 'classmgmt', 'wordgame']
+        : ['today', 'wordgame', 'myprogress', 'compare', 'myerrors']).indexOf(bootTab) >= 0;
+      if (validBoot) { this.state.currentTab = bootTab; this._saveTab(bootTab); }
+      window.__bootPendingTab = null;
+    }
     this.state.currentDay = this.getTodayWeekdayIdx();
     // v160：刷新前停在题库预览 → 原样回到同一天同一周（previewDay/Week
     // 只存 localStorage，必须在这里接回来；_syncWeekData 会按 previewWeek
@@ -2001,16 +2041,10 @@ const App = {
         : '📍 接着上次做到的地方继续');
     }
     clearTimeout(this._advanceTimer);
-    // v120：把本机的历史打卡补报一次到后台（见 _backfillCheckins）。
-    // v121：再绑一层"回到前台就补一次"，孩子不用做任何操作。
-    // v122：之前是本机打卡压根没写下来（Api._answerPrefix 漏周标记），
-    //       所以先重算再上报 —— 打开一次 App 就把这几天的补回来。
-    this._backfillCheckins();
-    this._bindCheckinUpload();
-    // v208：把这台手机的型号 / 浏览器记到后台，老师端能一眼看出
-    // 谁用的不是手机自带浏览器（例：华为 nova 14 + 头条浏览器）。
-    this._reportDevice();
-    if (this.isTeacher()) this._pullDeviceList();
+    // v220：补报打卡 / 上报设备型号 / 拉设备档案这一串原来全挤在
+    // renderTabs() **之前**同步跑（补报要遍历全部本机打卡、逐条发请求），
+    // 弱网上把主线程占住，页签栏和内容就迟迟画不出来 —— 孩子感觉"进去好久"。
+    // 现在挪到首帧之后（见 _bootDeferred），先让孩子看到界面。
     // Update header name - show student name or teacher label
     const headerName = document.getElementById('header-name');
     if (headerName) {
@@ -2038,6 +2072,8 @@ const App = {
     document.getElementById('invite-btn-header').style.display = this.isTeacher() ? '' : 'none';
     document.getElementById('settings-btn-header').style.display = this.isTeacher() ? '' : 'none';
     this.renderTabs();
+    // v220：真页签栏已经画好，此刻再摘骨架 —— 中间零白屏。
+    this._dropBootSplash();
     // v142（家长 2026-10-18）：「点了登录要等好一会才跳转」。点下之后这
     // 一大段是**同步**跑的：老师端的周报一次要渲染几十个学生，主线程被
     // 占住的这几百毫秒里，界面还停在登录页 —— 看起来就是"点了没反应"。
@@ -2048,32 +2084,53 @@ const App = {
     } else {
       setTimeout(function() { self.renderContent(); }, 0);
     }
-    // Cloud sync + auto-polling for BOTH roles:
-    // - Teacher: download student registrations, merge & upload
-    // - Student: download own class assignment (updates badge promptly
-    //   whenever the teacher assigns a class)
-    if (this.isTeacher()) {
-      this.syncFromCloud().then(() => {
-        // After downloading, also upload local data (merge)
-        this.syncToCloud();
-      });
-    } else {
-      this.syncFromCloud();
-    }
-    this.startAutoSync();
-    // v150：恢复到「打卡监控」这类数据页时，先拉一次云端再补画 —— 刷新出来
-    // 的必须是**刷新之后**的数据，而不是上一屏的旧快照。
-    if (['checkin', 'daily', 'scores', 'compare', 'myprogress'].indexOf(this.state.currentTab) >= 0) {
-      const wantTab = this.state.currentTab;
-      this._pullCloudCheckins(wantTab === 'myprogress' ? 'me' : 'class').then(changed => {
-        if (this.state.currentTab !== wantTab) return;
-        // v189：第一次拉一定要补画一次 —— 第一屏是在云端数据还没到手时画的，
-        // 那时候每个格子都只能是 ✗。以前这里要求"本机记录有变化"才重画，
-        // 于是本机早就存着同样一份记录的设备永远停在那一屏死叉上。
-        if (!changed && this._ckPaintedSeq === this._ckPullSeq) return;
-        this.renderContent();
-      }).catch(() => {});
-    }
+    // v220：云同步 / 轮询 / 补报 / 设备上报 / 数据页补拉一律让出首帧，
+    // 界面先画完再说。这些都是后台活儿，晚一两帧完全不影响正确性，却
+    // 直接决定「进去快不快」。集中到 _bootDeferred() 统一调度。
+    this._bootDeferred(this.state.currentTab);
+  },
+
+  // v220：摘掉首帧骨架。放在 renderTabs() 之后调用，真页签栏已在 DOM 里，
+  // 骨架一消失就是真界面，不闪白。重复调用无害（幂等）。
+  _dropBootSplash() {
+    var s = document.getElementById('boot-splash');
+    if (s && s.parentNode) s.parentNode.removeChild(s);
+  },
+
+  // v220：首屏之后的后台活儿。全部包在 setTimeout(0) 里 —— 让浏览器先把
+  // 页签栏 + 内容画到屏幕上，再去发这些请求。以前它们挤在 renderTabs()
+  // 之前同步跑（补报打卡会遍历全部本机记录逐条发请求），弱网上把主线程
+  // 占住几百毫秒到几秒，孩子盯着「正在进入…」以为卡死了。
+  _bootDeferred(wantTab) {
+    var self = this;
+    var run = function () {
+      // v120/v121/v122：本机历史打卡补报 + 回到前台再补一次。
+      try { self._backfillCheckins(); } catch (e) {}
+      try { self._bindCheckinUpload(); } catch (e) {}
+      // v208：上报这台手机的型号 / 浏览器；老师端拉设备档案。
+      try { self._reportDevice(); } catch (e) {}
+      if (self.isTeacher()) { try { self._pullDeviceList(); } catch (e) {} }
+      // 云同步 + 自动轮询（老师：下载名单再合并上传；学生：取班级分配）
+      try {
+        if (self.isTeacher()) {
+          self.syncFromCloud().then(function () { self.syncToCloud(); }).catch(function () {});
+        } else {
+          self.syncFromCloud();
+        }
+      } catch (e) {}
+      try { self.startAutoSync(); } catch (e) {}
+      // v150/v189：恢复到打卡/成绩/对比这类数据页时，云端到手再补画一次，
+      // 刷新出来必须是刷新之后的数据，而不是上一屏的旧快照。
+      if (['checkin', 'daily', 'scores', 'compare', 'myprogress'].indexOf(wantTab) >= 0) {
+        self._pullCloudCheckins(wantTab === 'myprogress' ? 'me' : 'class').then(function (changed) {
+          if (self.state.currentTab !== wantTab) return;
+          if (!changed && self._ckPaintedSeq === self._ckPullSeq) return;
+          self.renderContent();
+        }).catch(function () {});
+      }
+    };
+    if (typeof setTimeout === 'function') setTimeout(run, 0);
+    else run();
   },
 
   // ===== TTS / Voice =====
@@ -4572,8 +4629,27 @@ const App = {
       window.addEventListener('resize', sync);
     }
 
-    const active = bar.querySelector('button.active');
-    if (active) active.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    // v220：以前用 active.scrollIntoView({block:'nearest',inline:'nearest'})，
+    // 它会连带滚动**所有祖先可滚容器**（整页 + body + tab-bar）。当恢复到的
+    // active 是最后一个页签（老师端「游戏试玩」是第 12 个），tab-bar 会被
+    // 一路横滚到最右，前 11 个页签全被挤出屏幕 —— 家长 2026-11-21 说的
+    // 「刚开始只能看见玩游戏这个界面，其他的界面都看不到」正是这个。
+    // 现在只动 tab-bar 自己的 scrollLeft，且仅在 active 真的在可视区外时
+    // 才滚一点点，首帧尽量让所有页签都露出来。
+    const activeBtn = bar.querySelector('button.active');
+    if (activeBtn) {
+      const left = activeBtn.offsetLeft;
+      const right = left + activeBtn.offsetWidth;
+      const viewL = bar.scrollLeft;
+      const viewR = viewL + bar.clientWidth;
+      let target = null;
+      if (left < viewL + 4) target = Math.max(0, left - 8);
+      else if (right > viewR - 4) target = Math.max(0, right - bar.clientWidth + 8);
+      if (target !== null) {
+        try { bar.scrollLeft = target; }
+        catch (e) { bar.style.scrollBehavior = 'auto'; bar.scrollLeft = target; }
+      }
+    }
     sync();
   },
 

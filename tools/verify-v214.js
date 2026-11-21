@@ -154,8 +154,10 @@ section('5. 版本钉子四处一致（随发版滚动，不再写死 214）');
   const mv = htmlSrc.match(/name="app-version" content="(\d+)"/);
   const ver = mv ? mv[1] : '';
   ok(!!ver, 'index.html 有 app-version', ver);
-  const hits = (htmlSrc.match(new RegExp('\\?v=' + ver + '(?![0-9])', 'g')) || []).length;
-  ok(hits === 7, 'index.html 7 处 ?v=' + ver, hits);
+  // v220 起 <head> 有 3 条 preload 也带 ?v=，全文计数会从 7 变 10。
+  // 这里钉的是「7 个 defer 脚本引用都跟当前版本一致」，只数 <script src>。
+  const hits = (htmlSrc.match(new RegExp('<script[^>]+src="[^"]+\\.js\\?v=' + ver + '(?![0-9])', 'g')) || []).length;
+  ok(hits === 7, 'index.html 7 处脚本引用 ?v=' + ver, hits);
   // 只看脚本资源：图片/图标也带 ?v= 做缓存 bust（如 ?v=65），那不是版本钉子。
   const stale = (htmlSrc.match(/\.js\?v=\d+/g) || []).filter(function (x) { return x !== '.js?v=' + ver; });
   ok(stale.length === 0, 'index.html 没有旧版本脚本 ?v= 残留', stale.join(','));
