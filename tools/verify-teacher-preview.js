@@ -266,14 +266,14 @@ console.log('\n== ⑦ 老师在预览里一个字节都写不进去 ==');
      '★★ 写作朗读门禁不再给老师开口子（预览照锁）');
 
   // ⑤ 预览里的门禁和学生同一套：renderStage 的"锁下一题"不再带 !isTeacher。
-  //    v224 起老师预览也不再有跳过键，必须按正常流程做完。
+  //    v225：老师预览保留「跳过本题（老师）」，学生端零出口。
   const rs = methodBody(appCode, 'renderStage');
   const teacherGuards = (rs.match(/!this\.isTeacher\(\)/g) || []).length;
   ok(teacherGuards <= 3,
      '★★ renderStage 里"锁下一题"不再带 !isTeacher（预览照锁，只剩错题/错词/续卡三处）',
      '实际 ' + teacherGuards + ' 处');
-  ok(!/跳过本题（老师）|pv-skip-btn/.test(rs),
-     '★★ v224：老师预览也不再出现「跳过本题（老师）」按钮');
+  ok(/跳过本题（老师）/.test(rs) && /pv-skip-btn/.test(rs),
+     '★★ v225：老师预览保留「跳过本题（老师）」按钮（学生端不渲染）');
 }
 
 // ===========================================================================

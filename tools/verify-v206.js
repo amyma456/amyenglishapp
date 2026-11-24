@@ -166,9 +166,9 @@ ok('学生界面能看见考点徽标：数据 → 周包透传 → app.js 两�
   assert(/\.q-qtype\{/.test(html) && /\.cq-blank-num \.q-qtype\{/.test(html), '缺徽标样式');
 });
 ok('版本钉子统一到 v206', () => {
-  assert(/name="app-version" content="224"/.test(html));
-  assert.strictEqual((html.match(/\?v=224/g) || []).length, 10);
-  assert(/var CACHE_NAME = 'amy-english-v224';/.test(swSrc) && /var V = 224;/.test(swSrc));
+  assert(/name="app-version" content="225"/.test(html));
+  assert.strictEqual((html.match(/\?v=225/g) || []).length, 10);
+  assert(/var CACHE_NAME = 'amy-english-v225';/.test(swSrc) && /var V = 225;/.test(swSrc));
 });
 ok('8 天（含下周整周）每天仍恰好 30 个真实动作', () => {
   assert.strictEqual(units(W[6][6]), 30, '11/15 周日不是 30 道');

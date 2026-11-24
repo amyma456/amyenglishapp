@@ -8592,7 +8592,7 @@ const App = {
   // （家长 2026-10-17：「题没做完，下一题又能开始做了」）。
   _vocabFootLocked(mi, dayIdx) {
     // v138：老师预览也照锁 —— 预览要验的就是"能不能不做就往前走"。
-    // v223：跳过键已永久移除，老师预览同样按正常流程做完。
+    // v225：学生端没有跳过键；老师预览有「跳过本题（老师）」可快进。
     var m = HOMEWORK_DATA[dayIdx] && HOMEWORK_DATA[dayIdx].modules[mi];
     if (!m || !m.words) return false;
     var wIdx = this.state.vocabWordIdx;
@@ -8940,7 +8940,7 @@ const App = {
         slot.insertAdjacentHTML('beforeend', self._retryHint(false, !!heard));
       } else if (okSpeak && slot && band === 'soft') {
         slot.insertAdjacentHTML('beforeend',
-          '<div class="retry-hint" style="color:#8A6D3B">意思差不多，先往下做，回头再练一遍这句～</div>');
+          '<div class="retry-hint" style="color:#8A6D3B">意思差不多，回头再练一遍这句～</div>');
       }
 
       if (heard) {
@@ -9356,7 +9356,9 @@ const App = {
       this._gateFail[key] = (this._gateFail[key] || 0) + 1;
       if (this._gateFail[key] >= 2) {
         passed = true;
-        this.showToast('这题先过，回头再练一遍就好', 'warn');
+        // v225：家长要求「学生端不要再出现这道题不做了 / 过这种话」——
+        // 自动放行时的提示也不能带「过 / 跳过 / 不做」，只说记下来回头练。
+        this.showToast('这题先记下，回头再练一遍就好', 'warn');
       }
     } else {
       delete this._gateFail[key];
@@ -9380,7 +9382,7 @@ const App = {
     // v138：老师预览也照锁。v136 曾给老师开个"免锁"口子（想让老师能一路翻着
     // 看题），结果家长在预览里看到的就是"我还没做题呢，下一题已经可以点了"
     // —— 预览不照学生规矩来，就验不出学生那边的问题。老师现在改用下面那颗
-    // v223 起没有任何跳过出口，锁本身对学生、老师一视同仁。
+    // v225：锁对学生、老师一视同仁；老师预览另有明说的跳过键可快进。
     if (!this._lockNextOnRender) return;
     this._lockNextOnRender = false;
     const next = document.getElementById('stage-next-btn');
@@ -11823,7 +11825,7 @@ const App = {
     const s = steps[this.state.stepIdx];
     if (!s || s.kind !== 'writingread') return true;
     // v138：老师预览也不再豁免 —— 预览要验的就是"能不能不读就过去"。
-    // v223：跳过键已永久移除，没有任何绕开这里的按钮。
+    // v225：学生端没有任何绕开这里的按钮（老师预览的跳过键另算）。
     const m = HOMEWORK_DATA[this.state.currentDay].modules[s.mi];
     return this._writingAllRead(m, s.mi);
   },
@@ -12781,8 +12783,8 @@ const App = {
   nextStep(force) {
     clearTimeout(this._advanceTimer);
     this._stopCurrentAudio();
-    // force 是历史接口：v223 起所有跳过按钮已删除，正常调用一律不带 true。
-    // 其他代码传 true 也不算数 —— 否则又是一个能让门禁失效的口子。
+    // v225：force 只认老师预览那颗「跳过本题（老师）」。学生端任何调用、
+    // 别的路径传 true 也一律不算数 —— 否则又是一个能让门禁失效的口子。
     if (force && !(this.isTeacher() && this.state.currentTab === 'preview')) force = false;
     const steps = this._buildSteps(this.state.currentDay);
     const st0 = steps[this.state.stepIdx];
@@ -12821,8 +12823,8 @@ const App = {
     }
   },
 
-  // v223：家长要求永久移除所有「跳过」出口（学生端先跳过 / 老师端跳过本题）。
-  // 判分/录音门一律照常执行，必须做完才能进入下一题。
+  // v225：学生端不留任何「跳过」出口（不做 / 过 / 先跳过，一个字都不显示）；
+  // 老师预览保留「跳过本题（老师）」用于快速翻题。判分/录音门照常执行。
 
   prevStep() {
     clearTimeout(this._advanceTimer);
@@ -13034,7 +13036,12 @@ const App = {
       var vLocked = this._vocabFootLocked(step.mi, dayIdx);
       html += '<button class="btn-ghost" id="stage-next-' + step.mi + '"' + (vLocked ? ' disabled' : '')
            + ' onclick="App.nextVocabWord(' + step.mi + ',' + dayIdx + ')">下一个单词</button>';
-      // v223：家长要求永久移除所有跳过键（含老师预览），锁着就按正常流程做完。
+      // v225：学生端不留任何跳过出口；老师预览要能快速翻题，锁着时给一颗
+      // 明说的「跳过本题（老师）」。学生端（today + !isTeacher）绝不渲染。
+      if (vLocked && this.isTeacher() && this.state.currentTab === 'preview') {
+        html += '<button class="btn-ghost" id="pv-skip-btn" style="font-size:max(calc(12px*var(--fs-sm)),var(--fs-sm-min));opacity:.75"'
+             + ' onclick="App.nextStep(true)">跳过本题（老师）</button>';
+      }
     } else {
       // Name the button after what actually comes next: reading a passage is
       // a run of sentences, not a run of questions.
@@ -13068,7 +13075,12 @@ const App = {
       var lockedNow = !!this._lockNextOnRender;
       html += '<button class="btn-ghost" id="stage-next-btn"' + (lockedNow ? ' disabled' : '')
            + ' onclick="App.nextStep()">' + label + '</button>';
-      // v223：家长要求永久移除所有跳过键（含老师预览），锁着就按正常流程做完。
+      // v225：只有老师预览、且这一屏还锁着时，才给这颗明说的跳过键。
+      // 学生端（today）永远不会走到这个分支，右下角只有「上一题 / 下一题」。
+      if (lockedNow && this.isTeacher() && this.state.currentTab === 'preview') {
+        html += '<button class="btn-ghost" id="pv-skip-btn" style="font-size:max(calc(12px*var(--fs-sm)),var(--fs-sm-min));opacity:.75"'
+             + ' onclick="App.nextStep(true)">跳过本题（老师）</button>';
+      }
     }
     html += '</div>';
 

@@ -218,8 +218,8 @@ ok(okFirst && okSecond, '★ 连画两遍都是灰的（锁在 HTML 里，不是
 // ---------------------------------------------------------------------------
 // v138：老师端「题库预览」改成和学生同一套门禁。
 // 家长 2026-10-17 就是在预览里看到"我还没做题呢，下一题已经可以点了" ——
-// 预览免锁，等于验不出学生那边的问题。v224 起跳过键永久删除，预览照常做完。
-console.log('\n--- 3. 老师端「题库预览」和学生同一套门禁（无任何跳过键）---');
+// 预览免锁，等于验不出学生那边的问题。v225：老师预览保留跳过键，学生端零出口。
+console.log('\n--- 3. 老师端「题库预览」和学生同一套门禁（仅老师可见跳过键）---');
 let teacherOpen = 0, teacherScreens = 0, teacherSkipSeen = 0;
 resetTeacher();
 for (let d = 0; d < Math.min(3, DAYS.length); d++) {
@@ -234,7 +234,7 @@ for (let d = 0; d < Math.min(3, DAYS.length); d++) {
   }
 }
 ok(teacherOpen === 0, '★★ 老师预览 ' + teacherScreens + ' 屏，该锁的都锁着', teacherOpen ? teacherOpen + ' 屏是亮的' : '');
-ok(teacherSkipSeen === 0, '★★ v224：老师预览没有任何「跳过本题」按钮', teacherSkipSeen ? teacherSkipSeen + ' 屏出现了跳过键' : '');
+ok(teacherSkipSeen > 0, '★★ v225：老师预览锁定屏有「跳过本题（老师）」按钮', teacherSkipSeen + ' 屏出现');
 // 学生端同样看不到任何跳过键
 resetStudent();
 App.state.currentDay = 0; App.state.stepIdx = 0;
