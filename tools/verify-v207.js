@@ -3,7 +3,7 @@
  *   node tools/verify-v207.js
  *
  * 钉住本周关键约束：
- *   - 题库 9 周，HOMEWORK_WEEKS 含 WEEK9；周包 tools/weekpacks/w9 与题库一致
+ *   - 题库 10 周，HOMEWORK_WEEKS 含 WEEK9；周包 tools/weekpacks/w9 与题库一致
  *   - 每天 30 个真实动作；键盘拼写每天 3~6 道（全周 29 道）
  *   - 听力 3 套、每套 ≥2 类、全周 ≥3 类（对话问答/选图/听写填空），复述 0%
  *   - 阅读 5 篇（6 句 4 题 + passage_cn）；完形 1 篇（7 句 6 空 + 7 句译文）
@@ -33,9 +33,9 @@ const ok = (cond, name, extra) => {
   else { fail++; console.log('  ✗ ' + name + (extra !== undefined ? '  (实际 ' + extra + ')' : '')); }
 };
 
-console.log('v207 · 第 9 周题库（2026-11-23）校验 · 题库现为 9 周');
+console.log('v207 · 第 9 周题库（2026-11-23）校验 · 题库现为 10 周');
 
-ok(WEEKS.length === 9, '题库 9 周', WEEKS.length);
+ok(WEEKS.length === 10, '题库 10 周', WEEKS.length);
 ok(!!W9, 'HOMEWORK_WEEKS 含 WEEK9');
 ok(fs.existsSync(path.join(ROOT, 'tools', 'weekpacks', 'w9', 'meta.json')),
   '周包 tools/weekpacks/w9 存在');
@@ -166,10 +166,10 @@ ok(wr && rebuilt.toLowerCase() === String(wr.full_text).toLowerCase(), '写作�
 ok(wr && String(wr.full_text).match(/[^.!?]+[.!?]+["']?(?=\s|$)/g).length === 5, '写作全文 5 句（10 动作口径）');
 
 // ---- 版本钉子 ----
-ok(/name="app-version" content="208"/.test(html), 'index.html app-version = 207');
-ok((html.match(/\?v=208/g) || []).length === 7, 'index.html 7 处 ?v=208', (html.match(/\?v=208/g) || []).length);
-ok(/var CACHE_NAME = 'amy-english-v208';/.test(swSrc), 'sw.js CACHE_NAME = amy-english-v208');
-ok(/var V = 208;/.test(swSrc), 'sw.js var V = 207');
+ok(/name="app-version" content="223"/.test(html), 'index.html app-version = 207');
+ok((html.match(/\?v=223/g) || []).length === 10, 'index.html 10 处 ?v=223', (html.match(/\?v=223/g) || []).length);
+ok(/var CACHE_NAME = 'amy-english-v223';/.test(swSrc), 'sw.js CACHE_NAME = amy-english-v223');
+ok(/var V = 223;/.test(swSrc), 'sw.js var V = 207');
 // 负向断言用字符类写「v2xx 里的旧版本」，避免下次批量升版把它一起改掉
 ok(!/\.js\?v=20[0-6](?![0-9])/.test(html), '没有残留旧 ?v=（字符类 v200~v206）');
 ok(!/amy-english-v20[0-6](?![0-9])/.test(swSrc), '没有残留旧缓存名（字符类 v200~v206）');

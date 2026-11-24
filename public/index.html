@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="221">
+<meta name="app-version" content="223">
 <link rel="manifest" href="manifest.json">
 <!-- v135：登录第一步就是调 api.amyeng.top 验手机号。提前把 DNS + TLS
      握手做掉，接口首调能省几百毫秒 —— 手机弱网下这几百毫秒很显眼。 -->
@@ -17,9 +17,9 @@
      解析到文档末尾的 <script defer> 才发现它们（那时 180KB 的 HTML 已经
      解析完了），白白晚了几百毫秒到一秒。preload 只提前取、不执行，顺序
      仍由 defer 保证，不会改变任何依赖关系。 -->
-<link rel="preload" as="script" href="data.js?v=221">
-<link rel="preload" as="script" href="api.js?v=221">
-<link rel="preload" as="script" href="app.js?v=221">
+<link rel="preload" as="script" href="data.js?v=223">
+<link rel="preload" as="script" href="api.js?v=223">
+<link rel="preload" as="script" href="app.js?v=223">
 <!-- iOS 的"添加到主屏幕"不认 SVG（装出来是白板/网页截图），必须给 PNG。
      图标与启动图由 tools/gen-pwa-icons.js 生成，别手改。 -->
 <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon-180.png">
@@ -406,7 +406,7 @@ input,textarea,select{font-family:inherit;font-size:max(calc(14px*var(--fs)),var
   font-size:max(calc(12px*var(--fs-sm)),var(--fs-sm-min));font-weight:600;padding:6px 14px;border-radius:999px;margin-bottom:14px}
 .review-card{background:var(--canvas);border:1px solid var(--line);border-radius:16px;
   padding:24px 12px;margin-bottom:10px}
-.review-word{font-size:max(calc(36px*var(--fs)),var(--fs-min));font-weight:700;color:var(--ink-1,#222);
+.review-word{font-size:max(calc(36px*var(--fs)),var(--fs-min));font-weight:700;color:var(--ink-1,#223);
   letter-spacing:.5px;cursor:pointer;word-break:break-word}
 .review-sub{font-size:max(calc(12px*var(--fs-sm)),var(--fs-sm-min));color:var(--ink-3,#999);margin-top:8px}
 .review-phonetic{font-size:max(calc(14px*var(--fs)),var(--fs-min));color:var(--ink-2,#444);margin-top:6px;font-family:Georgia,serif}
@@ -428,13 +428,13 @@ input,textarea,select{font-family:inherit;font-size:max(calc(14px*var(--fs)),var
 .retry-badge{display:inline-block;background:#FDECEC;color:#C0392B;
   font-size:max(calc(12px*var(--fs-sm)),var(--fs-sm-min));font-weight:600;padding:6px 14px;border-radius:999px}
 .retry-note{font-size:max(calc(12px*var(--fs-sm)),var(--fs-sm-min));color:var(--ink-3,#999);margin:10px 0 12px}
-.retry-stem{font-size:max(calc(16px*var(--fs)),var(--fs-min));line-height:1.7;color:var(--ink-1,#222);font-weight:600}
+.retry-stem{font-size:max(calc(16px*var(--fs)),var(--fs-min));line-height:1.7;color:var(--ink-1,#223);font-weight:600}
 .retry-zh{margin-top:8px;padding:8px 11px;border-radius:10px;
   background:var(--primary-light,#EEF3FF);font-size:max(calc(12.5px*var(--fs-sm)),var(--fs-sm-min));line-height:1.6;
   color:var(--ink-2,#444);text-align:left}
 .retry-options{margin-top:14px;display:flex;flex-direction:column;gap:10px}
 .retry-option{padding:13px 14px;border:1.5px solid var(--line);border-radius:12px;
-  font-size:max(calc(15px*var(--fs)),var(--fs-min));color:var(--ink-1,#222);background:#fff;cursor:pointer;
+  font-size:max(calc(15px*var(--fs)),var(--fs-min));color:var(--ink-1,#223);background:#fff;cursor:pointer;
   transition:background .15s,border-color .15s;word-break:break-word}
 .retry-option.correct{background:#E8F7EF;border-color:#1F9D55;color:#1F9D55;font-weight:700}
 .retry-option.wrong{background:#FDECEC;border-color:#C0392B;color:#C0392B;
@@ -848,11 +848,11 @@ body.wf-typing .writing-banner{display:none}
 .a4-sheet .a4-ctx b{font-weight:bold}
 .a4-sheet .a4-frame{margin-top:3px}
 .a4-sheet .a4-hint{color:#333;margin-top:3px}
-.a4-sheet .a4-passage{margin:3px 0 0;color:#222}
+.a4-sheet .a4-passage{margin:3px 0 0;color:#223}
 .a4-sheet .a4-ctx .ef-blank{min-width:70px;border-bottom:1px solid #333;height:1em}
 /* 题目里的填空横线：宽度由答案字数决定（见 app.js 的 _a4QuestionHtml），
    所以这里不写死宽度，只管"长什么样"。横线压在文字基线上，像下划线。 */
-.a4-sheet .a4-blank{display:inline-block;height:1.05em;vertical-align:baseline;border-bottom:1px solid #222;margin:0 3px;max-width:100%}
+.a4-sheet .a4-blank{display:inline-block;height:1.05em;vertical-align:baseline;border-bottom:1px solid #223;margin:0 3px;max-width:100%}
 .a4-sheet .a4-similar{background:#FFF8E1;border:1px dashed var(--warning);border-radius:4px;padding:8px;margin-top:8px;font-size:11pt}
 @media print{
   body * {visibility:hidden}
@@ -2312,9 +2312,9 @@ button,.q-option,.gate-listen,.hold-btn,.tap-btn,.speak-btn{
 </div>
 
 <script>window.__appReady = false;</script>
-<script defer src="cloud.js?v=221"></script>
-<script defer src="data.js?v=221"></script>
-<script defer src="data-shuffle.js?v=221"></script>
+<script defer src="cloud.js?v=223"></script>
+<script defer src="data.js?v=223"></script>
+<script defer src="data-shuffle.js?v=223"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
 <!--
   ?v= 必须跟着版本号走（v124 修正）。
@@ -2324,13 +2324,13 @@ button,.q-option,.gate-listen,.hold-btn,.tap-btn,.speak-btn{
   这个坑很隐蔽：代码明明改了、也部署上去了，手机上跑的还是几个月前的逻辑。
   以后每次发版，这里跟着 app-version 一起改。
 -->
-<script defer src="recorder.js?v=221"></script>
-<script defer src="api.js?v=221"></script>
+<script defer src="recorder.js?v=223"></script>
+<script defer src="api.js?v=223"></script>
 <!-- v194：小游戏独立成文件，不塞进已经 800KB 的 app.js。必须排在 app.js
      **前面**：app.js 顶层有同步初始化，登录回来若正好停在「单词乐园」，
      渲染时 WordGame 得已经存在。game.js 只在被点击/渲染时才读 window.App。 -->
-<script defer src="game.js?v=221"></script>
-<script defer src="app.js?v=221"></script>
+<script defer src="game.js?v=223"></script>
+<script defer src="app.js?v=223"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {

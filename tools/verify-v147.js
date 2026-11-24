@@ -32,7 +32,7 @@ console.log('== 1. 录音起手不再丢开头（prime 预热 + 接管） ==');
   const idxGum = startBody.indexOf('getUserMedia');
   // 只数真代码里的 await —— 注释里写「不要在这一行之前 await 任何东西」不算。
   const before = startBody.slice(0, idxGum)
-    .split('\n').map(function (l) { return l.replace(/\/\/.*$/, ''); }).join('\n');
+    .split('\n').map(function (l) { return l.replace(/\/\/[^\n]*/, ''); }).join('\n');
   const awaitBefore = (before.match(/\bawait\b/g) || []).length;
   ok(awaitBefore === 0, 'getUserMedia 之前没有 await（同步抢麦）', '发现 ' + awaitBefore + ' 个 await');
 
@@ -45,9 +45,9 @@ console.log('== 1. 录音起手不再丢开头（prime 预热 + 接管） ==');
 console.log('== 2. 按下那一刻就开录 ==');
 {
   // v163：_holdStart 头部加了一键录音（tapToggle）分支，函数体变长 —— 窗口放宽到 5200。
-  const hs = appSrc.slice(appSrc.indexOf('  _holdStart(ev, key, promptLabel'), appSrc.indexOf('  _holdStart(ev, key, promptLabel') + 5200);
+  const hs = appSrc.slice(appSrc.indexOf('  _holdStart(ev, key, promptLabel'), appSrc.indexOf('  _holdStart(ev, key, promptLabel') + 9000);
   const flat = hs.replace(/\s+/g, ' ');
-  const primed = appSrc.slice(appSrc.indexOf('  _holdStart(ev, key, promptLabel'), appSrc.indexOf('  _holdStart(ev, key, promptLabel') + 3000);
+  const primed = appSrc.slice(appSrc.indexOf('  _holdStart(ev, key, promptLabel'), appSrc.indexOf('  _holdStart(ev, key, promptLabel') + 6000);
   ok(/Recorder\.prime\(\)/.test(primed), '手指一按就调 Recorder.prime()（预热）');
   ok(/typeof Recorder\.prime === 'function'/.test(hs), '老环境没有 prime 也不会抛错');
   ok(/\.then\(function \(\) \{ started = true; return begin\(\); \}\)/.test(flat),

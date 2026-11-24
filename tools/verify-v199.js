@@ -125,7 +125,7 @@ ok('姓名条有醒目样式（红底 / 大字加粗 / 自动换行）', () => {
   const css = html.slice(html.indexOf('/* v199 · 谁做错了放在第一眼'), html.indexOf('.err-head{'));
   assert(/\.err-who\{[^}]*background:#FFF1F0/.test(css), '浅红底');
   assert(/\.err-who\{[^}]*flex-wrap:wrap/.test(css), '人多自动换行');
-  assert(/\.err-who \.names\{[^}]*font-size:15px/.test(css) && /font-weight:700/.test(css), '名字大字加粗');
+  assert(/\.err-who \.names\{[^}]*font-size:max\(calc\(15px\*var\(--fs\)\)/.test(css) && /font-weight:700/.test(css), '名字大字加粗（v209 自适应）');
   assert(/\.err-who \.n\{/.test(css), '人数徽标');
 });
 ok('学生端「我的错题本」没有名单字段时，卡片结构照旧', () => {
@@ -167,9 +167,9 @@ ok('学生端「我的错题本」没有名单字段时，卡片结构照旧', (
     assert(line.indexOf(NAMES[2]) < 0, '全对的 Matt 不该出现在做错名单里');
   });
   ok('版本钉子统一到 v202', () => {
-    assert(/name="app-version" content="208"/.test(html));
-    assert.strictEqual((html.match(/\?v=208/g) || []).length, 7, '首页 7 处脚本引用');
-    assert(/var CACHE_NAME = 'amy-english-v208';/.test(sw) && /var V = 208;/.test(sw));
+    assert(/name="app-version" content="223"/.test(html));
+    assert.strictEqual((html.match(/\?v=223/g) || []).length, 10, '首页 10 处脚本引用');
+    assert(/var CACHE_NAME = 'amy-english-v223';/.test(sw) && /var V = 223;/.test(sw));
   });
   console.log('\n全部 ' + pass + ' 项通过 ✅');
   process.exit(0);

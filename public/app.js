@@ -8596,7 +8596,7 @@ const App = {
   // （家长 2026-10-17：「题没做完，下一题又能开始做了」）。
   _vocabFootLocked(mi, dayIdx) {
     // v138：老师预览也照锁 —— 预览要验的就是"能不能不做就往前走"。
-    // 老师真想快进，用底部那颗明说的「跳过本题（老师）」。
+    // v223：跳过键已永久移除，老师预览同样按正常流程做完。
     var m = HOMEWORK_DATA[dayIdx] && HOMEWORK_DATA[dayIdx].modules[mi];
     if (!m || !m.words) return false;
     var wIdx = this.state.vocabWordIdx;
@@ -9384,7 +9384,7 @@ const App = {
     // v138：老师预览也照锁。v136 曾给老师开个"免锁"口子（想让老师能一路翻着
     // 看题），结果家长在预览里看到的就是"我还没做题呢，下一题已经可以点了"
     // —— 预览不照学生规矩来，就验不出学生那边的问题。老师现在改用下面那颗
-    // 「跳过本题（老师）」走，锁本身对学生、老师一视同仁。
+    // v223 起没有任何跳过出口，锁本身对学生、老师一视同仁。
     if (!this._lockNextOnRender) return;
     this._lockNextOnRender = false;
     const next = document.getElementById('stage-next-btn');
@@ -11827,7 +11827,7 @@ const App = {
     const s = steps[this.state.stepIdx];
     if (!s || s.kind !== 'writingread') return true;
     // v138：老师预览也不再豁免 —— 预览要验的就是"能不能不读就过去"。
-    // 老师真想快进，用底部那颗「跳过本题（老师）」（nextStep(true) 会绕开这里）。
+    // v223：跳过键已永久移除，没有任何绕开这里的按钮。
     const m = HOMEWORK_DATA[this.state.currentDay].modules[s.mi];
     return this._writingAllRead(m, s.mi);
   },
@@ -12785,8 +12785,8 @@ const App = {
   nextStep(force) {
     clearTimeout(this._advanceTimer);
     this._stopCurrentAudio();
-    // force 只给「题库预览」里那颗明说的「跳过本题（老师）」用，别处在代码里
-    // 传 true 也不算数 —— 否则又是一个能让门禁失效的口子。
+    // force 是历史接口：v223 起所有跳过按钮已删除，正常调用一律不带 true。
+    // 其他代码传 true 也不算数 —— 否则又是一个能让门禁失效的口子。
     if (force && !(this.isTeacher() && this.state.currentTab === 'preview')) force = false;
     const steps = this._buildSteps(this.state.currentDay);
     const st0 = steps[this.state.stepIdx];
@@ -12825,25 +12825,8 @@ const App = {
     }
   },
 
-  // v221：孩子/家长点「这题做不了？先跳过」时走这里。只有明确点了才绕开
-  // 判分/录音门，平时「下一题」照旧锁着，不影响必须做完的规矩。
-  //  Harvey 的平板 2026-11-21 卡在第 19 题（逐句翻译长句判分不过）就是
-  //  缺这个出口：一整天的打卡停在一屏上，刷新回来还是那一屏。
-  _bailStep() {
-    const steps = this._buildSteps(this.state.currentDay);
-    if (!steps.length) return;
-    try { this._stopCurrentAudio(); } catch (e) {}
-    clearTimeout(this._advanceTimer);
-    if (this.state.stepIdx < steps.length - 1) {
-      this.state.stepIdx++;
-      this.renderContent();
-      this._flushSpeakOnRender();
-    } else {
-      this.state.stepIdx = steps.length;
-      this.renderContent();
-    }
-    this.showToast('这题先跳过，回头再练一遍就好', 'warn');
-  },
+  // v223：家长要求永久移除所有「跳过」出口（学生端先跳过 / 老师端跳过本题）。
+  // 判分/录音门一律照常执行，必须做完才能进入下一题。
 
   prevStep() {
     clearTimeout(this._advanceTimer);
@@ -13055,11 +13038,7 @@ const App = {
       var vLocked = this._vocabFootLocked(step.mi, dayIdx);
       html += '<button class="btn-ghost" id="stage-next-' + step.mi + '"' + (vLocked ? ' disabled' : '')
            + ' onclick="App.nextVocabWord(' + step.mi + ',' + dayIdx + ')">下一个单词</button>';
-      // 预览里词汇这一屏也锁着：老师想快进就整块跳过（学生看不到这颗键）。
-      if (vLocked && this.isTeacher() && this.state.currentTab === 'preview') {
-        html += '<button class="btn-ghost" id="pv-skip-btn" style="font-size:max(calc(12px*var(--fs-sm)),var(--fs-sm-min));opacity:.75"'
-             + ' onclick="App.nextStep(true)">跳过本题（老师）</button>';
-      }
+      // v223：家长要求永久移除所有跳过键（含老师预览），锁着就按正常流程做完。
     } else {
       // Name the button after what actually comes next: reading a passage is
       // a run of sentences, not a run of questions.
@@ -13093,20 +13072,7 @@ const App = {
       var lockedNow = !!this._lockNextOnRender;
       html += '<button class="btn-ghost" id="stage-next-btn"' + (lockedNow ? ' disabled' : '')
            + ' onclick="App.nextStep()">' + label + '</button>';
-      // 但老师不能因此被卡在某一屏翻不下去 —— 给老师一颗**明说的**跳过键，
-      // 只出现在「题库预览」里，学生端永远看不到（也不受它影响）。
-      if (lockedNow && this.isTeacher() && this.state.currentTab === 'preview') {
-        html += '<button class="btn-ghost" id="pv-skip-btn" style="font-size:max(calc(12px*var(--fs-sm)),var(--fs-sm-min));opacity:.75"'
-             + ' onclick="App.nextStep(true)">跳过本题（老师）</button>';
-      }
-      // v221：学生端的「卡住自救」出口。平时照旧锁着必须做完，只有明确点
-      // 这颗灰色小字才走 —— 平板录音/识别异常、长句判分不过时，孩子和
-      // 家长不用再对着灰按钮干等，一点就能继续把今天的卡打完。
-      if (lockedNow && !this.isTeacher()) {
-        html += '<button class="btn-ghost" id="st-stuck-btn" '
-             + 'style="font-size:max(calc(12px*var(--fs-sm)),var(--fs-sm-min));opacity:.55;margin-left:6px" '
-             + 'onclick="App._bailStep()">这题做不了？先跳过 →</button>';
-      }
+      // v223：家长要求永久移除所有跳过键（含老师预览），锁着就按正常流程做完。
     }
     html += '</div>';
 

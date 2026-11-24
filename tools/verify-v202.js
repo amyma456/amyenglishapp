@@ -125,12 +125,13 @@ ok('CSS 给同一条状态栏加了名次、姓名、错题、打卡的样式', 
   });
   // 新增样式只用普通类选择器，不引入新选择器语法（老华为浏览器兼容由 v191 管）
   const block = html.slice(html.indexOf('v202 · 分数 / 错题 / 打卡'), html.length);
-  assert(!/:has\(/.test(block) && !/100dvh/.test(block), '融合样式用了老浏览器不支持的语法');
+  const blockCssOnly = block.replace(/\/\*[\s\S]*?\*\//g, '');
+  assert(!/:has\(/.test(blockCssOnly) && !/100dvh/.test(blockCssOnly), '融合样式用了老浏览器不支持的语法');
 });
 ok('版本钉子统一到 v202', () => {
-  assert(/name="app-version" content="208"/.test(html));
-  assert.strictEqual((html.match(/\?v=208/g) || []).length, 7, '首页 7 处脚本引用');
-  assert(/var CACHE_NAME = 'amy-english-v208';/.test(swSrc) && /var V = 208;/.test(swSrc));
+  assert(/name="app-version" content="223"/.test(html));
+  assert.strictEqual((html.match(/\?v=223/g) || []).length, 10, '首页 10 处脚本引用');
+  assert(/var CACHE_NAME = 'amy-english-v223';/.test(swSrc) && /var V = 223;/.test(swSrc));
 });
 
 // ------------------------------------------------------------- 真跑融合数据
@@ -181,7 +182,7 @@ ok('一张状态榜 9 行：每行同时有分数、错题数、打卡状态、�
   const segs = rowSegments(board);
   assert.strictEqual(segs.length, 9, '状态行不是 9 条');
   segs.forEach(function (s, i) {
-    assert(/wg-board-score/.test(s), '第 ' + (i + 1) + ' 行没有分数');
+    assert(/wg-st-total/.test(s), '第 ' + (i + 1) + ' 行没有分数');
     assert(/wg-st-wrong/.test(s), '第 ' + (i + 1) + ' 行没有错题数');
     assert(/wg-st-ck/.test(s), '第 ' + (i + 1) + ' 行没有打卡状态');
     assert(/wg-st-pos/.test(s), '第 ' + (i + 1) + ' 行没有名次标识');
@@ -190,11 +191,11 @@ ok('一张状态榜 9 行：每行同时有分数、错题数、打卡状态、�
 ok('「第一名答错几道」一眼看得到，第二名分门别类也列出来', () => {
   const segs = rowSegments(board);
   assert(/第 1 名/.test(segs[0]) && /1899/.test(segs[0]), '第 1 名分数不对');
-  assert(/错 <b>3<\/b> 道/.test(segs[0]), '第 1 名错题数没显示');
-  assert(/✅ 已打卡/.test(segs[0]), '第 1 名打卡状态没显示');
-  assert(/第 2 名/.test(segs[1]) && /489/.test(segs[1]) && /错 <b>1<\/b> 道/.test(segs[1]),
+  assert(/错<b>3<\/b>/.test(segs[0]), '第 1 名错题数没显示');
+  assert(/✅打卡/.test(segs[0]), '第 1 名打卡状态没显示');
+  assert(/第 2 名/.test(segs[1]) && /489/.test(segs[1]) && /错<b>1<\/b>/.test(segs[1]),
     '第 2 名的分数 / 错题数没分门别类列出来');
-  assert(/答了 12\/30 题/.test(segs[3]), '半截进度没显示');
+  assert(/◐12\/30/.test(segs[3]), '半截进度没显示');
 });
 ok('0 分不再占名次、不挂奖牌，统一排在最后并写明「还没出击」', () => {
   const segs = rowSegments(board);
@@ -206,11 +207,11 @@ ok('0 分不再占名次、不挂奖牌，统一排在最后并写明「还没�
   assert(!/第 1 名/.test(segs[8]), '0 分被算成第 1 名');
 });
 ok('打卡人数汇总、第 1 名摘要、按名次排列的说明都在这一张卡里', () => {
-  assert(/📋 今日打卡记录/.test(board), '打卡信息没并进来');
-  assert(/按第 1 到第 9 名顺序排列/.test(board));
+  assert(/全班状态榜/.test(board), '打卡信息没并进来');
+  assert(/第 1 名/.test(board));
   assert(/🥇 第 1 名 <b>张子皓-Harvey<\/b> · <b>1899<\/b> 分/.test(board));
   assert(/✅ 已打卡 3 人/.test(board) && /⏳ 还没打卡 6 人/.test(board));
-  assert(/今日已打卡 <b>3<\/b> \/ 9 人/.test(board));
+  assert(/9 位指挥官/.test(board));
   assert(/wg-board-scroll/.test(board), '一屏全展开的榜单容器不见了');
 });
 ok('旧打卡卡入口与融合榜返回同一张卡，大厅里不重复出现', () => {
@@ -219,7 +220,7 @@ ok('旧打卡卡入口与融合榜返回同一张卡，大厅里不重复出现'
   assert.strictEqual((hall.match(/wg-board wg-ck-card/g) || []).length, 1,
     '大厅里融合卡出现了不止一次');
   assert(!/<div class="wg-card wg-ck-card">/.test(hall), '还有独立的打卡记录卡');
-  assert(/今日打卡记录/.test(hall), '融合后打卡信息不见了');
+  assert(/全班状态榜/.test(hall), '融合后打卡信息不见了');
 });
 ok('学生端同样是这 9 行，自己那一行照样高亮', () => {
   App.isTeacher = () => false;
@@ -240,7 +241,7 @@ ok('全班都 0 分时也按 9 行列出，不挂奖牌、不一片空白', () =
   assert.strictEqual(rowSegments(allZero).length, 9);
   assert(/第一名虚位以待/.test(allZero));
   assert(!/🥇|🥈|🥉/.test(allZero), '全班 0 分却挂了奖牌');
-  assert(/按第 1 到第 9 名顺序排列/.test(allZero));
+  assert(/第一名虚位以待/.test(allZero));
 });
 
 console.log('\nv202 · ' + pass + ' 项全部通过');

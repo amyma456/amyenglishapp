@@ -265,17 +265,15 @@ console.log('\n== ⑦ 老师在预览里一个字节都写不进去 ==');
   ok(!/if\s*\(\s*this\.isTeacher\(\)\s*\)\s*return\s+true/.test(wg),
      '★★ 写作朗读门禁不再给老师开口子（预览照锁）');
 
-  // ⑤ 预览里的门禁和学生同一套：renderStage 的"锁下一题"不再带 !isTeacher，
-  //    改由底部那颗「跳过本题（老师）」给老师留出口。
+  // ⑤ 预览里的门禁和学生同一套：renderStage 的"锁下一题"不再带 !isTeacher。
+  //    v223 起老师预览也不再有跳过键，必须按正常流程做完。
   const rs = methodBody(appCode, 'renderStage');
   const teacherGuards = (rs.match(/!this\.isTeacher\(\)/g) || []).length;
-  ok(teacherGuards <= 2,
-     '★★ renderStage 里"锁下一题"不再带 !isTeacher（预览照锁，只剩错题/错词两处）',
+  ok(teacherGuards <= 3,
+     '★★ renderStage 里"锁下一题"不再带 !isTeacher（预览照锁，只剩错题/错词/续卡三处）',
      '实际 ' + teacherGuards + ' 处');
-  ok(/跳过本题（老师）/.test(rs) && /nextStep\(true\)/.test(rs),
-     '★★ 锁着的时候给老师一颗明说的「跳过本题（老师）」→ nextStep(true)');
-  ok(/isTeacher\(\)\s*&&\s*this\.state\.currentTab\s*===\s*'preview'/.test(rs),
-     '★ 这颗跳过键只在「题库预览」里出现（学生端看不到）');
+  ok(!/跳过本题（老师）|pv-skip-btn/.test(rs),
+     '★★ v223：老师预览也不再出现「跳过本题（老师）」按钮');
 }
 
 // ===========================================================================

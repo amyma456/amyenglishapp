@@ -1,0 +1,217 @@
+{
+  "day_cn": "周六",
+  "day_en": "Saturday",
+  "theme_cn": "大熊猫野化放归 · 高频词汇 + 阅读理解 + 键盘拼写",
+  "reading_name": "阅读理解 · 熊猫回家",
+  "spell_name": "今天学的词，敲一遍",
+  "speaking": [
+    {
+      "sentence": "What do you know about baby pandas?",
+      "sentence_cn": "关于熊猫宝宝你知道些什么？",
+      "options": [
+        "Baby pandas are very small, and their mothers take gentle care of them.",
+        "Baby pandas can run faster than a train.",
+        "Pandas live in the sea with the fish.",
+        "Baby pandas are born as big as their mums."
+      ],
+      "options_cn": [
+        "熊猫宝宝非常小，熊猫妈妈会温柔地照顾它们。",
+        "熊猫宝宝能跑得比火车还快。",
+        "熊猫和鱼一起住在海里。",
+        "熊猫宝宝一出生就和妈妈一样大。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "gentle /ˈdʒentl/ 的 g 读 /dʒ/，care 与 car 的元音不同，mothers 词尾 s 出声",
+      "explanation_cn": "问熊猫宝宝的常识，答句要说真实的特点。A 说了宝宝小、妈妈温柔照顾；B 比火车快、C 住在海里、D 一出生像妈妈一样大，都不真实。",
+      "answer_cn_hint": "说出熊猫宝宝的小、软，还有妈妈温柔照顾它们的样子。"
+    },
+    {
+      "sentence": "Why must young pandas learn skills before they go back to the wild?",
+      "sentence_cn": "为什么年轻的大熊猫回野外前必须学本领？",
+      "options": [
+        "Because in the wild they must find food and keep themselves safe alone.",
+        "Because they need skills to watch TV.",
+        "Because skills help them sleep all day.",
+        "Because zoo keepers like to give tests."
+      ],
+      "options_cn": [
+        "因为在野外它们要独自找吃的、保护自己的安全。",
+        "因为看电视需要本领。",
+        "因为本领能帮它们整天睡觉。",
+        "因为饲养员喜欢出考题。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "skills 词尾 ls 连读，alone /əˈləʊn/ 重音在后，safe 与 save 的尾音不同",
+      "explanation_cn": "Why 问原因，答句要用 Because 说清楚。A 说了独自找食物、保护安全这两条真实原因；B、C、D 都不合常理。",
+      "answer_cn_hint": "用 Because… 说出野外要自己找吃的、自己保平安这样的理由。"
+    },
+    {
+      "sentence": "Which is happier for a panda, living in a zoo or living in the wild?",
+      "sentence_cn": "住在动物园和住在野外，哪一种对熊猫更幸福？",
+      "options": [
+        "I think the wild is happier, because a panda can climb and roam free in its own forest.",
+        "The zoo is better because pandas can eat hamburgers.",
+        "Wild places are cold and boring.",
+        "Pandas don't care where they live."
+      ],
+      "options_cn": [
+        "我觉得野外更幸福，因为熊猫能在自己的森林里自由爬树、到处走。",
+        "动物园更好，因为熊猫能吃汉堡。",
+        "野外又冷又无聊。",
+        "熊猫不在乎住在哪里。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "roam /rəʊm/ 与 home 押韵，forest 重音在前，climb 里的 b 不发音",
+      "explanation_cn": "两者选一要给出选择和理由。A 选了野外并说明能自由活动的理由；B 熊猫不吃汉堡；C、D 都不是有依据的回答。",
+      "answer_cn_hint": "先说 I think … is happier，再用 because 说一条理由，比如自由、有森林。"
+    },
+    {
+      "sentence": "What can we do to help pandas?",
+      "sentence_cn": "我们能做些什么来帮助大熊猫？",
+      "options": [
+        "We can protect the bamboo forests and learn more about pandas.",
+        "We can visit the pandas every day and feed them snacks.",
+        "We can move all the pandas to the city.",
+        "We can leave rubbish on the mountain."
+      ],
+      "options_cn": [
+        "我们可以保护竹林，多了解大熊猫。",
+        "我们可以每天去看熊猫、喂它们零食。",
+        "我们可以把熊猫都搬进城市。",
+        "我们可以在山上乱丢垃圾。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "protect /prəˈtekt/ 重音在 tect，bamboo /bæmˈbuː/ 重音在后，forests 词尾 s 出声",
+      "explanation_cn": "问帮助办法，答句要给出具体做法。A 说了保护竹林、多了解两条；B 乱投喂会伤害熊猫；C、D 都是伤害它们的方式。",
+      "answer_cn_hint": "用 We can… 说出保护竹林、不乱丢垃圾、了解熊猫这样的做法。"
+    },
+    {
+      "sentence": "What does it mean when a panda walks into the wild forest alone?",
+      "sentence_cn": "当一只熊猫独自走进野外的森林，这说明什么？",
+      "options": [
+        "It means the panda has grown up and can start a free new life.",
+        "It means the panda is lost and afraid.",
+        "It means the zoo made a mistake.",
+        "It means the panda does not like people at all."
+      ],
+      "options_cn": [
+        "说明这只熊猫长大了，可以开始自由的新生活。",
+        "说明熊猫迷路了、很害怕。",
+        "说明动物园犯了错。",
+        "说明熊猫一点都不喜欢人。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "grown /ɡrəʊn/ 与 home 押韵，free 的 ee 读长音，alone 重音在后",
+      "explanation_cn": "问走进森林的意义，答句要解释这件事背后的含义。A 说了长大、开始新生活；B 迷路、C 犯错、D 讨厌人，都不是放归的意义。",
+      "answer_cn_hint": "用 It means… 说出熊猫长大了、回到属于自己的家这样的含义。"
+    }
+  ],
+  "vocab": [
+    {
+      "word": "cub",
+      "phonetic": "/kʌb/",
+      "meaning": "幼崽",
+      "emoji": "🐼",
+      "example_en": "The panda cub drinks milk and sleeps in its mother's arms.",
+      "example_cn": "熊猫幼崽喝着奶，在妈妈的怀里睡觉。",
+      "hint_cn": "熊、豹这些动物的小宝宝",
+      "syllables": ["cub"]
+    },
+    {
+      "word": "gentle",
+      "phonetic": "/ˈdʒentl/",
+      "meaning": "温柔的",
+      "emoji": "🤲",
+      "example_en": "The keeper is gentle with the baby panda.",
+      "example_cn": "饲养员对熊猫宝宝很温柔。",
+      "hint_cn": "轻轻的、不会弄疼人的样子",
+      "syllables": ["gen", "tle"]
+    },
+    {
+      "word": "skill",
+      "phonetic": "/skɪl/",
+      "meaning": "技能",
+      "emoji": "🎯",
+      "example_en": "Climbing trees is an important skill for a young panda.",
+      "example_cn": "爬树是小熊猫的一项重要技能。",
+      "hint_cn": "学会了才能做好的本领",
+      "syllables": ["skill"]
+    },
+    {
+      "word": "wild",
+      "phonetic": "/waɪld/",
+      "meaning": "野生的",
+      "emoji": "🌿",
+      "example_en": "The panda learns to find food in the wild forest.",
+      "example_cn": "熊猫学着在野生森林里找食物。",
+      "hint_cn": "不属于人管、自己在大自然里生活的",
+      "syllables": ["wild"]
+    },
+    {
+      "word": "trail",
+      "phonetic": "/treɪl/",
+      "meaning": "足迹",
+      "emoji": "👣",
+      "example_en": "The keeper follows the panda's trail in the snow.",
+      "example_cn": "饲养员顺着雪地里的足迹找熊猫。",
+      "hint_cn": "走过之后留下的印子或小路",
+      "syllables": ["trail"]
+    }
+  ],
+  "reading": {
+    "passage": "Giant pandas are the best-loved animals of China. Long ago, many pandas lived in small forests that were far from each other. Baby pandas, called cubs, are very small and need gentle care from their mothers. Now scientists teach young pandas the skills they need to live in the wild. When a panda is ready, it walks out along a mountain trail and starts a free life. Every panda that returns to the wild is a big step for China's nature work.",
+    "passage_cn": "大熊猫是中国最受喜爱的动物。很久以前，许多熊猫住在彼此相隔很远的小森林里。熊猫宝宝非常小，需要妈妈的温柔照顾。现在，科学家们教年轻的大熊猫学会在野外生活需要的本领。熊猫准备好以后，就沿着山间的小径走出去，开始自由的生活。每一只回到野外的大熊猫，都是中国自然保护工作向前迈出的一大步。",
+    "questions": [
+      {
+        "question": "What are baby pandas called?",
+        "qtype_cn": "细节定位",
+        "options": ["Cubs", "Chicks", "Puppies", "Calves"],
+        "answer": 0,
+        "explanation_cn": "细节定位：第三句 Baby pandas, called cubs 直接给出名字，选 A。chicks 是雏鸟，puppies 是小狗，calves 是小牛。方法：called 后面往往就是答案。"
+      },
+      {
+        "question": "What do scientists teach young pandas?",
+        "qtype_cn": "细节定位",
+        "options": ["How to sing and dance", "The skills to live in the wild", "How to open the zoo gate", "How to take photos"],
+        "answer": 1,
+        "explanation_cn": "细节定位：第四句 teach young pandas the skills they need to live in the wild，教的是野外生存本领，选 B。A 唱歌跳舞、C 开门、D 拍照都不是文中的内容。方法：圈出 teach，答案就在它后面。"
+      },
+      {
+        "question": "In 'it walks out along a mountain trail', what does 'trail' mean?",
+        "qtype_cn": "词义猜测",
+        "options": ["A kind of food", "A big train", "A small path in the mountains", "A warm blanket"],
+        "answer": 2,
+        "explanation_cn": "词义猜测：熊猫沿着它走出山林，说明 trail 是「山间小径」，选 C。A 食物、B 大火车、D 毛毯都跟不上熊猫的脚步。方法：跟着动词 walks out along 猜名词。"
+      },
+      {
+        "question": "What can we infer about a panda going back to the wild?",
+        "qtype_cn": "推理判断",
+        "options": ["It means the panda is naughty", "It means the zoo is closing", "It happens to every panda every day", "It shows China's nature work is working well"],
+        "answer": 3,
+        "explanation_cn": "推理判断：末句说每只回野外的熊猫都是自然保护工作的一大步，可以推出保护工作做得好，选 D。A 调皮、B 动物园关门、C 每天都发生，都不是文意。方法：a big step 是推理的钥匙。"
+      }
+    ]
+  },
+  "spell": [
+    {
+      "question": "幼崽：c__ [填完整单词]",
+      "answer": "cub",
+      "explanation_cn": "cub 幼崽；u 读短音 /ʌ/。"
+    },
+    {
+      "question": "温柔的：g_____ [填完整单词]",
+      "answer": "gentle",
+      "explanation_cn": "gen + tle；g 读 /dʒ/。"
+    },
+    {
+      "question": "技能：s____ [填完整单词]",
+      "answer": "skill",
+      "explanation_cn": "skill 技能；sk 连读，ll 双写。"
+    },
+    {
+      "question": "野生的：w___ [填完整单词]",
+      "answer": "wild",
+      "explanation_cn": "wild 野生的；i 读长音 /aɪ/。"
+    }
+  ]
+}

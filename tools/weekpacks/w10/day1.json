@@ -1,0 +1,136 @@
+{
+  "day_cn": "周二",
+  "day_en": "Tuesday",
+  "theme_cn": "国产大飞机 C919 阅读 + 现在进行时 + 航空开放日听力 + 键盘拼写",
+  "reading_name": "阅读理解 · 中国的 C919",
+  "grammar_name": "语法 · 现在进行时",
+  "listening_name": "听力 · 航空开放日",
+  "spell_name": "阅读重点词，敲一遍",
+  "reading": {
+    "passage": "C919 is China's own big passenger plane, made by Chinese engineers. It can carry about one hundred and sixty passengers at a time. With strong engines, the plane flies at a great speed and saves fuel. The jet made its first flight in 2017 and now carries travellers between many cities. Building China's own big plane was not easy, but the engineers never gave up. Many children now dream of flying this great plane across the sky one day.",
+    "passage_cn": "C919 是中国人自己造的大客机，由中国工程师制造。它一次能载大约 160 名乘客。飞机装着强劲的发动机，能以很快的速度飞行，还很省燃料。这架喷气式客机在 2017 年完成首飞，如今往返于许多城市之间运送旅客。造出中国自己的大飞机并不容易，但工程师们从不放弃。许多小朋友梦想着有一天驾驶这架大飞机飞越蓝天。",
+    "questions": [
+      {
+        "question": "How many passengers can the C919 carry at a time?",
+        "qtype_cn": "数字细节",
+        "options": ["About 160", "About 60", "About 260", "About 16"],
+        "answer": 0,
+        "explanation_cn": "数字细节：第二句 about one hundred and sixty passengers 直接给出载客数，选 A。B、C、D 都是把数字改错的干扰项。方法：数字题要把文中数字圈出来，看清 one hundred and sixty。"
+      },
+      {
+        "question": "When did the C919 make its first flight?",
+        "qtype_cn": "细节定位",
+        "options": ["In 2007", "In 2017", "In 2027", "In 1977"],
+        "answer": 1,
+        "explanation_cn": "细节定位：第四句 made its first flight in 2017 给出时间，选 B。A、C、D 都是 2017 的近似年份数字陷阱。方法：时间题回到 first flight 那一句，别被其它数字带跑。"
+      },
+      {
+        "question": "In 'Building China's own big plane was not easy', what does 'its own' mean?",
+        "qtype_cn": "词义猜测",
+        "options": ["Made by China itself", "Bought from a shop", "Very old", "Made of paper"],
+        "answer": 0,
+        "explanation_cn": "词义猜测：首句说这是 China's own big passenger plane，由中国的工程师制造，its own 就是「中国自己的」，选 A。B 买来的与 own 相反；C、D 与大飞机不符。方法：首尾呼应的 own，指自己制造。"
+      },
+      {
+        "question": "Which is the best title for this passage?",
+        "qtype_cn": "标题选择",
+        "options": ["A Trip to Chengdu", "How to Make Paper Planes", "C919: China's Own Big Plane", "My Busy Monday"],
+        "answer": 2,
+        "explanation_cn": "标题选择：全文从头到尾都在讲中国自己的大飞机 C919，标题要罩住全文，选 C。A 旅行、C 纸飞机、D 忙碌周一都只碰到边角。方法：标题必须概括整篇，只提一个细节的先排除。"
+      }
+    ]
+  },
+  "grammar": [
+    {
+      "question": "用所给动词的现在进行时填空：Look! The plane ___ (take) off right now.",
+      "type": "fill",
+      "answer": "is taking",
+      "explanation_cn": "look 和 right now 提示动作正在发生，用 is + taking；主语 the plane 是单数，be 动词用 is。"
+    },
+    {
+      "question": "用所给动词的现在进行时填空：Listen! The engines ___ (make) a loud sound.",
+      "type": "fill",
+      "answer": "are making",
+      "explanation_cn": "engines 是复数，现在进行时用 are + making。"
+    },
+    {
+      "question": "用所给动词的现在进行时填空：The engineers ___ (test) the new plane these days.",
+      "type": "fill",
+      "answer": "are testing",
+      "explanation_cn": "these days 表示近段时间一直在进行，用 are testing。"
+    },
+    {
+      "question": "Be quiet! The baby ___.",
+      "type": "choice",
+      "options": ["is sleeping", "sleeps", "sleep", "slept"],
+      "answer": 0,
+      "explanation_cn": "Be quiet 提示此刻动作正在进行，用现在进行时 is sleeping；sleeps 是一般现在时，slept 是过去式。"
+    },
+    {
+      "question": "What are you doing now? — I ___ my model plane.",
+      "type": "choice",
+      "options": ["am making", "make", "made", "makes"],
+      "answer": 0,
+      "explanation_cn": "问句 What are you doing 是现在进行时，答句也要用 am making 保持一致；主语 I 用 am。"
+    },
+    {
+      "question": "用所给动词的现在进行时填空：Look, the birds ___ (fly) beside the plane!",
+      "type": "fill",
+      "answer": "are flying",
+      "explanation_cn": "birds 是复数，look 提示正在发生，用 are flying。"
+    }
+  ],
+  "listening": [
+    {
+      "question": "Listen to the dialogue. What did Ben see at the air show?",
+      "audio_text": "Girl: Ben, what did you see at the air show? Boy: I saw the C919, China's own big plane! It is so huge. Girl: How cool! I want to see it too.",
+      "options": ["The C919 plane", "A fast ship", "A new train", "A small kite"],
+      "answer": 0,
+      "explanation_cn": "男孩说 I saw the C919, China's own big plane，看到的是国产大飞机 C919。"
+    },
+    {
+      "question": "Listen to the dialogue. How many passengers can the C919 carry?",
+      "audio_text": "Boy: Mum, how many people can the C919 carry? Woman: About one hundred and sixty passengers, Mingming. Boy: Wow, that is like my whole school!",
+      "options": ["About 160", "About 60", "About 260", "About 16"],
+      "answer": 0,
+      "explanation_cn": "妈妈说 About one hundred and sixty passengers，大约能载 160 名乘客。"
+    },
+    {
+      "question": "Which picture matches the sentence you hear?",
+      "audio_text": "The big silver plane is taking off from the airport.",
+      "options": ["✈️", "🚄", "⛵", "🚗"],
+      "picture_options": true,
+      "answer": 0,
+      "explanation_cn": "句子里说 the big silver plane is taking off（大银色飞机正在起飞），所以选飞机 ✈️。"
+    },
+    {
+      "type": "fill",
+      "question": "Listen and fill in the blank: The C919 flies above the white ___.",
+      "audio_text": "The C919 flies above the white clouds.",
+      "answer": "clouds",
+      "explanation_cn": "听到 above the white clouds，空里填 clouds。"
+    }
+  ],
+  "spell": [
+    {
+      "question": "喷气式飞机：j__ [填完整单词]",
+      "answer": "jet",
+      "explanation_cn": "jet 喷气式飞机；jet 里 e 读短音 /e/。"
+    },
+    {
+      "question": "燃料：f___ [填完整单词]",
+      "answer": "fuel",
+      "explanation_cn": "save fuel 省燃料；fuel 的 ue 读 /uː/。"
+    },
+    {
+      "question": "飞行；航班：f_____ [填完整单词]",
+      "answer": "flight",
+      "explanation_cn": "first flight 首飞；gh 在 flight 里不发音。"
+    },
+    {
+      "question": "速度：s____ [填完整单词]",
+      "answer": "speed",
+      "explanation_cn": "at a great speed 以很快的速度；ee 读长音 /iː/。"
+    }
+  ]
+}

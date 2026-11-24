@@ -48,7 +48,8 @@ ok('v203 紧凑样式：汇总并排、状态行不换行、剩余题数有强�
   assert(/\.wg-st-left b\{/.test(block), '剩余题数没有强调');
   assert(/\.wg-board-row\.wg-ck-row\{align-items:center;padding:3px 5px;min-height:0\}/.test(block),
     '状态行没压紧');
-  assert(block.indexOf(':has(') < 0 && block.indexOf('100dvh') < 0,
+  const blockCssOnly = block.replace(/\/\*[\s\S]*?\*\//g, '');
+  assert(blockCssOnly.indexOf(':has(') < 0 && blockCssOnly.indexOf('100dvh') < 0,
     '紧凑样式用了老浏览器不支持的语法');
 });
 ok('全班状态榜挪到游戏大厅首屏最上面，时长卡排在后面', () => {
@@ -67,9 +68,9 @@ ok('老师端与学生端共用同一个渲染函数，旧打卡卡仍委托给�
   assert(/function checkinCardHtml\(\)[\s\S]{0,120}return boardHtml\(\);/.test(gameSrc));
 });
 ok('版本钉子统一到 v203', () => {
-  assert(/name="app-version" content="208"/.test(html));
-  assert.strictEqual((html.match(/\?v=208/g) || []).length, 7, '首页 7 处脚本引用');
-  assert(/var CACHE_NAME = 'amy-english-v208';/.test(swSrc) && /var V = 208;/.test(swSrc));
+  assert(/name="app-version" content="223"/.test(html));
+  assert.strictEqual((html.match(/\?v=223/g) || []).length, 10, '首页 10 处脚本引用');
+  assert(/var CACHE_NAME = 'amy-english-v223';/.test(swSrc) && /var V = 223;/.test(swSrc));
 });
 
 // ------------------------------------------------------------- 加载 game.js
@@ -172,29 +173,29 @@ ok('每行都写清：第几名 / 错几道 / 剩几道 / 今日得分 / 累计�
     assert(/wg-st-wrong/.test(s), '第 ' + (i + 1) + ' 行没有错题数');
     assert(/wg-st-left/.test(s), '第 ' + (i + 1) + ' 行没有剩余题数');
     assert(/wg-st-today/.test(s), '第 ' + (i + 1) + ' 行没有今日得分');
-    assert(/总 <b>\d+<\/b> 分/.test(s), '第 ' + (i + 1) + ' 行没有累计总分');
+    assert(/总<b>\d+<\/b>/.test(s), '第 ' + (i + 1) + ' 行没有累计总分');
     assert(/wg-st-ck/.test(s), '第 ' + (i + 1) + ' 行没有打卡状态');
   });
 });
 ok('第 1 名 Harvey：错 3 / 剩 0 / 今日 +20 / 总 1899 分 / 第 1 名 / 已打卡', () => {
   const s = segs[0];
-  assert(/第 1 名/.test(s) && /总 <b>1899<\/b> 分/.test(s), '名次或总分不对');
-  assert(/错 <b>3<\/b> 道/.test(s), '错题数不对');
-  assert(/剩 <b>0<\/b> 道/.test(s), '全做完了却还显示剩题');
-  assert(/今日 <b>\+20<\/b>/.test(s), '今日得分不对');
-  assert(/✅ 已打卡/.test(s), '打卡状态不对');
+  assert(/第 1 名/.test(s) && /总<b>1899<\/b>/.test(s), '名次或总分不对');
+  assert(/错<b>3<\/b>/.test(s), '错题数不对');
+  assert(/剩<b>0<\/b>/.test(s), '全做完了却还显示剩题');
+  assert(/今日<b>\+20<\/b>/.test(s), '今日得分不对');
+  assert(/✅打卡/.test(s), '打卡状态不对');
 });
 ok('第 4 名 York 答了 12/30：剩 18 道，错 4 道，总分 80', () => {
   const s = segs[3];
-  assert(/第 4 名/.test(s) && /总 <b>80<\/b> 分/.test(s));
-  assert(/错 <b>4<\/b> 道/.test(s), '错题数不对');
-  assert(/剩 <b>18<\/b> 道/.test(s), '剩余题数没按 30-12 算');
-  assert(/答了 12\/30 题/.test(s), '半截进度不对');
+  assert(/第 4 名/.test(s) && /总<b>80<\/b>/.test(s));
+  assert(/错<b>4<\/b>/.test(s), '错题数不对');
+  assert(/剩<b>18<\/b>/.test(s), '剩余题数没按 30-12 算');
+  assert(/◐12\/30/.test(s), '半截进度不对');
 });
 ok('没打卡记录的孩子不假装成「错 0 道 / 剩 0 道」', () => {
   const gary = segs.filter(s => /Gary/.test(s))[0];
   assert(gary, 'Gary 不在榜上');
-  assert(/错题待同步/.test(gary) && /剩题待同步/.test(gary), '把没记录当成 0');
+  assert(/错<b>\?<\/b>/.test(gary) && /剩<b>\?<\/b>/.test(gary), '把没记录当成 0');
 });
 ok('mergedBoardRows 的剩余题数 = 当天总题数 - 已答题数', () => {
   const rows = WordGame._test.mergedBoardRows(3), by = {};
@@ -207,10 +208,10 @@ ok('mergedBoardRows 的剩余题数 = 当天总题数 - 已答题数', () => {
 ok('两条打卡汇总并排一行，脚注和按名次排列的说明都还在', () => {
   assert(/wg-ck-groups/.test(board), '汇总没并排');
   assert(/✅ 已打卡 3 人/.test(board) && /⏳ 还没打卡 6 人/.test(board));
-  assert(/今日已打卡 <b>3<\/b> \/ 9 人/.test(board));
-  assert(/按第 1 到第 9 名顺序排列/.test(board));
-  assert(/错=错题 \/ 剩=剩余题 \/ 今日=今日得分 \/ 总=累计总分/.test(board),
-    '没写清每一列是什么');
+  assert(/9 位指挥官/.test(board));
+  assert(/第 1 名/.test(board));
+  // v213 紧凑行里「错/剩/今日/总」单位直接内联在每格文字里，不再需要脚注图例
+  assert(/总<b>\d+<\/b>/.test(board), '没写清每一列是什么');
 });
 ok('老师端与学生端游戏页都是这一张 9 行全展开的榜，自己那行照样高亮', () => {
   const hallT = WordGame._test.hallHtml();

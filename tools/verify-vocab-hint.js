@@ -309,9 +309,9 @@ console.log('\n=== 5. 图片收小 + 提示紧凑：保证"图片 + 提示 + 选
      '手机尺寸：默认 ' + defMobile + 'px → 提示出现 ' + openMobile + 'px（省下 ' + (defMobile - openMobile) + 'px）');
 
   ok(/\.vocab-hint-slot\{display:none\}/.test(htmlSrc), '槽位默认隐藏的规则在 CSS 里');
-  const fs13 = num(/\.vocab-hint-slot\.q-hint\{[^}]*font-size:([\d.]+)px/);
+  const fs13 = num(/\.vocab-hint-slot\.q-hint\{[^}]*font-size:max\(calc\(([\d.]+)px\*var\(--fs-sm\)\)/);
   const lh = num(/\.vocab-hint-slot\.q-hint\{[^}]*line-height:([\d.]+)/);
-  ok(isFinite(fs13) && fs13 <= 13, '提示字号压到 ' + fs13 + 'px（≤13，尽量少占地方）');
+  ok(isFinite(fs13) && fs13 <= 13, '提示字号 ≥12.5px（v209 自适应，' + fs13 + 'px 档，尽量少占地方）');
   ok(isFinite(lh) && lh <= 1.6, '提示行高 ' + lh + '（≤1.6，紧凑）');
   ok(/\.vocab-hint-slot\.q-hint\{[^}]*text-align:left/.test(htmlSrc), '提示左对齐（好读）');
 }
@@ -319,8 +319,8 @@ console.log('\n=== 5. 图片收小 + 提示紧凑：保证"图片 + 提示 + 选
 // ===========================================================================
 console.log('\n=== 6. 版本与缓存名 ===');
 {
-  ok(/name="app-version" content="208"/.test(htmlSrc), '版本号升到 144');
-  ok(/amy-english-v208/.test(swSrc), 'Service Worker 缓存名同步到 v144（不然手机上还是旧版）');
+  ok(/name="app-version" content="223"/.test(htmlSrc), '版本号升到 144');
+  ok(/amy-english-v223/.test(swSrc), 'Service Worker 缓存名同步到 v144（不然手机上还是旧版）');
 }
 
 console.log('\n' + (fail === 0 ? '全部通过' : (fail + ' 项失败')));

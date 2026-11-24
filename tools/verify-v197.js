@@ -126,12 +126,12 @@ function assertNoInternal(out, label) {
 
 // -------------------------------------------------------------- 版本钉子
 ok('版本钉子一致（meta / 7 处 ?v= / SW / game.js 预缓存）', () => {
-  assert(/<meta name="app-version" content="208">/.test(html), 'index.html meta 没升');
+  assert(/<meta name="app-version" content="223">/.test(html), 'index.html meta 没升');
   const vs = html.match(/<script defer src="[^"]+\?v=(\d+)"/g) || [];
   assert.strictEqual(vs.length, 7, '脚本引用应是 7 处，实际 ' + vs.length);
-  vs.forEach(s => assert(/\?v=208"/.test(s), '还有旧版本：' + s));
-  assert(/var CACHE_NAME = 'amy-english-v208'/.test(sw), 'SW CACHE_NAME 没升');
-  assert(/var V = 208;/.test(sw), 'SW V 没升');
+  vs.forEach(s => assert(/\?v=223"/.test(s), '还有旧版本：' + s));
+  assert(/var CACHE_NAME = 'amy-english-v223'/.test(sw), 'SW CACHE_NAME 没升');
+  assert(/var V = 223;/.test(sw), 'SW V 没升');
   assert(/\.\/game\.js\?v=' \+ V/.test(sw), 'SW 没预缓存 game.js');
 });
 
@@ -207,7 +207,8 @@ ok('v197 样式块仍在（v203 起改成一屏全展开），老浏览器选择
       'v203 之后榜单里还留着要下拉的进度条');
   });
   assert(/\.wg-board-row\.wg-board-idle\{/.test(block), '0 分行没有视觉区分');
-  assert(block.indexOf(':has(') < 0, '新样式用了老浏览器不认的选择器');
+  const blockCssOnly = block.replace(/\/\*[\s\S]*?\*\//g, '');
+  assert(blockCssOnly.indexOf(':has(') < 0, '新样式用了老浏览器不认的选择器');
   assert(block.indexOf('100dvh') < 0, '新样式单写了 100dvh');
 });
 
@@ -233,7 +234,7 @@ ok('v197 样式块仍在（v203 起改成一屏全展开），老浏览器选择
       '从没玩过的同学没有出现');
     assert((out.match(/wg-board-idle/g) || []).length >= 12,
       '没玩过的 0 分行没标出来');
-    assert(/\<b\>0\<\/b\> 分/.test(out), '没玩过的不显示 0 分');
+    assert(/总<b>0<\/b>/.test(out), '没玩过的不显示 0 分（v213 同行状态栏格式）');
     assertNoInternal(out, '排行榜');
   });
 

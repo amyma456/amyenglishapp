@@ -1,0 +1,135 @@
+{
+  "day_cn": "周四",
+  "day_en": "Thursday",
+  "theme_cn": "海绵城市阅读 + 一般过去时（规则动词 -ed） + 城市防水听力 + 键盘拼写",
+  "reading_name": "阅读理解 · 会喝水的海绵城市",
+  "grammar_name": "语法 · 一般过去时（规则动词 -ed）",
+  "listening_name": "听力 · 大雨过后",
+  "spell_name": "阅读重点词，敲一遍",
+  "reading": {
+    "passage": "In a big storm, city streets can fill with water like small rivers. A sponge city is a city that can drink rainwater like a sponge. Gardens on the roofs of buildings hold the rain and let it out slowly. Special roads and drains let the rainwater sink into the ground. The saved water can wash the streets and water the trees in summer. In a sponge city, rain is not a problem but a helpful friend.",
+    "passage_cn": "在大暴雨里，城市的街道会像小河一样灌满水。「海绵城市」就是一座能像海绵一样喝进雨水的城市。楼房屋顶上的花园把雨水存起来，再慢慢放出去。特殊的路面和排水沟让雨水渗进地下。存下来的水夏天可以冲洗街道、浇灌树木。在海绵城市里，雨水不是麻烦，而是帮手。",
+    "questions": [
+      {
+        "question": "What is a 'sponge city'?",
+        "qtype_cn": "词义猜测",
+        "options": ["A city that can take in rainwater like a sponge", "A city built inside the sea", "A city made of rubber", "A city with no rain at all"],
+        "answer": 0,
+        "explanation_cn": "词义猜测：第二句说海绵城市能像海绵一样喝进雨水，所以它是一座会吸水的城市，选 A。B 建在海里、C 橡胶做的、D 完全没雨都与定义对不上。方法：紧跟在 is 后面的解释就是定义。"
+      },
+      {
+        "question": "What do the gardens on the roofs do?",
+        "qtype_cn": "细节定位",
+        "options": ["They grow big watermelons for sale", "They hold the rain and let it out slowly", "They keep the streets warm at night", "They stop people from walking"],
+        "answer": 1,
+        "explanation_cn": "细节定位：第三句 hold the rain and let it out slowly 给出屋顶花园的作用，选 B。A 卖西瓜、C 保暖、D 拦人，原文都没提。方法：细节题圈出主语，再回原文找它做的事。"
+      },
+      {
+        "question": "What can we infer about the saved rainwater?",
+        "qtype_cn": "推理判断",
+        "options": ["It is too dirty to use ever", "It flows into the sea at once", "It can be useful on hot dry days", "It makes the streets muddy"],
+        "answer": 2,
+        "explanation_cn": "推理判断：第五句说存下的水夏天能洗街浇树，可以推出天热干旱时它很有用，选 C。A 说脏得不能用与洗街浇树相反；B 马上流走就存不下来；D 泥泞街道不是推断。方法：把用途往前推一步就是好处。"
+      },
+      {
+        "question": "Which is the best title for this passage?",
+        "qtype_cn": "标题选择",
+        "options": ["A Rainy Monday", "How to Wash Streets", "My Umbrella Is Broken", "Sponge Cities: Cities That Drink Rain"],
+        "answer": 3,
+        "explanation_cn": "标题选择：全文都在介绍会喝雨水的海绵城市，标题要罩住全文，选 D。A 雨天、B 洗街、C 伞坏了都只碰边角。方法：标题要能概括整篇，太小的细节先排除。"
+      }
+    ]
+  },
+  "grammar": [
+    {
+      "question": "用所给动词的过去式填空：Last night it ___ (rain) hard in our city.",
+      "type": "fill",
+      "answer": "rained",
+      "explanation_cn": "rain 是规则动词，直接加 ed 变 rained；last night 是过去的时间标志。"
+    },
+    {
+      "question": "用所给动词的过去式填空：The rain water ___ (fill) the streets like small rivers.",
+      "type": "fill",
+      "answer": "filled",
+      "explanation_cn": "fill 直接加 ed 变 filled；雨水灌满了街道。"
+    },
+    {
+      "question": "用所给动词的过去式填空：We ___ (walk) home slowly with our umbrellas.",
+      "type": "fill",
+      "answer": "walked",
+      "explanation_cn": "walk 加 ed 变 walked；撑着伞慢慢走回家。"
+    },
+    {
+      "question": "用所给动词的过去式填空：Dad ___ (plant) some flowers on our roof last Sunday.",
+      "type": "fill",
+      "answer": "planted",
+      "explanation_cn": "plant 加 ed 变 planted；上个星期天爸爸在屋顶种花。"
+    },
+    {
+      "question": "We ___ the new sponge park near the river last week.",
+      "type": "choice",
+      "options": ["visit", "visited", "visits", "will visit"],
+      "answer": 1,
+      "explanation_cn": "last week 是过去时间，用过去式 visited；visit 的过去式直接加 ed。"
+    },
+    {
+      "question": "用所给动词的过去式填空：The small lake ___ (collect) the rainwater yesterday.",
+      "type": "fill",
+      "answer": "collected",
+      "explanation_cn": "collect 加 ed 变 collected；小湖昨天把雨水收集了起来。"
+    }
+  ],
+  "listening": [
+    {
+      "question": "Listen to the dialogue. What can the road do after the rain?",
+      "audio_text": "Girl: Dad, why is the road still wet after the rain stops? Dad: Look, the water is sinking into the ground. Our city is learning to drink rain like a sponge! Girl: A city that drinks rain — how interesting!",
+      "options": ["The rainwater sinks into the ground", "The road gets longer", "The rain goes into the sea", "The road becomes dry at once"],
+      "answer": 0,
+      "explanation_cn": "爸爸说 the water is sinking into the ground，雨水正在渗进地下。"
+    },
+    {
+      "question": "Listen to the dialogue. What do the roof gardens do?",
+      "audio_text": "Girl: Grandpa, what are the gardens on the roof for? Grandpa: They hold the rain and let it out slowly, dear. They also keep the rooms cool. Girl: I want a garden on our roof too!",
+      "options": ["They hold the rain and let it out slowly", "They cook dinner for us", "They make the house taller", "They water the cars"],
+      "answer": 0,
+      "explanation_cn": "爷爷说 They hold the rain and let it out slowly，屋顶花园能存住雨水再慢慢放出来。"
+    },
+    {
+      "question": "Which picture matches the sentence you hear?",
+      "audio_text": "The children are planting flowers in the rooftop garden.",
+      "options": ["🌷", "⚽", "🍚", "📚"],
+      "picture_options": true,
+      "answer": 0,
+      "explanation_cn": "句子里说 planting flowers（种花），所以选花朵 🌷。"
+    },
+    {
+      "type": "fill",
+      "question": "Listen and fill in the blank: A sponge city drinks rainwater like a ___.",
+      "audio_text": "A sponge city drinks rainwater like a sponge.",
+      "answer": "sponge",
+      "explanation_cn": "听到 like a sponge，空里填 sponge。"
+    }
+  ],
+  "spell": [
+    {
+      "question": "海绵：s_____ [填完整单词]",
+      "answer": "sponge",
+      "explanation_cn": "sponge 海绵；o 在 s 后读短音 /ʌ/。"
+    },
+    {
+      "question": "花园：g_____ [填完整单词]",
+      "answer": "garden",
+      "explanation_cn": "roof garden 屋顶花园；den 轻轻读。"
+    },
+    {
+      "question": "排水沟：d____ [填完整单词]",
+      "answer": "drain",
+      "explanation_cn": "drain 排水沟；ai 读长音 /eɪ/。"
+    },
+    {
+      "question": "屋顶：r___ [填完整单词]",
+      "answer": "roof",
+      "explanation_cn": "roof 屋顶；oo 读长音 /uː/。"
+    }
+  ]
+}

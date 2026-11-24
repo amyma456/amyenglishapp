@@ -129,23 +129,23 @@ function setBoard(rows) {
 
 // ------------------------------------------------------------------ 源码约束
 ok('版本钉子统一到 v202', () => {
-  assert(/name="app-version" content="208"/.test(html));
-  assert.strictEqual((html.match(/\?v=208/g) || []).length, 7, '首页 7 处脚本引用');
-  assert(/var CACHE_NAME = 'amy-english-v208';/.test(swSrc) && /var V = 208;/.test(swSrc));
-  assert(/^<meta name="app-version" content="208">/m.test(html));
+  assert(/name="app-version" content="223"/.test(html));
+  assert.strictEqual((html.match(/\?v=223/g) || []).length, 10, '首页 10 处脚本引用');
+  assert(/var CACHE_NAME = 'amy-english-v223';/.test(swSrc) && /var V = 223;/.test(swSrc));
+  assert(/^<meta name="app-version" content="223">/m.test(html));
 });
 ok('游戏页 tab 仍在刷新恢复白名单里（v198 的修复没被覆盖）', () => {
   const rt = appSrc.slice(appSrc.indexOf('  _restoreTab() {'), appSrc.indexOf('  showApp() {'));
   assert(/\['wordgame', 'weekly'/.test(rt), '老师白名单丢了 wordgame');
   assert(/\['wordgame', 'today'/.test(rt), '学生白名单丢了 wordgame');
 });
-ok('版本探针发现落后会先清缓存再刷新，且同一版本只刷一次', () => {
+ok('版本探针发现落后会 reload 一次拿新版，且同一版本只刷一次', () => {
   const probe = html.slice(html.indexOf('function __checkVersion()'),
-    html.indexOf('document.addEventListener(\'visibilitychange\''));
-  assert(/caches\.keys\(\)/.test(probe) && /caches\.delete\(n\)/.test(probe), '没清旧缓存');
+    html.indexOf('document.addEventListener(\'visibilitychange\'')).replace(/\/\/[^\n]*/g, '');
+  assert(!/caches\.delete/.test(probe) && /__amyReloadOnce/.test(probe) && /amy_ver_reload_/.test(probe), '版本落后只 reload 一次（v220 起不清缓存，导航走网络优先）');
   assert(/sessionStorage\.setItem\(key, '1'\)/.test(probe), '没有防重复刷新标记');
-  assert(/setTimeout\(go, 1500\)/.test(probe), '清缓存卡住时没有兜底刷新');
-  assert(/window\.__safeReload\(\)/.test(probe), '没有触发刷新');
+  assert(/__amyReloadOnce/.test(probe), '刷新入口是 __amyReloadOnce');
+  assert(/window\.__amyReloadOnce\(\)/.test(probe), '落后时确实触发刷新');
 });
 ok('CSS 里有 0 分名次与打卡卡的样式（老浏览器可用的普通选择器）', () => {
   assert(/\.wg-rank-none\{/.test(html));
@@ -233,17 +233,17 @@ ok('CSS 里有 0 分名次与打卡卡的样式（老浏览器可用的普通选
   cloudCk['s1792850539588_d3'] = { done: false, answered: 8, total: 30 };
   let ckHtml = WordGame._test.checkinCardHtml();
   ok('游戏页有「今日打卡记录」卡：同名只一行，全班 9 人一个不少', () => {
-    assert(/📋 今日打卡记录/.test(ckHtml));
+    assert(/全班状态榜/.test(ckHtml));
     assert.strictEqual((ckHtml.match(/wg-ck-row/g) || []).length, 9);
-    assert(/今日已打卡 <b>2<\/b> \/ 9 人/.test(ckHtml), '打卡人数统计不对');
+    assert(/9 位指挥官/.test(ckHtml), '打卡人数统计不对');
   });
   ok('融合状态栏读的是后台确认记录：重复账号的另一编号也能认到，状态与错题数一致', () => {
-    assert(/错 <b>2<\/b> 道/.test(ckHtml), 'York 的错题数没显示');
-    assert(/错 <b>1<\/b> 道/.test(ckHtml), 'jerry 第二个编号的打卡没认到');
-    assert(/答了 8\/30 题/.test(ckHtml), '半截进度没显示');
+    assert(/错<b>2<\/b>/.test(ckHtml), 'York 的错题数没显示');
+    assert(/错<b>1<\/b>/.test(ckHtml), 'jerry 第二个编号的打卡没认到');
+    assert(/◐8\/30/.test(ckHtml), '半截进度没显示');
     assert(/还没打卡/.test(ckHtml));
     // v202：分数和错题数在同一条状态栏里，不用再翻另一张卡
-    assert(/wg-st-wrong/.test(ckHtml) && /wg-board-score/.test(ckHtml));
+    assert(/wg-st-wrong/.test(ckHtml) && /wg-st-total/.test(ckHtml));
   });
   App.isTeacher = () => false;
   App._myStudentId = () => 's1791895377291';
@@ -269,7 +269,7 @@ ok('CSS 里有 0 分名次与打卡卡的样式（老浏览器可用的普通选
   });
   await new Promise(r => setTimeout(r, 0));
   ok('拉到新打卡数据后重画大厅，游戏页真的显示出来了', () => {
-    assert(/今日打卡记录/.test(rootEl.innerHTML), '拉到新数据后没重画大厅');
+    assert(/全班状态榜/.test(rootEl.innerHTML), '拉到新数据后没重画大厅');
   });
   ok('老师端班级为空时会从名册推断班级，不会把别班混进榜', () => {
     const saved = App.state.className;

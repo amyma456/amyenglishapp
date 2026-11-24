@@ -44,9 +44,9 @@ const REAL = [
 
 // ------------------------------------------------------------------ 源码约束
 ok('版本钉子统一到 v202', () => {
-  assert(/name="app-version" content="208"/.test(html));
-  assert.strictEqual((html.match(/\?v=208/g) || []).length, 7, '首页 7 处脚本引用');
-  assert(/var CACHE_NAME = 'amy-english-v208';/.test(swSrc) && /var V = 208;/.test(swSrc));
+  assert(/name="app-version" content="223"/.test(html));
+  assert.strictEqual((html.match(/\?v=223/g) || []).length, 10, '首页 10 处脚本引用');
+  assert(/var CACHE_NAME = 'amy-english-v223';/.test(swSrc) && /var V = 223;/.test(swSrc));
 });
 ok('后端不再把「已下线但带分」的账号整行丢掉', () => {
   const fn = worker.slice(worker.indexOf('async function buildBoardRows'),
@@ -335,13 +335,13 @@ App._updatePendingBadge = function () {};
   ok('融合榜：按第 1~9 名顺序排列，每行同时列出分数、错题数与打卡状态', () => {
     assert(/✅ 已打卡 2 人/.test(ck), '已打卡人数不对');
     assert(/⏳ 还没打卡 7 人/.test(ck), '未打卡人数不对');
-    assert(/今日已打卡 <b>2<\/b> \/ 9 人/.test(ck));
-    assert(/按第 1 到第 \d+ 名顺序排列/.test(ck), '没写明按名次顺序排列');
+    assert(/9 位指挥官/.test(ck));
+    assert(/全班状态榜/.test(ck), '状态榜标题不见了');
     const first = ck.indexOf('wg-board-row wg-ck-row');
     assert(first > 0, '融合状态行没渲染出来');
     const next = ck.indexOf('wg-board-row wg-ck-row', first + 10);
     const seg = ck.slice(first, next > 0 ? next : undefined);
-    assert(/wg-st-wrong/.test(seg) && /wg-st-ck/.test(seg) && /wg-board-score/.test(seg),
+    assert(/wg-st-wrong/.test(seg) && /wg-st-ck/.test(seg) && /wg-st-total/.test(seg),
       '分数、错题数、打卡状态没放在同一条状态栏里');
     assert(/第 1 名|还没出击/.test(seg), '第一行没有名次标识');
   });

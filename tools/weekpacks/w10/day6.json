@@ -1,0 +1,143 @@
+{
+  "day_cn": "周日",
+  "day_en": "Sunday",
+  "theme_cn": "高频词汇 + 完形填空（乡村直播助农） + 键盘拼写",
+  "cloze_name": "完形填空 · 苹果飞出大山记",
+  "spell_name": "今天学的词，敲一遍",
+  "vocab": [
+    {
+      "word": "farmer",
+      "phonetic": "/ˈfɑːmə/",
+      "meaning": "农民",
+      "emoji": "👨‍🌾",
+      "example_en": "The farmer grows sweet apples on his little farm.",
+      "example_cn": "农民在他的小农场里种出甜甜的苹果。",
+      "hint_cn": "种庄稼、养动物的人",
+      "syllables": ["farm", "er"]
+    },
+    {
+      "word": "market",
+      "phonetic": "/ˈmɑːkɪt/",
+      "meaning": "市场",
+      "emoji": "🏪",
+      "example_en": "Mum buys fresh vegetables at the morning market.",
+      "example_cn": "妈妈在早上的市场里买新鲜的蔬菜。",
+      "hint_cn": "大家买菜卖东西的地方",
+      "syllables": ["mar", "ket"]
+    },
+    {
+      "word": "online",
+      "phonetic": "/ˌɒnˈlaɪn/",
+      "meaning": "线上",
+      "emoji": "💻",
+      "example_en": "Grandpa sells his apples online with a phone.",
+      "example_cn": "爷爷用手机在线上卖苹果。",
+      "hint_cn": "用网络来做的事情",
+      "syllables": ["on", "line"]
+    },
+    {
+      "word": "fruit",
+      "phonetic": "/fruːt/",
+      "meaning": "水果",
+      "emoji": "🍎",
+      "example_en": "The village has many fruit trees behind the houses.",
+      "example_cn": "村庄的房子后面有很多水果树。",
+      "hint_cn": "树上长的、甜甜的吃食",
+      "syllables": ["fruit"]
+    },
+    {
+      "word": "village",
+      "phonetic": "/ˈvɪlɪdʒ/",
+      "meaning": "村庄",
+      "emoji": "🏘️",
+      "example_en": "The small village sits between two green hills.",
+      "example_cn": "小小的村庄坐落在两座青山之间。",
+      "hint_cn": "乡下房子聚在一起的地方",
+      "syllables": ["vil", "lage"]
+    }
+  ],
+  "cloze": {
+    "passage": "Last Saturday, Mingming took a bus to Uncle Li's village deep in the mountains. Uncle Li grows apples, pears and other 1___ on his little farm. This autumn the fruit is big and sweet, but Uncle Li cannot sell all of it in the town 2___. Mingming has a good idea: 'We can show your farm 3___ with my phone, and people will buy the apples!' Uncle Li is a bit shy, but he stands up like a brave 4___ and says hello to everyone. Soon people from many cities 5___ boxes of apples, and trucks carry them away. At night Uncle Li smiles and says, 'The 6___ helps our sweet apples find good homes in every city!'",
+    "passage_cn": "上个星期六，明明坐大巴去大山深处李爷爷住的村庄。李爷爷在他的小农场里种苹果、梨和其他水果。今年秋天水果又大又甜，可是李爷爷在镇上的市场里卖不完。明明想出一个好主意：「我们用我的手机把你的农场放到线上，大家就会来买苹果啦！」李爷爷有点害羞，但他还是像一位勇敢的农民一样站起来跟大家打招呼。很快，许多城市的人下单买苹果，卡车把一箱箱苹果运走了。晚上李爷爷笑着说：「网络让我们甜甜的苹果在每个城市都找到了好人家！」",
+    "sentences_cn": [
+      "上个星期六，明明坐大巴去大山深处李爷爷住的村庄。",
+      "李爷爷在他的小农场里种苹果、梨和其他水果。",
+      "今年秋天水果又大又甜，可是李爷爷在镇上的市场里卖不完。",
+      "明明想出一个好主意：「我们用我的手机把你的农场放到线上，大家就会来买苹果啦！」",
+      "李爷爷有点害羞，但他还是像一位勇敢的农民一样站起来跟大家打招呼。",
+      "很快，许多城市的人下单买苹果，卡车把一箱箱苹果运走了。",
+      "晚上李爷爷笑着说：「网络让我们甜甜的苹果在每个城市都找到了好人家！」"
+    ],
+    "questions": [
+      {
+        "question": "1___",
+        "qtype_cn": "语义搭配",
+        "options": ["fruit", "paper", "stones", "clocks"],
+        "answer": 0,
+        "explanation_cn": "语义搭配：前文说种的是 apples, pears（苹果、梨），后面又说水果又大又甜，能和它们并列的是 fruit 水果，选 A。paper 纸、stones 石头、clocks 钟表都不是种出来的。方法：看空前后的并列词划范围。"
+      },
+      {
+        "question": "2___",
+        "qtype_cn": "词义理解",
+        "options": ["library", "hospital", "market", "cinema"],
+        "answer": 2,
+        "explanation_cn": "词义理解：sell all of it in the town…（在镇上的……卖完），能卖水果的地方是 market 市场，选 C。library 图书馆、hospital 医院、cinema 电影院都不卖苹果。方法：跟着动词 sell 找卖东西的地方。"
+      },
+      {
+        "question": "3___",
+        "qtype_cn": "上下文线索",
+        "options": ["asleep", "online", "alone", "late"],
+        "answer": 1,
+        "explanation_cn": "上下文线索：后面说 with my phone、人们会来买苹果，是用手机在网上展示，show… online 把农场放到线上，选 B。asleep 睡着、alone 独自、late 迟了都和买苹果对不上。方法：抓住 phone 这个线索词。"
+      },
+      {
+        "question": "4___",
+        "qtype_cn": "语义搭配",
+        "options": ["pilot", "doctor", "dancer", "farmer"],
+        "answer": 3,
+        "explanation_cn": "语义搭配：种苹果卖苹果的李爷爷本来就是干农活的人，像一位勇敢的 farmer 农民一样打招呼，选 D。pilot 飞行员、doctor 医生、dancer 舞者都和他不相干。方法：完形先想人物身份再选。"
+      },
+      {
+        "question": "5___",
+        "qtype_cn": "固定搭配",
+        "options": ["wash", "draw", "order", "fold"],
+        "answer": 2,
+        "explanation_cn": "固定搭配：order boxes of apples 下单买一箱箱苹果，是网上买东西的常用说法，选 C。wash 洗、draw 画、fold 折都不能和 boxes of apples 搭配。方法：order 后接买的东西，表示下单。"
+      },
+      {
+        "question": "6___",
+        "qtype_cn": "上下文线索",
+        "options": ["window", "pencil", "bicycle", "internet"],
+        "answer": 3,
+        "explanation_cn": "上下文线索：整篇都在讲用手机网上卖苹果，帮苹果找到好人家的是 internet 网络，选 D。window 窗户、pencil 铅笔、bicycle 自行车都没有这个本事。方法：结尾往往呼应开头的办法。"
+      }
+    ]
+  },
+  "spell": [
+    {
+      "question": "农民：f_____ [填完整单词]",
+      "answer": "farmer",
+      "explanation_cn": "farm + er，种地的人就是农民。"
+    },
+    {
+      "question": "市场：m_____ [填完整单词]",
+      "answer": "market",
+      "explanation_cn": "morning market 早市；ket 轻轻读。"
+    },
+    {
+      "question": "线上：o_____ [填完整单词]",
+      "answer": "online",
+      "explanation_cn": "on + line，在线上就是 online。"
+    },
+    {
+      "question": "水果：f____ [填完整单词]",
+      "answer": "fruit",
+      "explanation_cn": "fruit 水果；ui 读长音 /uː/。"
+    },
+    {
+      "question": "村庄：v_____ [填完整单词]",
+      "answer": "village",
+      "explanation_cn": "village 村庄；双写 l，结尾 age 读 /ɪdʒ/。"
+    }
+  ]
+}

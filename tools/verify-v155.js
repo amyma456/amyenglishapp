@@ -56,13 +56,13 @@ section('1b. 阅读与完形的新结构');
     if (m.type === 'reading') readings.push({ w: wi, m });
     if (m.type === 'cloze') clozes.push({ w: wi, m });
   })));
-  ok(readings.length === 37, '阅读模块 37 篇（W1-W4 每周 4 篇 + W5 承接；W6 置换为 2 篇；W7~W9 每周 5 篇）', readings.length);
+  ok(readings.length === 42, '阅读模块 42 篇（W1-W4 每周 4 篇 + W5 承接；W6 置换为 2 篇；W7~W10 每周 5 篇）', readings.length);
   ok(readings.every(x => sentsEN(x.m.passage).length === 6), '每篇阅读课文 6 句');
   // v193（家长 2026-11-07）：作文跟读每天占 2~3 个动作，30 道上限下阅读题让位为 3 道
   ok(readings.every(x => x.m.questions.length >= 3), '每篇阅读 ≥3 道题（v193 起）');
   ok(readings.every(x => sentsEN(x.m.passage).length === sentsCN(x.m.passage_cn).length),
      '每篇阅读中英句数逐句对齐');
-  ok(clozes.length === 13, '完形模块 13 篇（W1-W4 每周 2 篇 + W5~W9 周日承接；周四完形被 v162 家长要求挪掉换成 30 道图题）', clozes.length);
+  ok(clozes.length === 14, '完形模块 14 篇（W1-W4 每周 2 篇 + W5~W10 周日承接；周四完形被 v162 家长要求挪掉换成 30 道图题）', clozes.length);
   ok(clozes.every(x => sentsEN(x.m.passage).length === 7), '每篇完形课文 7 句');
   ok(clozes.every(x => x.m.questions.length === 6), '每篇完形 6 空');
   ok(clozes.every(x => (x.m.passage.match(/[0-9]+_{2,}/g) || []).length === 6),
@@ -129,10 +129,10 @@ section('2. app.js 按真实动作计数（行为级，W1 周一）');
 
 section('3. 版本号 = 155');
 {
-  ok(/app-version" content="208"/.test(htmlSrc), 'index.html app-version = 155');
-  ok((htmlSrc.match(/\?v=208/g) || []).length === 7, 'index.html 7 处 ?v=208（新增 game.js）', (htmlSrc.match(/\?v=208/g) || []).length);
-  ok(/amy-english-v208/.test(swSrc), 'sw.js 缓存名 v155');
-  ok(/var V = 208;/.test(swSrc), 'sw.js var V = 155');
+  ok(/app-version" content="223"/.test(htmlSrc), 'index.html app-version = 155');
+  ok((htmlSrc.match(/\?v=223/g) || []).length === 10, 'index.html 10 处 ?v=223（新增 game.js）', (htmlSrc.match(/\?v=223/g) || []).length);
+  ok(/amy-english-v223/.test(swSrc), 'sw.js 缓存名 v155');
+  ok(/var V = 223;/.test(swSrc), 'sw.js var V = 155');
 }
 
 console.log('\n———————————————');

@@ -1,0 +1,217 @@
+{
+  "day_cn": "周三",
+  "day_en": "Wednesday",
+  "theme_cn": "三星堆考古 · 高频词汇 + 阅读理解 + 键盘拼写",
+  "reading_name": "阅读理解 · 神奇的三星堆",
+  "spell_name": "今天学的词，敲一遍",
+  "speaking": [
+    {
+      "sentence": "What can you see in a history museum?",
+      "sentence_cn": "在历史博物馆里你能看到什么？",
+      "options": [
+        "I can see old relics like bronze masks and jade pieces.",
+        "I can see my homework from yesterday.",
+        "There are many cows on the farm.",
+        "The museum sells cold drinks only."
+      ],
+      "options_cn": [
+        "我能看到青铜面具、玉石这样的古老文物。",
+        "我能看到我昨天的作业。",
+        "农场里有很多牛。",
+        "博物馆只卖冷饮。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "relic /ˈrelɪk/ 重音在前，bronze 里 o 读 /rɒ/，jade /dʒeɪd/ 的 j 读 /dʒ/",
+      "explanation_cn": "问博物馆里看到什么，答句要说出具体的展品。A 说了青铜面具、玉石这些文物；B 说作业；C 说农场；D 说冷饮，都答非所问。",
+      "answer_cn_hint": "用 I can see… 说出青铜面具、黄金面罩、玉石器这样的展品。"
+    },
+    {
+      "sentence": "Which relic do you like best, a gold mask or a jade stone?",
+      "sentence_cn": "黄金面具和玉石器，你最喜欢哪件文物？",
+      "options": [
+        "I like the gold mask best, because its big eyes look so strange and cool.",
+        "Gold masks can fly in the sky.",
+        "Jade stones are used for cooking rice.",
+        "I don't like looking at anything at all."
+      ],
+      "options_cn": [
+        "我最喜欢黄金面具，因为它的大眼睛看起来又奇特又酷。",
+        "黄金面具能在天上飞。",
+        "玉石器是用来煮饭的。",
+        "我什么都不喜欢看。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "strange /streɪndʒ/ 的 a 读 /eɪ/，gold 里 ld 前的 o 读 /əʊ/，eyes 词尾 z 要出声",
+      "explanation_cn": "两者选一要给出选择和理由。A 选了黄金面具并说明大眼睛又奇特又酷；B、C 说法错误；D 直接不配合。",
+      "answer_cn_hint": "先说 I like … best，再用 because 说一条理由，比如眼睛奇特、工艺精美。"
+    },
+    {
+      "sentence": "Why do people dig carefully at an old site?",
+      "sentence_cn": "为什么人们在古遗址上要小心地挖掘？",
+      "options": [
+        "Because a small pull can break a relic that is three thousand years old.",
+        "Because digging fast is good exercise.",
+        "Because the ground is very soft there.",
+        "Because they want to find water pipes."
+      ],
+      "options_cn": [
+        "因为轻轻一拉就可能弄坏一件三千岁的文物。",
+        "因为挖得快是很好的锻炼。",
+        "因为那里的地面非常软。",
+        "因为他们想找水管。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "carefully /ˈkeəfəli/ 重音在前，thousand 里 ou 读 /aʊ/，relics 词尾 s 轻轻带过",
+      "explanation_cn": "Why 问原因，答句要用 Because 说清楚。A 说了文物太古老、容易损坏这个真实原因；B、C、D 都不是考古要小心的原因。",
+      "answer_cn_hint": "用 Because… 说出文物很古老、一碰就可能坏这样的理由。"
+    },
+    {
+      "sentence": "If you could ask an old artist one question, what would you ask?",
+      "sentence_cn": "如果你能问一位古代工匠一个问题，你会问什么？",
+      "options": [
+        "I would ask how you made such a beautiful mask without any machines.",
+        "I would ask you to give me all your gold.",
+        "I would ask the mask to talk to me.",
+        "I would ask nothing and go home early."
+      ],
+      "options_cn": [
+        "我会问您在没有机器的年代是怎么做出这么美的面具的。",
+        "我会要您把金子都给我。",
+        "我会让面具跟我说话。",
+        "我什么都不问，早早回家。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "artist /ˈɑːtɪst/ 重音在前，without 的 th 咬舌尖，machines 重音在后",
+      "explanation_cn": "If 引导的假设句用 I would… 回答。A 问出了关于工艺的真实好问题；B 要金子没礼貌；C 面具不会说话；D 放弃了机会。",
+      "answer_cn_hint": "用 I would ask… 说出关于工艺、生活或花纹的好问题。"
+    },
+    {
+      "sentence": "How can we help more people learn about Sanxingdui?",
+      "sentence_cn": "我们可以怎样帮助更多人了解三星堆？",
+      "options": [
+        "We can draw the relics and tell their stories to our classmates.",
+        "We can touch the relics with dirty hands.",
+        "We can keep the museum a secret.",
+        "We can take the relics home to play with."
+      ],
+      "options_cn": [
+        "我们可以画下文物，把他们的故事讲给同学听。",
+        "我们可以用脏手摸文物。",
+        "我们可以把博物馆当成秘密。",
+        "我们可以把文物带回家玩。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "Sanxingdui 读作 /sænʃɪŋdweɪ/，stories 的 st 连读，classmates 重音在前",
+      "explanation_cn": "How 问方法，答句要给出具体的做法。A 说了画画、讲故事两条传播办法；B 会损坏文物；C、D 都不是帮助大家了解的办法。",
+      "answer_cn_hint": "用 We can… 说出画画、讲故事、做小讲解员这样的具体做法。"
+    }
+  ],
+  "vocab": [
+    {
+      "word": "dig",
+      "phonetic": "/dɪɡ/",
+      "meaning": "挖掘",
+      "emoji": "⛏️",
+      "example_en": "The workers dig the old pits carefully with small tools.",
+      "example_cn": "工人们用小工具小心地挖掘古坑。",
+      "hint_cn": "用手或工具把土慢慢翻开",
+      "syllables": ["dig"]
+    },
+    {
+      "word": "gold",
+      "phonetic": "/ɡəʊld/",
+      "meaning": "黄金",
+      "emoji": "🥇",
+      "example_en": "The gold mask shines under the light in the museum.",
+      "example_cn": "黄金面具在博物馆的灯光下闪闪发亮。",
+      "hint_cn": "黄黄的、贵重闪亮的金属",
+      "syllables": ["gold"]
+    },
+    {
+      "word": "mask",
+      "phonetic": "/mɑːsk/",
+      "meaning": "面具",
+      "emoji": "🎭",
+      "example_en": "The bronze mask has big ears and strange eyes.",
+      "example_cn": "青铜面具长着大大的耳朵和奇怪的眼睛。",
+      "hint_cn": "盖在脸上、做出特别模样的一件东西",
+      "syllables": ["mask"]
+    },
+    {
+      "word": "jade",
+      "phonetic": "/dʒeɪd/",
+      "meaning": "玉石",
+      "emoji": "🟩",
+      "example_en": "The jade piece feels smooth and cool in the hand.",
+      "example_cn": "玉石拿在手里摸起来又光滑又凉爽。",
+      "hint_cn": "绿莹莹、贵重又漂亮的石头",
+      "syllables": ["jade"]
+    },
+    {
+      "word": "relic",
+      "phonetic": "/ˈrelɪk/",
+      "meaning": "文物",
+      "emoji": "🏺",
+      "example_en": "Old relics tell us stories from long ago.",
+      "example_cn": "古老的文物给我们讲很久以前的故事。",
+      "hint_cn": "古人留下来、很珍贵的物件",
+      "syllables": ["rel", "ic"]
+    }
+  ],
+  "reading": {
+    "passage": "Sanxingdui is a famous archaeological site near Chengdu in Sichuan. Scientists dug in the earth and found old pits full of amazing things. The most famous finds are bronze masks with big ears and shiny gold items. Some masks have eyes that stick out, and nobody knows exactly what they mean. The gold mask and the jade pieces show that the people here were very good at making things. Today, visitors can see these relics in the museum and imagine life three thousand years ago.",
+    "passage_cn": "三星堆是四川成都附近一处有名的考古遗址。科学家们挖开泥土，找到了装满神奇东西的古老坑洞。最著名的发现是长着大耳朵的青铜面具和闪闪发光的黄金器物。有的面具眼睛向外凸出，没有人确切知道那是什么意思。黄金面具和玉石器件说明，这里的人们非常擅长制作器物。今天，参观者可以在博物馆里看到这些文物，想象三千年前的生活。",
+    "questions": [
+      {
+        "question": "Where is Sanxingdui?",
+        "qtype_cn": "细节定位",
+        "options": ["Near Chengdu in Sichuan", "Near Shanghai", "Near Beijing", "Near Harbin"],
+        "answer": 0,
+        "explanation_cn": "细节定位：第一句 near Chengdu in Sichuan 直接给出位置，选 A。B、C、D 都是别的城市。方法：地点题先圈 Where，再回首句。"
+      },
+      {
+        "question": "What do the most famous masks look like?",
+        "qtype_cn": "细节定位",
+        "options": ["They are made of paper", "They are small and round", "They have big ears and strange eyes", "They can change colour"],
+        "answer": 2,
+        "explanation_cn": "细节定位：第三句说最著名的是长着大耳朵的青铜面具，第四句说眼睛凸出，选 C。A 纸做的、B 又小又圆、D 会变色，原文都没有说。方法：把第三、四句合起来读再选。"
+      },
+      {
+        "question": "What can we infer about the people of Sanxingdui?",
+        "qtype_cn": "推理判断",
+        "options": ["They were good at making beautiful things", "They had planes and trains", "They lived in the sea", "They never used gold"],
+        "answer": 0,
+        "explanation_cn": "推理判断：第五句说黄金面具和玉石器件说明这里的人擅长制作器物，选 A。B 飞机火车是现代的；C 住在海里不合理；D 与用了 gold 相反。方法：show that 后面就是可推断的结论。"
+      },
+      {
+        "question": "Why does the writer ask us to imagine life three thousand years ago?",
+        "qtype_cn": "作者意图",
+        "options": ["To sell museum tickets", "To say history is useless", "To make the passage longer", "To invite readers to think about the old kingdom"],
+        "answer": 3,
+        "explanation_cn": "作者意图：末句用 imagine 引导读者想象古代生活，是在邀请小读者走进这段历史，选 D。A 卖票、B 说历史没用、C 凑字数都不是目的。方法：imagine、welcome 这类词常是作者的邀请。"
+      }
+    ]
+  },
+  "spell": [
+    {
+      "question": "挖掘：d__ [填完整单词]",
+      "answer": "dig",
+      "explanation_cn": "dig 挖掘；过去式 dug。"
+    },
+    {
+      "question": "黄金：g___ [填完整单词]",
+      "answer": "gold",
+      "explanation_cn": "gold 黄金；a gold mask 黄金面具。"
+    },
+    {
+      "question": "面具：m___ [填完整单词]",
+      "answer": "mask",
+      "explanation_cn": "mask 面具；sk 结尾要读出来。"
+    },
+    {
+      "question": "玉石：j___ [填完整单词]",
+      "answer": "jade",
+      "explanation_cn": "jade 玉石；j 读 /dʒ/。"
+    }
+  ]
+}

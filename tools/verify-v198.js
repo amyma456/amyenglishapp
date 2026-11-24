@@ -64,10 +64,10 @@ ok('四个全局都桥接到 window（game.js 才读得到）', () => {
   assert(bridge > 0 && bridge < appSrcFull.indexOf('App.init();'), '桥接必须排在 init 之前');
 });
 ok('版本钉子统一到 v202', () => {
-  assert(/name="app-version" content="208"/.test(html));
-  assert.strictEqual((html.match(/\?v=208/g) || []).length, 7, '首页 7 处脚本引用');
-  assert(/var CACHE_NAME = 'amy-english-v208';/.test(sw));
-  assert(/var V = 208;/.test(sw));
+  assert(/name="app-version" content="223"/.test(html));
+  assert.strictEqual((html.match(/\?v=223/g) || []).length, 10, '首页 10 处脚本引用');
+  assert(/var CACHE_NAME = 'amy-english-v223';/.test(sw));
+  assert(/var V = 223;/.test(sw));
 });
 
 // ------------------------------------------------------------- 模拟运行环境
@@ -108,10 +108,11 @@ function apiProxy() {
 }
 
 /** 重建整套脚本 = 一次整页刷新；mem 共享 = localStorage 还在。 */
-async function boot(role, mem) {
+async function boot(role, mem, sess) {
   const dom = new JSDOM(SHELL, { url: 'https://amyeng.top/', pretendToBeVisual: true });
   const win = dom.window;
   Object.defineProperty(win, 'localStorage', { value: mem, configurable: true });
+  if (sess) Object.defineProperty(win, 'sessionStorage', { value: sess, configurable: true });
   Object.defineProperty(win, 'speechSynthesis', {
     value: { getVoices: () => [], speak: noop, cancel: noop, addEventListener: noop }, configurable: true,
   });
@@ -124,7 +125,7 @@ async function boot(role, mem) {
   win.HOMEWORK_DATA = sevenDays;
   const g = {
     document: win.document, window: win, location: win.location, navigator: win.navigator,
-    localStorage: mem, sessionStorage: win.sessionStorage,
+    localStorage: mem, sessionStorage: sess || win.sessionStorage,
     Api: win.Api, Recorder: apiProxy(), URL: win.URL, fetch: () => new Promise(() => {}),
     Cloud: undefined, SpeechRecognition: undefined, Audio: win.Audio,
     alert: noop, confirm: () => true, prompt: () => '',
@@ -186,18 +187,20 @@ function assertGameScreen(ctx, label, tabName) {
 (async () => {
   // ---- 老师：切到游戏试玩 → 刷新 → 在游戏界面上再点一次刷新 -------------
   const mem = makeMem();
-  const first = await boot('teacher', mem);
+  const sess = makeMem();   // 同一标签页：刷新间 sessionStorage 保留（v220 语义）
+  const first = await boot('teacher', mem, sess);
+  first.App.showApp();                             // 会话已打开（v220 标记）
   await first.App.switchTab('wordgame');           // 用户点「游戏试玩」
-  ok('老师点了「游戏试玩」后，amy_last_tab 记下 wordgame', () => {
-    assert.strictEqual(mem.getItem('amy_last_tab'), 'wordgame');
+  ok('老师点了「游戏试玩」后，按账号记下 wordgame', () => {
+    assert.strictEqual(mem.getItem(first.App._tabMemoryKey()), 'wordgame');
     assert.strictEqual(first.App._restoreTab(), 'wordgame');
   });
-  const r1 = await boot('teacher', mem);            // 第一次刷新（整页重载）
+  const r1 = await boot('teacher', mem, sess);            // 第一次刷新（整页重载）
   r1.App.showApp();
   await new Promise(r => setTimeout(r, 30));       // 等 showApp 的 rAF 渲染
   ok('老师第 1 次刷新：仍停在游戏界面（不是作业详情）',
     () => assertGameScreen(r1, '第 1 次刷新', '游戏试玩'));
-  const r2 = await boot('teacher', mem);            // 「还是在游戏界面上，再点一下刷新」
+  const r2 = await boot('teacher', mem, sess);            // 「还是在游戏界面上，再点一下刷新」
   r2.App.showApp();
   await new Promise(r => setTimeout(r, 30));
   ok('老师第 2 次刷新：依旧停在游戏界面',
@@ -205,9 +208,11 @@ function assertGameScreen(ctx, label, tabName) {
 
   // ---- 学生端同样要能还原（v194 两端都有这个页签） ------------------------
   const mem2 = makeMem();
-  const s0 = await boot('user', mem2);
+  const sess2 = makeMem();
+  const s0 = await boot('user', mem2, sess2);
+  s0.App.showApp();                                // 会话已打开（v220 标记）
   await s0.App.switchTab('wordgame');
-  const s1 = await boot('user', mem2);
+  const s1 = await boot('user', mem2, sess2);
   s1.App.showApp();
   await new Promise(r => setTimeout(r, 30));
   ok('学生端刷新：仍停在「单词乐园」',
@@ -215,12 +220,12 @@ function assertGameScreen(ctx, label, tabName) {
 
   // ---- 老规矩不能被改坏：无效页 / 换角色登录仍回默认 ----------------------
   ok('白名单之外的页签不还原，角色不符也不串页', () => {
-    mem.setItem('amy_last_tab', 'print');
+    mem.setItem(r2.App._tabMemoryKey(), 'print');
     assert.strictEqual(r2.App._restoreTab(), 'weekly', '老师不认识的页回周计划');
-    mem2.setItem('amy_last_tab', 'checkin');   // 学生用的是另一份 localStorage
+    mem2.setItem(s1.App._tabMemoryKey(), 'checkin');   // 学生用的是另一份 localStorage
     assert.strictEqual(s1.App._restoreTab(), 'today', '老师存的值学生登录要回今日作业');
-    mem.removeItem('amy_last_tab');
-    mem2.removeItem('amy_last_tab');
+    mem.removeItem(r2.App._tabMemoryKey());
+    mem2.removeItem(s1.App._tabMemoryKey());
     assert.strictEqual(r2.App._restoreTab(), 'weekly');
     assert.strictEqual(s1.App._restoreTab(), 'today');
   });

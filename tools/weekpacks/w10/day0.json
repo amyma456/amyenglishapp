@@ -1,0 +1,217 @@
+{
+  "day_cn": "周一",
+  "day_en": "Monday",
+  "theme_cn": "国家公园雪豹 · 高频词汇 + 阅读理解 + 键盘拼写",
+  "reading_name": "阅读理解 · 雪豹的家",
+  "spell_name": "今天学的词，敲一遍",
+  "speaking": [
+    {
+      "sentence": "What animal do you want to see in a national park?",
+      "sentence_cn": "在国家公园里你最想看到什么动物？",
+      "options": [
+        "I want to see the snow leopard, because it is beautiful and very rare.",
+        "Leopards can jump very high.",
+        "The park ticket is ten yuan.",
+        "I like eating ice cream in summer."
+      ],
+      "options_cn": [
+        "我想看雪豹，因为它又美丽又珍稀。",
+        "豹子能跳得很高。",
+        "公园门票是十块钱。",
+        "我喜欢在夏天吃冰淇淋。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "leopard /ˈlepəd/ 重音在前，o 不发音，rare /reə/ 的 r 要卷舌",
+      "explanation_cn": "问想看什么，答句要说出动物名字并给理由。A 说了雪豹、给出美丽珍稀两条理由；B 只说豹子的本领；C 说票价；D 说冰淇淋，都答非所问。",
+      "answer_cn_hint": "用 I want to see… 说出想看的动物，再用 because 说一条理由。"
+    },
+    {
+      "sentence": "Why is the snow leopard hard to find?",
+      "sentence_cn": "为什么雪豹很难被发现？",
+      "options": [
+        "Because it lives high in the mountains and moves very quietly.",
+        "Because it likes to sleep in hotels.",
+        "Because it is as small as an ant.",
+        "Because it cannot see anything."
+      ],
+      "options_cn": [
+        "因为它住在高高的山上，走路又非常轻。",
+        "因为它喜欢睡在旅馆里。",
+        "因为它像蚂蚁一样小。",
+        "因为它什么都看不见。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "mountains 里 tain 读 /tən/ 轻轻带过，quietly 重音在 qui，hotels 重音在后",
+      "explanation_cn": "Why 问原因，答句要用 Because 说清楚。A 说了住得高、走路轻两条真实原因；B、C、D 都不合常理。",
+      "answer_cn_hint": "用 Because… 说出雪豹难找的原因，比如住得高、动作轻。"
+    },
+    {
+      "sentence": "What should we do to protect wild animals?",
+      "sentence_cn": "我们应该怎样保护野生动物？",
+      "options": [
+        "We should never buy things made from wild animals and keep the mountains clean.",
+        "We should catch them and keep them at home.",
+        "We should cut down all the trees.",
+        "Wild animals can look after everything themselves."
+      ],
+      "options_cn": [
+        "我们绝不买野生动物做的东西，还要保持大山干净。",
+        "我们应该把它们抓回家养。",
+        "我们应该把树都砍掉。",
+        "野生动物自己能照顾好一切。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "protect /prəˈtekt/ 重音在 tect，wild 的 i 读长音 /aɪ/，clean 与 clamp 别混",
+      "explanation_cn": "问保护做法，答句要给出具体行动。A 说了不买野生动物制品、保持山林干净两条；B、C 都是伤害动物的做法；D 说不用管，也不对。",
+      "answer_cn_hint": "用 We should… 说出保护动物的具体做法，比如不乱丢垃圾、不买动物制品。"
+    },
+    {
+      "sentence": "If you see a leopard far away in the mountains, what will you do?",
+      "sentence_cn": "如果在山上远远看到一只豹子，你会怎么做？",
+      "options": [
+        "I will keep quiet and walk away slowly with my parents.",
+        "I will run to it and touch it.",
+        "I will shout at it loudly.",
+        "I will feed it my lunch."
+      ],
+      "options_cn": [
+        "我会保持安静，跟着爸爸妈妈慢慢走开。",
+        "我会跑过去摸摸它。",
+        "我会朝它大声喊叫。",
+        "我会把我的午饭喂给它。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "quiet 里 qu 读 /kw/，slowly /ˈsləʊli/ 重音在前，feed 与 foot 的元音不同",
+      "explanation_cn": "问遇到野生动物怎么办，答句要给出安全的做法。A 保持安静、慢慢离开是正确做法；B、C、D 都会惊扰或招惹野生动物，很危险。",
+      "answer_cn_hint": "用 I will… 说出保持安静、慢慢离开这样的安全做法。"
+    },
+    {
+      "sentence": "How can cameras help the rangers in the park?",
+      "sentence_cn": "相机怎样帮到公园里的巡护员？",
+      "options": [
+        "The cameras take photos of the leopards, so the rangers can count them.",
+        "Cameras help the leopards cook their food.",
+        "The cameras make the mountains taller.",
+        "Rangers use cameras to watch cartoons."
+      ],
+      "options_cn": [
+        "相机会拍下雪豹的照片，巡护员就能数清它们的数量。",
+        "相机帮雪豹做饭。",
+        "相机会让山变高。",
+        "巡护员用相机看动画片。"
+      ],
+      "answer": 0,
+      "pronunciation_tips": "ranger /ˈreɪndʒə/ 的 ge 读 /dʒ/，count 与 can't 别混，photos 词尾 s 要出声",
+      "explanation_cn": "How 问方法，答句要说明相机起的作用。A 说了拍照、帮巡护员数豹子这个真实用处；B、C、D 都不合常理。",
+      "answer_cn_hint": "用 The cameras… 说出相机帮巡护员拍照、数数的用处。"
+    }
+  ],
+  "vocab": [
+    {
+      "word": "leopard",
+      "phonetic": "/ˈlepəd/",
+      "meaning": "雪豹",
+      "emoji": "🐆",
+      "example_en": "The snow leopard walks quietly on the snowy rocks.",
+      "example_cn": "雪豹悄悄地在雪石上走过。",
+      "hint_cn": "住在高山雪地里的大猫，又美丽又珍稀",
+      "syllables": ["leop", "ard"]
+    },
+    {
+      "word": "cliff",
+      "phonetic": "/klɪf/",
+      "meaning": "悬崖",
+      "emoji": "🪨",
+      "example_en": "Do not stand near the edge of the tall cliff.",
+      "example_cn": "不要站在高高的悬崖边上。",
+      "hint_cn": "又高又陡、像被刀切出来的石壁",
+      "syllables": ["cliff"]
+    },
+    {
+      "word": "valley",
+      "phonetic": "/ˈvæli/",
+      "meaning": "山谷",
+      "emoji": "🏞️",
+      "example_en": "A small river runs through the green valley.",
+      "example_cn": "一条小河从绿色的山谷里流过。",
+      "hint_cn": "两座山之间低低的落地带",
+      "syllables": ["val", "ley"]
+    },
+    {
+      "word": "paw",
+      "phonetic": "/pɔː/",
+      "meaning": "爪子",
+      "emoji": "🐾",
+      "example_en": "The cat uses its paw to leave prints in the snow.",
+      "example_cn": "小猫用它的爪子在雪里留下印子。",
+      "hint_cn": "猫狗脚上带肉垫的脚掌",
+      "syllables": ["paw"]
+    },
+    {
+      "word": "peak",
+      "phonetic": "/piːk/",
+      "meaning": "山峰",
+      "emoji": "🗻",
+      "example_en": "White snow covers the top of the highest peak.",
+      "example_cn": "白雪盖住了最高山峰的顶上。",
+      "hint_cn": "一座山的最高处",
+      "syllables": ["peak"]
+    }
+  ],
+  "reading": {
+    "passage": "The snow leopard is a big wild cat that lives high in the mountains of western China. Its thick grey fur keeps it warm in the cold winter. With its big paws and long tail, it can jump across rocks on steep cliffs. For many years, hunters made the snow leopard hard to find. Now China builds big national parks to keep these cats safe. Rangers with cameras watch the leopards and count them every year.",
+    "passage_cn": "雪豹是一种大型野生猫科动物，住在中国西部的高山上。它厚厚的灰色皮毛让它在寒冷的冬天里保持温暖。靠着大大的爪子和长尾巴，它能跳过陡峭悬崖上的岩石。很多年里，猎人的捕猎让雪豹变得很难见到。现在中国建起了大国家公园，保护这些大猫的安全。带着相机的巡护员守望着雪豹，每年都要数一数它们的数量。",
+    "questions": [
+      {
+        "question": "Where does the snow leopard live?",
+        "qtype_cn": "细节定位",
+        "options": ["High in the mountains of western China", "In the sea near Shanghai", "In the desert far south", "In big cities like Beijing"],
+        "answer": 0,
+        "explanation_cn": "细节定位：第一句 lives high in the mountains of western China 直接给出住处，选 A。B 在海里、C 在沙漠、D 在大城市都与原文相反。方法：地点题先圈出 Where，再回首句找答案。"
+      },
+      {
+        "question": "In 'it can jump across rocks on steep cliffs', what does 'steep' mean?",
+        "qtype_cn": "词义猜测",
+        "options": ["Smooth and flat", "Very high and hard to climb", "Warm and soft", "Full of water"],
+        "answer": 1,
+        "explanation_cn": "词义猜测：雪豹要跳过去、还要靠大爪子，说明这种石壁又高又难爬，steep 是「陡峭的」，选 B。A 平坦光滑就不用跳了；C 温暖柔软、D 充满水都与岩石无关。方法：跟着动物的动作（jump、paws）猜词义。"
+      },
+      {
+        "question": "What can we infer about the national parks?",
+        "qtype_cn": "推理判断",
+        "options": ["They make the leopards leave China", "They give the snow leopards a safe home", "They teach leopards to sing", "They are only for visitors"],
+        "answer": 1,
+        "explanation_cn": "推理判断：第五句说建国家公园是为了 keep these cats safe，可以推出公园给雪豹一个安全的家，选 B。A 与保护相反；C、D 原文都没提。方法：to keep… safe 就是推理的钥匙。"
+      },
+      {
+        "question": "Why does the writer tell us that rangers count the leopards every year?",
+        "qtype_cn": "作者意图",
+        "options": ["To show people are watching over them carefully", "To say cameras are very heavy", "To ask children to buy cameras", "To prove leopards like photos"],
+        "answer": 0,
+        "explanation_cn": "作者意图：巡护员每年数豹子，说明人们一直在认真守护雪豹，选 A。B 相机轻重、C 买相机、D 豹子爱拍照都不是写这句话的目的。方法：每年都做的监测，说明保护在认真进行。"
+      }
+    ]
+  },
+  "spell": [
+    {
+      "question": "雪豹：l______ [填完整单词]",
+      "answer": "leopard",
+      "explanation_cn": "leop + ard；雪豹中间的 o 不发音。"
+    },
+    {
+      "question": "悬崖：c____ [填完整单词]",
+      "answer": "cliff",
+      "explanation_cn": "cliff 悬崖；cl 读 /kl/，ff 双写。"
+    },
+    {
+      "question": "山谷：v_____ [填完整单词]",
+      "answer": "valley",
+      "explanation_cn": "val + ley；绿色山谷里常常有小河。"
+    },
+    {
+      "question": "爪子：p__ [填完整单词]",
+      "answer": "paw",
+      "explanation_cn": "paw 爪子；aw 读长音 /ɔː/。"
+    }
+  ]
+}

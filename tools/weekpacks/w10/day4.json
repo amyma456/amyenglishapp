@@ -1,0 +1,157 @@
+{
+  "day_cn": "周五",
+  "day_en": "Friday",
+  "theme_cn": "情态动词 + 糖画庙会听力 + KET 词汇 + 糖画庙会邀请信作文 + 键盘拼写",
+  "grammar_name": "语法 · 情态动词 can / must / should",
+  "listening_name": "听力 · 庙会上的糖画",
+  "writing_name": "背诵作文 · 写给 Anna 的糖画庙会邀请",
+  "spell_name": "本周重点词，敲一遍",
+  "grammar": [
+    {
+      "question": "You ___ drink the rainwater. It is not clean.",
+      "type": "choice",
+      "options": ["must not", "can", "may", "would"],
+      "answer": 0,
+      "explanation_cn": "雨水不干净，绝对不可以喝，用 must not 表示禁止；can、may 都表示允许，意思相反。"
+    },
+    {
+      "question": "We ___ save water, because it is precious.",
+      "type": "choice",
+      "options": ["should", "shouldn't", "can't", "mustn't"],
+      "answer": 0,
+      "explanation_cn": "水很珍贵，所以应该节约，用 should 表示建议；shouldn't、can't、mustn't 都是否定，意思相反。"
+    },
+    {
+      "question": "___ I borrow your umbrella?",
+      "type": "choice",
+      "options": ["May", "Must", "Should", "Would"],
+      "answer": 0,
+      "explanation_cn": "May I…? 是礼貌请求的固定句式；Must I 问「必须吗」，Should I 问「该不该」，都不适合借东西的请求。"
+    },
+    {
+      "question": "You ___ run in the museum. It is a quiet place.",
+      "type": "choice",
+      "options": ["must not", "must", "should", "can"],
+      "answer": 0,
+      "explanation_cn": "博物馆是安静的地方，禁止奔跑用 must not；must 表示必须，should 语气弱一些，can 表示可以。"
+    },
+    {
+      "question": "选词填空（can / must / should / would）：Children ___ sit near the sugar artist to watch clearly.",
+      "type": "fill",
+      "answer": "can",
+      "explanation_cn": "表示「可以」，允许孩子们坐在糖画艺人旁边看，用 can。"
+    },
+    {
+      "question": "选词填空（can / must / should / must not）：You ___ be careful with the hot sugar; it is very hot!",
+      "type": "fill",
+      "answer": "must",
+      "explanation_cn": "热糖浆很烫，必须小心，用 must 表示「必须」。"
+    },
+    {
+      "question": "选词填空（should / shouldn't / mustn't / can）：We ___ wash our hands before we eat sweet food.",
+      "type": "fill",
+      "answer": "should",
+      "explanation_cn": "吃东西前洗手是应该做的建议，用 should。"
+    }
+  ],
+  "listening": [
+    {
+      "question": "Listen to the dialogue. What is the artist drawing with hot sugar?",
+      "audio_text": "Girl: Wow, look at the sugar painting! Boy: The artist is drawing a golden dragon with hot sugar. Girl: Can I have a sugar rabbit, please? Shopkeeper: Of course, little one!",
+      "options": ["A golden dragon", "A little cat", "A big ship", "A green tree"],
+      "answer": 0,
+      "explanation_cn": "男孩说 the artist is drawing a golden dragon with hot sugar，艺人正用热糖浆画一条金色的龙。"
+    },
+    {
+      "question": "Listen to the dialogue. How long have people made sugar paintings?",
+      "audio_text": "Girl: Dad, when did people start making sugar paintings? Dad: It is a very old folk art, dear. People made sweet pictures hundreds of years ago. Girl: Then sugar paintings are like tasty history!",
+      "options": ["For hundreds of years", "For two days", "For ten minutes", "For one week"],
+      "answer": 0,
+      "explanation_cn": "爸爸说 people made sweet pictures hundreds of years ago，糖画已经有几百年的历史。"
+    },
+    {
+      "question": "Which picture matches the sentence you hear?",
+      "audio_text": "The little girl is holding a sweet sugar dragon.",
+      "options": ["🐉", "🐟", "🚲", "🎈"],
+      "picture_options": true,
+      "answer": 0,
+      "explanation_cn": "句子里说 a sweet sugar dragon（一只甜甜的糖龙），所以选龙 🐉。"
+    },
+    {
+      "type": "fill",
+      "question": "Listen and fill in the blank: The sugar painting looks nice and tastes ___.",
+      "audio_text": "The sugar painting looks nice and tastes sweet.",
+      "answer": "sweet",
+      "explanation_cn": "听到 tastes sweet，空里填 sweet。"
+    }
+  ],
+  "ket_pet": [
+    {
+      "question": "KET: a sweet food that is made of sugar → ___",
+      "type": "choice",
+      "options": ["candy", "carrot", "candle", "camera"],
+      "answer": 0,
+      "explanation_cn": "用糖做的甜食物是 candy 糖果；carrot 胡萝卜，candle 蜡烛，camera 相机。"
+    },
+    {
+      "question": "KET: We can buy sugar paintings at the temple ___.",
+      "type": "choice",
+      "options": ["fair", "farm", "fact", "fan"],
+      "answer": 0,
+      "explanation_cn": "temple fair 庙会，是买糖画的地方；farm 农场，fact 事实，fan 扇子。"
+    },
+    {
+      "question": "KET: The opposite of 'sweet' is ___.",
+      "type": "choice",
+      "options": ["sour", "soft", "dry", "cold"],
+      "answer": 0,
+      "explanation_cn": "sweet 甜的反义词是 sour 酸；soft 软，dry 干，cold 冷。"
+    },
+    {
+      "question": "KET: The artist draws a dragon ___ hot sugar.",
+      "type": "choice",
+      "options": ["with", "of", "at", "from"],
+      "answer": 0,
+      "explanation_cn": "draw… with… 用……来画，with 表示使用的工具。"
+    },
+    {
+      "question": "KET: I like sweet food, ___ I don't eat too much.",
+      "type": "choice",
+      "options": ["but", "so", "or", "because"],
+      "answer": 0,
+      "explanation_cn": "前半句说喜欢、后半句说不多吃，意思转折，用 but。"
+    }
+  ],
+  "writing": {
+    "title": "Dear Anna（糖画庙会小作文 · 全文背默）",
+    "requirement_cn": "先把整封信读三遍，再把 5 个词填回去，最后背诵全文。五个空全是这一周练的词！",
+    "keywords": ["Sunday", "fair", "sugar", "dragon", "sweet"],
+    "keywords_cn": ["星期天", "庙会", "糖", "龙", "甜的"],
+    "template": "Dear Anna, This {{1}} our family will go to the temple {{2}} near our home. My favourite stall makes {{3}} paintings there. The old artist can draw a flying {{4}} with hot sugar in one minute. Sugar painting is an old folk art with hundreds of years of history. Sweet food tastes better when we share it, so please come and try a {{5}} dragon with me! Yours, Li Ming",
+    "full_text_cn": "亲爱的Anna，这个星期天我们全家要去家附近的庙会。我最喜欢的摊位在那儿做糖画。老艺人能在一分钟里用热糖浆画出一条会飞的龙。糖画是一门有几百年历史的古老民间手艺。甜的东西一起分享才更好吃，快来和我一起尝尝甜甜的糖龙吧！你的，李明",
+    "explanation_cn": "邀请信三件事：说清时间地点（This Sunday, at the temple fair）、说好一起做什么（watch sugar paintings, try a sweet dragon）、最后热情邀请（Please come…）。全信用 will 表示将来的打算，句子里还用上了 can 表示老艺人的本领。",
+    "explanation_en": "An invitation letter tells when and where, what you will do together, and ends with a warm invitation using 'will'."
+  },
+  "spell": [
+    {
+      "question": "糖：s____ [填完整单词]",
+      "answer": "sugar",
+      "explanation_cn": "sugar 糖；sugar painting 糖画。"
+    },
+    {
+      "question": "龙：d_____ [填完整单词]",
+      "answer": "dragon",
+      "explanation_cn": "dragon 龙；a golden dragon 一条金色的龙。"
+    },
+    {
+      "question": "庙宇；寺院：t_____ [填完整单词]",
+      "answer": "temple",
+      "explanation_cn": "temple fair 庙会；temple 的 p 要写出来。"
+    },
+    {
+      "question": "甜的：s____ [填完整单词]",
+      "answer": "sweet",
+      "explanation_cn": "sweet 甜的；ee 读长音 /iː/。"
+    }
+  ]
+}

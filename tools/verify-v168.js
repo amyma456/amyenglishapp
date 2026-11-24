@@ -45,9 +45,9 @@ section('1. 顶栏两行结构');
 section('2. 字号与高度');
 {
   ok(/--pv-h:64px/.test(htmlSrc), '顶栏让位高度 44px → 64px（两行）');
-  ok(/\.pv-bar button\{flex:none;padding:3px 8px;font-size:11px\}/.test(htmlSrc), '按钮字号压到 11px');
-  ok(/\.pv-bar \.pv-date\{[^}]*font-size:12px/.test(htmlSrc), '日期字号 12px');
-  ok(/\.pv-bar \.pv-title\{[^}]*font-size:12px/.test(htmlSrc), '标题字号 12px');
+  ok(/\.pv-bar button\{flex:none;padding:3px 8px;font-size:max\(calc\(11px\*var\(--fs-sm\)\)/.test(htmlSrc), '按钮字号 ≥11px（v209 自适应）');
+  ok(/\.pv-bar \.pv-date\{[^}]*font-size:max\(calc\(12px\*var\(--fs-sm\)\)/.test(htmlSrc), '日期字号 ≥12px（v209 自适应）');
+  ok(/\.pv-bar \.pv-title\{[^}]*font-size:max\(calc\(12px\*var\(--fs-sm\)\)/.test(htmlSrc), '标题字号 ≥12px（v209 自适应）');
   ok(/\.pv-bar \.pv-date\{[^}]*text-overflow:ellipsis/.test(htmlSrc), '日期行保底防溢出（正常宽度下不会触发）');
   ok(/\.pv-picker\{[^}]*var\(--pv-h,64px\)/.test(htmlSrc), '换天浮层定位 fallback 同步 64px');
   ok(/height:calc\(100dvh - var\(--nav-h\) - var\(--pv-h\)/.test(htmlSrc), '舞台高度公式仍走 --pv-h，舞台样式零改动');
@@ -56,11 +56,11 @@ section('2. 字号与高度');
 // ---------------------------------------------------------------------------
 section('3. 版本钉子 = 168');
 {
-  ok(/name="app-version" content="208"/.test(htmlSrc), 'index.html app-version = 168');
-  ok((htmlSrc.match(/\?v=208/g) || []).length === 7, 'index.html 7 处 ?v=208', (htmlSrc.match(/\?v=208/g) || []).length);
+  ok(/name="app-version" content="223"/.test(htmlSrc), 'index.html app-version = 168');
+  ok((htmlSrc.match(/\?v=223/g) || []).length === 10, 'index.html 10 处 ?v=223', (htmlSrc.match(/\?v=223/g) || []).length);
   ok(!/\?v=16[0-7]\b/.test(htmlSrc), 'index.html 没有残留旧 ?v=');
-  ok(/var V = 208;/.test(swSrc), 'sw.js var V = 168');
-  ok(/amy-english-v208/.test(swSrc), 'sw.js CACHE_NAME = amy-english-v208');
+  ok(/var V = 223;/.test(swSrc), 'sw.js var V = 168');
+  ok(/amy-english-v223/.test(swSrc), 'sw.js CACHE_NAME = amy-english-v223');
   ok(!/amy-english-v16[0-7]\b/.test(swSrc), 'sw.js 没有残留旧缓存名');
 }
 

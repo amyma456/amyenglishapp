@@ -27,7 +27,7 @@ const appSrc = fs.readFileSync(path.join(ROOT, 'public', 'app.js'), 'utf8');
 const idxSrc = fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8');
 
 console.log('\n--- 1. 横线输入框（键盘不挡字、光标不乱跑）---');
-ok(/writing-blank-input[^>]*font-size:16px/.test(appSrc), '输入框字号 16px（iOS 不再聚焦放大整页）');
+ok(/writing-blank-input[^>]*font-size:max\(calc\(16px\*var\(--fs\)\)/.test(appSrc), '输入框字号 ≥16px（v209 自适应，iOS 不再聚焦放大整页）');
 ok(/writing-blank-input[^>]*width:140px[^>]*padding:3px 10px/.test(appSrc), '输入框加宽到 140px 并有内边距（好点中、不点错行）');
 ok(appSrc.includes('onfocus="App._writingInputFocus(event)"'), '聚焦走 _writingInputFocus');
 ok(/onblur="App\._writingInputBlur\(event,\s*'\s*\+ mi \+/.test(appSrc.replace(/'/g, "'")) || appSrc.includes('_writingInputBlur(event,'), '失焦走 _writingInputBlur');
@@ -44,7 +44,7 @@ ok(idxSrc.includes('body.wf-typing .writing-kwbar{display:none}'), '打字时粘
 ok(idxSrc.includes('body.wf-typing .writing-banner{display:none}'), '打字时横幅也让位');
 ok(idxSrc.includes('.writing-blank-input{scroll-margin:130px 0 45vh}'), '横线滚动留位：上不钻粘性条、下不被键盘挡');
 ok(idxSrc.includes('.stage-q{scroll-padding-bottom:45vh}'), '滚动容器预留键盘高度');
-ok(/@media[^{]*\(max-width[^{]*\{[\s\S]*?\.writing-essay\{font-size:16px;padding:14px;line-height:2\.1\}/.test(idxSrc), '手机端整段英文 16px / 行距 2.1');
+ok(/@media[^{]*\(max-width[^{]*\{[\s\S]*?\.writing-essay\{font-size:max\(calc\(16px\*var\(--fs\)\),var\(--fs-min\)\);padding:14px;line-height:2\.1\}/.test(idxSrc), '手机端整段英文 ≥16px / 行距 2.1（v209 自适应）');
 
 console.log('\n--- 3. 词条翻面：写的时候英文藏起来 ---');
 ok(/_kwChipHtml\(mi, ki, it, paired, revealed, blind\)/.test(appSrc), '_kwChipHtml 支持 blind 参数');
@@ -73,7 +73,7 @@ const stu = App.renderWritingTemplate(wm, mi, 0);
 ok((stu.match(/paired blind/g) || []).length === 5, '学生端：5 个词块全部翻面（中文朝上）');
 ok((stu.match(/kw-hit-cn/g) || []).length === 5, '学生端：词块主显示是中文');
 ok(stu.includes('_kwEnPeek'), '学生端：眼睛接的是「瞟英文」');
-ok(/writing-blank-input[^>]*font-size:16px/.test(stu), '学生端：横线输入框 16px');
+ok(/writing-blank-input[^>]*font-size:max\(calc\(16px\*var\(--fs\)\)/.test(stu), '学生端：横线输入框 ≥16px（v209 自适应）');
 ok(stu.includes('onfocus="App._writingInputFocus(event)"'), '学生端：聚焦处理已挂上');
 App.isTeacher = () => true;
 const tea = App.renderWritingTemplate(wm, mi, 0);
@@ -81,9 +81,9 @@ ok(!tea.includes(' paired blind'), '老师端：预览不翻面（英文照旧�
 ok(!tea.includes('kw-hit-cn'), '老师端：没有中文主显示');
 
 console.log('\n--- 5. 版本钉 ---');
-ok(idxSrc.includes('app-version" content="208"'), 'index.html meta 版本 = 178');
-ok((idxSrc.match(/\?v=208/g) || []).length >= 5, 'index.html 静态资源 ?v=208（' + (idxSrc.match(/\?v=208/g) || []).length + ' 处）');
-ok(/var CACHE_NAME = 'amy-english-v208'/.test(fs.readFileSync(path.join(ROOT, 'public', 'sw.js'), 'utf8')), 'sw.js 缓存名 = v178');
+ok(idxSrc.includes('app-version" content="223"'), 'index.html meta 版本 = 178');
+ok((idxSrc.match(/\?v=223/g) || []).length >= 5, 'index.html 静态资源 ?v=223（' + (idxSrc.match(/\?v=223/g) || []).length + ' 处）');
+ok(/var CACHE_NAME = 'amy-english-v223'/.test(fs.readFileSync(path.join(ROOT, 'public', 'sw.js'), 'utf8')), 'sw.js 缓存名 = v178');
 ok(!/amy-english-v17[0-7]/.test(idxSrc + fs.readFileSync(path.join(ROOT, 'public', 'sw.js'), 'utf8')), '不再残留 177 及以前的钉子');
 
 console.log('\n========== ' + pass + ' 通过 / ' + fail + ' 失败 ==========');

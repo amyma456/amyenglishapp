@@ -218,9 +218,9 @@ ok(okFirst && okSecond, '★ 连画两遍都是灰的（锁在 HTML 里，不是
 // ---------------------------------------------------------------------------
 // v138：老师端「题库预览」改成和学生同一套门禁。
 // 家长 2026-10-17 就是在预览里看到"我还没做题呢，下一题已经可以点了" ——
-// 预览免锁，等于验不出学生那边的问题。老师要快进有「跳过本题（老师）」。
-console.log('\n--- 3. 老师端「题库预览」和学生同一套门禁（另给一颗跳过键）---');
-let teacherOpen = 0, teacherScreens = 0, teacherNoSkip = 0;
+// 预览免锁，等于验不出学生那边的问题。v223 起跳过键永久删除，预览照常做完。
+console.log('\n--- 3. 老师端「题库预览」和学生同一套门禁（无任何跳过键）---');
+let teacherOpen = 0, teacherScreens = 0, teacherSkipSeen = 0;
 resetTeacher();
 for (let d = 0; d < Math.min(3, DAYS.length); d++) {
   App.state.previewDay = d; App.state.currentDay = d;
@@ -230,16 +230,16 @@ for (let d = 0; d < Math.min(3, DAYS.length); d++) {
     teacherScreens++;
     const b = footBtn(DAYS[d][i].mi);
     if (b && !b.disabled) teacherOpen++;
-    if (b && b.disabled && !document.getElementById('pv-skip-btn')) teacherNoSkip++;
+    if (document.getElementById('pv-skip-btn')) teacherSkipSeen++;
   }
 }
 ok(teacherOpen === 0, '★★ 老师预览 ' + teacherScreens + ' 屏，该锁的都锁着', teacherOpen ? teacherOpen + ' 屏是亮的' : '');
-ok(teacherNoSkip === 0, '★★ 锁着的每一屏都给老师留了「跳过本题」（不会被卡死）', teacherNoSkip ? teacherNoSkip + ' 屏没有出口' : '');
-// 学生端永远看不到这颗键
+ok(teacherSkipSeen === 0, '★★ v223：老师预览没有任何「跳过本题」按钮', teacherSkipSeen ? teacherSkipSeen + ' 屏出现了跳过键' : '');
+// 学生端同样看不到任何跳过键
 resetStudent();
 App.state.currentDay = 0; App.state.stepIdx = 0;
 paint(0);
-ok(!document.getElementById('pv-skip-btn'), '★ 学生端没有「跳过本题」');
+ok(!document.getElementById('pv-skip-btn') && !document.getElementById('st-stuck-btn'), '★ 学生端没有任何跳过按钮');
 
 // ---------------------------------------------------------------------------
 console.log('\n--- 4. 词汇闯关：一个词没学完，就不能点「下一个单词」---');
