@@ -272,7 +272,7 @@ console.log('\n--- 4. 上一题的打分晚到，不许点亮孩子正看着的�
 }
 
 // ---------------------------------------------------------------------------
-console.log('\n--- 5. 老师端「题库预览」：同一套门禁 + 无任何跳过键（v223）---');
+console.log('\n--- 5. 老师端「题库预览」：同一套门禁 + 无任何跳过键（v224）---');
 {
   resetTeacher();
   App.state.previewDay = SP_DAY;
@@ -283,7 +283,7 @@ console.log('\n--- 5. 老师端「题库预览」：同一套门禁 + 无任何�
   const html = paint(SP_DAY);
 
   ok(nextBtn() && nextBtn().disabled === true, '★ 预览里口语屏同样是灰的（家长看到的那一屏）');
-  ok(!skipBtn(), '★ v223：预览里没有任何「跳过本题」按钮');
+  ok(!skipBtn(), '★ v224：预览里没有任何「跳过本题」按钮');
   const before = App.state.stepIdx;
   App.nextStep();
   ok(App.state.stepIdx === before, '老师点「下一题」也翻不过去，必须按正常流程做完');
@@ -303,7 +303,7 @@ console.log('\n--- 6. 学生端没有任何"跳过"的口子 ---');
 }
 
 // ---------------------------------------------------------------------------
-console.log('\n--- 7. 老师预览的词汇那一屏也锁 + 无跳过键（v223）---');
+console.log('\n--- 7. 老师预览的词汇那一屏也锁 + 无跳过键（v224）---');
 {
   resetTeacher();
   let vDay = -1, vIdx = -1;
@@ -313,7 +313,7 @@ console.log('\n--- 7. 老师预览的词汇那一屏也锁 + 无跳过键（v223
     paint(vDay);
     const vb = document.getElementById('stage-next-' + DAYS[vDay][vIdx].mi);
     ok(!!vb && vb.disabled === true, '★ 预览里「下一个单词」也是灰的');
-    ok(!skipBtn(), '★ v223：词汇屏同样没有任何跳过键');
+    ok(!skipBtn(), '★ v224：词汇屏同样没有任何跳过键');
   } else {
     console.log('  （题库里没有词汇闯关，跳过）');
   }
@@ -331,9 +331,9 @@ console.log('\n--- 8. 代码层面：判据只有一处，按钮不再是判据 
      '★ _applyStepLock 里不再有"老师整体免锁"');
   ok(!/_vocabFootLocked\(mi, dayIdx\)\s*\{\s*if\s*\(this\.isTeacher\(\)\)\s*return false;/.test(src),
      '★ 词汇门禁也不再给老师开口子');
-  // v223：所有跳过键（含老师预览）永久删除
+  // v224：所有跳过键（含老师预览）永久删除
   const skips = (src.match(/pv-skip-btn/g) || []).length;
-  ok(skips === 0, '★ v223：任何跳过按钮都已从代码删除（' + skips + ' 处残留）');
+  ok(skips === 0, '★ v224：任何跳过按钮都已从代码删除（' + skips + ' 处残留）');
 }
 
 console.log('\n===========================================');

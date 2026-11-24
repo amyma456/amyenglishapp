@@ -102,10 +102,10 @@ if (w7) {
 }
 
 // 7) 版本钉子 190
-ok((html.match(/\?v=223/g) || []).length === 10, 'index.html 十处 ?v=223');
-ok(html.includes('app-version" content="223"'), 'index.html app-version=189');
-ok(/var CACHE_NAME = 'amy-english-v223';/.test(sw), 'sw.js CACHE_NAME v193');
-ok(/var V = 223;/.test(sw), 'sw.js V = 189');
+ok((html.match(/\?v=224/g) || []).length === 10, 'index.html 十处 ?v=224');
+ok(html.includes('app-version" content="224"'), 'index.html app-version=189');
+ok(/var CACHE_NAME = 'amy-english-v224';/.test(sw), 'sw.js CACHE_NAME v193');
+ok(/var V = 224;/.test(sw), 'sw.js V = 189');
 
 // =========================================================================
 // 8) v193：打卡表"每天几个人打卡" + 永远显示后台当下那份
@@ -210,21 +210,20 @@ ok(/const pick = rich \? 'phraseAtRich' : 'phraseAt';/.test(app2)
   '阅读材料启用规则搭配，跟读判分句仍只用手写表');
 ok(/\.lk-phrase\{border-bottom:2px solid/.test(html), '短语横线加粗成实线');
 
-// —— v193：AI 口语练习里一句要有两三个短语提示 ——
-ok(/this\._wordSpans\(q\.sentence\)/.test(app2), '★ 口语题干不再是一整段纯文本，画了短语横线');
+// —— v224：短语提示条撤掉，改回「画横线、点了才出中文」——
+ok(/this\._wordSpans\(q\.sentence\)/.test(app2), '★ 口语题干画了短语横线');
 ok(/this\._wordSpans\(o, true\)/.test(app2),
-  '★ 选项用 plain 模式：画短语但不包 .lk-word，点答案不会被查词抢走');
-ok(/this\._spPhraseBar\(q\.sentence/.test(app2)
-  && /this\._spPhraseBar\(o, '短语', 3\)/.test(app2),
-  '★ 题干 + 每个选项下面都直接列出短语中文（不用点）');
-ok(/this\._spPhraseBar\(parts \? parts\.q : sentence/.test(app2),
-  '★ 口语跟读面板也加提示条，逐词判分的词盒一个没动');
-ok(/_phraseHints\(text, limit\)/.test(app2) && /_spTapPhrase\(el\)/.test(app2),
-  '提示条：重叠扫描补漏 + 点 chip 仍能听读音查中文');
+  '★ 选项用 plain 模式：画短语但不包 .lk-word，点其余文字照样选答案');
+ok(!/this\._spPhraseBar\(/.test(app2),
+  '★ v224：题干 / 选项 / 跟读面板都不再直接列出短语中文');
+ok(!/📌 本句短语|📌 问句和答句里的短语/.test(app2),
+  '★ v224：两处短语提示条标题已移除');
+ok(/closest\('\.lk-word,\.lk-phrase'\)/.test(app2),
+  '★ v224：选项里的短语横线点得开（读音 + 中文）');
 ok(/\['close to', '靠近/.test(api2) && /_handPhraseFrom\(tokens, i \+ 1\)/.test(api2),
   '★ it is 不会把 is close to 切碎（家长上轮点名的搭配保住）');
 ok(/\.sp-ph-bar\{/.test(html) && /\.sp-ph-chip\.sp-ph-word\{/.test(html),
-  '提示条与重点词兜底的样式在位');
+  '提示条与重点词兜底的样式留在 index.html（v224 起停用，不渲染）');
 
 console.log(fail ? '✗ ' + fail + ' 项失败 / ' + (pass + fail) : '✅ verify-v193 全部 ' + pass + ' 项通过');
 process.exit(fail ? 1 : 0);

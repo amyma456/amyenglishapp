@@ -1,5 +1,5 @@
 /* eslint-disable */
-// v223 校验：Harvey 平板 2026-11-21 卡在「第 19 题」的修复。
+// v224 校验：Harvey 平板 2026-11-21 卡在「第 19 题」的修复。
 //
 // 根因：今天（WEEK8 周六）第 19 题 = 阅读理解逐句翻译第 3 句
 // 「在那里，海水用非常大的重量压着潜水器，就像一头大象站在一张小桌上。」
@@ -12,7 +12,7 @@
 //   ① 阅读理解逐句翻译与完形填空统一三档口径，soft 放行；
 //   ② 同一屏连续两次判分不通过 → 自动放行，设备/识别问题不算孩子的账；
 //
-// v223 家长要求：所有「先跳过 / 跳过本题」按钮永久删除，锁定屏不再有任何出口。
+// v224 家长要求：所有「先跳过 / 跳过本题」按钮永久删除，锁定屏不再有任何出口。
 // 上面第 ③ 条（学生端灰色小字跳过键）与老师预览的「跳过本题（老师）」都已撤销。
 //
 // 用法：node tools/verify-v221.js
@@ -33,17 +33,17 @@ const ok = (cond, msg, extra) => {
 };
 const section = (t) => console.log('\n' + t);
 
-section('[1] 版本号 223 四处一致（平板必须拿到新代码）');
+section('[1] 版本号 224 四处一致（平板必须拿到新代码）');
 {
   const ver = (htmlSrc.match(/name="app-version" content="(\d+)"/) || [])[1];
-  ok(Number(ver) === 223, 'app-version = 223（当前 ' + ver + '）');
+  ok(Number(ver) === 224, 'app-version = 224（当前 ' + ver + '）');
   const pins = htmlSrc.match(/\.js\?v=(\d+)/g) || [];
-  ok(pins.length >= 10 && pins.every(x => x === '.js?v=223'),
-    '全部 10 个脚本钉子都是 ?v=223', pins.join(','));
-  ok((htmlSrc.match(/href="[^"]+\?v=223"/g) || []).length === 3,
-    '3 个 preload 也跟到 223');
-  ok(/var CACHE_NAME = 'amy-english-v223';/.test(swSrc) && /var V = 223;/.test(swSrc),
-    'sw CACHE_NAME / V = 223');
+  ok(pins.length >= 10 && pins.every(x => x === '.js?v=224'),
+    '全部 10 个脚本钉子都是 ?v=224', pins.join(','));
+  ok((htmlSrc.match(/href="[^"]+\?v=224"/g) || []).length === 3,
+    '3 个 preload 也跟到 224');
+  ok(/var CACHE_NAME = 'amy-english-v224';/.test(swSrc) && /var V = 224;/.test(swSrc),
+    'sw CACHE_NAME / V = 224');
   ok(!/\.js\?v=220|amy-english-v220\b/.test(htmlSrc + swSrc), '没有 220 残留');
 }
 
@@ -142,10 +142,10 @@ section('[4] 真跑沙箱：卡两次能过、跳过入口已消失');
     App._gateStep(App.PASS_SCORE, true);
     ok(!App._gateFail['5:14'], '下一次通过会清掉失败计数');
 
-    // v223：跳过函数已不存在，孩子不能再靠额外出口翻页
+    // v224：跳过函数已不存在，孩子不能再靠额外出口翻页
     ok(typeof App._bailStep !== 'function', '★ 沙箱里 _bailStep 已不存在');
   }
 }
 
-console.log('\nv223: ' + pass + ' passed, ' + fail + ' failed');
+console.log('\nv224: ' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

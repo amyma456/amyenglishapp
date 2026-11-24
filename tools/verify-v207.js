@@ -166,10 +166,10 @@ ok(wr && rebuilt.toLowerCase() === String(wr.full_text).toLowerCase(), '写作�
 ok(wr && String(wr.full_text).match(/[^.!?]+[.!?]+["']?(?=\s|$)/g).length === 5, '写作全文 5 句（10 动作口径）');
 
 // ---- 版本钉子 ----
-ok(/name="app-version" content="223"/.test(html), 'index.html app-version = 207');
-ok((html.match(/\?v=223/g) || []).length === 10, 'index.html 10 处 ?v=223', (html.match(/\?v=223/g) || []).length);
-ok(/var CACHE_NAME = 'amy-english-v223';/.test(swSrc), 'sw.js CACHE_NAME = amy-english-v223');
-ok(/var V = 223;/.test(swSrc), 'sw.js var V = 207');
+ok(/name="app-version" content="224"/.test(html), 'index.html app-version = 207');
+ok((html.match(/\?v=224/g) || []).length === 10, 'index.html 10 处 ?v=224', (html.match(/\?v=224/g) || []).length);
+ok(/var CACHE_NAME = 'amy-english-v224';/.test(swSrc), 'sw.js CACHE_NAME = amy-english-v224');
+ok(/var V = 224;/.test(swSrc), 'sw.js var V = 207');
 // 负向断言用字符类写「v2xx 里的旧版本」，避免下次批量升版把它一起改掉
 ok(!/\.js\?v=20[0-6](?![0-9])/.test(html), '没有残留旧 ?v=（字符类 v200~v206）');
 ok(!/amy-english-v20[0-6](?![0-9])/.test(swSrc), '没有残留旧缓存名（字符类 v200~v206）');

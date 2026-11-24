@@ -6895,12 +6895,10 @@ const App = {
          + '<div class="auto-read-badge" style="margin-bottom:0"><svg class="icon icon-sm speaking-anim"><use href="#i-sound"/></svg> 正在朗读…</div>'
          + '<div class="fs-12 text-sub">第' + (qi+1) + '题 / 共' + m.questions.length + '题</div></div>';
     html += '<div class="vocab-progress" style="margin-bottom:4px"><div class="fill" style="width:' + (qi/m.questions.length*100) + '%"></div></div>';
-    // v193：口语练习这一屏以前是**纯文本**，一个短语横线都没有 —— 家长
-    // 2026-11-11：「AI 口语练习里面的短语还是太少了，没有一句里两三个
-    // 短语的提示」。题干、四个选项现在都走 _wordSpans 画短语，句子下面
-    // 再直接把短语和中文列成小卡片，孩子不用点就看得见意思。
+    // v224（家长 2026-11-25）：句子下面那条「本句短语」小卡片撤掉了 ——
+    // 不用点就把中文摆在眼前，既占地方，孩子也不用自己想了。改回和别的
+    // 题一样：题干、四个选项只画短语横线，孩子自己点一下才出读音和中文。
     html += '<div class="speak-sentence">' + this._wordSpans(q.sentence) + '</div>';
-    html += this._spPhraseBar(q.sentence, '📌 本句短语', 4);
     html += '<div class="speak-sentence-cn">' + q.sentence_cn + '</div>';
     html += '<button class="speak-btn play" onclick="App.playSentence(' + mi + ',' + qi + ',\'' + dayIdx + '\')"><svg class="icon icon-sm"><use href="#i-sound"/></svg> 重新听</button>';
     // Options disabled until reading finishes
@@ -6908,9 +6906,8 @@ const App = {
     shuffled.options.forEach((o, oi) => {
       html += '<div class="speak-option" onclick="App.selectSpeakAnswer(' + mi + ',' + qi + ',' + oi + ',' + dayIdx + ')">'
         + String.fromCharCode(65+oi) + '. ' + this._wordSpans(o, true) + '</div>';
-      // 提示条是选项的**兄弟**节点，不能塞进 .speak-option 里 —— 否则
-      // 点短语卡片会被当成"选了这个答案"。
-      html += this._spPhraseBar(o, '短语', 3);
+      // v224：选项下面不再另起一行把短语中文摊开。选项里的短语横线本身
+      // 可以点（见 _initWordLookup 对 .lk-phrase 的命中），点其余文字才选答案。
     });
     html += '</div>';
     html += '<div class="listen-wait" id="sp-wait-' + mi + '" style="text-align:center;padding:8px;color:var(--text-sub);font-size:max(calc(12px*var(--fs-sm)),var(--fs-sm-min))">⏳ 请先听完整朗读，再选择答案</div>';
@@ -7148,10 +7145,9 @@ const App = {
     this._gateReset(gid);   // v184：重进这道口语题 = 重新先听（详见 _gateReset 注释）
     readArea.innerHTML = '<div class="speak-record show" style="text-align:center">'
       + '<p class="fs-12 text-sub">请把问句和答句连起来读：</p>'
-      // v193：跟读判分的词盒一个都不动（逐词打勾/打分全靠它的顺序），
-      // 只在上方另加一条短语提示，孩子读之前先看清哪几个词是一块。
-      + this._spPhraseBar(parts ? parts.q : sentence, '📌 问句和答句里的短语', 5,
-          (parts && parts.a) ? parts.a : '')
+      // v224：上方那条「问句和答句里的短语」提示条撤掉了 —— 中文不用点
+      // 就摆在那儿，孩子读之前不用自己想。跟读判分的词盒一个都不动，
+      // 短语仍画着横线，点一下才有读音和中文。
       + '<div class="rd-sentence" id="rd-sent-' + mi + '-' + qi + '">' + sentHtml + '</div>'
       + '<div class="rd-live-hint" id="rd-live-' + mi + '-' + qi + '"></div>'
       + '<div class="gate-bar">' + this._gateListenHtml(gid, sentence, '🔊 先听一遍示范', 'cf') + '</div>'
@@ -13936,7 +13932,9 @@ const App = {
     return out.slice(0, cap);
   },
 
-  // 短语中文直接摆在句子下面（不是「点了才查」）。点一下仍能听读音。
+  // v224 起停用：家长要求短语不直接把中文摆在句子下面，改回「画横线、
+  // 点了才出读音和中文」。函数留着不调用（历史测试脚本还要抠它做短语表
+  // 质量校验），任何一屏都不会再输出 .sp-ph-bar。
   _spPhraseBar(text, label, limit, extraText) {
     const cap = limit || 4;
     let hints = this._phraseHints(text, cap);
@@ -13950,7 +13948,7 @@ const App = {
     }
     if (!hints.length) return '';
     let html = '<div class="sp-ph-bar"><span class="sp-ph-label">'
-      + (label || '📌 本句短语') + '</span>';
+      + (label || '短语') + '</span>';
     hints.forEach(h => {
       html += '<span class="sp-ph-chip' + (h.word ? ' sp-ph-word' : '')
         + '" data-en="' + this._escHtml(h.en)
@@ -16458,11 +16456,14 @@ const App = {
         if (sel && sel.toString && sel.toString().trim()) return;
       } catch (e) {}
 
-      // ① 明确标好的词盒（.lk-word）—— 句子、范文、逐词判分结果里的词都走这条。
+      // ① 明确标好的词盒（.lk-word / .lk-phrase）—— 句子、范文、逐词判分
+      //    结果里的词都走这条。v224：选项里的短语横线用的是 plain 模式，
+      //    只有 .lk-phrase、没有 .lk-word（不能抢走整块选答案的点击），
+      //    这里一并认下来：点短语横线 → 弹读音+中文，点其余文字 → 选答案。
       //    不依赖 caretRangeFromPoint：那个 API 在 iOS / 微信里取不到落点时
       //    会静默失败，孩子点了没反应；词盒是实实在在的点击目标，稳定得多。
       const t = ev.target;
-      const span = (t && t.closest) ? t.closest('.lk-word') : null;
+      const span = (t && t.closest) ? t.closest('.lk-word,.lk-phrase') : null;
       if (span) {
         // v143：短语盒子（giving up）里带空格，也要能点 —— 以前这里只认
         // 单个单词，整块短语反而点不开。

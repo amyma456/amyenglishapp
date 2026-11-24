@@ -167,9 +167,9 @@ ok('学生端「我的错题本」没有名单字段时，卡片结构照旧', (
     assert(line.indexOf(NAMES[2]) < 0, '全对的 Matt 不该出现在做错名单里');
   });
   ok('版本钉子统一到 v202', () => {
-    assert(/name="app-version" content="223"/.test(html));
-    assert.strictEqual((html.match(/\?v=223/g) || []).length, 10, '首页 10 处脚本引用');
-    assert(/var CACHE_NAME = 'amy-english-v223';/.test(sw) && /var V = 223;/.test(sw));
+    assert(/name="app-version" content="224"/.test(html));
+    assert.strictEqual((html.match(/\?v=224/g) || []).length, 10, '首页 10 处脚本引用');
+    assert(/var CACHE_NAME = 'amy-english-v224';/.test(sw) && /var V = 224;/.test(sw));
   });
   console.log('\n全部 ' + pass + ' 项通过 ✅');
   process.exit(0);

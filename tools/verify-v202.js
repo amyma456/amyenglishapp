@@ -129,9 +129,9 @@ ok('CSS 给同一条状态栏加了名次、姓名、错题、打卡的样式', 
   assert(!/:has\(/.test(blockCssOnly) && !/100dvh/.test(blockCssOnly), '融合样式用了老浏览器不支持的语法');
 });
 ok('版本钉子统一到 v202', () => {
-  assert(/name="app-version" content="223"/.test(html));
-  assert.strictEqual((html.match(/\?v=223/g) || []).length, 10, '首页 10 处脚本引用');
-  assert(/var CACHE_NAME = 'amy-english-v223';/.test(swSrc) && /var V = 223;/.test(swSrc));
+  assert(/name="app-version" content="224"/.test(html));
+  assert.strictEqual((html.match(/\?v=224/g) || []).length, 10, '首页 10 处脚本引用');
+  assert(/var CACHE_NAME = 'amy-english-v224';/.test(swSrc) && /var V = 224;/.test(swSrc));
 });
 
 // ------------------------------------------------------------- 真跑融合数据

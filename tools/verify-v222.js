@@ -1,11 +1,11 @@
-// verify-v223 校验：第 10 周题库（2026-11-30 起）按 v165 标准骨架上线
-//   node tools/verify-v223.js
+// verify-v224 校验：第 10 周题库（2026-11-30 起）按 v165 标准骨架上线
+//   node tools/verify-v224.js
 // 内容来源：tools/weekpacks/w10（国家公园雪豹 / 国产大飞机 C919 / 三星堆 / 海绵城市 /
 //   大熊猫野化放归 / 乡村直播助农完形 / 糖画庙会邀请信作文）。
 //   - 周数：题库 10 周；每天恰好 30 个真实动作；每天 keyboard 拼写 3~6 道、全周 ≥20；
 //   - 听力 ≥3 类题型（问答 / 选图 / 填空），复述类 ≤40%；
 //   - 阅读每篇 6 句 + passage_cn；完形 7 句 + sentences_cn 7 句；
-//   - 版本钉子：index.html / sw.js 统一 v223（残留检查用字符类，防批量升版自相矛盾）。
+//   - 版本钉子：index.html / sw.js 统一 v224（残留检查用字符类，防批量升版自相矛盾）。
 
 const fs = require('fs');
 const path = require('path');
@@ -36,7 +36,7 @@ const CLOZE_CN = new Function(dataSrc.slice(start, end) + '\nreturn CLOZE_SENTEN
 const W10 = WEEKS[9];
 
 section('1] 周数与骨架');
-ok(WEEKS.length === 10, '题库 10 周（W10 于 v223 上线）', WEEKS.length);
+ok(WEEKS.length === 10, '题库 10 周（W10 于 v224 上线）', WEEKS.length);
 ok(Array.isArray(W10) && W10.length === 7, 'WEEK10 有 7 天');
 
 const mod = (d, type) => d.modules.filter(m => m.type === type);
@@ -121,14 +121,14 @@ const speaks = W10.flatMap(d => mod(d, 'speaking')).flatMap(m => m.questions);
 ok(speaks.length === 15, '口语 3 天 × 5 题 = 15 道', speaks.length);
 ok(speaks.every(x => Array.isArray(x.options_cn) && x.options_cn.length === 4 && !!x.answer_cn_hint), '口语每题 options_cn ×4 + answer_cn_hint');
 
-section('7] 版本钉子 v223');
-ok(/name="app-version" content="223"/.test(htmlSrc), 'index.html app-version = 223');
+section('7] 版本钉子 v224');
+ok(/name="app-version" content="224"/.test(htmlSrc), 'index.html app-version = 224');
 const scriptPins = (htmlSrc.match(/src="[^"]+\.js\?v=\d+"/g) || []);
   const preloadPins = (htmlSrc.match(/href="[^"]+\.js\?v=\d+"/g) || []);
-  ok(scriptPins.length === 7 && preloadPins.length === 3 && scriptPins.concat(preloadPins).every(x => x.endsWith('?v=223"')), '全部 10 个脚本钉子（7 src + 3 preload）都是 ?v=223', scriptPins.length + '+' + preloadPins.length);
-ok(/var CACHE_NAME = 'amy-english-v223';/.test(swSrc) && /var V = 223;/.test(swSrc), 'sw.js CACHE_NAME / V = 223');
+  ok(scriptPins.length === 7 && preloadPins.length === 3 && scriptPins.concat(preloadPins).every(x => x.endsWith('?v=224"')), '全部 10 个脚本钉子（7 src + 3 preload）都是 ?v=224', scriptPins.length + '+' + preloadPins.length);
+ok(/var CACHE_NAME = 'amy-english-v224';/.test(swSrc) && /var V = 224;/.test(swSrc), 'sw.js CACHE_NAME / V = 224');
 ok(!/\?v=2(0[0-9]|1[0-9]|2[01])(?![0-9])/.test(htmlSrc), '没有残留旧 ?v=（字符类 v200~v221）');
 ok(!/amy-english-v2(0[0-9]|1[0-9]|2[01])(?![0-9])/.test(swSrc), '没有残留旧缓存名（字符类 v200~v221）');
 
-console.log('\nv223 · ' + (fail ? '❌ ' + fail + ' 项失败（通过 ' + pass + '）' : pass + ' 项全部通过'));
+console.log('\nv224 · ' + (fail ? '❌ ' + fail + ' 项失败（通过 ' + pass + '）' : pass + ' 项全部通过'));
 process.exit(fail ? 1 : 0);
