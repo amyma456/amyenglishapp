@@ -43,9 +43,9 @@ section('[1] 首帧骨架屏：解析期就把「所有界面」画出来');
     '内容区也预置占位，骨架摘掉到真内容之间不空白');
   ok(/case 'today': area\.innerHTML = this\.renderToday\(\)/.test(appSrc),
     'renderContent 整体覆盖 innerHTML，占位会被自动清掉');
-  ok(/<link rel="preload" as="script" href="data\.js\?v=225">/.test(htmlSrc) &&
-     /<link rel="preload" as="script" href="api\.js\?v=225">/.test(htmlSrc) &&
-     /<link rel="preload" as="script" href="app\.js\?v=225">/.test(htmlSrc),
+  ok(/<link rel="preload" as="script" href="data\.js\?v=226">/.test(htmlSrc) &&
+     /<link rel="preload" as="script" href="api\.js\?v=226">/.test(htmlSrc) &&
+     /<link rel="preload" as="script" href="app\.js\?v=226">/.test(htmlSrc),
     '三个最重的脚本在 <head> 就 preload，提前并行下载');
   // preload 与 defer 的 URL 必须完全一致，否则会重复下载 2MB（反而更慢）
   const preloads = (htmlSrc.match(/<link rel="preload" as="script" href="([^"]+)"/g) || [])
@@ -173,7 +173,7 @@ section('[8] 发版 / 刷新：只刷一次、不清缓存、让出首帧');
 section('[9] 版本号四处一致');
 {
   const ver = (htmlSrc.match(/name="app-version" content="(\d+)"/) || [])[1] || '0';
-  ok(Number(ver) === 225, 'app-version = 225（当前 ' + ver + '）');
+  ok(Number(ver) === 226, 'app-version = 226（当前 ' + ver + '）');
   const scripts = (htmlSrc.match(new RegExp('<script[^>]+src="[^"]+\\.js\\?v=' + ver + '\\b', 'g')) || []).length;
   ok(scripts === 7, '7 个 defer 脚本都带 ?v=' + ver, scripts);
   const preloads = (htmlSrc.match(new RegExp('<link rel="preload" as="script" href="[^"]+\\?v=' + ver + '"', 'g')) || []).length;

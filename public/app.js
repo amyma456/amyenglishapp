@@ -57,6 +57,10 @@ const App = {
   },
 
   async init() {
+    // v226：先把上一次可能没收尾的录音彻底关掉。麦克风出错、切后台、
+    // 强退重进都可能留下一条还开着的流；它不只占着麦克风，还会让版本
+    // 更新的刷新看门狗永远判为"正在录音"，孩子就一直进不去新版。
+    try { if (typeof Recorder !== 'undefined' && Recorder.forceStop) Recorder.forceStop(); } catch (e) {}
     // v143：本机数据是同步的（localStorage），先同步读进来，**读词表
     // （IndexedDB）挪到最后**。以前 loadData 里 await 了 IndexedDB，自动登录
     // 排在它后面，孩子就得先等这一下 —— 家长 2026-10-19：「登录时间还是太久」。

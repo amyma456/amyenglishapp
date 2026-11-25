@@ -68,9 +68,9 @@ ok('老师端与学生端共用同一个渲染函数，旧打卡卡仍委托给�
   assert(/function checkinCardHtml\(\)[\s\S]{0,120}return boardHtml\(\);/.test(gameSrc));
 });
 ok('版本钉子统一到 v203', () => {
-  assert(/name="app-version" content="225"/.test(html));
-  assert.strictEqual((html.match(/\?v=225/g) || []).length, 10, '首页 10 处脚本引用');
-  assert(/var CACHE_NAME = 'amy-english-v225';/.test(swSrc) && /var V = 225;/.test(swSrc));
+  assert(/name="app-version" content="226"/.test(html));
+  assert.strictEqual((html.match(/\?v=226/g) || []).length, 10, '首页 10 处脚本引用');
+  assert(/var CACHE_NAME = 'amy-english-v226';/.test(swSrc) && /var V = 226;/.test(swSrc));
 });
 
 // ------------------------------------------------------------- 加载 game.js

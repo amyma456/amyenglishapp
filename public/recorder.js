@@ -132,7 +132,13 @@ const Recorder = {
 
   async start(opts) {
     const options = opts || {};
+    const self = this;
     this._primeP = null;          // 走过一次 start，预热标记就作废
+
+    // v226：上一次采集没正常收尾（麦克风报错 / 手指被系统抢走 / 切后台），
+    // 绝不能让第二条流接上去 —— 两条 worklet 同时往主线程灌音频帧，
+    // 手机上就会卡到浏览器弹「页面无响应」。新开一路前先强制收掉旧的。
+    if (this._active && options.pre === true) this.forceStop();
 
     // 已经有"预热中"的采集在跑 → 直接接管它（那段音频就是孩子的起手音）。
     const hot = this._active;
@@ -230,9 +236,15 @@ const Recorder = {
 
     // v147：不再有单独的"预录缓冲"—— 预热本身就是这个 start()，
     // 接管时 chunks 里已经是孩子开口起的那一段。
-    this._active = { stream, ctx, source, node, sink, chunks, usingWorklet,
-                     startedAt: Date.now(), peak: () => peak,
-                     levelRef: levelRef };
+    const a = { stream, ctx, source, node, sink, chunks, usingWorklet,
+                startedAt: Date.now(), peak: () => peak,
+                levelRef: levelRef };
+    // v226：3 分钟兜底（比一键录音 2 分钟上限还长），防止任何出口漏掉
+    // 时把麦克风一直占着 —— 占着就再也刷不了新版本。
+    a.watchT = setTimeout(function () {
+      if (self._active === a) self.forceStop();
+    }, 180000);
+    this._active = a;
     return this._active;
   },
 
@@ -247,6 +259,30 @@ const Recorder = {
 
   recording() { return !!this._active; },
 
+  // v226：把一条采集彻底拆掉（节点断开 + 麦克风轨道关闭 + 看门狗清掉）。
+  // stop() 和 forceStop() 共用，保证任何出口都不留半条管道。
+  _dispose(a) {
+    if (!a) return;
+    clearTimeout(a.watchT);
+    try { a.node.disconnect(); } catch (e) {}
+    try { a.source.disconnect(); } catch (e) {}
+    try { a.sink.disconnect(); } catch (e) {}
+    try { a.stream.getTracks().forEach(t => t.stop()); } catch (e) {}
+  },
+
+  // v226：无条件收尾，不关心有没有录到音频。麦克风报错、页面切后台、
+  // 版本更新强制刷新时都调它 —— 只要它不调，recording() 就一直是 true，
+  // 刷新看门狗会永远等下去。
+  forceStop() {
+    const a = this._active;
+    this._active = null;
+    this._primeP = null;
+    this._hotTaken = false;
+    clearTimeout(this._primeT);
+    this._dispose(a);
+    return Promise.resolve(null);
+  },
+
   // Stop and return { blob, duration, sampleRate, peak } — or null if the
   // capture produced no audio at all.
   async stop() {
@@ -258,10 +294,7 @@ const Recorder = {
     clearTimeout(this._primeT);
     if (!a) return null;
 
-    try { a.node.disconnect(); } catch (e) {}
-    try { a.source.disconnect(); } catch (e) {}
-    try { a.sink.disconnect(); } catch (e) {}
-    try { a.stream.getTracks().forEach(t => t.stop()); } catch (e) {}
+    this._dispose(a);
     const srcRate = a.ctx.sampleRate;
     // Context stays open on purpose — closing it is what made the next take
     // slow to start. It holds no microphone; the stream tracks above do.
@@ -559,3 +592,13 @@ const Recorder = {
     return new Blob([buf], { type: 'audio/wav' });
   },
 };
+
+// v226：页面关闭 / 切到后台时无条件收掉麦克风。以前手指被系统抢走、
+// 弹窗、强退都可能让流一直开着，recording() 永远为 true，版本更新的
+// 刷新看门狗就卡死；这里补最后一道保险。
+(function () {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return;
+  var bye = function () { try { Recorder.forceStop(); } catch (e) {} };
+  window.addEventListener('pagehide', bye);
+  document.addEventListener('visibilitychange', function () { if (document.hidden) bye(); });
+})();

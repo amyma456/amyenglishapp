@@ -63,8 +63,9 @@ ok(/caches\.delete\(name\)/.test(swSrc), 'activate 清旧缓存还在');
 
 section('④ 静默更新 + 录音保护');
 ok(/window\.__safeReload = function/.test(htmlSrc), '★ 自动刷新统一走 __safeReload');
-ok(/if \(window\.Recorder && Recorder\.recording && Recorder\.recording\(\)\)/.test(htmlSrc),
-   '★ 正在录音绝不刷新（推迟 5 秒）', '掐断孩子跟读是事故');
+ok(/var busy = !!\(window\.Recorder && Recorder\.recording && Recorder\.recording\(\)\)/.test(htmlSrc) &&
+   /__safeReloadTries <= 3/.test(htmlSrc),
+   '★ 正在录音先推迟刷新（最多 3 次，到点强制收尾）', '掐断孩子跟读是事故；也不许无限等');
 ok(/setTimeout\(window\.__safeReload, 5000\)/.test(htmlSrc), '录音中推迟 5 秒重试');
 // v220：SW 接管与版本自检**共用一个闸门**，避免发版当天连刷两次。
 // 两条路都收敛到 __amyReloadOnce() → 内部仍走 __safeReload()（录音保护不丢）。
