@@ -92,9 +92,9 @@ console.log('== 5. 草稿三重存储（localStorage + sessionStorage + cookie�
 
 console.log('== 6. 版本号 147 三处同步 ==');
 {
-  ok(/app-version" content="227"/.test(htmlSrc), 'index.html meta = 145');
-  ok((htmlSrc.match(/\?v=227/g) || []).length >= 5, '脚本引用 ?v=227（' + (htmlSrc.match(/\?v=227/g) || []).length + ' 处）');
-  ok(/amy-english-v227/.test(swSrc) && /var V = 227;/.test(swSrc), 'sw.js 缓存名与 V = 145');
+  ok(/app-version" content="228"/.test(htmlSrc), 'index.html meta = 145');
+  ok((htmlSrc.match(/\?v=228/g) || []).length >= 5, '脚本引用 ?v=228（' + (htmlSrc.match(/\?v=228/g) || []).length + ' 处）');
+  ok(/amy-english-v228/.test(swSrc) && /var V = 228;/.test(swSrc), 'sw.js 缓存名与 V = 145');
 }
 
 console.log(fail === 0 ? '\n全部通过 ✅' : '\n有 ' + fail + ' 项失败 ❌');

@@ -1,4 +1,4 @@
-// verify-v227.js — 修「麦克风出错后重进一直进不去 / 页面无响应」
+// verify-v228.js — 修「麦克风出错后重进一直进不去 / 页面无响应」
 //
 // 家长 2026-11-25：Gary 打卡几分钟后提示麦克风有问题，重进一直停在开屏，
 // Chrome 弹「页面无响应」，点恢复也没用。
@@ -11,7 +11,7 @@
 //   ④ showApp() 中途出错时开屏没人摘，孩子只能反复重进。
 //
 // 本脚本验证：刷新看门狗有上限且会强制收尾、Recorder 有 forceStop 和
-// 看门狗、启动/切后台都会清理、开屏有 22 秒自愈兜底、版本号统一 227。
+// 看门狗、启动/切后台都会清理、开屏有 22 秒自愈兜底、版本号统一 228。
 const fs = require('fs');
 const path = require('path');
 
@@ -55,7 +55,7 @@ ok(/window\.Recorder = Recorder/.test(app),
   '★ Recorder 挂到 window（否则 __safeReload 的录音判断永远为假）');
 ok(/async init\(\) \{[\s\S]{0,520}Recorder\.forceStop\(\)/.test(app),
   '★ 启动时先清掉上次残留录音');
-ok(/amy_boot_recover_v227/.test(html) &&
+ok(/amy_boot_recover_v228/.test(html) &&
    /location\.replace\(location\.pathname \+ '\?recover=1'\)/.test(html) &&
    /\}, 10000\);/.test(html),
   '★ 脚本没加载出来时清缓存硬刷一次（只一次）');
@@ -65,10 +65,10 @@ ok(/var s5 = document\.getElementById\('boot-splash'\)/.test(html)
   && /lp2\.classList\.remove\('hidden'\)/.test(html),
   '★ 补不回来就摘开屏露登录页，不再无限等');
 
-section('4. 版本统一 v227');
-ok(/app-version" content="227"/.test(html), 'index.html meta 227');
-ok((html.match(/\?v=227/g) || []).length === 10, '10 处脚本 ?v=227');
-ok(/amy-english-v227/.test(sw) && /var V = 227;/.test(sw), 'sw.js 缓存版本 227');
+section('4. 版本统一 v228');
+ok(/app-version" content="228"/.test(html), 'index.html meta 228');
+ok((html.match(/\?v=228/g) || []).length === 10, '10 处脚本 ?v=228');
+ok(/amy-english-v228/.test(sw) && /var V = 228;/.test(sw), 'sw.js 缓存版本 228');
 
 console.log('\n结果: ' + passed + ' 通过 / ' + failed + ' 失败');
 if (failed) process.exit(1);

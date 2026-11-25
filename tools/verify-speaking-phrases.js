@@ -1,4 +1,4 @@
-// tools/verify-speaking-phrases.js —— AI 口语练习短语（v193 → v227）
+// tools/verify-speaking-phrases.js —— AI 口语练习短语（v193 → v228）
 // 家长 2026-11-11 要「一句里两三个短语的提示」，v193 做了题干/选项的短语
 // 横线 + 句子下面的中文提示条。家长 2026-11-25 改口径：中文提示条直接把
 // 意思摆在眼前，既占地方又让孩子不用自己想，撤掉；改回「画横线、自己点，
@@ -40,6 +40,8 @@ const A = {
   _notePhrases() {},
   _shuffle(a) { return a.slice(); },
   autoSpeak() {},
+  // v228：渲染函数调用的是安全朗读入口，stub 一份避免测试里抛错
+  _safeAutoSpeak() {},
 };
 const sigs = {
   _phraseMask: '_phraseMask(words, rich) {',
@@ -63,17 +65,17 @@ console.log('  例题:', q.sentence);
 ok((out.match(/lk-word lk-phrase/g) || []).length >= 2,
   '★ 题干画了 ≥2 个短语横线（以前是纯文本，一个都没有）');
 ok((out.match(/class="sp-ph-bar/g) || []).length === 0,
-  '★ v227：题干和每个选项下面都不再有「短语+中文」提示条');
+  '★ v228：题干和每个选项下面都不再有「短语+中文」提示条');
 ok(!/sp-ph-chip|📌 本句短语|短语中文/.test(out),
-  '★ v227：屏幕上不再有不用点就能看到的中文释义');
+  '★ v228：屏幕上不再有不用点就能看到的中文释义');
 ok((out.match(/class="speak-option" onclick=/g) || []).length === q.options.length,
   '四个选项的 onclick 全在，孩子仍然点得动答案');
 ok(!/class="lk-word"/.test(out.split('class="speak-options"')[1] || ''),
   '★ 选项里不出现 .lk-word（点其余文字才会选答案）');
 ok((out.match(/sp-opt-ph" data-phrase=/g) || []).length >= 2,
-  '★ v227：选项里的短语横线带 data-phrase，点一下出整块短语的读音和中文');
+  '★ v228：选项里的短语横线带 data-phrase，点一下出整块短语的读音和中文');
 ok(/closest\('\.lk-word,\.lk-phrase'\)/.test(app),
-  '★ v227：点词捕获器认 .lk-phrase，选项里的短语横线点得开');
+  '★ v228：点词捕获器认 .lk-phrase，选项里的短语横线点得开');
 
 // ---- ② 全口语题库覆盖率 ----
 const sents = [];
@@ -133,13 +135,13 @@ WH.PHRASES.forEach(p => {
 });
 ok(dup === 0, '短语表无重复条目（实得 ' + dup + '）');
 ok(/\.sp-ph-bar\{/.test(html) && /\.sp-ph-chip\{/.test(html),
-  '提示条样式保留在 index.html（v227 起停用，留作回退，不渲染）');
+  '提示条样式保留在 index.html（v228 起停用，留作回退，不渲染）');
 ok(/\.sp-ph-chip\.sp-ph-word\{/.test(html), '短句兜底的重点词有区分样式');
 ok(!/this\._spPhraseBar\(/.test(app),
-  '★ v227：题干 / 选项 / 跟读面板都不再调用短语提示条');
+  '★ v228：题干 / 选项 / 跟读面板都不再调用短语提示条');
 ok(/_readSentenceHtml\(parts\.q\)/.test(app), '跟读判分仍用原来的逐词词盒，完全不受影响');
 ok(/closest\('\.lk-word,\.lk-phrase'\)/.test(app),
-  '★ v227：跟读/选项里的短语横线点一下就有读音和中文');
+  '★ v228：跟读/选项里的短语横线点一下就有读音和中文');
 
 console.log(fail ? '✗ ' + fail + ' 项失败 / ' + (pass + fail)
   : '✅ verify-speaking-phrases 全部 ' + pass + ' 项通过');

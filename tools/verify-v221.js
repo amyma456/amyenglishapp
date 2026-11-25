@@ -1,5 +1,5 @@
 /* eslint-disable */
-// v227 校验：Harvey 平板 2026-11-21 卡在「第 19 题」的修复。
+// v228 校验：Harvey 平板 2026-11-21 卡在「第 19 题」的修复。
 //
 // 根因：今天（WEEK8 周六）第 19 题 = 阅读理解逐句翻译第 3 句
 // 「在那里，海水用非常大的重量压着潜水器，就像一头大象站在一张小桌上。」
@@ -12,7 +12,7 @@
 //   ① 阅读理解逐句翻译与完形填空统一三档口径，soft 放行；
 //   ② 同一屏连续两次判分不通过 → 自动放行，设备/识别问题不算孩子的账；
 //
-// v227 家长要求：学生端不再出现「这道题不做了 / 过」这类话，零跳过出口；
+// v228 家长要求：学生端不再出现「这道题不做了 / 过」这类话，零跳过出口；
 // 老师预览仍保留「跳过本题（老师）」用于快速翻题。
 //
 // 用法：node tools/verify-v221.js
@@ -33,17 +33,17 @@ const ok = (cond, msg, extra) => {
 };
 const section = (t) => console.log('\n' + t);
 
-section('[1] 版本号 227 四处一致（平板必须拿到新代码）');
+section('[1] 版本号 228 四处一致（平板必须拿到新代码）');
 {
   const ver = (htmlSrc.match(/name="app-version" content="(\d+)"/) || [])[1];
-  ok(Number(ver) === 227, 'app-version = 227（当前 ' + ver + '）');
+  ok(Number(ver) === 228, 'app-version = 228（当前 ' + ver + '）');
   const pins = htmlSrc.match(/\.js\?v=(\d+)/g) || [];
-  ok(pins.length >= 10 && pins.every(x => x === '.js?v=227'),
-    '全部 10 个脚本钉子都是 ?v=227', pins.join(','));
-  ok((htmlSrc.match(/href="[^"]+\?v=227"/g) || []).length === 3,
-    '3 个 preload 也跟到 227');
-  ok(/var CACHE_NAME = 'amy-english-v227';/.test(swSrc) && /var V = 227;/.test(swSrc),
-    'sw CACHE_NAME / V = 227');
+  ok(pins.length >= 10 && pins.every(x => x === '.js?v=228'),
+    '全部 10 个脚本钉子都是 ?v=228', pins.join(','));
+  ok((htmlSrc.match(/href="[^"]+\?v=228"/g) || []).length === 3,
+    '3 个 preload 也跟到 228');
+  ok(/var CACHE_NAME = 'amy-english-v228';/.test(swSrc) && /var V = 228;/.test(swSrc),
+    'sw CACHE_NAME / V = 228');
   ok(!/\.js\?v=220|amy-english-v220\b/.test(htmlSrc + swSrc), '没有 220 残留');
 }
 
@@ -69,7 +69,7 @@ section('[3] 全局防卡死：连续两次不过 → 解锁「下一题」');
     '★ 学生端「这题做不了？先跳过」按钮及入口已彻底删除');
   ok(/id="pv-skip-btn"/.test(appSrc)
     && /isTeacher\(\) && this\.state\.currentTab === 'preview'/.test(appSrc),
-    '★ v227：老师预览有跳过键，且严格限定 isTeacher + preview（学生端看不到）');
+    '★ v228：老师预览有跳过键，且严格限定 isTeacher + preview（学生端看不到）');
   ok(/lockNextOnRender/.test(appSrc) && /stage-next-btn/.test(appSrc),
     '锁定屏仍由「下一题」按钮的 disabled 控制，必须做完才能走');
 }
@@ -143,10 +143,10 @@ section('[4] 真跑沙箱：卡两次能过、学生端跳过入口仍为零');
     App._gateStep(App.PASS_SCORE, true);
     ok(!App._gateFail['5:14'], '下一次通过会清掉失败计数');
 
-    // v227：跳过函数已不存在，孩子不能再靠额外出口翻页
+    // v228：跳过函数已不存在，孩子不能再靠额外出口翻页
     ok(typeof App._bailStep !== 'function', '★ 沙箱里 _bailStep 已不存在');
   }
 }
 
-console.log('\nv227: ' + pass + ' passed, ' + fail + ' failed');
+console.log('\nv228: ' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

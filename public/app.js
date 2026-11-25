@@ -2927,8 +2927,11 @@ const App = {
       } catch(e) {}
       this._currentAudio = null;
     }
-    // Cancel any speechSynthesis that might be running
-    if (window.speechSynthesis) {
+    // v228：只对"确实起过内建合成"的那一路 cancel —— 以前每一次 speak()
+    // 都无条件 cancel，手机上这是一次浏览器级同步调用；看图听音一屏连播时
+    // 反复 cancel 会把主线程拖住。没起过合成就别碰它。
+    if (this._synthActive && window.speechSynthesis) {
+      this._synthActive = false;
       try { window.speechSynthesis.cancel(); } catch(e) {}
     }
   },
@@ -2945,7 +2948,10 @@ const App = {
     }
 
     try {
+      // v228：只在真要起内建合成时才 cancel（_stopCurrentAudio 现在靠这个标记
+      // 决定要不要 cancel）—— 别让每次普通 <audio> 朗读都去拖一次浏览器主线程。
       window.speechSynthesis.cancel();
+      this._synthActive = true;
       var u = new SpeechSynthesisUtterance(text);
       u.lang = 'en-US';
       u.rate = opts.rate || this.SYNTH_RATE;
@@ -2974,12 +2980,14 @@ const App = {
       if (chosen) u.voice = chosen;
 
       u.onend = function() {
+        self._synthActive = false;
         // Only fire if this is still the current speak call
         if (myToken !== self._speakToken) return;
         self._showSpeakingIndicator(false);
         if (self._ttsCallback) { self._ttsCallback(); self._ttsCallback = null; }
       };
       u.onerror = function() {
+        self._synthActive = false;
         // Only fire if this is still the current speak call
         if (myToken !== self._speakToken) return;
         self._showSpeakingIndicator(false);
@@ -2996,6 +3004,7 @@ const App = {
       setTimeout(function() {
         if (myToken !== self._speakToken) return;
         if (!started) {
+          self._synthActive = false;
           self._showSpeakingIndicator(false);
           if (self._ttsCallback) { self._ttsCallback(); self._ttsCallback = null; }
         }
@@ -3003,6 +3012,7 @@ const App = {
 
       window.speechSynthesis.speak(u);
     } catch(e) {
+      this._synthActive = false;
       this._showSpeakingIndicator(false);
       if (myToken === self._speakToken && self._ttsCallback) { self._ttsCallback(); self._ttsCallback = null; }
     }
@@ -3701,6 +3711,34 @@ const App = {
     } else if (callback) {
       callback();
     }
+  },
+
+  // ===== v228：看图听音那一屏的"安全自动朗读" ==============================
+  // Gary（2026-11-25）：一到"看图片听语音"的题就「页面无响应」，重进也进不去。
+  // 病根：词汇闯关的 learn / image_choice / meaning_choice 是全平台唯一在
+  // **renderContent 的同步栈里**直接 autoSpeak → speak 的界面。speak 里
+  // audioEl.load()/play()、speechSynthesis.cancel() 都是浏览器级的同步调用；
+  // 手机音频栈一旦卡住（前一次麦克风报错尤其容易），主线程就被拖死，
+  // Chrome 弹「页面无响应」，开屏来不及摘；断点续做又把他送回同一题，
+  // 于是每次重进都重演一次。
+  // 两道修复：
+  //   ① 出声挪到本帧画完之后，render 的同步栈里绝不碰浏览器音频 API；
+  //   ② 选项解锁挂独立兜底计时器 —— 就算朗读永远不回调，也一定放行，
+  //      孩子不会对着锁住的选项干等（"进不去"的第二层含义）。
+  VOCAB_UNLOCK_MS: 4000,
+  _safeAutoSpeak(text, onDone, prefer) {
+    var self = this;
+    var opened = false;
+    var open = function () {
+      if (opened) return;              // onDone 和兜底谁先到都只放一次
+      opened = true;
+      try { if (onDone) onDone(); } catch (e) {}
+    };
+    if (onDone) setTimeout(open, this.VOCAB_UNLOCK_MS);
+    setTimeout(function () {
+      try { self.autoSpeak(text, open, prefer || ''); }
+      catch (e) { open(); }            // 音频 API 抛错也要放行，绝不锁死
+    }, 0);
   },
 
   // ===== v173（家长 2026-10-30）：翻译屏进屏就自动读，不用孩子点 =====
@@ -6918,9 +6956,9 @@ const App = {
     html += '<div class="speak-tip" id="sp-tip-' + mi + '"></div>';
     html += '<div id="sp-read-' + mi + '"></div>';
     html += '</div>';
-    // Auto-play the sentence, then enable options
+    // v228：落帧后再出声 + 4 秒绝对兜底解锁（和词汇看图听音同一套保护）
     // 'cf' = 这一屏的示范读音要 Cloudflare 的母语音色（见 _stepTtsPrefer）
-    this.autoSpeak(q.sentence, function() {
+    this._safeAutoSpeak(q.sentence, function() {
       var optsEl = document.getElementById('sp-opts-' + mi);
       var waitEl = document.getElementById('sp-wait-' + mi);
       if (optsEl) { optsEl.style.opacity = '1'; optsEl.style.pointerEvents = 'auto'; }
@@ -8233,8 +8271,8 @@ const App = {
       html += '<div class="vocab-example">"' + word.example_en + '"<br>' + word.example_cn + '</div>';
       html += '<button class="vocab-btn" onclick="App.speak(\'' + word.word.replace(/'/g,"\\'") + '\')">🔊 听发音</button>';
       html += '<button class="vocab-btn" onclick="App.nextVocabStage(' + mi + ',' + dayIdx + ',' + m.words.length + ',' + word.stages.length + ')">我学会了 →</button>';
-      // Auto-read the word
-      this.autoSpeak(word.word);
+      // v228：落帧后再出声，render 同步栈里不碰浏览器音频 API（Gary 卡死）
+      this._safeAutoSpeak(word.word);
     } else if (stage.type === 'image_choice') {
       html += '<div class="auto-read-badge"><svg class="icon icon-sm speaking-anim"><use href="#i-sound"/></svg> 正在朗读…</div>';
       html += '<div class="vocab-meaning">' + stage.prompt + '</div>';
@@ -8248,8 +8286,8 @@ const App = {
       });
       html += '</div>';
       html += '<div class="listen-wait" id="vw-' + mi + '" style="text-align:center;padding:8px;color:var(--text-sub);font-size:max(calc(12px*var(--fs-sm)),var(--fs-sm-min))">⏳ 请先听完整朗读，再选择答案</div>';
-      // Auto-read the word, then enable options
-      this.autoSpeak(word.word, function() {
+      // v228：落帧后再出声 + 4 秒绝对兜底解锁（朗读卡住也能继续答题）
+      this._safeAutoSpeak(word.word, function() {
         var el = document.getElementById('vo-' + mi);
         var w = document.getElementById('vw-' + mi);
         if (el) { el.style.opacity = '1'; el.style.pointerEvents = 'auto'; }
@@ -8270,8 +8308,8 @@ const App = {
       });
       html += '</div>';
       html += '<div class="listen-wait" id="vw-' + mi + '" style="text-align:center;padding:8px;color:var(--text-sub);font-size:max(calc(12px*var(--fs-sm)),var(--fs-sm-min))">⏳ 请先听完整朗读，再选择答案</div>';
-      // Auto-read the word, then enable options
-      this.autoSpeak(word.word, function() {
+      // v228：落帧后再出声 + 4 秒绝对兜底解锁（朗读卡住也能继续答题）
+      this._safeAutoSpeak(word.word, function() {
         var el = document.getElementById('vo-' + mi);
         var w = document.getElementById('vw-' + mi);
         if (el) { el.style.opacity = '1'; el.style.pointerEvents = 'auto'; }

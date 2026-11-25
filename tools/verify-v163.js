@@ -207,10 +207,10 @@ section('4. 短语识别精细化（v163 ④）');
 // ---------------- 5. 版本号 ----------------
 section('5. 版本号 = 163');
 {
-  ok(/app-version" content="227"/.test(htmlSrc), 'index.html app-version = 163');
-  const refs = (htmlSrc.match(/\.js\?v=227/g) || []).length;
+  ok(/app-version" content="228"/.test(htmlSrc), 'index.html app-version = 163');
+  const refs = (htmlSrc.match(/\.js\?v=228/g) || []).length;
   ok(refs >= 6, '6 个 script 引用都升到 v163', refs);
-  ok(/amy-english-v227/.test(swSrc) && /var V = 227;/.test(swSrc), 'sw.js 缓存名与 V = 163');
+  ok(/amy-english-v228/.test(swSrc) && /var V = 228;/.test(swSrc), 'sw.js 缓存名与 V = 163');
 }
 
 console.log('\n结果: ' + pass + ' 通过, ' + fail + ' 失败');

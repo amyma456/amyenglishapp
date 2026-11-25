@@ -125,10 +125,10 @@ console.log('\n== 2. 成绩分析 / 错题本也只算本班 ==');
 
 console.log('\n== 3. 版本号 = 151 ==');
 {
-  ok(/app-version" content="227"/.test(htmlSrc), 'index.html meta = 151');
-  ok((htmlSrc.match(/\?v=227/g) || []).length >= 5, '脚本引用 ?v=227（' + (htmlSrc.match(/\?v=227/g) || []).length + ' 处）');
-  ok(/amy-english-v227/.test(swSrc) && /var V = 227;/.test(swSrc), 'sw.js 缓存名与 V = 151（旧缓存整体作废）');
-  ok(!/\.js\?v=(?!227)\d{2,3}/.test(htmlSrc) && !/amy-english-v(?!227)\d{3}/.test(swSrc), '没有旧版本残留（脚本引用与缓存名都只有 188）');
+  ok(/app-version" content="228"/.test(htmlSrc), 'index.html meta = 151');
+  ok((htmlSrc.match(/\?v=228/g) || []).length >= 5, '脚本引用 ?v=228（' + (htmlSrc.match(/\?v=228/g) || []).length + ' 处）');
+  ok(/amy-english-v228/.test(swSrc) && /var V = 228;/.test(swSrc), 'sw.js 缓存名与 V = 151（旧缓存整体作废）');
+  ok(!/\.js\?v=(?!228)\d{2,3}/.test(htmlSrc) && !/amy-english-v(?!228)\d{3}/.test(swSrc), '没有旧版本残留（脚本引用与缓存名都只有 188）');
 }
 
 console.log('');

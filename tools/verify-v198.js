@@ -64,10 +64,10 @@ ok('四个全局都桥接到 window（game.js 才读得到）', () => {
   assert(bridge > 0 && bridge < appSrcFull.indexOf('App.init();'), '桥接必须排在 init 之前');
 });
 ok('版本钉子统一到 v202', () => {
-  assert(/name="app-version" content="227"/.test(html));
-  assert.strictEqual((html.match(/\?v=227/g) || []).length, 10, '首页 10 处脚本引用');
-  assert(/var CACHE_NAME = 'amy-english-v227';/.test(sw));
-  assert(/var V = 227;/.test(sw));
+  assert(/name="app-version" content="228"/.test(html));
+  assert.strictEqual((html.match(/\?v=228/g) || []).length, 10, '首页 10 处脚本引用');
+  assert(/var CACHE_NAME = 'amy-english-v228';/.test(sw));
+  assert(/var V = 228;/.test(sw));
 });
 
 // ------------------------------------------------------------- 模拟运行环境
