@@ -44,9 +44,9 @@ const REAL = [
 
 // ------------------------------------------------------------------ 源码约束
 ok('版本钉子统一到 v202', () => {
-  assert(/name="app-version" content="226"/.test(html));
-  assert.strictEqual((html.match(/\?v=226/g) || []).length, 10, '首页 10 处脚本引用');
-  assert(/var CACHE_NAME = 'amy-english-v226';/.test(swSrc) && /var V = 226;/.test(swSrc));
+  assert(/name="app-version" content="227"/.test(html));
+  assert.strictEqual((html.match(/\?v=227/g) || []).length, 10, '首页 10 处脚本引用');
+  assert(/var CACHE_NAME = 'amy-english-v227';/.test(swSrc) && /var V = 227;/.test(swSrc));
 });
 ok('后端不再把「已下线但带分」的账号整行丢掉', () => {
   const fn = worker.slice(worker.indexOf('async function buildBoardRows'),

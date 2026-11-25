@@ -150,12 +150,12 @@ ok(wr && rebuilt.toLowerCase() === String(wr.full_text).toLowerCase(), '写作�
 ok(wr && String(wr.full_text).match(/[^.!?]+[.!?]+["']?(?=\s|$)/g).length === 5, '写作全文 5 句（10 动作口径）');
 
 // ---- 版本钉子 ----
-ok(/name="app-version" content="226"/.test(html), 'index.html app-version = 204');
-ok((html.match(/\?v=226/g) || []).length === 10, 'index.html 10 处 ?v=226', (html.match(/\?v=226/g) || []).length);
-ok(/var CACHE_NAME = 'amy-english-v226';/.test(swSrc), 'sw.js CACHE_NAME = amy-english-v226');
-ok(/var V = 226;/.test(swSrc), 'sw.js var V = 204');
-ok(!/\.js\?v=(?!226)\d{2,3}/.test(html), '没有残留旧 ?v=（负向前瞻）');
-ok(!/amy-english-v(?!226)\d{3}/.test(swSrc), '没有残留旧缓存名（负向前瞻）');
+ok(/name="app-version" content="227"/.test(html), 'index.html app-version = 204');
+ok((html.match(/\?v=227/g) || []).length === 10, 'index.html 10 处 ?v=227', (html.match(/\?v=227/g) || []).length);
+ok(/var CACHE_NAME = 'amy-english-v227';/.test(swSrc), 'sw.js CACHE_NAME = amy-english-v227');
+ok(/var V = 227;/.test(swSrc), 'sw.js var V = 204');
+ok(!/\.js\?v=(?!227)\d{2,3}/.test(html), '没有残留旧 ?v=（负向前瞻）');
+ok(!/amy-english-v(?!227)\d{3}/.test(swSrc), '没有残留旧缓存名（负向前瞻）');
 
 console.log('\nv204 · ' + (fail ? '❌ ' + fail + ' 项失败（通过 ' + pass + '）' : pass + ' 项全部通过'));
 process.exit(fail ? 1 : 0);

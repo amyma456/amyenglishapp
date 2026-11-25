@@ -16761,6 +16761,10 @@ if (typeof window !== 'undefined') {
   try { if (typeof Api !== 'undefined') window.Api = Api; } catch (e) {}
   try { if (typeof WordHelp !== 'undefined') window.WordHelp = WordHelp; } catch (e) {}
   try { if (typeof HOMEWORK_DATA !== 'undefined') window.HOMEWORK_DATA = HOMEWORK_DATA; } catch (e) {}
+  // v227：Recorder 是 const，经典脚本里不会自动挂到 window —— 而 index.html
+  // 的 __safeReload 一直用 window.Recorder 判断"正在录音"，等于这层保护
+  // 从来没生效过。补上桥接，刷新看门狗才真的看得见录音状态。
+  try { if (typeof Recorder !== 'undefined') window.Recorder = Recorder; } catch (e) {}
 }
 
 // v216：统一录音控制条 —— 一次绑定，所有录音入口共用。

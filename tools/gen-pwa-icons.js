@@ -68,7 +68,7 @@ const SPLASH = [
   { file: 'iphone-15max.png', w: 1290, h: 2796 },      // 15 Pro Max, 16 Plus
   { file: 'ipad-97.png', w: 1536, h: 2048 },           // iPad 9.7, mini 4
   { file: 'ipad-air.png', w: 1640, h: 2360 },          // iPad Air 10.9, iPad 10
-  { file: 'ipad-mini6.png', w: 1488, h: 2266 },        // iPad mini 6
+  { file: 'ipad-mini6.png', w: 1488, h: 2276 },        // iPad mini 6
   { file: 'ipad-102.png', w: 1620, h: 2160 },          // iPad 10.2
   { file: 'ipad-pro11.png', w: 1668, h: 2388 },        // iPad Pro 11
   { file: 'ipad-pro129.png', w: 2048, h: 2732 },       // iPad Pro 12.9

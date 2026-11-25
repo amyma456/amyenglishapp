@@ -102,10 +102,10 @@ if (w7) {
 }
 
 // 7) 版本钉子 190
-ok((html.match(/\?v=226/g) || []).length === 10, 'index.html 十处 ?v=226');
-ok(html.includes('app-version" content="226"'), 'index.html app-version=189');
-ok(/var CACHE_NAME = 'amy-english-v226';/.test(sw), 'sw.js CACHE_NAME v193');
-ok(/var V = 226;/.test(sw), 'sw.js V = 189');
+ok((html.match(/\?v=227/g) || []).length === 10, 'index.html 十处 ?v=227');
+ok(html.includes('app-version" content="227"'), 'index.html app-version=189');
+ok(/var CACHE_NAME = 'amy-english-v227';/.test(sw), 'sw.js CACHE_NAME v193');
+ok(/var V = 227;/.test(sw), 'sw.js V = 189');
 
 // =========================================================================
 // 8) v193：打卡表"每天几个人打卡" + 永远显示后台当下那份
@@ -210,20 +210,20 @@ ok(/const pick = rich \? 'phraseAtRich' : 'phraseAt';/.test(app2)
   '阅读材料启用规则搭配，跟读判分句仍只用手写表');
 ok(/\.lk-phrase\{border-bottom:2px solid/.test(html), '短语横线加粗成实线');
 
-// —— v226：短语提示条撤掉，改回「画横线、点了才出中文」——
+// —— v227：短语提示条撤掉，改回「画横线、点了才出中文」——
 ok(/this\._wordSpans\(q\.sentence\)/.test(app2), '★ 口语题干画了短语横线');
 ok(/this\._wordSpans\(o, true\)/.test(app2),
   '★ 选项用 plain 模式：画短语但不包 .lk-word，点其余文字照样选答案');
 ok(!/this\._spPhraseBar\(/.test(app2),
-  '★ v226：题干 / 选项 / 跟读面板都不再直接列出短语中文');
+  '★ v227：题干 / 选项 / 跟读面板都不再直接列出短语中文');
 ok(!/📌 本句短语|📌 问句和答句里的短语/.test(app2),
-  '★ v226：两处短语提示条标题已移除');
+  '★ v227：两处短语提示条标题已移除');
 ok(/closest\('\.lk-word,\.lk-phrase'\)/.test(app2),
-  '★ v226：选项里的短语横线点得开（读音 + 中文）');
+  '★ v227：选项里的短语横线点得开（读音 + 中文）');
 ok(/\['close to', '靠近/.test(api2) && /_handPhraseFrom\(tokens, i \+ 1\)/.test(api2),
   '★ it is 不会把 is close to 切碎（家长上轮点名的搭配保住）');
 ok(/\.sp-ph-bar\{/.test(html) && /\.sp-ph-chip\.sp-ph-word\{/.test(html),
-  '提示条与重点词兜底的样式留在 index.html（v226 起停用，不渲染）');
+  '提示条与重点词兜底的样式留在 index.html（v227 起停用，不渲染）');
 
 console.log(fail ? '✗ ' + fail + ' 项失败 / ' + (pass + fail) : '✅ verify-v193 全部 ' + pass + ' 项通过');
 process.exit(fail ? 1 : 0);

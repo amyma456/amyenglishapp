@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="226">
+<meta name="app-version" content="227">
 <link rel="manifest" href="manifest.json">
 <!-- v135：登录第一步就是调 api.amyeng.top 验手机号。提前把 DNS + TLS
      握手做掉，接口首调能省几百毫秒 —— 手机弱网下这几百毫秒很显眼。 -->
@@ -17,9 +17,9 @@
      解析到文档末尾的 <script defer> 才发现它们（那时 180KB 的 HTML 已经
      解析完了），白白晚了几百毫秒到一秒。preload 只提前取、不执行，顺序
      仍由 defer 保证，不会改变任何依赖关系。 -->
-<link rel="preload" as="script" href="data.js?v=226">
-<link rel="preload" as="script" href="api.js?v=226">
-<link rel="preload" as="script" href="app.js?v=226">
+<link rel="preload" as="script" href="data.js?v=227">
+<link rel="preload" as="script" href="api.js?v=227">
+<link rel="preload" as="script" href="app.js?v=227">
 <!-- iOS 的"添加到主屏幕"不认 SVG（装出来是白板/网页截图），必须给 PNG。
      图标与启动图由 tools/gen-pwa-icons.js 生成，别手改。 -->
 <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon-180.png">
@@ -2312,9 +2312,9 @@ button,.q-option,.gate-listen,.hold-btn,.tap-btn,.speak-btn{
 </div>
 
 <script>window.__appReady = false;</script>
-<script defer src="cloud.js?v=226"></script>
-<script defer src="data.js?v=226"></script>
-<script defer src="data-shuffle.js?v=226"></script>
+<script defer src="cloud.js?v=227"></script>
+<script defer src="data.js?v=227"></script>
+<script defer src="data-shuffle.js?v=227"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
 <!--
   ?v= 必须跟着版本号走（v124 修正）。
@@ -2324,13 +2324,13 @@ button,.q-option,.gate-listen,.hold-btn,.tap-btn,.speak-btn{
   这个坑很隐蔽：代码明明改了、也部署上去了，手机上跑的还是几个月前的逻辑。
   以后每次发版，这里跟着 app-version 一起改。
 -->
-<script defer src="recorder.js?v=226"></script>
-<script defer src="api.js?v=226"></script>
+<script defer src="recorder.js?v=227"></script>
+<script defer src="api.js?v=227"></script>
 <!-- v194：小游戏独立成文件，不塞进已经 800KB 的 app.js。必须排在 app.js
      **前面**：app.js 顶层有同步初始化，登录回来若正好停在「单词乐园」，
      渲染时 WordGame 得已经存在。game.js 只在被点击/渲染时才读 window.App。 -->
-<script defer src="game.js?v=226"></script>
-<script defer src="app.js?v=226"></script>
+<script defer src="game.js?v=227"></script>
+<script defer src="app.js?v=227"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {
@@ -2354,7 +2354,7 @@ if ('serviceWorker' in navigator) {
   // v135：自动刷新统一走 __safeReload —— 孩子正在录音（跟读/口语/翻译）
   // 时绝不刷新，不然这条录音就没了。推迟 5 秒再试，录完自然放行。
   window.__safeReload = function (force) {
-    // v226：上一版只要 Recorder.recording() 为真就每 5 秒再试，而且**没有
+    // v227：上一版只要 Recorder.recording() 为真就每 5 秒再试，而且**没有
     // 次数上限** —— 麦克风出错后那面旗可能永远不落（录音没正常收尾），
     // 版本更新就永远刷不动，孩子一直卡在旧页面，重进也没用。
     // 现在最多等 3 次（15 秒），到点强制收掉残留录音再刷。
@@ -2426,7 +2426,7 @@ if ('serviceWorker' in navigator) {
   // 把首帧让给做题；版本落后时也只是「闪一下」，脚本仍在缓存里。
   setTimeout(__checkVersion, 8000);
   setInterval(function() { __swCheck(); __checkVersion(); }, 10 * 60 * 1000); // 挂着不动也每 10 分钟查一次
-  // v226：脚本已就绪、却仍挂在开屏 —— 说明 showApp() 中途出错了。
+  // v227：脚本已就绪、却仍挂在开屏 —— 说明 showApp() 中途出错了。
   // 以前这种状态会一直停在「正在打开今天的作业…」，孩子只能反复重进；
   // 现在补一次 showApp，仍不行就摘掉开屏、露出登录页当逃生口。
   setTimeout(function () {
@@ -2440,6 +2440,25 @@ if ('serviceWorker' in navigator) {
     var lp2 = document.getElementById('login-page');
     if (lp2) lp2.classList.remove('hidden');
   }, 22000);
+  // v227：脚本根本没加载出来（旧缓存 / 坏缓存 / 弱网半截包）时，20 秒后
+  // 露出的登录页是点不动的 —— App 都不存在。这里在 10 秒就先自愈一次：
+  // 清掉 SW 缓存、硬刷一次，同一个会话只做一次，绝不来回刷。
+  setTimeout(function () {
+    if (window.__appReady) return;
+    var key = 'amy_boot_recover_v227';
+    try {
+      if (sessionStorage.getItem(key)) return;
+      sessionStorage.setItem(key, '1');
+    } catch (e) {}
+    try {
+      if (window.caches) {
+        caches.keys().then(function (ks) {
+          return Promise.all(ks.map(function (k) { return caches.delete(k); }));
+        }).catch(function () {});
+      }
+    } catch (e) {}
+    try { location.replace(location.pathname + '?recover=1'); } catch (e) {}
+  }, 10000);
   window.addEventListener('load', function() {
     navigator.serviceWorker.register('sw.js').then(function() {
       console.log('SW registered');

@@ -220,7 +220,7 @@ console.log('\n=== 4. 逐词判分结果里的词也可点（红色那个尤其�
   const look = src.slice(src.indexOf('_initWordLookup()'));
   const lkAt = look.indexOf("closest('.lk-word,.lk-phrase')");
   const caretAt = look.indexOf('_wordAtPoint(pt.x, pt.y)');
-  ok(lkAt > 0, '★ v226：点词查义先认 .lk-word / .lk-phrase 词盒（明确目标，选项短语横线也点得开）');
+  ok(lkAt > 0, '★ v227：点词查义先认 .lk-word / .lk-phrase 词盒（明确目标，选项短语横线也点得开）');
   ok(lkAt > 0 && caretAt > lkAt, '词盒没命中才退回按落点取词（两条路并存）');
   // v143：中间多了一段"是不是短语盒子（giving up）"的判断，窗口放宽到 700 字。
   ok(/closest\('\.lk-word,\.lk-phrase'\)[\s\S]{0,700}?_openWordSheet\(w\)/.test(look), '命中词盒 → 直接开查词弹层');
