@@ -16518,7 +16518,11 @@ const App = {
         // v143：短语盒子（giving up）里带空格，也要能点 —— 以前这里只认
         // 单个单词，整块短语反而点不开。
         const ph = span.getAttribute && span.getAttribute('data-phrase');
-        const w = ph || String(span.textContent || '').trim();
+        // v230：词盒文字常带着标点（"Over," / "(the)"）。以前原样拿去校验，
+        // 正则一失败就掉进下面的 caret 取词，手机上 caret 偏偏会偏到相邻词
+        // —— 家长反馈「点 Over 弹出 the」。先削掉首尾非字母再判。
+        const w = String(ph || span.textContent || '').trim()
+          .replace(/^[^A-Za-z]+|[^A-Za-z]+$/g, '');
         if (ph || /^[A-Za-z][A-Za-z'\-]*$/.test(w)) {
           ev.preventDefault();
           ev.stopPropagation();
@@ -16554,6 +16558,21 @@ const App = {
 
   // 手指落点下面的那个英文单词，取不到就返回 null。
   _wordAtPoint(x, y) {
+    // v230：先问「手指到底落在哪个词盒上」，别只信 caretRangeFromPoint。
+    // iOS / 微信 / UC 上 caret 会偏到相邻文本节点（家长：点 Over 弹出 the），
+    // 而 elementFromPoint 给的才是真正被点中的元素。逐词判分的 .rd-w
+    // 词盒没有 .lk-word 类，上面的 ① 分支够不着，全靠这里兜住。
+    try {
+      const hit = document.elementFromPoint && document.elementFromPoint(x, y);
+      const box = (hit && hit.closest)
+        ? hit.closest('.lk-word,.lk-phrase,.rd-w[data-w]') : null;
+      if (box) {
+        const ph = box.getAttribute && box.getAttribute('data-phrase');
+        const w = String(ph || box.textContent || '').trim()
+          .replace(/^[^A-Za-z]+|[^A-Za-z]+$/g, '');
+        if (w && /^[A-Za-z][A-Za-z'\- ]*$/.test(w)) return w;
+      }
+    } catch (e) {}
     let node = null, offset = 0;
     try {
       if (document.caretRangeFromPoint) {
@@ -16657,7 +16676,10 @@ const App = {
     wrap.querySelector('.ws-mask').addEventListener('click', function() { self._closeWordSheet(); });
     wrap.querySelector('#ws-close').addEventListener('click', function() { self._closeWordSheet(); });
     wrap.querySelector('#ws-speak').addEventListener('click', function() {
-      if (self._lookupWord) self.speak(self._lookupWord, { prefer: 'cf' });
+      // v230：查词读音统一走同源 /api/tts 的默认音色（Azure 外教腔女声 /
+      // 静态预生成 mp3）。以前点名 cf，那条会绕开静态表、现场合成更慢，
+      // 而且和点开时自动读出来的那一声不是同一个嗓子。
+      if (self._lookupWord) self.speak(self._lookupWord);
     });
     this._lookupEl = wrap;
     return wrap;
@@ -16707,13 +16729,11 @@ const App = {
               ? '：这里是 <b>' + this._escHtml(ph.surface) + '</b>，来自 <b>' + this._escHtml(ph.en) + '</b>' : '');
       }
       el.querySelector('#ws-zh').textContent = ph.zh;
-      // v172（家长 2026-10-30）：「点开之后还要等英文的发音，不要等，点完就自己
-      // 说出来」。短语读音改成三步：
-      //   ① 这一屏渲染时已经预取好了 → 本地音频，点下去就响（母语音色）；
-      //   ② 没赶上（刚进屏就点）→ 先用本机语音立刻读，一秒都不等；
-      //   ③ 同时把这一条排到预取队头，下次点就是母语音色。
+      // v172「点开就自己说出来」；v230：不再用本机语音先凑一声，统一走
+      // 同源 /api/tts 的高质量音色（静态 mp3 / Azure 外教腔）。v229 起播
+      // 已在手势内同步发起，点下去照样立刻响。
       if (this._speakPhraseNow) this._speakPhraseNow(ph.en);
-      else this.speak(ph.en, { prefer: 'cf' });
+      else this.speak(ph.en);
       const binfo0 = await Api.dict(ph.en.split(' ')[0]).catch(function () { return null; });
       if (this._lookupWord !== ph.en.toLowerCase()) return;
       if (binfo0 && binfo0.phon) el.querySelector('#ws-phon').textContent = '/' + binfo0.phon + '/';
@@ -16726,11 +16746,11 @@ const App = {
     const forms = (typeof WordHelp !== 'undefined') ? WordHelp.formsOf(word) : [];
 
     // 点词即读：孩子点这个词多半就是不认识，先让他听见怎么念。
-    // v163：家长 2026-10-29「点单词正在查、要等网络」——读音改为本地合成
-    // 优先（零网络、点下去就响），本机没有英文语音时 1.2 秒内自动落回
-    // 原来的网络通道（CF 母语音色）。字母仍走有道（v91 红线不变）。
+    // v230：去掉设备内建 speechSynthesis（家长嫌音色难听），统一走同源
+    // /api/tts 的高质量音色；v229 起播已在手势内同步发起，不用再等网络。
+    // 字母仍由 worker 转发有道（v91 红线不变）。
     if (this._speakWordInstant) this._speakWordInstant(word);
-    else this.speak(word, { prefer: 'cf' });
+    else this.speak(word);
 
     const info = await Api.dict(word);
     if (this._lookupWord !== word.toLowerCase()) return;   // 已经点了别的词
@@ -16820,60 +16840,32 @@ App.init();
 // 而不是抛 ReferenceError 让人以为按钮坏了。
 window.__appReady = true;
 
-// ===== 点词秒出读音（v163，家长 2026-10-29）==============================
-// 单词（非字母）先用设备本地 speechSynthesis 读——零网络、点下去就响；
-// 本机没有英文语音（onstart 不来 / onerror）时 1.2 秒内自动落回原来的
-// 网络通道（CF 母语音色）。字母仍走有道（v91 红线：孤立字母只有有道准）。
+// ===== 点词秒出读音（v163 引入，v230 换音色）============================
+// v163 为了让「点下去就响」用设备内建 speechSynthesis 先凑一声，
+// 家长 2026-11-26 明确反馈「这个语音不好听，换成别的语音」：手机自带
+// 英文合成又硬又平，微信 / UC 内核还常挑到最差的那个 voice。
+// v230 彻底去掉内建合成，查词链路（点开自动读 + 🔊 重听）统一走同源
+// /api/tts 的高质量音色：
+//   · 固定课程词命中静态预生成 mp3，边缘直出；
+//   · 其余走 Azure 外教腔女声，响应 immutable 一年缓存；
+//   · v229 已把起播改成手势内同步发起，点下去照样立刻出声，不再需要
+//     「本机先凑一声、1.2 秒后再落回网络」这条拐弯。
+// 想换童声 / 男声时，给这里的 App.speak 传 { voice: 'f1' } 之类的角色
+// 参数即可（worker 的 TTS_VOICES_EN 里有 Ana / Andrew / Brian 等），
+// 不用再动别处。
 App._speakWordInstant = function (word) {
   const w = String(word || '').trim();
   if (!w) return;
-  if (/^[a-z]$/i.test(w)) { App.speak(w); return; }
-  try {
-    if (window.speechSynthesis) {
-      let started = false, fellBack = false;
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(w);
-      u.lang = 'en-US';
-      u.rate = 0.85;
-      try {
-        const voices = window.speechSynthesis.getVoices() || [];
-        const v = voices.find(function (x) { return x.lang && x.lang.indexOf('en') === 0; });
-        if (v) u.voice = v;
-      } catch (e) {}
-      u.onstart = function () { started = true; };
-      u.onerror = function () {
-        if (fellBack) return;
-        fellBack = true;
-        App.speak(w, { prefer: 'cf' });
-      };
-      window.speechSynthesis.speak(u);
-      setTimeout(function () {
-        if (!started && !fellBack) {
-          try { window.speechSynthesis.cancel(); } catch (e) {}
-          fellBack = true;
-          App.speak(w, { prefer: 'cf' });
-        }
-      }, 1200);
-      return;
-    }
-  } catch (e) {}
-  App.speak(w, { prefer: 'cf' });
+  App.speak(w);
 };
 
-// v172（家长 2026-10-30）：短语点开就响，不等网络。
-// 和单词不同，短语（in the park / used to / the end of）走的是自家 TTS 端点，
-// 现场请求要等一次往返 + 一次合成。这里先看本地有没有预取好的音频：
-//   · 有 → 直接播（母语音色，点下去就响）
-//   · 没有 → 本机语音立刻读（零网络），同时把这条排到预取队头，下一次点
-//            就是母语音色；本机没有英文语音时会自动落回网络通道。
+// v172 引入，v230 统一音色：短语点开同样不再用本机语音凑一声。
+// speak() 自己会先查本地预取 blob，命中就是瞬时起播；没命中直接同源
+// URL 同步播放，浏览器 immutable 缓存兜着，第二次点就是秒响。
 App._speakPhraseNow = function (text) {
   const t = String(text || '').trim();
   if (!t) return;
-  const key = App._ttsKey(t, 'cf', '');
-  if (App._ttsBlobs && App._ttsBlobs[key]) { App.speak(t, { prefer: 'cf' }); return; }
-  App._ttsPrioritize(t, 'cf', '');
-  App.prefetchTts(t, (App.state && typeof App.state.stepIdx === 'number') ? App.state.stepIdx : 0, 'cf');
-  App._speakWordInstant(t);
+  App.speak(t);
 };
 
 // 点词查义：全局代理，页面上任何英文单词点一下都有音标、中文意思和读音。
