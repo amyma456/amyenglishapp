@@ -2053,7 +2053,9 @@ const App = {
     const headerName = document.getElementById('header-name');
     if (headerName) {
       if (this.isTeacher()) {
-        headerName.textContent = 'Amy老师';
+        // v232：老师端品牌名竖排在左侧空白处，给全称"艾米老师英语打卡"
+        // 才像一块招牌；原来横排时为了省地方才缩成"Amy老师"。
+        headerName.textContent = 'Amy老师英语打卡';
       } else {
         headerName.textContent = this.state.userName || '同学';
       }
@@ -4602,6 +4604,10 @@ const App = {
   renderTabs() {
     const bar = document.getElementById('tab-bar');
     const isTeacher = this.isTeacher();
+    // v232：给顶栏标记老师模式——品牌名竖排、班级横排、12 页签缩小一屏放下。
+    // 学生端不加这个 class，沿用原来的横排小字顶栏。
+    const nav = bar ? bar.closest('.navbar') : null;
+    if (nav) nav.classList.toggle('teacher-mode', isTeacher);
     let tabs;
     // Icons are sprite ids from the <symbol> set in index.html — no emoji.
     if (isTeacher) {
