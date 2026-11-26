@@ -2619,15 +2619,19 @@ const App = {
     return false;
   },
 
-  // 读音网址的版本参数（v186）。/api/tts 的响应头是一年 immutable，浏览器会把
-  // 旧音频在本地缓存一整年 —— 换发音引擎后孩子刷新页面听到的还是老声音
-  // （家长 2026-11-06 实测）。把 app-version 编进请求网址，每次发版浏览器
-  // 自然改道重新取，不用清缓存也不用重新登录。
+  // 读音网址的版本参数（v186 引入，v229 修正）。/api/tts 的响应头是一年
+  // immutable，浏览器会把音频在本地缓存一整年 —— 换发音引擎后孩子刷新页面
+  // 听到的还是老声音（家长 2026-11-06 实测），所以网址里得带个版本号。
+  // 但 v186 直接拿 app-version 当它：每次发版（哪怕只改一行 UI）av 都变，
+  // 浏览器把整年有效的读音**全部**判成新 URL，发完版第一遍又得逐句重新
+  // 下载 —— 家长说的「更新完还是要读好几遍」有一半是这儿来的。
+  // v229 改成独立的固定值：只有真的换发音引擎 / 音色时才手动 +1，
+  // 常规发版不动音频缓存，刷新、重进、隔天打开都从磁盘直接出声。
   ttsVer() {
-    try {
-      var m = document.querySelector('meta[name="app-version"]');
-      return (m && m.content) || '0';
-    } catch (e) { return '0'; }
+    // 这个值故意冻结在 228：线上已经用 av=228 缓存了全部读音，保持不动
+    // 才能让这次发版**一份缓存都不作废**。它不是 app-version，别跟着升；
+    // 只有换发音引擎 / 音色时才改成 229、230……让浏览器主动改道。
+    return '228';
   },
 
   // 释放本地音频。扔的顺序不是"谁先取回来谁先走" —— 那正好会把孩子马上
@@ -2719,31 +2723,27 @@ const App = {
     self._ttsDone = false;
     self._audioStarted = false;
 
-    // Pick the endpoint by what is being spoken. Youdao's dictvoice is a
-    // DICTIONARY endpoint: it returns audio for a word and HTTP 500 for a
-    // sentence (measured). That is why words played and sentences were silent
-    // — desktop happened to recover through speechSynthesis, mobile browsers
-    // did not. Sentences therefore go to Baidu first, with our own same-origin
-    // endpoint behind it.
-    var isSentence = /\s/.test(cleanText.trim());
-    var youdao = 'https://dict.youdao.com/dictvoice?audio=' + encoded + '&type=2';
+    // v229：所有朗读统一走同源 /api/tts（worker 内部按文本分流：静态预生成
+    // mp3 / 单字母转发有道 / 在线合成），第三方域名只留作兜底。
+    // 以前按「句子走同源、单词走有道」分流，移动端跨域媒体经常被整个拦掉，
+    // 逐字母拼读尤其只响第一个；同源响应带 immutable 一年缓存，音频落在
+    // 浏览器磁盘上，刷新后第一题也能立刻出声，不用重新合成。
     var baidu  = 'https://fanyi.baidu.com/gettts?lan=en&text=' + encoded + '&spd=3&source=web';
     var ownTts = '/api/tts?av=' + self.ttsVer() + '&text=' + encoded
       + (prefer ? '&prefer=' + encodeURIComponent(prefer) : '')
       + (voice ? '&voice=' + encodeURIComponent(voice) : '');
-    // Sentences go to our own origin FIRST. Routing them to Baidu instead of
-    // Youdao fixed nothing on the phones — words still played and sentences
-    // still did not, on both iOS Safari and Xiaomi's browser. Both remaining
-    // suspects (a blocked third-party host, a cross-origin media restriction)
-    // disappear when the audio comes from the same origin as the page.
-    // Words keep Youdao: that path is the one already known to work.
     // 预取命中就直接播本地 blob —— 不用再等一次网络往返 + 模型生成。
-    // 这是"题一出来就开始读"的关键：绝大多数时候音频早就躺在本地了。
-    // 单词/字母也走缓存：词汇模块的"先听一遍"要串行播 5~6 个字母 + 整词，
-    // 每一段都现场去有道取一次的话中间全是空档；预取回来就是一段接一段。
+    // 词汇模块的「先听一遍」要串行播 5~6 个字母 + 整词，逐段都命中本地
+    // blob 才能一段接一段、中间不留空档。没命中也不再等预取，直接同源
+    // 起播（见下面 v229 的说明）。
     var cachedTts = (self._ttsBlobs && self._ttsBlobs[tkey]) || null;
-    var ttsUrl      = cachedTts || (isSentence ? ownTts : youdao);
-    var fallbackUrl = isSentence ? baidu  : baidu;
+    // v229：单词 / 字母也改走同源 /api/tts。以前只有句子走同源，单词和
+    // 「逐字母朗读 → 音节拼读」直连有道第三方域名 —— 移动端（微信 / UC /
+    // 夸克内核）这类跨域媒体经常被整个拦掉，孩子只能一遍遍点🔊。同源响应
+    // 带 immutable 一年缓存，音频落在浏览器磁盘上，刷新后第一题也能立刻
+    // 出声。worker 端对单个字母仍会自己转发有道取音，所以字母读音不变。
+    var ttsUrl      = cachedTts || ownTts;
+    var fallbackUrl = baidu;
 
     var timeoutId = null;
     var absoluteTimeout = null;
@@ -2819,85 +2819,81 @@ const App = {
       }
     };
 
-    // 开播动作收进一个函数：如果这句的音频正在预取（题一渲染就发出去了），
-    // 先等它一小会儿 —— 直接再发一次请求等于两份生成音频赛跑，后发的
-    // 那次常常更慢，孩子点完选项就是从这儿开始干等的。等到本地 blob 就
-    // 直接播，基本瞬时；最多等 2.5 秒，取不回来就照旧走网络，行为不变。
+    // v229：开播动作收进函数只是为了「同源重试一次」，不再等预取。
+    // 预取在后台照常跑，命中时 cachedTts 已经是本地 blob；没命中就直接
+    // 用同源 URL 同步起播（响应 immutable 一年，浏览器磁盘缓存兜着）。
     function startPlayback() {
       if (self._ttsDone || myToken !== self._speakToken) return;
-      audioEl.src = ttsUrl;
-      audioEl.load(); // Critical for Safari/cross-browser: must call load() after setting src
-      self._applyRate(audioEl);
+      var sameOriginRetried = false;
 
-      var playPromise = audioEl.play();
-      if (playPromise && typeof playPromise.then === 'function') {
-        playPromise.then(function() {
-          if (myToken !== self._speakToken) return;
-          self._audioStarted = true;
-          if (timeoutId) { clearTimeout(timeoutId); timeoutId = null; }
-        }).catch(function(err) {
-          if (self._ttsDone || myToken !== self._speakToken) return;
-          // play() was rejected — likely autoplay restriction or network error
-          // Try Baidu first, then speechSynthesis
-          if (!baiduTried) {
-            baiduTried = true;
-            try {
-              audioEl.src = fallbackUrl;
-              audioEl.load();
-              audioEl.play().then(function() {
+      // 兜底：同源没起来，才退百度 / 内建合成。
+      function goFallback() {
+        if (self._ttsDone || myToken !== self._speakToken) return;
+        if (!baiduTried) {
+          baiduTried = true;
+          try {
+            audioEl.src = fallbackUrl;
+            audioEl.load();
+            var p = audioEl.play();
+            if (p && p.then) {
+              p.then(function() {
                 if (myToken !== self._speakToken) return;
                 self._audioStarted = true;
                 if (timeoutId) { clearTimeout(timeoutId); timeoutId = null; }
               }).catch(function() { trySynthFallback(); });
-            } catch(e) { trySynthFallback(); }
-          } else {
-            trySynthFallback();
-          }
-        });
+            }
+          } catch(e) { trySynthFallback(); }
+        } else {
+          trySynthFallback();
+        }
       }
 
-      // Safety timeout: if audio hasn't started in 2.5 seconds, try Baidu/synthesis
+      // v229：连播 / 换题时，上一次的 load() 常常把这一次的 play() 打断
+      // （AbortError），并不是真的没权限。先对同一个同源地址重试一次再
+      // 谈兜底 —— 以前一拒就跳第三方域名，手机上第三方更容易整个被拦。
+      // 注意：起播必须同步发起，attemptPlay 里绝不夹 setTimeout。
+      function attemptPlay(url) {
+        if (self._ttsDone || myToken !== self._speakToken) return;
+        audioEl.src = url;
+        audioEl.load(); // Safari / 各内核：换 src 之后必须 load()
+        self._applyRate(audioEl);
+        var playPromise = audioEl.play();
+        if (playPromise && typeof playPromise.then === 'function') {
+          playPromise.then(function() {
+            if (myToken !== self._speakToken) return;
+            self._audioStarted = true;
+            if (timeoutId) { clearTimeout(timeoutId); timeoutId = null; }
+          }).catch(function() {
+            if (self._ttsDone || myToken !== self._speakToken) return;
+            if (!sameOriginRetried) {
+              sameOriginRetried = true;
+              try { attemptPlay(ttsUrl); } catch(e) { goFallback(); }
+            } else {
+              goFallback();
+            }
+          });
+        }
+      }
+
+      attemptPlay(ttsUrl);
+
+      // Safety timeout: 2.5 秒还没起播就走兜底链路。
       timeoutId = setTimeout(function() {
         if (!self._ttsDone && !self._audioStarted && myToken === self._speakToken) {
-          if (!baiduTried) {
-            baiduTried = true;
-            try {
-              audioEl.src = fallbackUrl;
-              audioEl.load();
-              audioEl.play().then(function() {
-                if (myToken !== self._speakToken) return;
-                self._audioStarted = true;
-              }).catch(function() { trySynthFallback(); });
-            } catch(e) { trySynthFallback(); }
-          } else {
-            trySynthFallback();
-          }
+          goFallback();
         }
       }, 2500);
     }
 
-    // 孩子点下去要读的这句，如果音频正在取、或还排在预取队列里，就等它
-    // 一下并让它插队 —— 直接再发一次请求等于两份音频赛跑，还要跟一堆预取
-    // 抢浏览器连接，反而更慢。最多等 2.5 秒，等不到就照旧走网络，行为不变。
-    var waitingForPrefetch = !cachedTts
-      && ((self._ttsPending && self._ttsPending[tkey]) || this._ttsQueued(cleanText, prefer, voice));
-    if (waitingForPrefetch) {
-      this._ttsPrioritize(cleanText, prefer, voice);
-      var waitedMs = 0;
-      (function waitForPrefetch() {
-        if (self._ttsDone || myToken !== self._speakToken) return;
-        var hit = self._ttsBlobs && self._ttsBlobs[tkey];
-        if (hit) { ttsUrl = hit; startPlayback(); return; }
-        var busy = (self._ttsPending && self._ttsPending[tkey]) || self._ttsQueued(cleanText, prefer, voice);
-        if (waitedMs >= 2500 || !busy) { startPlayback(); return; }
-        waitedMs += 120;
-        setTimeout(waitForPrefetch, 120);
-      })();
-    } else {
-      startPlayback();
-    }
+    // v229：起播绝不等预取 —— play() 必须留在触发它的那次手势的同步栈里。
+    // 以前这句若还在预取队列，会用 setTimeout 轮询最多 2.5 秒再播；一旦
+    // 出了手势栈，iOS / 微信 / UC 会以 autoplay 为由直接静音，孩子只能
+    // 再点一次，而第二次音频已躺在本地才响 —— 这正是「点一下没声音、
+    // 要读好几遍」的根因。预取照常后台跑，只用于下次点同一句时命中
+    // 本地 blob，不再挡住这一次出声；刷新清掉内存缓存也不再拖慢首播。
+    startPlayback();
 
-    // Absolute timeout: no matter what, stop indicator after 12 seconds.
+    // Absolute timeout: no matter what, stop indicator after 7 seconds.
     // If NOTHING ever started playing (all TTS sources failed), tell the
     // user instead of failing silently.
     absoluteTimeout = setTimeout(function() {
@@ -2907,7 +2903,7 @@ const App = {
         }
         finishTTS();
       }
-    }, 12000);
+    }, 7000);
   },
 
   _stopCurrentAudio() {
