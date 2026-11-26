@@ -4606,22 +4606,25 @@ const App = {
     // Icons are sprite ids from the <symbol> set in index.html — no emoji.
     if (isTeacher) {
       tabs = [
+        // v231：第一页仍是「周计划」；页签顺序按老师 2026-11-27 的要求重排——
+        // 「错题本」挪到「题库预览」左边，「打卡监控 / 游戏试玩」紧挨在题库预览
+        // 右边，方便老师查题 + 看孩子做题 + 试玩这三个动作连在一起做。
         { id: 'weekly', icon: 'i-list', name: '周计划' },
+        { id: 'errors', icon: 'i-close', name: '错题本' },
         // v134：老师自己想先做一遍、提前发现问题的那一屏。渲染的就是学生
         // 做题的那套界面（renderStage），不是另做一份预览版 —— 不然"看到的
         // 和学生看到的不一样"就没意义了。
         { id: 'preview', icon: 'i-eye', name: '题库预览' },
+        { id: 'checkin', icon: 'i-chart', name: '打卡监控' },
+        // v194：老师也能试玩（按满额 3 分钟），方便验收孩子的游戏。
+        { id: 'wordgame', icon: 'i-game', name: '游戏试玩' },
         { id: 'daily', icon: 'i-calendar', name: '每日详情' },
         { id: 'edit', icon: 'i-pencil', name: '作业编辑' },
-        { id: 'checkin', icon: 'i-chart', name: '打卡监控' },
         { id: 'scores', icon: 'i-trend', name: '成绩分析' },
-        { id: 'errors', icon: 'i-close', name: '错题本' },
         { id: 'print', icon: 'i-printer', name: '错题卷打印' },
         { id: 'speaking', icon: 'i-mic', name: '口语记录' },
         { id: 'students', icon: 'i-users', name: '学生管理' },
         { id: 'classmgmt', icon: 'i-layers', name: '班级管理' },
-        // v194：老师也能试玩（按满额 3 分钟），方便验收孩子的游戏。
-        { id: 'wordgame', icon: 'i-game', name: '游戏试玩' },
       ];
     } else {
       // Non-teacher: see today's homework, own child progress, class comparison, own error book
@@ -4669,7 +4672,7 @@ const App = {
 
     // v220：以前用 active.scrollIntoView({block:'nearest',inline:'nearest'})，
     // 它会连带滚动**所有祖先可滚容器**（整页 + body + tab-bar）。当恢复到的
-    // active 是最后一个页签（老师端「游戏试玩」是第 12 个），tab-bar 会被
+    // active 是最后一个页签（12 个页签里的最后一个），tab-bar 会被
     // 一路横滚到最右，前 11 个页签全被挤出屏幕 —— 家长 2026-11-21 说的
     // 「刚开始只能看见玩游戏这个界面，其他的界面都看不到」正是这个。
     // 现在只动 tab-bar 自己的 scrollLeft，且仅在 active 真的在可视区外时

@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="230">
+<meta name="app-version" content="231">
 <link rel="manifest" href="manifest.json">
 <!-- v135：登录第一步就是调 api.amyeng.top 验手机号。提前把 DNS + TLS
      握手做掉，接口首调能省几百毫秒 —— 手机弱网下这几百毫秒很显眼。 -->
@@ -17,9 +17,9 @@
      解析到文档末尾的 <script defer> 才发现它们（那时 180KB 的 HTML 已经
      解析完了），白白晚了几百毫秒到一秒。preload 只提前取、不执行，顺序
      仍由 defer 保证，不会改变任何依赖关系。 -->
-<link rel="preload" as="script" href="data.js?v=230">
-<link rel="preload" as="script" href="api.js?v=230">
-<link rel="preload" as="script" href="app.js?v=230">
+<link rel="preload" as="script" href="data.js?v=231">
+<link rel="preload" as="script" href="api.js?v=231">
+<link rel="preload" as="script" href="app.js?v=231">
 <!-- iOS 的"添加到主屏幕"不认 SVG（装出来是白板/网页截图），必须给 PNG。
      图标与启动图由 tools/gen-pwa-icons.js 生成，别手改。 -->
 <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon-180.png">
@@ -2138,11 +2138,13 @@ button,.q-option,.gate-listen,.hold-btn,.tap-btn,.speak-btn{
     ['today', '今日作业'], ['wordgame', '单词乐园'], ['myprogress', '孩子打卡'],
     ['compare', '完成率对比'], ['myerrors', '错题改错']
   ];
+  // v231：老师页签顺序与 app.js renderTabs() 保持一致 —— 第一页仍是周计划，
+  // 错题本在题库预览左边，打卡监控 / 游戏试玩紧挨在题库预览右边。
   var TEACHER_TABS = [
-    ['weekly', '周计划'], ['preview', '题库预览'], ['daily', '每日详情'],
-    ['edit', '作业编辑'], ['checkin', '打卡监控'], ['scores', '成绩分析'],
-    ['errors', '错题本'], ['print', '错题卷打印'], ['speaking', '口语记录'],
-    ['students', '学生管理'], ['classmgmt', '班级管理'], ['wordgame', '游戏试玩']
+    ['weekly', '周计划'], ['errors', '错题本'], ['preview', '题库预览'],
+    ['checkin', '打卡监控'], ['wordgame', '游戏试玩'], ['daily', '每日详情'],
+    ['edit', '作业编辑'], ['scores', '成绩分析'], ['print', '错题卷打印'],
+    ['speaking', '口语记录'], ['students', '学生管理'], ['classmgmt', '班级管理']
   ];
   var bootTabs = bootIsTeacher ? TEACHER_TABS : STUDENT_TABS;
   window.__bootTabs = bootTabs.map(function (t) { return t[0]; });
@@ -2312,9 +2314,9 @@ button,.q-option,.gate-listen,.hold-btn,.tap-btn,.speak-btn{
 </div>
 
 <script>window.__appReady = false;</script>
-<script defer src="cloud.js?v=230"></script>
-<script defer src="data.js?v=230"></script>
-<script defer src="data-shuffle.js?v=230"></script>
+<script defer src="cloud.js?v=231"></script>
+<script defer src="data.js?v=231"></script>
+<script defer src="data-shuffle.js?v=231"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
 <!--
   ?v= 必须跟着版本号走（v124 修正）。
@@ -2324,13 +2326,13 @@ button,.q-option,.gate-listen,.hold-btn,.tap-btn,.speak-btn{
   这个坑很隐蔽：代码明明改了、也部署上去了，手机上跑的还是几个月前的逻辑。
   以后每次发版，这里跟着 app-version 一起改。
 -->
-<script defer src="recorder.js?v=230"></script>
-<script defer src="api.js?v=230"></script>
+<script defer src="recorder.js?v=231"></script>
+<script defer src="api.js?v=231"></script>
 <!-- v194：小游戏独立成文件，不塞进已经 800KB 的 app.js。必须排在 app.js
      **前面**：app.js 顶层有同步初始化，登录回来若正好停在「单词乐园」，
      渲染时 WordGame 得已经存在。game.js 只在被点击/渲染时才读 window.App。 -->
-<script defer src="game.js?v=230"></script>
-<script defer src="app.js?v=230"></script>
+<script defer src="game.js?v=231"></script>
+<script defer src="app.js?v=231"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {
@@ -2445,7 +2447,7 @@ if ('serviceWorker' in navigator) {
   // 清掉 SW 缓存、硬刷一次，同一个会话只做一次，绝不来回刷。
   setTimeout(function () {
     if (window.__appReady) return;
-    var key = 'amy_boot_recover_v230';
+    var key = 'amy_boot_recover_v231';
     try {
       if (sessionStorage.getItem(key)) return;
       sessionStorage.setItem(key, '1');
