@@ -2053,9 +2053,9 @@ const App = {
     const headerName = document.getElementById('header-name');
     if (headerName) {
       if (this.isTeacher()) {
-        // v232：老师端品牌名竖排在左侧空白处，给全称"艾米老师英语打卡"
-        // 才像一块招牌；原来横排时为了省地方才缩成"Amy老师"。
-        headerName.textContent = 'Amy老师英语打卡';
+        // v234：老师端品牌名全字横排放最左边（"艾米少儿英语老师"），
+        // 不再省略号截断；班级徽章另起一行排在它正下方。
+        headerName.textContent = '艾米少儿英语老师';
       } else {
         headerName.textContent = this.state.userName || '同学';
       }
