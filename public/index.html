@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Amy英语打卡">
-<meta name="app-version" content="232">
+<meta name="app-version" content="233">
 <link rel="manifest" href="manifest.json">
 <!-- v135：登录第一步就是调 api.amyeng.top 验手机号。提前把 DNS + TLS
      握手做掉，接口首调能省几百毫秒 —— 手机弱网下这几百毫秒很显眼。 -->
@@ -17,9 +17,9 @@
      解析到文档末尾的 <script defer> 才发现它们（那时 180KB 的 HTML 已经
      解析完了），白白晚了几百毫秒到一秒。preload 只提前取、不执行，顺序
      仍由 defer 保证，不会改变任何依赖关系。 -->
-<link rel="preload" as="script" href="data.js?v=232">
-<link rel="preload" as="script" href="api.js?v=232">
-<link rel="preload" as="script" href="app.js?v=232">
+<link rel="preload" as="script" href="data.js?v=233">
+<link rel="preload" as="script" href="api.js?v=233">
+<link rel="preload" as="script" href="app.js?v=233">
 <!-- iOS 的"添加到主屏幕"不认 SVG（装出来是白板/网页截图），必须给 PNG。
      图标与启动图由 tools/gen-pwa-icons.js 生成，别手改。 -->
 <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon-180.png">
@@ -207,22 +207,29 @@ input,textarea,select{font-family:inherit;font-size:max(calc(14px*var(--fs)),var
   transition:background var(--fast) var(--ease),color var(--fast) var(--ease)}
 .icon-btn:hover{background:var(--canvas);color:var(--ink)}
 
-/* ===== v232 老师端顶部左中右排版 ======================================
-   左＝竖排品牌名 + 横排班级；中＝12 页签一屏放下、不再左右滑；
-   右＝头像 + 3 个小设置按钮横排。学生端沿用原来的样子，不受影响。 */
+/* ===== v233 老师端顶部排版 ============================================
+   品牌名横排放最左、设置按钮贴最右、顶栏拉满整屏并压到最矮；
+   整条 sticky 吸顶、不随题目滚动（压矮后挡题最少）。学生端不受影响。 */
 .nav-brand{display:flex;align-items:center;gap:8px;flex:none}
 .brand-name{font-size:max(calc(12px*var(--fs-sm)),var(--fs-sm-min));font-weight:500;color:var(--ink);white-space:nowrap}
 @media(min-width:769px){
-  /* 品牌名竖排：像对联一样一个字一个字往下排，放在左侧空白处 */
-  .navbar.teacher-mode .brand-name{
-    writing-mode:vertical-rl;text-orientation:upright;letter-spacing:1px;line-height:1.15}
-  .navbar.teacher-mode .class-badge{max-width:115px}
-  /* 12 个页签缩小字号、去掉图标、收紧内边距，一屏全显示 */
-  .navbar.teacher-mode .nav-tabs{gap:1px;overflow-x:visible;flex-wrap:wrap;
+  /* 老师端顶栏拉满整屏：解掉 .container 的 max-width 与左右留白，
+     上下留白也收到最小，整条钉在顶部不再随题目滚动。 */
+  .nav-wrap.teacher-mode{padding-block:6px}
+  .container.teacher-mode{max-width:none;padding-inline:12px}
+  .navbar.teacher-mode{min-height:42px;padding:4px 8px;gap:10px;border-radius:14px}
+  /* 品牌名横排（不再竖排撑高），放在最左边；班级仍横排紧随其后 */
+  .navbar.teacher-mode .brand-name{writing-mode:horizontal-tb;text-orientation:mixed;
+    letter-spacing:0;line-height:1.2;font-size:max(calc(13px*var(--fs-sm)),var(--fs-sm-min))}
+  .navbar.teacher-mode .class-badge{max-width:130px}
+  /* 12 个页签一屏全显示，拉满整屏后空间充足，不再左右滑 */
+  .navbar.teacher-mode .nav-tabs{gap:2px;overflow-x:visible;flex-wrap:nowrap;
     -webkit-mask-image:none;mask-image:none}
   .navbar.teacher-mode .nav-tabs button{
-    padding:5px 6px;gap:0;font-size:max(calc(10px*var(--fs-sm)),var(--fs-sm-min))}
+    padding:5px 9px;gap:0;font-size:max(calc(11px*var(--fs-sm)),var(--fs-sm-min))}
   .navbar.teacher-mode .nav-tabs button .icon{display:none}
+  /* 右侧 3 个设置按钮紧贴最右空白处 */
+  .navbar.teacher-mode .nav-user{padding-right:2px}
 }
 
 /* 图标 */
@@ -2271,8 +2278,8 @@ button,.q-option,.gate-listen,.hold-btn,.tap-btn,.speak-btn{
   <div class="nav-wrap">
     <div class="container">
       <nav class="navbar">
-        <!-- v232：左＝竖排品牌名 + 横排班级；中＝页签；右＝3 个小设置（横排）。
-             品牌名文字竖排（writing-mode:vertical-rl），放在左边空白处。 -->
+        <!-- v233：左＝横排品牌名 + 横排班级（最左）；中＝页签；右＝3 个小设置（最右）。
+             整条顶栏拉满全屏、sticky 钉顶压到最矮，滚动题目时挡得最少。 -->
         <div class="nav-brand">
           <span id="header-name" class="brand-name">Amy老师英语打卡</span>
           <span class="class-badge" id="class-badge"></span>
@@ -2336,9 +2343,9 @@ button,.q-option,.gate-listen,.hold-btn,.tap-btn,.speak-btn{
 </div>
 
 <script>window.__appReady = false;</script>
-<script defer src="cloud.js?v=232"></script>
-<script defer src="data.js?v=232"></script>
-<script defer src="data-shuffle.js?v=232"></script>
+<script defer src="cloud.js?v=233"></script>
+<script defer src="data.js?v=233"></script>
+<script defer src="data-shuffle.js?v=233"></script>
 <!-- api.js must load before app.js: app.js calls Api at init. -->
 <!--
   ?v= 必须跟着版本号走（v124 修正）。
@@ -2348,13 +2355,13 @@ button,.q-option,.gate-listen,.hold-btn,.tap-btn,.speak-btn{
   这个坑很隐蔽：代码明明改了、也部署上去了，手机上跑的还是几个月前的逻辑。
   以后每次发版，这里跟着 app-version 一起改。
 -->
-<script defer src="recorder.js?v=232"></script>
-<script defer src="api.js?v=232"></script>
+<script defer src="recorder.js?v=233"></script>
+<script defer src="api.js?v=233"></script>
 <!-- v194：小游戏独立成文件，不塞进已经 800KB 的 app.js。必须排在 app.js
      **前面**：app.js 顶层有同步初始化，登录回来若正好停在「单词乐园」，
      渲染时 WordGame 得已经存在。game.js 只在被点击/渲染时才读 window.App。 -->
-<script defer src="game.js?v=232"></script>
-<script defer src="app.js?v=232"></script>
+<script defer src="game.js?v=233"></script>
+<script defer src="app.js?v=233"></script>
 <script>
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {
@@ -2469,7 +2476,7 @@ if ('serviceWorker' in navigator) {
   // 清掉 SW 缓存、硬刷一次，同一个会话只做一次，绝不来回刷。
   setTimeout(function () {
     if (window.__appReady) return;
-    var key = 'amy_boot_recover_v232';
+    var key = 'amy_boot_recover_v233';
     try {
       if (sessionStorage.getItem(key)) return;
       sessionStorage.setItem(key, '1');

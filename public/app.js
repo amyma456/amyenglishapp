@@ -4604,10 +4604,18 @@ const App = {
   renderTabs() {
     const bar = document.getElementById('tab-bar');
     const isTeacher = this.isTeacher();
-    // v232：给顶栏标记老师模式——品牌名竖排、班级横排、12 页签缩小一屏放下。
-    // 学生端不加这个 class，沿用原来的横排小字顶栏。
+    // v233：给顶栏标记老师模式——品牌名横排放最左、设置按钮最右、顶栏拉满
+    // 整屏并压到最矮（fixed 钉住不随滚动、挡题最少）。class 同时打在
+    // .nav-wrap / .container / .navbar 三层，CSS 才能把外层容器的最大宽度
+    // 限制解掉，真正做到"拉满整个界面"。学生端不加，沿用原来的样子。
     const nav = bar ? bar.closest('.navbar') : null;
-    if (nav) nav.classList.toggle('teacher-mode', isTeacher);
+    if (nav) {
+      nav.classList.toggle('teacher-mode', isTeacher);
+      const wrap = nav.closest('.nav-wrap');
+      const ctr = nav.closest('.container');
+      if (wrap) wrap.classList.toggle('teacher-mode', isTeacher);
+      if (ctr) ctr.classList.toggle('teacher-mode', isTeacher);
+    }
     let tabs;
     // Icons are sprite ids from the <symbol> set in index.html — no emoji.
     if (isTeacher) {
