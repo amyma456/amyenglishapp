@@ -2871,6 +2871,20 @@ const Api = {
     } catch (e) { console.warn('classRemovedList failed:', e); return null; }
   },
 
+  // v236：清空整张被删名单（只删拦截记录，不加白名单）。清掉的号码变回
+  // 普通号码，再登录走「名单外 → 老师同意」那条正常通道。
+  async classRemovedClear() {
+    try {
+      const res = await fetch(this._classUrl('/api/class/removed-clear'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ teacher: this.session && this.session.phone }),
+      });
+      if (!res.ok) return null;
+      return await res.json();
+    } catch (e) { console.warn('classRemovedClear failed:', e); return null; }
+  },
+
   // Teacher: let one phone back in WITHOUT it having to apply first.
   // This is the only door that opens the gate from the teacher side, and it
   // is deliberately an explicit click — never a side effect of a sync.

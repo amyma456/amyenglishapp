@@ -6044,6 +6044,13 @@ const App = {
     let html = '<h3 style="color:var(--warning);margin:16px 0 8px">🚫 被删过的号码（' + gatedAll.length + '）</h3>';
     html += '<p class="text-sub fs-12 mb-8">这些人登录会被拦住，必须你同意。'
          + '点「🔓 放行」让他以后不用验证；点「🗑️ 删除」就彻底清掉这个号码。</p>';
+    // v236：整张名单一次性清空——只删拦截记录、不加白名单。清掉的号码变回
+    // 普通号码，再登录走「名单外 → 你同意」这条正常通道。
+    html += '<div style="margin:0 0 10px;padding:8px 10px;border:1px dashed var(--warning);border-radius:8px">'
+         + '<div class="fs-12 text-sub" style="margin-bottom:6px">清空后这些号码不再是「被删过」，'
+         + '跟新号码一样：登录时会提醒你，由你决定同不同意。</div>'
+         + '<button class="btn btn-outline btn-sm" onclick="App.clearRemovedAll()">🧹 一键清空全部（' + gatedAll.length + '）</button>'
+         + '</div>';
     gatedAll.forEach(g => {
       const inRoster = (this.state.students || []).find(s => s.phone === g.phone);
       const name = (inRoster && inRoster.name) || g.name || '-';
@@ -6383,6 +6390,23 @@ const App = {
   },
 
   // 每行自带的「🗑️ 删除」——不用先打勾，点一下就删这一个。
+  // v236：整张被删名单清空。只删拦截记录、不写白名单——清掉的号码变回
+  // 普通号码，下次登录走「名单外 → 老师同意」正常通道，不会直接放进来。
+  async clearRemovedAll() {
+    if (!this.isTeacher()) return;
+    const n = (this.state.removedPhones || []).length;
+    if (!n) { this.showToast('名单已经是空的了'); return; }
+    if (!confirm('清空全部 ' + n + ' 个被删号码？\n\n'
+      + '清空后它们不再是「被删过」，跟新号码一样：登录时会在「名单外登录」里提醒你，'
+      + '由你点同意才会放行。不会直接放进来。')) return;
+    const r = await Api.classRemovedClear();
+    if (!r) { this.showToast('⚠️ 清空失败，再试一次就好', 'warn'); return; }
+    this.state.removedPhones = [];
+    this.state.joinRequests = [];
+    this.renderContent();
+    this.showToast('✅ 已清空 ' + (r.cleared != null ? r.cleared : n) + ' 个被删号码');
+  },
+
   async deleteGatedOne(phone, name) {
     if (!this.isTeacher()) return;
     let msg = '删除「' + (name || phone) + '」？\n\n'

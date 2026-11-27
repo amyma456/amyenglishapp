@@ -2199,6 +2199,26 @@ async function classApi(request, url, env) {
     return json({ removed: (rows && rows.results) || [] });
   }
 
+  // -- teacher: wipe the whole removed list ----------------------------------
+  // v236：老师 2026-11-27「被删过的号码在后台全部清除，这些号码和普通号码
+  // 没什么两样」。和 unblock 不同——unblock 会把号码直接塞进白名单（下次
+  // 不用同意就能进），这里只清空拦截记录，绝不写白名单。清掉后这些号码
+  // 变回普通号码：再登录走「名单外 → 老师同意」那条正常通道。
+  // 必须老师号 + 显式 POST，同步路径永远不许碰。
+  if (path === '/api/class/removed-clear' && request.method === 'POST') {
+    const body = await readJsonBody(request);
+    if (!body) return json({ error: 'bad_json' }, 400);
+    if (!isTeacher(body)) return json({ error: 'forbidden' }, 403);
+    const before = await db.prepare('SELECT COUNT(*) AS n FROM removed_students').first();
+    const n = Number(before && before.n) || 0;
+    // 清掉全部被删记录；顺带作废这些号码悬着的重新入班申请，免得清完又从
+    // 旧申请里冒出来。白名单(approved_phones) 一个字都不动。
+    await db.prepare('DELETE FROM removed_students').run();
+    await db.prepare("UPDATE join_requests SET status = 'denied', resolved_at = ? WHERE status = 'pending'")
+      .bind(new Date().toISOString()).run();
+    return json({ ok: true, cleared: n });
+  }
+
   // -- teacher: lift the gate by hand ----------------------------------------
   // The student normally applies and the teacher approves. This is the short
   // cut for "I already know, let them in" — and it must stay an explicit
