@@ -2833,11 +2833,16 @@ async function deviceApi(request, url, env) {
     };
 
     // 内容没变就别写：一天之内同一台手机反复开屏不该产生十几次写入。
+    // v235：去重必须把 standalone 也算进去 —— 孩子先在浏览器里打开（0），
+    // 之后「添加到桌面」再从桌面图标进（1），ua/机型/浏览器全没变，旧逻辑
+    // 会当成"没变化"直接跳过，导致"已添加桌面"永远存不进去（Yunus 就是这样
+    // 丢的）。standalone 一变就必须落库，哪怕其它字段一字未动。
     const prev = await db.prepare(
-      'SELECT ua, model, browser, is_stock, updated_at FROM student_devices WHERE student_id = ?1'
+      'SELECT ua, model, browser, is_stock, standalone, updated_at FROM student_devices WHERE student_id = ?1'
     ).bind(sid).first();
     if (prev && prev.ua === v.ua && prev.model === v.model && prev.browser === v.browser
         && Number(prev.is_stock) === v.stock
+        && Number(prev.standalone || 0) === v.standalone
         && (Date.now() - Date.parse(prev.updated_at || '')) < 86400000) {
       return json({ ok: true, unchanged: true });
     }

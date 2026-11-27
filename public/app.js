@@ -1964,11 +1964,20 @@ const App = {
           + '用的是哪个浏览器，都记在这里。孩子登录一次之后就有记录。</p>';
     html += '<div class="dev-table"><div class="dev-head">'
           + '<span>姓名</span><span>手机型号</span><span>自带浏览器</span>'
-          + '<span>使用浏览器</span><span>系统</span></div>';
+          + '<span>使用浏览器</span><span>系统</span><span>添加到桌面</span></div>';
     (approved || []).forEach(function (s) {
       var key = String(s.name || '').toLowerCase().replace(/\s+/g, '');
       var d = byId[s.id] || byName[key] || null;
       var notStock = d && Number(d.is_stock) === 0;
+      // v235：有些孩子换过设备，同一姓名在后台留了多台的记录（如 Yunus 有
+      // 两台小米）。任一设备从桌面图标打开过就算"已添加"，不能只看匹配到的
+      // 那一行 —— 否则孩子在 A 机加了桌面、老师在表里看到的是没加的 B 机。
+      var addedDesktop = devs.some(function (x) {
+        if (!x) return false;
+        var same = (s.id && x.student_id === s.id)
+          || (key && String(x.student_name || '').toLowerCase().replace(/\s+/g, '') === key);
+        return same && Number(x.standalone || 0) === 1;
+      });
       html += '<div class="dev-row' + (notStock ? ' dev-row-warn' : '') + '">'
         + '<span class="dev-name">' + esc(s.name || s.phone) + '</span>'
         + '<span>' + esc(d ? (d.model_label || d.model || '—') : '还没记录') + '</span>'
@@ -1976,6 +1985,7 @@ const App = {
         + '<span class="dev-browser">' + esc(d ? (d.browser || '—') : '—')
         + (d && d.browser_ver ? ' ' + esc(d.browser_ver) : '') + '</span>'
         + '<span>' + esc(d ? (d.os || '—') : '—') + '</span>'
+        + '<span>' + (addedDesktop ? '✅ 已添加' : '—') + '</span>'
         + '</div>';
     });
     if (!(approved || []).length) {
@@ -2053,9 +2063,9 @@ const App = {
     const headerName = document.getElementById('header-name');
     if (headerName) {
       if (this.isTeacher()) {
-        // v234：老师端品牌名全字横排放最左边（"艾米少儿英语老师"），
-        // 不再省略号截断；班级徽章另起一行排在它正下方。
-        headerName.textContent = '艾米少儿英语老师';
+        // v235：老师端品牌名换成「Amy英语打卡平台」（全字横排、不截断），
+        // 班级徽章另起一行排在它正下方。
+        headerName.textContent = 'Amy英语打卡平台';
       } else {
         headerName.textContent = this.state.userName || '同学';
       }
